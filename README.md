@@ -27,4 +27,13 @@ cd web && npm run dev        # UI, proxies /api to :8080
 
 Web checks (in `web/`): `npm run lint`, `npm run typecheck`, `npm test`, `npm run e2e` (Playwright, needs `npx playwright install chromium` once). After changing the API, run `npm run gen:api` and commit `src/api/schema.d.ts`.
 
+Operations (the same commands work in the container with `docker compose run --rm web <command>`):
+
+```bash
+uv run folio backup [--no-secrets]    # verified backup now (a nightly one also runs at 03:00)
+uv run folio restore <file>           # stop web and worker first; the current database is kept
+uv run folio run-job fx               # eod, fx, gaps, snapshots, actions, backfill, backup
+uv run folio seed --demo              # fictional data for working on the UI, never real holdings
+```
+
 Not exposed to the public internet: LAN or Tailscale only.

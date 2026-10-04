@@ -32,9 +32,16 @@ def first_transaction_date(db: Session, instrument_id: int | None = None) -> dat
     return db.scalar(query)
 
 
-def eod_job(ctx: JobContext, mic: str, day: date | None = None) -> JobResult:
+def eod_job(
+    ctx: JobContext, mic: str, day: date | None = None, only_if_tracked: bool = False
+) -> JobResult:
     """Fetch the latest closes for every tracked listing on one exchange. On a day the
-    exchange is closed nothing is fetched (FR-MD-02)."""
+    exchange is closed nothing is fetched (FR-MD-02). The scheduler passes
+    `only_if_tracked`, so exchanges without any of your listings leave no run record."""
+    if only_if_tracked:
+        with ctx.session_factory() as db:
+            if not tracked_listings(db, mic):
+                return JobResult(0, "eod", "skipped", f"No tracked listings on {mic}.")
     zone = ZoneInfo(str(exchanges.calendar(mic).tz))
     local_day = day or ctx.now().astimezone(zone).date()
 
