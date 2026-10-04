@@ -25,4 +25,6 @@ uv run folio web --reload    # API on :8080
 cd web && npm run dev        # UI, proxies /api to :8080
 ```
 
+Web checks (in `web/`): `npm run lint`, `npm run typecheck`, `npm test`, `npm run e2e` (Playwright, needs `npx playwright install chromium` once). After changing the API, run `npm run gen:api` and commit `src/api/schema.d.ts`.
+
 Not exposed to the public internet: LAN or Tailscale only.

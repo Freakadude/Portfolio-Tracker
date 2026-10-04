@@ -50,3 +50,9 @@ def test_value_stored_as_text(engine) -> None:  # type: ignore[no-untyped-def]
             "select typeof(v), v from amounts order by id desc limit 1"
         ).one()
     assert raw == ("text", "1.10")
+
+
+def test_sqlite_folder_is_created(tmp_path) -> None:  # type: ignore[no-untyped-def]
+    target = tmp_path / "nested" / "dir" / "folio.db"
+    make_engine(f"sqlite:///{target}").connect().close()
+    assert target.exists()

@@ -1,10 +1,20 @@
+from pathlib import Path
 from typing import Any
 
 from sqlalchemy import Engine, create_engine, event
+from sqlalchemy.engine import make_url
 from sqlalchemy.orm import Session, sessionmaker
 
 
+def ensure_sqlite_dir(url: str) -> None:
+    """Create the folder of a file-based SQLite database (the /data volume already exists)."""
+    parsed = make_url(url)
+    if parsed.get_backend_name() == "sqlite" and parsed.database not in (None, "", ":memory:"):
+        Path(parsed.database).parent.mkdir(parents=True, exist_ok=True)
+
+
 def make_engine(url: str) -> Engine:
+    ensure_sqlite_dir(url)
     engine = create_engine(url, future=True)
     if engine.dialect.name == "sqlite":
 

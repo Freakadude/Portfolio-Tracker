@@ -6,6 +6,8 @@ from alembic.runtime.migration import MigrationContext
 from alembic.script import ScriptDirectory
 from sqlalchemy import Engine
 
+from folio.db.engine import ensure_sqlite_dir
+
 MIGRATIONS_DIR = Path(__file__).resolve().parents[2] / "migrations"
 
 
@@ -17,6 +19,7 @@ def _config(url: str) -> Config:
 
 
 def upgrade(url: str) -> None:
+    ensure_sqlite_dir(url)
     command.upgrade(_config(url), "head")
 
 

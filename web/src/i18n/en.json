@@ -1,0 +1,180 @@
+{
+  "app": {
+    "name": "Folio",
+    "loading": "Loading…",
+    "retry": "Try again",
+    "save": "Save",
+    "saved": "Saved",
+    "next": "Next",
+    "back": "Back",
+    "skip": "Skip for now",
+    "finish": "Finish setup"
+  },
+  "nav": {
+    "home": "Home",
+    "holdings": "Holdings",
+    "transactions": "Transactions",
+    "dashboards": "Dashboards",
+    "insights": "Insights",
+    "news": "News",
+    "strategies": "Strategies",
+    "watchlist": "Watchlist",
+    "reports": "Reports",
+    "settings": "Settings",
+    "system": "System",
+    "signOut": "Sign out",
+    "main": "Main navigation"
+  },
+  "empty": {
+    "home": {
+      "title": "Welcome to Folio",
+      "body": "Add your first instrument to start tracking your portfolio."
+    },
+    "holdings": {
+      "title": "No holdings yet",
+      "body": "Add your first instrument and a transaction to see positions here."
+    },
+    "transactions": {
+      "title": "No transactions yet",
+      "body": "Add a transaction or import a CSV export from your broker."
+    },
+    "dashboards": {
+      "title": "No dashboards yet",
+      "body": "Dashboards arrive in a later phase. You will build them from widgets by drag and drop."
+    },
+    "insights": {
+      "title": "Nothing to review",
+      "body": "Recommendations and alerts will land here."
+    },
+    "news": {
+      "title": "No news yet",
+      "body": "Add news sources in Settings once the news feature is available."
+    },
+    "strategies": {
+      "title": "No strategy yet",
+      "body": "Define your sleeves, targets and rules once the strategy editor is available."
+    },
+    "watchlist": { "title": "Watchlist is empty", "body": "Track instruments you do not hold." },
+    "reports": {
+      "title": "No reports yet",
+      "body": "Annual and tax-support reports appear once you have transactions."
+    },
+    "system": {
+      "title": "System",
+      "body": "Job runs, provider usage and agent costs will be shown here."
+    },
+    "comingLater": "This part of Folio is built in a later phase."
+  },
+  "login": {
+    "title": "Sign in",
+    "username": "Username",
+    "password": "Password",
+    "remember": "Remember this device for 30 days",
+    "submit": "Sign in",
+    "failed": "Could not sign in."
+  },
+  "setup": {
+    "title": "Set up Folio",
+    "step": "Step {{current}} of {{total}}",
+    "steps": {
+      "owner": "Owner account",
+      "preferences": "Preferences",
+      "account": "First account",
+      "providers": "Data providers",
+      "notifications": "Notifications"
+    },
+    "owner": {
+      "intro": "Create the single owner account. A long passphrase works best.",
+      "username": "Username",
+      "password": "Password (12+ characters)",
+      "confirm": "Repeat password",
+      "mismatch": "The passwords do not match.",
+      "tooShort": "Use at least 12 characters.",
+      "usernameRequired": "Enter a username."
+    },
+    "preferences": {
+      "intro": "Choose your timezone and number format.",
+      "timezone": "Timezone",
+      "numberFormat": "Number format"
+    },
+    "account": {
+      "intro": "Add the broker account you want to track. You can add more later.",
+      "name": "Account name",
+      "broker": "Broker",
+      "method": "Cost basis method",
+      "fifo": "FIFO (first in, first out)",
+      "avg": "Average cost",
+      "nameRequired": "Give the account a name."
+    },
+    "providers": {
+      "intro": "Optional. Folio works on free tiers; add keys here if you have them. Keys are stored encrypted."
+    },
+    "notifications": {
+      "intro": "Optional. Choose how important alerts reach your phone.",
+      "channel": "Phone channel"
+    }
+  },
+  "settings": {
+    "title": "Settings",
+    "sections": {
+      "general": "General",
+      "providers": "Providers",
+      "agent": "Agent",
+      "schedules": "Schedules",
+      "notifications": "Notifications",
+      "appearance": "Appearance",
+      "language": "Language",
+      "retention": "Retention"
+    },
+    "secretSet": "A value is saved. Type a new one to replace it.",
+    "secretUnset": "Not set",
+    "clear": "Remove saved value",
+    "invalidJson": "This field must be valid JSON.",
+    "saved": "Settings saved."
+  },
+  "fields": {
+    "timezone": "Timezone",
+    "number_format": "Number format",
+    "providers": "Providers (JSON)",
+    "eodhd_api_key": "EODHD API key",
+    "twelvedata_api_key": "Twelve Data API key",
+    "openfigi_api_key": "OpenFIGI API key",
+    "fred_api_key": "FRED API key",
+    "enabled": "Enabled",
+    "monthly_budget_eur": "Monthly budget (EUR)",
+    "daily_run_cap": "Daily run cap",
+    "per_run_token_cap": "Token cap per run",
+    "web_search_max_uses": "Web searches per run",
+    "web_search_domains": "Trusted web-search domains (JSON list)",
+    "privacy_mode": "Privacy mode",
+    "models": "Models per run type (JSON)",
+    "anthropic_api_key": "Anthropic API key",
+    "cron_overrides": "Cron overrides per job (JSON)",
+    "channel": "Phone channel",
+    "quiet_hours_start": "Quiet hours start",
+    "quiet_hours_end": "Quiet hours end",
+    "daily_push_cap": "Daily push cap",
+    "home_assistant_url": "Home Assistant URL",
+    "home_assistant_service": "Home Assistant notify service",
+    "ntfy_url": "ntfy URL",
+    "ntfy_topic": "ntfy topic",
+    "home_assistant_token": "Home Assistant token",
+    "ntfy_token": "ntfy token",
+    "theme": "Theme",
+    "language": "Language",
+    "quotes_days": "Keep quotes (days)",
+    "agent_runs_days": "Keep agent runs (days)",
+    "news_days": "Keep news (days)"
+  },
+  "options": {
+    "number_format": { "eu": "€ 1.234,56", "us": "€1,234.56" },
+    "theme": { "system": "Follow system", "light": "Light", "dark": "Dark" },
+    "channel": {
+      "home_assistant": "Home Assistant app",
+      "ntfy": "ntfy",
+      "web_push": "Web Push",
+      "none": "None"
+    },
+    "language": { "en": "English" }
+  }
+}
