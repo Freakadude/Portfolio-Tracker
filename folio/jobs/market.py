@@ -13,6 +13,7 @@ from folio.jobs.context import JobContext
 from folio.jobs.runner import JobLog, JobResult, run_job
 from folio.marketdata import exchanges
 from folio.marketdata.base import ProviderError
+from folio.marketdata.corporate_actions import propose_all
 from folio.marketdata.fx import FxService, needed_currencies
 from folio.marketdata.prices import PriceService, listing_ref, tracked_listings
 
@@ -93,6 +94,20 @@ def gap_job(ctx: JobContext, days: int = GAP_WINDOW_DAYS) -> JobResult:
                 log.error(f"{listing.ticker}: {exc}")
 
     return run_job(ctx, "gaps", body, {"days": days})
+
+
+def actions_job(ctx: JobContext) -> JobResult:
+    """Look for splits and dividends on everything held, and propose them (FR-MD-07)."""
+
+    def body(db: Session, log: JobLog) -> None:
+        proposals = propose_all(db, ctx.chain_for(db), ctx.today())
+        log.info(
+            f"{proposals.splits} split(s) and {proposals.dividends} dividend draft(s) proposed"
+        )
+        for note in proposals.notes:
+            log.error(note)
+
+    return run_job(ctx, "actions", body)
 
 
 def backfill_job(ctx: JobContext, listing_id: int) -> JobResult:

@@ -16,6 +16,7 @@ from folio.ledger_service import (
     TransactionChanges,
     TransactionError,
     TransactionIn,
+    confirm_draft,
     create_transaction,
     delete_transaction,
     preview_sell_transaction,
@@ -255,6 +256,18 @@ def update(
 ) -> TransactionOut:
     try:
         row = update_transaction(db, transaction_id, body)
+    except TransactionError as exc:
+        raise _fail(exc) from exc
+    return transaction_out(db, row)
+
+
+@router.post("/{transaction_id}/confirm", response_model=TransactionOut)
+def confirm(
+    transaction_id: int, _user: UserDep, db: DbDep, body: TransactionChanges | None = None
+) -> TransactionOut:
+    """Post a proposed (draft) transaction, optionally correcting it in the same step."""
+    try:
+        row = confirm_draft(db, transaction_id, body)
     except TransactionError as exc:
         raise _fail(exc) from exc
     return transaction_out(db, row)

@@ -32,7 +32,7 @@ Requirement ID → module → test → status (`todo`, `in progress`, `done`).
 | FR-MD-03 | folio/jobs/market.py backfill_job | tests/integration/test_jobs_market.py | in progress (queued from instrument add, pending) |
 | FR-MD-04 | folio/marketdata/prices.py (gaps, overrides), gap_job | tests/integration/test_marketdata_prices.py, test_jobs_market.py | done |
 | FR-MD-06 | folio/marketdata/fx.py, ecb.py | tests/integration/test_marketdata_fx.py | done |
-| FR-MD-07 | folio/marketdata/corporate_actions | - | todo |
+| FR-MD-07 | folio/marketdata/corporate_actions.py, folio/api/routers/corporate_actions.py, ledger_service.confirm_draft, jobs actions_job | tests/integration/test_corporate_actions.py (1:4 split quadruples quantity and keeps cost; dividend drafts) | in progress (Insights UI pending; weekly schedule pending) |
 | FR-TX-01 | folio/ledger_service.py, folio/api/routers/transactions.py | tests/integration/test_transactions_api.py | in progress (UI pending) |
 | FR-TX-02 | folio/ledger_service.py (ECB prefill, override), fx-prefill endpoint | tests/integration/test_transactions_api.py | in progress (UI pending) |
 | FR-TX-05 | folio/positions.py, folio/api/routers/positions.py | tests/integration/test_positions_api.py (hand-computed metrics; reconciliation with invariants 1 and 2) | in progress (UI pending) |

@@ -473,6 +473,35 @@ def update_transaction(
     return row
 
 
+def confirm_draft(
+    db: Session,
+    transaction_id: int,
+    changes: TransactionChanges | None = None,
+    actor: str = "user",
+) -> LedgerTransaction:
+    """Turn a proposed (draft) transaction into a real one, optionally correcting it first, for
+    example the payment date, the amount or the withholding tax of a proposed dividend."""
+    row = _live(db, transaction_id)
+    if row.status != "draft":
+        raise TransactionError("This transaction is already posted.")
+    if changes is not None and changes.model_dump(exclude_unset=True):
+        update_transaction(db, transaction_id, changes, actor)
+    account = _account(db, row.account_id)
+    row.status = "posted"
+    db.flush()
+    _rebuild_or_reject(db, account)
+    write_audit(
+        db,
+        actor,
+        "transaction",
+        "confirm",
+        entity_id=row.id,
+        diff={"status": {"old": "draft", "new": "posted"}},
+    )
+    request_snapshot_rebuild(db, row.trade_date)
+    return row
+
+
 def _is_ecb_prefill(fx: FxService, currency: str, on: date, stored: Decimal) -> bool:
     if currency == "EUR":
         return False

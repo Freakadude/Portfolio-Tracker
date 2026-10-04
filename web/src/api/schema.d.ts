@@ -91,6 +91,60 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/corporate-actions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Actions */
+        get: operations["list_actions_api_v1_corporate_actions_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/corporate-actions/{action_id}/confirm": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Confirm
+         * @description Apply a proposed split to every account that held the instrument.
+         */
+        post: operations["confirm_api_v1_corporate_actions__action_id__confirm_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/corporate-actions/{action_id}/dismiss": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Dismiss */
+        post: operations["dismiss_api_v1_corporate_actions__action_id__dismiss_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/import-presets": {
         parameters: {
             query?: never;
@@ -493,6 +547,26 @@ export interface paths {
         patch: operations["update_api_v1_transactions__transaction_id__patch"];
         trace?: never;
     };
+    "/api/v1/transactions/{transaction_id}/confirm": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Confirm
+         * @description Post a proposed (draft) transaction, optionally correcting it in the same step.
+         */
+        post: operations["confirm_api_v1_transactions__transaction_id__confirm_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/healthz": {
         parameters: {
             query?: never;
@@ -547,6 +621,38 @@ export interface components {
             cost_basis_method?: ("FIFO" | "AVG") | null;
             /** Name */
             name?: string | null;
+        };
+        /** ActionOut */
+        ActionOut: {
+            /** Applied At */
+            applied_at: string | null;
+            /** Effects */
+            effects: components["schemas"]["EffectOut"][];
+            /**
+             * Ex Date
+             * Format: date
+             */
+            ex_date: string;
+            /** Id */
+            id: number;
+            /** Instrument Id */
+            instrument_id: number;
+            /** Instrument Name */
+            instrument_name: string;
+            /** Isin */
+            isin: string | null;
+            /** Ratio */
+            ratio: string | null;
+            /** Source */
+            source: string | null;
+            /** Status */
+            status: string;
+            /** Ticker */
+            ticker: string | null;
+            /** Transaction Ids */
+            transaction_ids: number[];
+            /** Type */
+            type: string;
         };
         /** BatchOut */
         BatchOut: {
@@ -630,6 +736,19 @@ export interface components {
             truncated: boolean;
             /** Unknown Isins */
             unknown_isins: string[];
+        };
+        /** EffectOut */
+        EffectOut: {
+            /** Account Id */
+            account_id: number;
+            /** Account Name */
+            account_name: string;
+            /** Cost Basis Eur */
+            cost_basis_eur: string;
+            /** Quantity After */
+            quantity_after: string;
+            /** Quantity Before */
+            quantity_before: string;
         };
         /** FxPrefillOut */
         FxPrefillOut: {
@@ -1664,6 +1783,99 @@ export interface operations {
             };
         };
     };
+    list_actions_api_v1_corporate_actions_get: {
+        parameters: {
+            query?: {
+                status?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionOut"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    confirm_api_v1_corporate_actions__action_id__confirm_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                action_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    dismiss_api_v1_corporate_actions__action_id__dismiss_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                action_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     list_presets_api_v1_import_presets_get: {
         parameters: {
             query?: never;
@@ -2639,6 +2851,41 @@ export interface operations {
         requestBody: {
             content: {
                 "application/json": components["schemas"]["TransactionChanges"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TransactionOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    confirm_api_v1_transactions__transaction_id__confirm_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                transaction_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["TransactionChanges"] | null;
             };
         };
         responses: {
