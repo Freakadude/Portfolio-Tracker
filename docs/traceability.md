@@ -14,3 +14,19 @@ Requirement ID → module → test → status (`todo`, `in progress`, `done`).
 | NFR-09 | folio/logging, folio/api/routers/health (Prometheus /metrics is optional, not built) | tests/integration/test_health.py, test_logging.py | done |
 | NFR-10 | .github/workflows/ci.yml, .pre-commit-config.yaml, pyproject.toml, web/eslint.config.js | CI workflow: ruff, mypy, pytest, pip-audit, eslint, vitest, npm audit, e2e, gitleaks | done |
 | NFR-01 (groundwork) | folio/db/types | tests/unit/test_decimal_type.py | done |
+
+## Phase 1 — Ledger and prices
+
+| ID | Module | Test | Status |
+| --- | --- | --- | --- |
+| NFR-01 | folio/domain (no floats; Decimal end to end) | tests/unit/domain/test_ledger_properties.py (no-floats test, invariants), test_ledger_golden.py | in progress (domain done; services and API pending) |
+| FR-TX-03 | folio/domain/ledger.py (FIFO and AVG); account switch in ledger service pending | tests/unit/domain/test_ledger_golden.py | in progress |
+| FR-TX-04 | folio/domain/ledger.py preview_sell; API pending | tests/unit/domain/test_ledger_golden.py, test_ledger_properties.py | in progress |
+| FR-INS-01..03 | folio/marketdata, folio/api (instruments) | - | todo |
+| FR-MD-01..04, 06, 07, 10, 11 | folio/marketdata, folio/jobs | - | todo |
+| FR-TX-01, 02, 05, 06 | folio/ledger_service, folio/api (transactions, positions) | - | todo |
+| FR-TX-07 | folio/imports | - | todo |
+| FR-PF-01, FR-PF-10 | folio/analytics/valuation, snapshot job | - | todo |
+| FR-SY-06, FR-SY-07 (CLI restore) | folio/backup, folio/cli | - | todo |
+| FR-SY-08 | folio/audit (helper done), audit viewer API and UI | tests/integration/test_settings.py (settings audit) | in progress |
+| NFR-02 | UTC storage, exchange-local trading dates | - | in progress (UTC types done in Phase 0) |

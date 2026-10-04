@@ -1,5 +1,9 @@
 # Changelog
 
+## Phase 1 — Ledger and prices (in progress)
+
+- Ledger domain: lots, FIFO and average cost, splits, transfers, income and cash flows, sell preview, position and portfolio metrics; property tests for invariants 1-5 and hand-computed golden scenarios; 85 percent coverage gate on `domain/` and `analytics/` in CI [FR-TX-03, FR-TX-04, NFR-01]. See ADR 0005.
+
 ## Phase 0 — Foundations (2026-10-04)
 
 Released as the state of `main` after the commit "ci: pin GitHub Actions to exact release tags". CI green: 60 Python tests, 6 web tests, 2 Playwright tests, multi-arch image build, pip-audit and npm audit clean, gitleaks clean. Requirements closed: FR-SY-01, FR-SY-02, FR-SY-05, FR-SY-09 (shell), NFR-01 (groundwork), NFR-07, NFR-09, NFR-10.

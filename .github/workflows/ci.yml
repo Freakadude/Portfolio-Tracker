@@ -19,6 +19,8 @@ jobs:
       - run: uv run ruff format --check .
       - run: uv run mypy folio
       - run: uv run pytest --cov=folio --cov-report=term-missing
+      - name: Coverage gate for domain and analytics (at least 85 percent)
+        run: uv run coverage report --include="folio/domain/*,folio/analytics/*" --fail-under=85
       - run: uv run pip-audit
 
   web:

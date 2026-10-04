@@ -1,0 +1,66 @@
+# Hand-computed ledger scenarios (FR-TX-03). Numbers are quoted so YAML never turns them into
+# floats. Expected values are for instrument 1 unless a key says otherwise.
+
+- name: fifo_vs_avg_with_fees
+  # Two buys at different prices, then one sell that spans both lots.
+  # FIFO: lot 1 costs 1001 (10 @ 100 + 1 fee), lot 2 costs 1201. Selling 15 uses all of lot 1
+  # and 5 of lot 2: consumed cost 1001 + 600.5 = 1601.5. Net proceeds 15 * 130 - 2 = 1948.
+  # AVG: pooled 20 units for 2202 (110.1 each): consumed 15 * 110.1 = 1651.5.
+  txs:
+    - {id: 1, type: buy, date: 2024-01-02, instrument: 1, quantity: "10", price: "100", fees: "1"}
+    - {id: 2, type: buy, date: 2024-02-01, instrument: 1, quantity: "10", price: "120", fees: "1"}
+    - {id: 3, type: sell, date: 2024-03-01, instrument: 1, quantity: "15", price: "130", fees: "2"}
+  expected:
+    FIFO: {quantity: "5", cost_basis: "600.5", realized: "346.5", net_contributions: "254"}
+    AVG: {quantity: "5", cost_basis: "550.5", realized: "296.5", net_contributions: "254"}
+
+- name: split_keeps_cost_basis
+  # 10 units for 1000, a 1:4 split gives 40 units, selling 20 consumes half of the cost (500).
+  txs:
+    - {id: 1, type: buy, date: 2024-01-02, instrument: 1, quantity: "10", price: "100"}
+    - {id: 2, type: split, date: 2024-02-01, instrument: 1, ratio: "4"}
+    - {id: 3, type: sell, date: 2024-03-01, instrument: 1, quantity: "20", price: "30", fees: "1"}
+  expected:
+    FIFO: {quantity: "20", cost_basis: "500", realized: "99", net_contributions: "401"}
+    AVG: {quantity: "20", cost_basis: "500", realized: "99", net_contributions: "401"}
+
+- name: foreign_currency_trade
+  # Buy 10 @ 50 USD at 0.9 EUR/USD plus 1 EUR fee = 451. Sell 4 @ 60 USD at 0.8 = 192.
+  # Consumed cost 4/10 of 451 = 180.4, so realized 11.6.
+  txs:
+    - {id: 1, type: buy, date: 2024-01-02, instrument: 1, quantity: "10", price: "50", fx: "0.9", fees: "1"}
+    - {id: 2, type: sell, date: 2024-02-01, instrument: 1, quantity: "4", price: "60", fx: "0.8"}
+  expected:
+    FIFO: {quantity: "6", cost_basis: "270.6", realized: "11.6", net_contributions: "259"}
+    AVG: {quantity: "6", cost_basis: "270.6", realized: "11.6", net_contributions: "259"}
+
+- name: same_day_export_listed_newest_first
+  # Brokers export newest first, so the sell can have the lower id. Acquisitions replay first.
+  txs:
+    - {id: 1, type: sell, date: 2024-02-01, instrument: 1, quantity: "5", price: "12"}
+    - {id: 2, type: buy, date: 2024-02-01, instrument: 1, quantity: "10", price: "10"}
+  expected:
+    FIFO: {quantity: "5", cost_basis: "50", realized: "10", net_contributions: "40"}
+    AVG: {quantity: "5", cost_basis: "50", realized: "10", net_contributions: "40"}
+
+- name: income_costs_and_cash_flows
+  # Dividend 5 with 0.75 withheld, a standalone fee 2 and tax 3, deposit 1000, withdrawal 200.
+  txs:
+    - {id: 1, type: buy, date: 2024-01-02, instrument: 1, quantity: "1", price: "100"}
+    - {id: 2, type: dividend, date: 2024-02-01, instrument: 1, amount: "5", taxes: "0.75"}
+    - {id: 3, type: fee, date: 2024-02-02, amount: "2"}
+    - {id: 4, type: tax, date: 2024-02-03, amount: "3"}
+    - {id: 5, type: deposit, date: 2024-02-04, amount: "1000"}
+    - {id: 6, type: withdrawal, date: 2024-02-05, amount: "200"}
+  expected:
+    FIFO: {quantity: "1", cost_basis: "100", realized: "0", net_contributions: "900", income: "5", fees: "2", taxes: "3.75"}
+    AVG: {quantity: "1", cost_basis: "100", realized: "0", net_contributions: "900", income: "5", fees: "2", taxes: "3.75"}
+
+- name: transfer_moves_cost_without_realizing
+  # Transfer in carries a cost of 500; transfer out of 4 of 10 units moves 200 of cost.
+  txs:
+    - {id: 1, type: transfer_in, date: 2024-01-02, instrument: 1, quantity: "10", price: "40", amount: "500"}
+    - {id: 2, type: transfer_out, date: 2024-02-01, instrument: 1, quantity: "4", price: "40"}
+  expected:
+    FIFO: {quantity: "6", cost_basis: "300", realized: "0", net_contributions: "300"}
+    AVG: {quantity: "6", cost_basis: "300", realized: "0", net_contributions: "300"}
