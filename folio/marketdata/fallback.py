@@ -102,3 +102,18 @@ class ProviderChain:
             if meta is not None:
                 return FetchResult(meta, provider.name)
         return None
+
+    def probe_listing(self, symbols: Mapping[str, str]) -> FetchResult[SymbolMeta] | None:
+        """Like `probe`, but each provider is asked about its own symbol for the listing
+        (for example SXR8.DE at Yahoo and SXR8.XETRA at EODHD)."""
+        for provider in self.providers:
+            symbol = symbols.get(provider.name)
+            if not symbol:
+                continue
+            try:
+                meta = provider.probe(symbol)
+            except ProviderError:
+                continue
+            if meta is not None:
+                return FetchResult(meta, provider.name)
+        return None

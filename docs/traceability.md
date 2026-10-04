@@ -22,7 +22,9 @@ Requirement ID → module → test → status (`todo`, `in progress`, `done`).
 | NFR-01 | folio/domain (no floats; Decimal end to end) | tests/unit/domain/test_ledger_properties.py (no-floats test, invariants), test_ledger_golden.py | in progress (domain done; services and API pending) |
 | FR-TX-03 | folio/domain/ledger.py (FIFO and AVG); account switch in ledger service pending | tests/unit/domain/test_ledger_golden.py | in progress |
 | FR-TX-04 | folio/domain/ledger.py preview_sell; API pending | tests/unit/domain/test_ledger_golden.py, test_ledger_properties.py | in progress |
-| FR-INS-01..03 | folio/marketdata, folio/api (instruments) | - | todo |
+| FR-INS-01 | folio/marketdata/resolve.py, isin.py, folio/api/routers/instruments.py | tests/integration/test_instruments_api.py (recorded OpenFIGI and Yahoo responses) | in progress (UI pending) |
+| FR-INS-02 | folio/instruments.py (manual instruments), prices endpoint | tests/integration/test_instruments_api.py | in progress (UI pending) |
+| FR-INS-03 | folio/instruments.py (edit, archive, delete) | tests/integration/test_instruments_api.py | in progress (UI pending) |
 | FR-MD-01 | folio/marketdata/base.py (provider interface), fake.py | tests/integration/test_marketdata_fallback.py | done (jobs that use it follow) |
 | FR-MD-10 | folio/marketdata/budget.py (UsageTracker), http.py | tests/integration/test_marketdata_http.py | in progress (usage endpoint pending) |
 | FR-MD-11 | folio/marketdata/fallback.py, registry.py, prices.py (is_stale) | tests/integration/test_marketdata_fallback.py, test_marketdata_prices.py | in progress (stale marker in the UI pending) |

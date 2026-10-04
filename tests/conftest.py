@@ -1,5 +1,6 @@
 from collections.abc import Callable, Iterator
 from pathlib import Path
+from typing import Any
 
 import pytest
 from fastapi.testclient import TestClient
@@ -25,8 +26,8 @@ def settings(tmp_path: Path) -> Settings:
 def make_client(settings: Settings) -> Iterator[Callable[..., TestClient]]:
     clients: list[TestClient] = []
 
-    def _make(base_url: str = "http://testserver") -> TestClient:
-        client = TestClient(create_app(settings), base_url=base_url)
+    def _make(base_url: str = "http://testserver", **app_kwargs: Any) -> TestClient:
+        client = TestClient(create_app(settings, **app_kwargs), base_url=base_url)
         client.get("/api/v1/auth/me")  # primes the CSRF cookie
         client.headers["X-CSRF-Token"] = client.cookies.get("folio_csrf") or ""
         clients.append(client)

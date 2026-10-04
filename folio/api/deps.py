@@ -35,6 +35,10 @@ def current_user(request: Request, db: DbDep) -> User:
     user = resolve_session(db, request.cookies.get(SESSION_COOKIE))
     if user is None:
         raise ApiError(401, "Not signed in", "Sign in to continue.")
+    # Save the session's "last seen" update now. SQLite allows one writer at a time, and a
+    # handler that calls a provider charges the call budget through a separate connection;
+    # an open write transaction here would make that charge wait and fail.
+    db.commit()
     return user
 
 

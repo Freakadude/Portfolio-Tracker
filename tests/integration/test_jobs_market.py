@@ -190,3 +190,34 @@ def test_bars_stored_by_a_failed_run_are_rolled_back(settings: Settings, db) -> 
     db.expire_all()
     assert db.scalars(select(PriceBar)).first() is None
     assert Bar  # keep the import used by type checkers
+
+
+def test_fx_job_with_two_currencies_does_not_lock_on_the_call_counter(
+    settings: Settings,
+    db,  # type: ignore[no-untyped-def]
+) -> None:
+    """Regression: each ECB call is charged through its own connection, so the job must not
+    hold an open write transaction between calls ("database is locked")."""
+    from folio.jobs.context import JobContext
+    from folio.marketdata.ecb import EcbRates
+    from folio.marketdata.fallback import ProviderChain
+    from folio.marketdata.runtime import make_usage_tracker
+    from tests.marketdata_helpers import client
+
+    make_listing(db, ticker="AAA", currency="USD", isin="IE0000000001")
+    make_listing(db, ticker="BBB", currency="GBP", isin="IE0000000002")
+    db.commit()
+    factory = make_session_factory(make_engine(settings.db_url))
+    usage = make_usage_tracker(factory)
+    ecb = Scripted(lambda r: respond("ecb_exr.csv", content_type="text/csv"))
+    ctx = JobContext(
+        session_factory=factory,
+        chain_for=lambda session: ProviderChain([]),
+        ecb_for=lambda session: EcbRates(client("ecb", ecb, usage=usage)),
+        now=lambda: datetime(2025, 1, 6, 17, 0, tzinfo=UTC),
+    )
+    result = fx_job(ctx)
+    assert result.status == "ok", result.log
+    assert usage.usage_today() == {"ecb": 2}  # one counted call per currency
+    db.expire_all()
+    assert {r.currency for r in db.scalars(select(FxRate))} == {"USD", "GBP"}

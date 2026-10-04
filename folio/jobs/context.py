@@ -10,12 +10,10 @@ from sqlalchemy.orm import Session, sessionmaker
 
 from folio.config import Settings
 from folio.db.engine import make_engine, make_session_factory
-from folio.marketdata.budget import CircuitBreaker, UsageTracker
+from folio.marketdata.budget import CircuitBreaker
 from folio.marketdata.ecb import EcbRates
 from folio.marketdata.fallback import ProviderChain
-from folio.marketdata.registry import ProviderFactory
-from folio.security.secrets import SecretStore
-from folio.settings_store import load_section
+from folio.marketdata.runtime import make_provider_factory, make_usage_tracker
 
 
 def _utc_now() -> datetime:
@@ -35,27 +33,16 @@ class JobContext:
 
 def build_context(settings: Settings) -> JobContext:
     """The production context: providers come from Settings > Providers and the encrypted keys."""
-    secret_key = settings.require_secret_key()
+    settings.require_secret_key()
     factory = make_session_factory(make_engine(settings.db_url))
+    usage = make_usage_tracker(factory)
     breakers: dict[str, CircuitBreaker] = {}  # shared, so a provider that is down stays paused
 
-    def current_providers() -> object:
-        with factory() as db:
-            return load_section(db, "providers")
-
-    def limit_for(provider: str) -> int:
-        config = current_providers().providers.get(provider)  # type: ignore[attr-defined]
-        return 0 if config is None else int(config.daily_call_budget)
-
-    usage = UsageTracker(factory, limit_for)
-
-    def provider_factory(db: Session) -> ProviderFactory:
-        config = load_section(db, "providers")
-        store = SecretStore(db, secret_key)
-        return ProviderFactory(config, store.get, usage, breakers)  # type: ignore[arg-type]
+    def providers(db: Session):  # type: ignore[no-untyped-def]
+        return make_provider_factory(db, settings, usage, breakers)
 
     return JobContext(
         session_factory=factory,
-        chain_for=lambda db: provider_factory(db).chain(),
-        ecb_for=lambda db: provider_factory(db).ecb(),
+        chain_for=lambda db: providers(db).chain(),
+        ecb_for=lambda db: providers(db).ecb(),
     )
