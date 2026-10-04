@@ -29,4 +29,4 @@ Requirement ID → module → test → status (`todo`, `in progress`, `done`).
 | FR-PF-01, FR-PF-10 | folio/analytics/valuation, snapshot job | - | todo |
 | FR-SY-06, FR-SY-07 (CLI restore) | folio/backup, folio/cli | - | todo |
 | FR-SY-08 | folio/audit (helper done), audit viewer API and UI | tests/integration/test_settings.py (settings audit) | in progress |
-| NFR-02 | UTC storage, exchange-local trading dates | - | in progress (UTC types done in Phase 0) |
+| NFR-02 | UTC storage (UTCDateTime), exchange-local trading dates (Date columns), migration 0002 | tests/integration/test_schema.py | in progress (schema done; job scheduling in exchange time pending) |
