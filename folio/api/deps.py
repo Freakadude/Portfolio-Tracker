@@ -1,0 +1,40 @@
+from collections.abc import Iterator
+from typing import Annotated
+
+from fastapi import Depends, Request
+from sqlalchemy.orm import Session
+
+from folio.api.errors import ApiError
+from folio.config import Settings
+from folio.db.models import User
+from folio.security.sessions import resolve_session
+
+SESSION_COOKIE = "folio_session"
+
+
+def get_settings_dep(request: Request) -> Settings:
+    settings: Settings = request.app.state.settings
+    return settings
+
+
+def get_db(request: Request) -> Iterator[Session]:
+    with request.app.state.session_factory() as session:
+        try:
+            yield session
+            session.commit()
+        except Exception:
+            session.rollback()
+            raise
+
+
+DbDep = Annotated[Session, Depends(get_db)]
+
+
+def current_user(request: Request, db: DbDep) -> User:
+    user = resolve_session(db, request.cookies.get(SESSION_COOKIE))
+    if user is None:
+        raise ApiError(401, "Not signed in", "Sign in to continue.")
+    return user
+
+
+UserDep = Annotated[User, Depends(current_user)]
