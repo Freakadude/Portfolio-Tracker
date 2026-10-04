@@ -25,8 +25,12 @@ Requirement ID → module → test → status (`todo`, `in progress`, `done`).
 | FR-INS-01..03 | folio/marketdata, folio/api (instruments) | - | todo |
 | FR-MD-01 | folio/marketdata/base.py (provider interface), fake.py | tests/integration/test_marketdata_fallback.py | done (jobs that use it follow) |
 | FR-MD-10 | folio/marketdata/budget.py (UsageTracker), http.py | tests/integration/test_marketdata_http.py | in progress (usage endpoint pending) |
-| FR-MD-11 | folio/marketdata/fallback.py, registry.py | tests/integration/test_marketdata_fallback.py | in progress (staleness marker pending) |
-| FR-MD-02, 03, 04, 06, 07 | folio/marketdata, folio/jobs | - | todo |
+| FR-MD-11 | folio/marketdata/fallback.py, registry.py, prices.py (is_stale) | tests/integration/test_marketdata_fallback.py, test_marketdata_prices.py | in progress (stale marker in the UI pending) |
+| FR-MD-02 | folio/marketdata/exchanges.py (calendars, job times), folio/jobs/market.py eod_job | tests/unit/test_exchanges.py, tests/integration/test_jobs_market.py | in progress (APScheduler registration pending) |
+| FR-MD-03 | folio/jobs/market.py backfill_job | tests/integration/test_jobs_market.py | in progress (queued from instrument add, pending) |
+| FR-MD-04 | folio/marketdata/prices.py (gaps, overrides), gap_job | tests/integration/test_marketdata_prices.py, test_jobs_market.py | done |
+| FR-MD-06 | folio/marketdata/fx.py, ecb.py | tests/integration/test_marketdata_fx.py | done |
+| FR-MD-07 | folio/marketdata/corporate_actions | - | todo |
 | FR-TX-01, 02, 05, 06 | folio/ledger_service, folio/api (transactions, positions) | - | todo |
 | FR-TX-07 | folio/imports | - | todo |
 | FR-PF-01, FR-PF-10 | folio/analytics/valuation, snapshot job | - | todo |

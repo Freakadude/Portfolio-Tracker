@@ -29,6 +29,7 @@ class FakeProvider:
     currencies: Mapping[str, str] = field(default_factory=dict)  # symbol -> currency for probe
     error: Exception | None = None  # raised by every call when set ("kill the adapter")
     calls: list[tuple[str, int | str]] = field(default_factory=list)
+    ranges: list[tuple[date, date]] = field(default_factory=list)  # (start, end) of each get_eod
 
     def _enter(self, op: str, key: int | str) -> None:
         self.calls.append((op, key))
@@ -37,6 +38,7 @@ class FakeProvider:
 
     def get_eod(self, listing: ListingRef, start: date, end: date) -> list[Bar]:
         self._enter("eod", listing.listing_id)
+        self.ranges.append((start, end))
         return [b for b in self.bars.get(listing.listing_id, ()) if start <= b.date <= end]
 
     def get_quotes(self, listings: Sequence[ListingRef]) -> dict[int, Quote]:
