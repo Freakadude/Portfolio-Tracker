@@ -12,6 +12,9 @@ class SecretDecryptError(Exception):
     """The stored secret cannot be decrypted, usually because FOLIO_SECRET_KEY changed."""
 
 
+MASK_PREFIX = "\u2022"
+
+
 def mask(value: str) -> str:
     """Display form for a saved secret: never more than the last 4 characters."""
     return "•" * 8 + value[-4:] if len(value) >= 12 else "•" * 8

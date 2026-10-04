@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Request, Response
 from pydantic import BaseModel, Field
 from sqlalchemy import select
+from sqlalchemy.orm import Session
 
 from folio.api.deps import SESSION_COOKIE, DbDep, UserDep
 from folio.api.errors import ApiError
@@ -22,6 +23,21 @@ class LoginIn(BaseModel):
 
 class MeOut(BaseModel):
     username: str
+
+
+def issue_session(
+    request: Request, response: Response, db: Session, user: User, remember: bool
+) -> None:
+    token, _ = create_session(db, user, remember)
+    response.set_cookie(
+        SESSION_COOKIE,
+        token,
+        max_age=int(REMEMBER_TTL.total_seconds()) if remember else None,
+        httponly=True,
+        samesite="strict",
+        secure=is_https(request),
+        path="/",
+    )
 
 
 @router.post("/login", response_model=MeOut)
@@ -47,16 +63,7 @@ def login(body: LoginIn, request: Request, response: Response, db: DbDep) -> MeO
     ratelimit.clear(db, ip, username)
     if needs_rehash(user.password_hash):
         user.password_hash = hash_password(body.password)
-    token, _ = create_session(db, user, body.remember)
-    response.set_cookie(
-        SESSION_COOKIE,
-        token,
-        max_age=int(REMEMBER_TTL.total_seconds()) if body.remember else None,
-        httponly=True,
-        samesite="strict",
-        secure=is_https(request),
-        path="/",
-    )
+    issue_session(request, response, db, user, body.remember)
     return MeOut(username=user.username)
 
 

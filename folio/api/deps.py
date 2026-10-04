@@ -7,6 +7,7 @@ from sqlalchemy.orm import Session
 from folio.api.errors import ApiError
 from folio.config import Settings
 from folio.db.models import User
+from folio.security.secrets import SecretStore
 from folio.security.sessions import resolve_session
 
 SESSION_COOKIE = "folio_session"
@@ -38,3 +39,10 @@ def current_user(request: Request, db: DbDep) -> User:
 
 
 UserDep = Annotated[User, Depends(current_user)]
+
+
+def get_secret_store(request: Request, db: DbDep) -> SecretStore:
+    return SecretStore(db, request.app.state.settings.require_secret_key())
+
+
+StoreDep = Annotated[SecretStore, Depends(get_secret_store)]
