@@ -1,0 +1,43 @@
+# Secrets and local config
+.env
+.env.*
+!.env.example
+.claude/settings.local.json
+
+# Data, databases, backups, broker exports
+/data/
+*.db
+*.db-wal
+*.db-shm
+*.sqlite*
+backups/
+/imports/
+*.csv
+!tests/fixtures/**/*.csv
+
+# Python
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+*.egg-info/
+dist/
+build/
+
+# Web
+node_modules/
+web/dist/
+folio/static/
+*.tsbuildinfo
+playwright-report/
+test-results/
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
