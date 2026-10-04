@@ -35,7 +35,7 @@ Requirement ID → module → test → status (`todo`, `in progress`, `done`).
 | FR-MD-07 | folio/marketdata/corporate_actions | - | todo |
 | FR-TX-01 | folio/ledger_service.py, folio/api/routers/transactions.py | tests/integration/test_transactions_api.py | in progress (UI pending) |
 | FR-TX-02 | folio/ledger_service.py (ECB prefill, override), fx-prefill endpoint | tests/integration/test_transactions_api.py | in progress (UI pending) |
-| FR-TX-05 | positions API | - | todo |
+| FR-TX-05 | folio/positions.py, folio/api/routers/positions.py | tests/integration/test_positions_api.py (hand-computed metrics; reconciliation with invariants 1 and 2) | in progress (UI pending) |
 | FR-TX-06 | folio/ledger_service.py (rebuild, snapshot requests) | tests/integration/test_transactions_api.py (value charts follow with snapshots) | in progress |
 | FR-TX-07 | folio/imports | - | todo |
 | FR-PF-01, FR-PF-10 | folio/analytics/valuation, snapshot job | - | todo |

@@ -501,6 +501,65 @@
         "title": "InstrumentOut",
         "type": "object"
       },
+      "InstrumentRef": {
+        "properties": {
+          "asset_class": {
+            "title": "Asset Class",
+            "type": "string"
+          },
+          "currency": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Currency"
+          },
+          "id": {
+            "title": "Id",
+            "type": "integer"
+          },
+          "isin": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Isin"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "ticker": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ticker"
+          }
+        },
+        "required": [
+          "id",
+          "isin",
+          "name",
+          "asset_class",
+          "ticker",
+          "currency"
+        ],
+        "title": "InstrumentRef",
+        "type": "object"
+      },
       "LastClose": {
         "properties": {
           "close": {
@@ -625,6 +684,87 @@
         "title": "LoginIn",
         "type": "object"
       },
+      "LotOut": {
+        "properties": {
+          "account_id": {
+            "title": "Account Id",
+            "type": "integer"
+          },
+          "avg_cost_eur": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Avg Cost Eur",
+            "type": "string"
+          },
+          "buy_transaction_id": {
+            "title": "Buy Transaction Id",
+            "type": "integer"
+          },
+          "cost_eur": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Cost Eur",
+            "type": "string"
+          },
+          "market_value_eur": {
+            "anyOf": [
+              {
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Market Value Eur"
+          },
+          "open_quantity": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Open Quantity",
+            "type": "string"
+          },
+          "trade_date": {
+            "format": "date",
+            "title": "Trade Date",
+            "type": "string"
+          },
+          "unrealized_pnl_eur": {
+            "anyOf": [
+              {
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Unrealized Pnl Eur"
+          },
+          "unrealized_ratio": {
+            "anyOf": [
+              {
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Unrealized Ratio"
+          }
+        },
+        "required": [
+          "buy_transaction_id",
+          "account_id",
+          "trade_date",
+          "open_quantity",
+          "cost_eur",
+          "avg_cost_eur",
+          "market_value_eur",
+          "unrealized_pnl_eur",
+          "unrealized_ratio"
+        ],
+        "title": "LotOut",
+        "type": "object"
+      },
       "ManualPriceIn": {
         "properties": {
           "close": {
@@ -651,56 +791,6 @@
           "close"
         ],
         "title": "ManualPriceIn",
-        "type": "object"
-      },
-      "MatchOut": {
-        "properties": {
-          "cost_eur": {
-            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
-            "title": "Cost Eur",
-            "type": "string"
-          },
-          "lot_buy_transaction_id": {
-            "title": "Lot Buy Transaction Id",
-            "type": "integer"
-          },
-          "lot_trade_date": {
-            "anyOf": [
-              {
-                "format": "date",
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Lot Trade Date"
-          },
-          "proceeds_eur": {
-            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
-            "title": "Proceeds Eur",
-            "type": "string"
-          },
-          "quantity": {
-            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
-            "title": "Quantity",
-            "type": "string"
-          },
-          "realized_pnl_eur": {
-            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
-            "title": "Realized Pnl Eur",
-            "type": "string"
-          }
-        },
-        "required": [
-          "lot_buy_transaction_id",
-          "lot_trade_date",
-          "quantity",
-          "cost_eur",
-          "proceeds_eur",
-          "realized_pnl_eur"
-        ],
-        "title": "MatchOut",
         "type": "object"
       },
       "MeOut": {
@@ -910,86 +1000,584 @@
         "title": "OwnerIn",
         "type": "object"
       },
-      "PriceOut": {
+      "PositionDetailOut": {
         "properties": {
-          "close": {
-            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
-            "title": "Close",
-            "type": "string"
-          },
-          "date": {
-            "format": "date",
-            "title": "Date",
-            "type": "string"
-          },
-          "high": {
+          "account_id": {
             "anyOf": [
               {
-                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Account Id"
+          },
+          "as_of": {
+            "anyOf": [
+              {
+                "format": "date",
                 "type": "string"
               },
               {
                 "type": "null"
               }
             ],
-            "title": "High"
+            "title": "As Of"
           },
-          "low": {
-            "anyOf": [
-              {
-                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Low"
+          "instrument": {
+            "$ref": "#/components/schemas/InstrumentRef"
           },
-          "open": {
-            "anyOf": [
-              {
-                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Open"
+          "lots": {
+            "items": {
+              "$ref": "#/components/schemas/LotOut"
+            },
+            "title": "Lots",
+            "type": "array"
           },
-          "overridden": {
-            "title": "Overridden",
-            "type": "boolean"
+          "matches": {
+            "items": {
+              "$ref": "#/components/schemas/folio__api__routers__positions__MatchOut"
+            },
+            "title": "Matches",
+            "type": "array"
           },
-          "source": {
-            "title": "Source",
-            "type": "string"
+          "summary": {
+            "$ref": "#/components/schemas/PositionMetricsOut"
           },
-          "volume": {
-            "anyOf": [
-              {
-                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Volume"
+          "transactions": {
+            "items": {
+              "$ref": "#/components/schemas/TransactionOut"
+            },
+            "title": "Transactions",
+            "type": "array"
           }
         },
         "required": [
-          "date",
-          "open",
-          "high",
-          "low",
-          "close",
-          "volume",
-          "source",
-          "overridden"
+          "instrument",
+          "account_id",
+          "as_of",
+          "summary",
+          "lots",
+          "matches",
+          "transactions"
         ],
-        "title": "PriceOut",
+        "title": "PositionDetailOut",
+        "type": "object"
+      },
+      "PositionMetricsOut": {
+        "properties": {
+          "avg_cost_eur": {
+            "anyOf": [
+              {
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Avg Cost Eur"
+          },
+          "cost_basis_eur": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Cost Basis Eur",
+            "type": "string"
+          },
+          "cost_basis_native": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Cost Basis Native",
+            "type": "string"
+          },
+          "day_change_eur": {
+            "anyOf": [
+              {
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Day Change Eur"
+          },
+          "day_change_ratio": {
+            "anyOf": [
+              {
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Day Change Ratio"
+          },
+          "first_trade_date": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "First Trade Date"
+          },
+          "income_eur": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Income Eur",
+            "type": "string"
+          },
+          "market_value_eur": {
+            "anyOf": [
+              {
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Market Value Eur"
+          },
+          "market_value_native": {
+            "anyOf": [
+              {
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Market Value Native"
+          },
+          "note": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Note"
+          },
+          "price": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/folio__api__routers__positions__PriceOut"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "quantity": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Quantity",
+            "type": "string"
+          },
+          "realized_pnl_eur": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Realized Pnl Eur",
+            "type": "string"
+          },
+          "total_return_eur": {
+            "anyOf": [
+              {
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Total Return Eur"
+          },
+          "total_return_ratio": {
+            "anyOf": [
+              {
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Total Return Ratio"
+          },
+          "unrealized_pnl_eur": {
+            "anyOf": [
+              {
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Unrealized Pnl Eur"
+          },
+          "unrealized_pnl_native": {
+            "anyOf": [
+              {
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Unrealized Pnl Native"
+          },
+          "unrealized_ratio": {
+            "anyOf": [
+              {
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Unrealized Ratio"
+          },
+          "weight": {
+            "anyOf": [
+              {
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Weight"
+          }
+        },
+        "required": [
+          "quantity",
+          "avg_cost_eur",
+          "cost_basis_eur",
+          "market_value_eur",
+          "unrealized_pnl_eur",
+          "unrealized_ratio",
+          "realized_pnl_eur",
+          "income_eur",
+          "total_return_eur",
+          "total_return_ratio",
+          "day_change_eur",
+          "day_change_ratio",
+          "weight",
+          "market_value_native",
+          "cost_basis_native",
+          "unrealized_pnl_native",
+          "first_trade_date",
+          "price",
+          "note"
+        ],
+        "title": "PositionMetricsOut",
+        "type": "object"
+      },
+      "PositionOut": {
+        "properties": {
+          "account_id": {
+            "title": "Account Id",
+            "type": "integer"
+          },
+          "account_name": {
+            "title": "Account Name",
+            "type": "string"
+          },
+          "asset_class": {
+            "title": "Asset Class",
+            "type": "string"
+          },
+          "avg_cost_eur": {
+            "anyOf": [
+              {
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Avg Cost Eur"
+          },
+          "cost_basis_eur": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Cost Basis Eur",
+            "type": "string"
+          },
+          "cost_basis_native": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Cost Basis Native",
+            "type": "string"
+          },
+          "currency": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Currency"
+          },
+          "day_change_eur": {
+            "anyOf": [
+              {
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Day Change Eur"
+          },
+          "day_change_ratio": {
+            "anyOf": [
+              {
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Day Change Ratio"
+          },
+          "first_trade_date": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "First Trade Date"
+          },
+          "income_eur": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Income Eur",
+            "type": "string"
+          },
+          "instrument_id": {
+            "title": "Instrument Id",
+            "type": "integer"
+          },
+          "isin": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Isin"
+          },
+          "market_value_eur": {
+            "anyOf": [
+              {
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Market Value Eur"
+          },
+          "market_value_native": {
+            "anyOf": [
+              {
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Market Value Native"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "note": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Note"
+          },
+          "price": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/folio__api__routers__positions__PriceOut"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "quantity": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Quantity",
+            "type": "string"
+          },
+          "realized_pnl_eur": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Realized Pnl Eur",
+            "type": "string"
+          },
+          "ticker": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ticker"
+          },
+          "total_return_eur": {
+            "anyOf": [
+              {
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Total Return Eur"
+          },
+          "total_return_ratio": {
+            "anyOf": [
+              {
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Total Return Ratio"
+          },
+          "unrealized_pnl_eur": {
+            "anyOf": [
+              {
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Unrealized Pnl Eur"
+          },
+          "unrealized_pnl_native": {
+            "anyOf": [
+              {
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Unrealized Pnl Native"
+          },
+          "unrealized_ratio": {
+            "anyOf": [
+              {
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Unrealized Ratio"
+          },
+          "weight": {
+            "anyOf": [
+              {
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Weight"
+          }
+        },
+        "required": [
+          "quantity",
+          "avg_cost_eur",
+          "cost_basis_eur",
+          "market_value_eur",
+          "unrealized_pnl_eur",
+          "unrealized_ratio",
+          "realized_pnl_eur",
+          "income_eur",
+          "total_return_eur",
+          "total_return_ratio",
+          "day_change_eur",
+          "day_change_ratio",
+          "weight",
+          "market_value_native",
+          "cost_basis_native",
+          "unrealized_pnl_native",
+          "first_trade_date",
+          "price",
+          "note",
+          "account_id",
+          "account_name",
+          "instrument_id",
+          "isin",
+          "name",
+          "ticker",
+          "currency",
+          "asset_class"
+        ],
+        "title": "PositionOut",
+        "type": "object"
+      },
+      "PositionsOut": {
+        "properties": {
+          "positions": {
+            "items": {
+              "$ref": "#/components/schemas/PositionOut"
+            },
+            "title": "Positions",
+            "type": "array"
+          },
+          "totals": {
+            "$ref": "#/components/schemas/TotalsOut"
+          }
+        },
+        "required": [
+          "positions",
+          "totals"
+        ],
+        "title": "PositionsOut",
         "type": "object"
       },
       "ResolutionOut": {
@@ -1049,7 +1637,7 @@
           },
           "matches": {
             "items": {
-              "$ref": "#/components/schemas/MatchOut"
+              "$ref": "#/components/schemas/folio__api__routers__transactions__MatchOut"
             },
             "title": "Matches",
             "type": "array"
@@ -1125,6 +1713,80 @@
           "setup_complete"
         ],
         "title": "SetupStatus",
+        "type": "object"
+      },
+      "TotalsOut": {
+        "properties": {
+          "cost_basis_eur": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Cost Basis Eur",
+            "type": "string"
+          },
+          "day_change_eur": {
+            "anyOf": [
+              {
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Day Change Eur"
+          },
+          "income_eur": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Income Eur",
+            "type": "string"
+          },
+          "market_value_eur": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Market Value Eur",
+            "type": "string"
+          },
+          "positions": {
+            "title": "Positions",
+            "type": "integer"
+          },
+          "realized_pnl_eur": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Realized Pnl Eur",
+            "type": "string"
+          },
+          "unrealized_pnl_eur": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Unrealized Pnl Eur",
+            "type": "string"
+          },
+          "unrealized_ratio": {
+            "anyOf": [
+              {
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Unrealized Ratio"
+          },
+          "unvalued_positions": {
+            "title": "Unvalued Positions",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "positions",
+          "unvalued_positions",
+          "market_value_eur",
+          "cost_basis_eur",
+          "unrealized_pnl_eur",
+          "unrealized_ratio",
+          "realized_pnl_eur",
+          "income_eur",
+          "day_change_eur"
+        ],
+        "title": "TotalsOut",
         "type": "object"
       },
       "TransactionChanges": {
@@ -1967,6 +2629,196 @@
         "title": "AccountOut",
         "type": "object"
       },
+      "folio__api__routers__instruments__PriceOut": {
+        "properties": {
+          "close": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Close",
+            "type": "string"
+          },
+          "date": {
+            "format": "date",
+            "title": "Date",
+            "type": "string"
+          },
+          "high": {
+            "anyOf": [
+              {
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "High"
+          },
+          "low": {
+            "anyOf": [
+              {
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Low"
+          },
+          "open": {
+            "anyOf": [
+              {
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Open"
+          },
+          "overridden": {
+            "title": "Overridden",
+            "type": "boolean"
+          },
+          "source": {
+            "title": "Source",
+            "type": "string"
+          },
+          "volume": {
+            "anyOf": [
+              {
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Volume"
+          }
+        },
+        "required": [
+          "date",
+          "open",
+          "high",
+          "low",
+          "close",
+          "volume",
+          "source",
+          "overridden"
+        ],
+        "title": "PriceOut",
+        "type": "object"
+      },
+      "folio__api__routers__positions__MatchOut": {
+        "properties": {
+          "account_id": {
+            "title": "Account Id",
+            "type": "integer"
+          },
+          "cost_eur": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Cost Eur",
+            "type": "string"
+          },
+          "lot_buy_transaction_id": {
+            "title": "Lot Buy Transaction Id",
+            "type": "integer"
+          },
+          "proceeds_eur": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Proceeds Eur",
+            "type": "string"
+          },
+          "quantity": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Quantity",
+            "type": "string"
+          },
+          "realized_pnl_eur": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Realized Pnl Eur",
+            "type": "string"
+          },
+          "sell_date": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sell Date"
+          },
+          "sell_transaction_id": {
+            "title": "Sell Transaction Id",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "sell_transaction_id",
+          "sell_date",
+          "lot_buy_transaction_id",
+          "account_id",
+          "quantity",
+          "cost_eur",
+          "proceeds_eur",
+          "realized_pnl_eur"
+        ],
+        "title": "MatchOut",
+        "type": "object"
+      },
+      "folio__api__routers__positions__PriceOut": {
+        "properties": {
+          "close": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Close",
+            "type": "string"
+          },
+          "date": {
+            "format": "date",
+            "title": "Date",
+            "type": "string"
+          },
+          "overridden": {
+            "title": "Overridden",
+            "type": "boolean"
+          },
+          "previous_close": {
+            "anyOf": [
+              {
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Previous Close"
+          },
+          "source": {
+            "title": "Source",
+            "type": "string"
+          },
+          "stale": {
+            "title": "Stale",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "date",
+          "close",
+          "previous_close",
+          "source",
+          "overridden",
+          "stale"
+        ],
+        "title": "PriceOut",
+        "type": "object"
+      },
       "folio__api__routers__setup__AccountIn": {
         "properties": {
           "broker": {
@@ -2036,6 +2888,56 @@
           "cost_basis_method"
         ],
         "title": "AccountOut",
+        "type": "object"
+      },
+      "folio__api__routers__transactions__MatchOut": {
+        "properties": {
+          "cost_eur": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Cost Eur",
+            "type": "string"
+          },
+          "lot_buy_transaction_id": {
+            "title": "Lot Buy Transaction Id",
+            "type": "integer"
+          },
+          "lot_trade_date": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Lot Trade Date"
+          },
+          "proceeds_eur": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Proceeds Eur",
+            "type": "string"
+          },
+          "quantity": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Quantity",
+            "type": "string"
+          },
+          "realized_pnl_eur": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Realized Pnl Eur",
+            "type": "string"
+          }
+        },
+        "required": [
+          "lot_buy_transaction_id",
+          "lot_trade_date",
+          "quantity",
+          "cost_eur",
+          "proceeds_eur",
+          "realized_pnl_eur"
+        ],
+        "title": "MatchOut",
         "type": "object"
       }
     }
@@ -2579,7 +3481,7 @@
               "application/json": {
                 "schema": {
                   "items": {
-                    "$ref": "#/components/schemas/PriceOut"
+                    "$ref": "#/components/schemas/folio__api__routers__instruments__PriceOut"
                   },
                   "title": "Response Prices Api V1 Instruments  Instrument Id  Prices Get",
                   "type": "array"
@@ -2633,7 +3535,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/PriceOut"
+                  "$ref": "#/components/schemas/folio__api__routers__instruments__PriceOut"
                 }
               }
             },
@@ -2653,6 +3555,157 @@
         "summary": "Set Price",
         "tags": [
           "instruments"
+        ]
+      }
+    },
+    "/api/v1/positions": {
+      "get": {
+        "operationId": "list_positions_api_v1_positions_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "account",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Account"
+            }
+          },
+          {
+            "in": "query",
+            "name": "as_of",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "date",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "As Of"
+            }
+          },
+          {
+            "in": "query",
+            "name": "include_closed",
+            "required": false,
+            "schema": {
+              "default": false,
+              "title": "Include Closed",
+              "type": "boolean"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PositionsOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "List Positions",
+        "tags": [
+          "positions"
+        ]
+      }
+    },
+    "/api/v1/positions/{instrument_id}": {
+      "get": {
+        "operationId": "position_detail_api_v1_positions__instrument_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "instrument_id",
+            "required": true,
+            "schema": {
+              "title": "Instrument Id",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "account",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Account"
+            }
+          },
+          {
+            "in": "query",
+            "name": "as_of",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "date",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "As Of"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PositionDetailOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Position Detail",
+        "tags": [
+          "positions"
         ]
       }
     },

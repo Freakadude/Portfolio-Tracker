@@ -166,6 +166,40 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/positions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Positions */
+        get: operations["list_positions_api_v1_positions_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/positions/{instrument_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Position Detail */
+        get: operations["position_detail_api_v1_positions__instrument_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/settings/{section}": {
         parameters: {
             query?: never;
@@ -490,6 +524,21 @@ export interface components {
             /** Ter Pct */
             ter_pct: string | null;
         };
+        /** InstrumentRef */
+        InstrumentRef: {
+            /** Asset Class */
+            asset_class: string;
+            /** Currency */
+            currency: string | null;
+            /** Id */
+            id: number;
+            /** Isin */
+            isin: string | null;
+            /** Name */
+            name: string;
+            /** Ticker */
+            ticker: string | null;
+        };
         /** LastClose */
         LastClose: {
             /** Close */
@@ -542,6 +591,30 @@ export interface components {
             /** Username */
             username: string;
         };
+        /** LotOut */
+        LotOut: {
+            /** Account Id */
+            account_id: number;
+            /** Avg Cost Eur */
+            avg_cost_eur: string;
+            /** Buy Transaction Id */
+            buy_transaction_id: number;
+            /** Cost Eur */
+            cost_eur: string;
+            /** Market Value Eur */
+            market_value_eur: string | null;
+            /** Open Quantity */
+            open_quantity: string;
+            /**
+             * Trade Date
+             * Format: date
+             */
+            trade_date: string;
+            /** Unrealized Pnl Eur */
+            unrealized_pnl_eur: string | null;
+            /** Unrealized Ratio */
+            unrealized_ratio: string | null;
+        };
         /** ManualPriceIn */
         ManualPriceIn: {
             /** Close */
@@ -551,21 +624,6 @@ export interface components {
              * Format: date
              */
             date: string;
-        };
-        /** MatchOut */
-        MatchOut: {
-            /** Cost Eur */
-            cost_eur: string;
-            /** Lot Buy Transaction Id */
-            lot_buy_transaction_id: number;
-            /** Lot Trade Date */
-            lot_trade_date: string | null;
-            /** Proceeds Eur */
-            proceeds_eur: string;
-            /** Quantity */
-            quantity: string;
-            /** Realized Pnl Eur */
-            realized_pnl_eur: string;
         };
         /** MeOut */
         MeOut: {
@@ -615,27 +673,122 @@ export interface components {
             /** Username */
             username: string;
         };
-        /** PriceOut */
-        PriceOut: {
-            /** Close */
-            close: string;
-            /**
-             * Date
-             * Format: date
-             */
-            date: string;
-            /** High */
-            high: string | null;
-            /** Low */
-            low: string | null;
-            /** Open */
-            open: string | null;
-            /** Overridden */
-            overridden: boolean;
-            /** Source */
-            source: string;
-            /** Volume */
-            volume: string | null;
+        /** PositionDetailOut */
+        PositionDetailOut: {
+            /** Account Id */
+            account_id: number | null;
+            /** As Of */
+            as_of: string | null;
+            instrument: components["schemas"]["InstrumentRef"];
+            /** Lots */
+            lots: components["schemas"]["LotOut"][];
+            /** Matches */
+            matches: components["schemas"]["folio__api__routers__positions__MatchOut"][];
+            summary: components["schemas"]["PositionMetricsOut"];
+            /** Transactions */
+            transactions: components["schemas"]["TransactionOut"][];
+        };
+        /** PositionMetricsOut */
+        PositionMetricsOut: {
+            /** Avg Cost Eur */
+            avg_cost_eur: string | null;
+            /** Cost Basis Eur */
+            cost_basis_eur: string;
+            /** Cost Basis Native */
+            cost_basis_native: string;
+            /** Day Change Eur */
+            day_change_eur: string | null;
+            /** Day Change Ratio */
+            day_change_ratio: string | null;
+            /** First Trade Date */
+            first_trade_date: string | null;
+            /** Income Eur */
+            income_eur: string;
+            /** Market Value Eur */
+            market_value_eur: string | null;
+            /** Market Value Native */
+            market_value_native: string | null;
+            /** Note */
+            note: string | null;
+            price: components["schemas"]["folio__api__routers__positions__PriceOut"] | null;
+            /** Quantity */
+            quantity: string;
+            /** Realized Pnl Eur */
+            realized_pnl_eur: string;
+            /** Total Return Eur */
+            total_return_eur: string | null;
+            /** Total Return Ratio */
+            total_return_ratio: string | null;
+            /** Unrealized Pnl Eur */
+            unrealized_pnl_eur: string | null;
+            /** Unrealized Pnl Native */
+            unrealized_pnl_native: string | null;
+            /** Unrealized Ratio */
+            unrealized_ratio: string | null;
+            /** Weight */
+            weight: string | null;
+        };
+        /** PositionOut */
+        PositionOut: {
+            /** Account Id */
+            account_id: number;
+            /** Account Name */
+            account_name: string;
+            /** Asset Class */
+            asset_class: string;
+            /** Avg Cost Eur */
+            avg_cost_eur: string | null;
+            /** Cost Basis Eur */
+            cost_basis_eur: string;
+            /** Cost Basis Native */
+            cost_basis_native: string;
+            /** Currency */
+            currency: string | null;
+            /** Day Change Eur */
+            day_change_eur: string | null;
+            /** Day Change Ratio */
+            day_change_ratio: string | null;
+            /** First Trade Date */
+            first_trade_date: string | null;
+            /** Income Eur */
+            income_eur: string;
+            /** Instrument Id */
+            instrument_id: number;
+            /** Isin */
+            isin: string | null;
+            /** Market Value Eur */
+            market_value_eur: string | null;
+            /** Market Value Native */
+            market_value_native: string | null;
+            /** Name */
+            name: string;
+            /** Note */
+            note: string | null;
+            price: components["schemas"]["folio__api__routers__positions__PriceOut"] | null;
+            /** Quantity */
+            quantity: string;
+            /** Realized Pnl Eur */
+            realized_pnl_eur: string;
+            /** Ticker */
+            ticker: string | null;
+            /** Total Return Eur */
+            total_return_eur: string | null;
+            /** Total Return Ratio */
+            total_return_ratio: string | null;
+            /** Unrealized Pnl Eur */
+            unrealized_pnl_eur: string | null;
+            /** Unrealized Pnl Native */
+            unrealized_pnl_native: string | null;
+            /** Unrealized Ratio */
+            unrealized_ratio: string | null;
+            /** Weight */
+            weight: string | null;
+        };
+        /** PositionsOut */
+        PositionsOut: {
+            /** Positions */
+            positions: components["schemas"]["PositionOut"][];
+            totals: components["schemas"]["TotalsOut"];
         };
         /** ResolutionOut */
         ResolutionOut: {
@@ -657,7 +810,7 @@ export interface components {
             /** Cost Eur */
             cost_eur: string;
             /** Matches */
-            matches: components["schemas"]["MatchOut"][];
+            matches: components["schemas"]["folio__api__routers__transactions__MatchOut"][];
             /** Net Proceeds Eur */
             net_proceeds_eur: string;
             /** Realized Pct */
@@ -679,6 +832,27 @@ export interface components {
             needs_owner: boolean;
             /** Setup Complete */
             setup_complete: boolean;
+        };
+        /** TotalsOut */
+        TotalsOut: {
+            /** Cost Basis Eur */
+            cost_basis_eur: string;
+            /** Day Change Eur */
+            day_change_eur: string | null;
+            /** Income Eur */
+            income_eur: string;
+            /** Market Value Eur */
+            market_value_eur: string;
+            /** Positions */
+            positions: number;
+            /** Realized Pnl Eur */
+            realized_pnl_eur: string;
+            /** Unrealized Pnl Eur */
+            unrealized_pnl_eur: string;
+            /** Unrealized Ratio */
+            unrealized_ratio: string | null;
+            /** Unvalued Positions */
+            unvalued_positions: number;
         };
         /**
          * TransactionChanges
@@ -877,6 +1051,65 @@ export interface components {
             /** Transaction Count */
             transaction_count: number;
         };
+        /** PriceOut */
+        folio__api__routers__instruments__PriceOut: {
+            /** Close */
+            close: string;
+            /**
+             * Date
+             * Format: date
+             */
+            date: string;
+            /** High */
+            high: string | null;
+            /** Low */
+            low: string | null;
+            /** Open */
+            open: string | null;
+            /** Overridden */
+            overridden: boolean;
+            /** Source */
+            source: string;
+            /** Volume */
+            volume: string | null;
+        };
+        /** MatchOut */
+        folio__api__routers__positions__MatchOut: {
+            /** Account Id */
+            account_id: number;
+            /** Cost Eur */
+            cost_eur: string;
+            /** Lot Buy Transaction Id */
+            lot_buy_transaction_id: number;
+            /** Proceeds Eur */
+            proceeds_eur: string;
+            /** Quantity */
+            quantity: string;
+            /** Realized Pnl Eur */
+            realized_pnl_eur: string;
+            /** Sell Date */
+            sell_date: string | null;
+            /** Sell Transaction Id */
+            sell_transaction_id: number;
+        };
+        /** PriceOut */
+        folio__api__routers__positions__PriceOut: {
+            /** Close */
+            close: string;
+            /**
+             * Date
+             * Format: date
+             */
+            date: string;
+            /** Overridden */
+            overridden: boolean;
+            /** Previous Close */
+            previous_close: string | null;
+            /** Source */
+            source: string;
+            /** Stale */
+            stale: boolean;
+        };
         /** AccountIn */
         folio__api__routers__setup__AccountIn: {
             /** Broker */
@@ -900,6 +1133,21 @@ export interface components {
             id: number;
             /** Name */
             name: string;
+        };
+        /** MatchOut */
+        folio__api__routers__transactions__MatchOut: {
+            /** Cost Eur */
+            cost_eur: string;
+            /** Lot Buy Transaction Id */
+            lot_buy_transaction_id: number;
+            /** Lot Trade Date */
+            lot_trade_date: string | null;
+            /** Proceeds Eur */
+            proceeds_eur: string;
+            /** Quantity */
+            quantity: string;
+            /** Realized Pnl Eur */
+            realized_pnl_eur: string;
         };
     };
     responses: never;
@@ -1308,7 +1556,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["PriceOut"][];
+                    "application/json": components["schemas"]["folio__api__routers__instruments__PriceOut"][];
                 };
             };
             /** @description Validation Error */
@@ -1343,7 +1591,74 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["PriceOut"];
+                    "application/json": components["schemas"]["folio__api__routers__instruments__PriceOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_positions_api_v1_positions_get: {
+        parameters: {
+            query?: {
+                account?: number | null;
+                as_of?: string | null;
+                include_closed?: boolean;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PositionsOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    position_detail_api_v1_positions__instrument_id__get: {
+        parameters: {
+            query?: {
+                account?: number | null;
+                as_of?: string | null;
+            };
+            header?: never;
+            path: {
+                instrument_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PositionDetailOut"];
                 };
             };
             /** @description Validation Error */

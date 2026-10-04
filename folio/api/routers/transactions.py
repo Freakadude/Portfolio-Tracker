@@ -94,7 +94,7 @@ def _fail(exc: TransactionError) -> ApiError:
     return ApiError(status, title, str(exc), errors=errors)
 
 
-def _out(db: Session, row: LedgerTransaction) -> TransactionOut:
+def transaction_out(db: Session, row: LedgerTransaction) -> TransactionOut:
     account = db.get(Account, row.account_id)
     instrument = db.get(Instrument, row.instrument_id) if row.instrument_id else None
     listing = None
@@ -183,7 +183,7 @@ def list_transactions(
     more = len(rows) > limit
     rows = rows[:limit]
     next_cursor = f"{rows[-1].trade_date.isoformat()}:{rows[-1].id}" if more and rows else None
-    return TransactionPage(items=[_out(db, r) for r in rows], next_cursor=next_cursor)
+    return TransactionPage(items=[transaction_out(db, r) for r in rows], next_cursor=next_cursor)
 
 
 @router.post("", response_model=TransactionOut, status_code=201)
@@ -192,7 +192,7 @@ def create(body: TransactionIn, _user: UserDep, db: DbDep) -> TransactionOut:
         row = create_transaction(db, body)
     except TransactionError as exc:
         raise _fail(exc) from exc
-    return _out(db, row)
+    return transaction_out(db, row)
 
 
 @router.post("/preview-sell", response_model=SellPreviewOut)
@@ -257,7 +257,7 @@ def update(
         row = update_transaction(db, transaction_id, body)
     except TransactionError as exc:
         raise _fail(exc) from exc
-    return _out(db, row)
+    return transaction_out(db, row)
 
 
 @router.delete("/{transaction_id}", status_code=204)
