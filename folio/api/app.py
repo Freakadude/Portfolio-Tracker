@@ -5,7 +5,15 @@ from fastapi import FastAPI
 
 from folio.api.errors import install_error_handlers
 from folio.api.middleware import CsrfMiddleware, RequestLogMiddleware, SecurityHeadersMiddleware
-from folio.api.routers import accounts, auth, health, instruments, positions, transactions
+from folio.api.routers import (
+    accounts,
+    auth,
+    health,
+    imports,
+    instruments,
+    positions,
+    transactions,
+)
 from folio.api.routers import settings as settings_router
 from folio.api.routers import setup as setup_router
 from folio.api.spa import STATIC_DIR, mount_spa
@@ -55,6 +63,7 @@ def create_app(
     app.include_router(instruments.router, prefix=API_PREFIX)
     app.include_router(transactions.router, prefix=API_PREFIX)
     app.include_router(positions.router, prefix=API_PREFIX)
+    app.include_router(imports.router, prefix=API_PREFIX)
     app.include_router(health.router)
     mount_spa(app, static_dir or STATIC_DIR)  # last: its catch-all route must not shadow the API
     return app

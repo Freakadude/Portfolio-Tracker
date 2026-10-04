@@ -136,6 +136,24 @@ def to_txin(row: LedgerTransaction) -> TxIn:
     )
 
 
+def fields_to_txin(tx_id: int, fields: dict[str, Any]) -> TxIn:
+    """The same conversion as `to_txin`, for normalised fields that are not saved yet."""
+    kind = TxType(fields["type"])
+    return TxIn(
+        id=tx_id,
+        type=kind,
+        trade_date=fields["trade_date"],
+        instrument_id=fields["instrument_id"],
+        quantity=fields["quantity"],
+        price=fields["price"],
+        fx_rate=fields["fx_rate_to_eur"],
+        fees_eur=fields["fees"] * fields["fees_fx_rate_to_eur"],
+        taxes_eur=fields["taxes"] * fields["taxes_fx_rate_to_eur"],
+        amount_eur=fields["net_amount_eur"] if fields["type"] not in _TRADES else None,
+        ratio=fields["ratio"],
+    )
+
+
 def _account(db: Session, account_id: int) -> Account:
     account = db.get(Account, account_id)
     if account is None or account.deleted_at is not None:

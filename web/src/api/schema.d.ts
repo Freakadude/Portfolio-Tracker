@@ -91,6 +91,134 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/import-presets": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Presets */
+        get: operations["list_presets_api_v1_import_presets_get"];
+        put?: never;
+        /** Create Preset */
+        post: operations["create_preset_api_v1_import_presets_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/import-presets/{preset_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Delete Preset */
+        delete: operations["delete_preset_api_v1_import_presets__preset_id__delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/imports": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** History */
+        get: operations["history_api_v1_imports_get"];
+        put?: never;
+        /** Upload */
+        post: operations["upload_api_v1_imports_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/imports/{batch_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Read */
+        get: operations["read_api_v1_imports__batch_id__get"];
+        put?: never;
+        post?: never;
+        /**
+         * Undo
+         * @description Discard a preview, or undo a committed import: all its transactions are removed.
+         */
+        delete: operations["undo_api_v1_imports__batch_id__delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/imports/{batch_id}/commit": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Commit */
+        post: operations["commit_api_v1_imports__batch_id__commit_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/imports/{batch_id}/dry-run": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Dry Run */
+        get: operations["dry_run_api_v1_imports__batch_id__dry_run_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/imports/{batch_id}/mapping": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Set Mapping
+         * @description Save the column mapping and return the dry run: what would be imported, nothing written.
+         */
+        put: operations["set_mapping_api_v1_imports__batch_id__mapping_put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/instruments": {
         parameters: {
             query?: never;
@@ -420,6 +548,45 @@ export interface components {
             /** Name */
             name?: string | null;
         };
+        /** BatchOut */
+        BatchOut: {
+            /** Account Id */
+            account_id: number;
+            /** Committed At */
+            committed_at: string | null;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Errors */
+            errors: {
+                [key: string]: unknown;
+            }[];
+            /** File Name */
+            file_name: string;
+            /** Id */
+            id: number;
+            /** Preset Id */
+            preset_id: number | null;
+            /** Rows Imported */
+            rows_imported: number;
+            /** Rows Skipped */
+            rows_skipped: number;
+            /** Rows Total */
+            rows_total: number;
+            /** Status */
+            status: string;
+        };
+        /** Body_upload_api_v1_imports_post */
+        Body_upload_api_v1_imports_post: {
+            /** Account Id */
+            account_id: number;
+            /** File */
+            file: string;
+            /** Preset Id */
+            preset_id?: number | null;
+        };
         /** CandidateOut */
         CandidateOut: {
             /** Confirmed By */
@@ -438,6 +605,31 @@ export interface components {
             usable: boolean;
             /** Warning */
             warning: string | null;
+        };
+        /** CommitIn */
+        CommitIn: {
+            /**
+             * Skip Errors
+             * @default false
+             */
+            skip_errors: boolean;
+        };
+        /** DryRunOut */
+        DryRunOut: {
+            /** Batch Id */
+            batch_id: number;
+            /** Can Commit */
+            can_commit: boolean;
+            /** Counts */
+            counts: {
+                [key: string]: number;
+            };
+            /** Rows */
+            rows: components["schemas"]["RowOut"][];
+            /** Truncated */
+            truncated: boolean;
+            /** Unknown Isins */
+            unknown_isins: string[];
         };
         /** FxPrefillOut */
         FxPrefillOut: {
@@ -462,6 +654,82 @@ export interface components {
         HTTPValidationError: {
             /** Detail */
             detail?: components["schemas"]["ValidationError"][];
+        };
+        /** HeaderOut */
+        HeaderOut: {
+            /** Index */
+            index: number;
+            /** Label */
+            label: string;
+        };
+        /**
+         * ImportMapping
+         * @description Everything needed to read one export layout; saved as a preset (FR-TX-07).
+         */
+        ImportMapping: {
+            /** Amount Col */
+            amount_col?: number | null;
+            /** Currency Col */
+            currency_col?: number | null;
+            /** Date Col */
+            date_col?: number | null;
+            /**
+             * Date Format
+             * @default %d-%m-%Y
+             */
+            date_format: string;
+            /**
+             * Decimal Separator
+             * @default .
+             * @enum {string}
+             */
+            decimal_separator: "," | ".";
+            /** Default Currency */
+            default_currency?: string | null;
+            /** Fees Col */
+            fees_col?: number | null;
+            /** Fees Currency Col */
+            fees_currency_col?: number | null;
+            /** Fx Col */
+            fx_col?: number | null;
+            /**
+             * Fx Semantics
+             * @default per_eur
+             * @enum {string}
+             */
+            fx_semantics: "per_eur" | "to_eur";
+            /** Isin Col */
+            isin_col?: number | null;
+            /** Note Col */
+            note_col?: number | null;
+            /** Price Col */
+            price_col?: number | null;
+            /** Quantity Col */
+            quantity_col?: number | null;
+            /** Reference Col */
+            reference_col?: number | null;
+            /** Skip Types */
+            skip_types?: string[];
+            /**
+             * Thousands Separator
+             * @default
+             * @enum {string}
+             */
+            thousands_separator: "" | "." | "," | " ";
+            /** Time Col */
+            time_col?: number | null;
+            /** Type Col */
+            type_col?: number | null;
+            /** Type Map */
+            type_map?: {
+                [key: string]: string;
+            };
+            /**
+             * Type Mode
+             * @default sign
+             * @enum {string}
+             */
+            type_mode: "sign" | "column";
         };
         /** InstrumentChanges */
         InstrumentChanges: {
@@ -624,6 +892,12 @@ export interface components {
              * Format: date
              */
             date: string;
+        };
+        /** MappingIn */
+        MappingIn: {
+            mapping: components["schemas"]["ImportMapping"];
+            /** Save As Preset */
+            save_as_preset?: string | null;
         };
         /** MeOut */
         MeOut: {
@@ -790,6 +1064,37 @@ export interface components {
             positions: components["schemas"]["PositionOut"][];
             totals: components["schemas"]["TotalsOut"];
         };
+        /** PresetIn */
+        PresetIn: {
+            mapping: components["schemas"]["ImportMapping"];
+            /** Name */
+            name: string;
+        };
+        /** PresetOut */
+        PresetOut: {
+            /** Id */
+            id: number;
+            mapping: components["schemas"]["ImportMapping"];
+            /** Name */
+            name: string;
+        };
+        /** PreviewOut */
+        PreviewOut: {
+            batch: components["schemas"]["BatchOut"];
+            /** Delimiter */
+            delimiter: string;
+            /** Encoding */
+            encoding: string;
+            /** From Preset */
+            from_preset: boolean;
+            /** Headers */
+            headers: components["schemas"]["HeaderOut"][];
+            mapping: components["schemas"]["ImportMapping"];
+            /** Row Count */
+            row_count: number;
+            /** Sample Rows */
+            sample_rows: string[][];
+        };
         /** ResolutionOut */
         ResolutionOut: {
             /** Asset Class */
@@ -804,6 +1109,19 @@ export interface components {
             issuer: string | null;
             /** Name */
             name: string;
+        };
+        /** RowOut */
+        RowOut: {
+            /** Reason */
+            reason: string | null;
+            /** Row */
+            row: number;
+            /** Status */
+            status: string;
+            /** Summary */
+            summary: {
+                [key: string]: string;
+            } | null;
         };
         /** SellPreviewOut */
         SellPreviewOut: {
@@ -1342,6 +1660,302 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["MeOut"];
+                };
+            };
+        };
+    };
+    list_presets_api_v1_import_presets_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PresetOut"][];
+                };
+            };
+        };
+    };
+    create_preset_api_v1_import_presets_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PresetIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PresetOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_preset_api_v1_import_presets__preset_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                preset_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    history_api_v1_imports_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BatchOut"][];
+                };
+            };
+        };
+    };
+    upload_api_v1_imports_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "multipart/form-data": components["schemas"]["Body_upload_api_v1_imports_post"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PreviewOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    read_api_v1_imports__batch_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                batch_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PreviewOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    undo_api_v1_imports__batch_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                batch_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    commit_api_v1_imports__batch_id__commit_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                batch_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CommitIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BatchOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    dry_run_api_v1_imports__batch_id__dry_run_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                batch_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DryRunOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    set_mapping_api_v1_imports__batch_id__mapping_put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                batch_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MappingIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DryRunOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
                 };
             };
         };

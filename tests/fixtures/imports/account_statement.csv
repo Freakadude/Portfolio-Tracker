@@ -1,0 +1,6 @@
+Date;Description;ISIN;Amount;Note
+02/01/2024;Deposit;;1000,00;first deposit
+15/03/2024;Dividend;IE00B5BMR087;4,25;Nestlé style accents
+16/03/2024;Fee;;2,00;custody
+17/03/2024;Cash sweep;;5,00;not a ledger event
+18/03/2024;Mystery;;1,00;unmapped on purpose

@@ -59,6 +59,119 @@
         "title": "AccountChanges",
         "type": "object"
       },
+      "BatchOut": {
+        "properties": {
+          "account_id": {
+            "title": "Account Id",
+            "type": "integer"
+          },
+          "committed_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Committed At"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "errors": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "title": "Errors",
+            "type": "array"
+          },
+          "file_name": {
+            "title": "File Name",
+            "type": "string"
+          },
+          "id": {
+            "title": "Id",
+            "type": "integer"
+          },
+          "preset_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Preset Id"
+          },
+          "rows_imported": {
+            "title": "Rows Imported",
+            "type": "integer"
+          },
+          "rows_skipped": {
+            "title": "Rows Skipped",
+            "type": "integer"
+          },
+          "rows_total": {
+            "title": "Rows Total",
+            "type": "integer"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "account_id",
+          "file_name",
+          "status",
+          "rows_total",
+          "rows_imported",
+          "rows_skipped",
+          "preset_id",
+          "created_at",
+          "committed_at",
+          "errors"
+        ],
+        "title": "BatchOut",
+        "type": "object"
+      },
+      "Body_upload_api_v1_imports_post": {
+        "properties": {
+          "account_id": {
+            "title": "Account Id",
+            "type": "integer"
+          },
+          "file": {
+            "contentMediaType": "application/octet-stream",
+            "title": "File",
+            "type": "string"
+          },
+          "preset_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Preset Id"
+          }
+        },
+        "required": [
+          "account_id",
+          "file"
+        ],
+        "title": "Body_upload_api_v1_imports_post",
+        "type": "object"
+      },
       "CandidateOut": {
         "properties": {
           "confirmed_by": {
@@ -121,6 +234,64 @@
         "title": "CandidateOut",
         "type": "object"
       },
+      "CommitIn": {
+        "properties": {
+          "skip_errors": {
+            "default": false,
+            "title": "Skip Errors",
+            "type": "boolean"
+          }
+        },
+        "title": "CommitIn",
+        "type": "object"
+      },
+      "DryRunOut": {
+        "properties": {
+          "batch_id": {
+            "title": "Batch Id",
+            "type": "integer"
+          },
+          "can_commit": {
+            "title": "Can Commit",
+            "type": "boolean"
+          },
+          "counts": {
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "title": "Counts",
+            "type": "object"
+          },
+          "rows": {
+            "items": {
+              "$ref": "#/components/schemas/RowOut"
+            },
+            "title": "Rows",
+            "type": "array"
+          },
+          "truncated": {
+            "title": "Truncated",
+            "type": "boolean"
+          },
+          "unknown_isins": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Unknown Isins",
+            "type": "array"
+          }
+        },
+        "required": [
+          "batch_id",
+          "counts",
+          "unknown_isins",
+          "rows",
+          "truncated",
+          "can_commit"
+        ],
+        "title": "DryRunOut",
+        "type": "object"
+      },
       "FxPrefillOut": {
         "properties": {
           "currency": {
@@ -169,6 +340,243 @@
           }
         },
         "title": "HTTPValidationError",
+        "type": "object"
+      },
+      "HeaderOut": {
+        "properties": {
+          "index": {
+            "title": "Index",
+            "type": "integer"
+          },
+          "label": {
+            "title": "Label",
+            "type": "string"
+          }
+        },
+        "required": [
+          "index",
+          "label"
+        ],
+        "title": "HeaderOut",
+        "type": "object"
+      },
+      "ImportMapping": {
+        "additionalProperties": false,
+        "description": "Everything needed to read one export layout; saved as a preset (FR-TX-07).",
+        "properties": {
+          "amount_col": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Amount Col"
+          },
+          "currency_col": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Currency Col"
+          },
+          "date_col": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Date Col"
+          },
+          "date_format": {
+            "default": "%d-%m-%Y",
+            "title": "Date Format",
+            "type": "string"
+          },
+          "decimal_separator": {
+            "default": ".",
+            "enum": [
+              ",",
+              "."
+            ],
+            "title": "Decimal Separator",
+            "type": "string"
+          },
+          "default_currency": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Default Currency"
+          },
+          "fees_col": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Fees Col"
+          },
+          "fees_currency_col": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Fees Currency Col"
+          },
+          "fx_col": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Fx Col"
+          },
+          "fx_semantics": {
+            "default": "per_eur",
+            "enum": [
+              "per_eur",
+              "to_eur"
+            ],
+            "title": "Fx Semantics",
+            "type": "string"
+          },
+          "isin_col": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Isin Col"
+          },
+          "note_col": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Note Col"
+          },
+          "price_col": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Price Col"
+          },
+          "quantity_col": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Quantity Col"
+          },
+          "reference_col": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reference Col"
+          },
+          "skip_types": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Skip Types",
+            "type": "array"
+          },
+          "thousands_separator": {
+            "default": "",
+            "enum": [
+              "",
+              ".",
+              ",",
+              " "
+            ],
+            "title": "Thousands Separator",
+            "type": "string"
+          },
+          "time_col": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Time Col"
+          },
+          "type_col": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Type Col"
+          },
+          "type_map": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "title": "Type Map",
+            "type": "object"
+          },
+          "type_mode": {
+            "default": "sign",
+            "enum": [
+              "sign",
+              "column"
+            ],
+            "title": "Type Mode",
+            "type": "string"
+          }
+        },
+        "title": "ImportMapping",
         "type": "object"
       },
       "InstrumentChanges": {
@@ -791,6 +1199,29 @@
           "close"
         ],
         "title": "ManualPriceIn",
+        "type": "object"
+      },
+      "MappingIn": {
+        "properties": {
+          "mapping": {
+            "$ref": "#/components/schemas/ImportMapping"
+          },
+          "save_as_preset": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Save As Preset"
+          }
+        },
+        "required": [
+          "mapping"
+        ],
+        "title": "MappingIn",
         "type": "object"
       },
       "MeOut": {
@@ -1580,6 +2011,102 @@
         "title": "PositionsOut",
         "type": "object"
       },
+      "PresetIn": {
+        "properties": {
+          "mapping": {
+            "$ref": "#/components/schemas/ImportMapping"
+          },
+          "name": {
+            "maxLength": 100,
+            "minLength": 1,
+            "title": "Name",
+            "type": "string"
+          }
+        },
+        "required": [
+          "name",
+          "mapping"
+        ],
+        "title": "PresetIn",
+        "type": "object"
+      },
+      "PresetOut": {
+        "properties": {
+          "id": {
+            "title": "Id",
+            "type": "integer"
+          },
+          "mapping": {
+            "$ref": "#/components/schemas/ImportMapping"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "mapping"
+        ],
+        "title": "PresetOut",
+        "type": "object"
+      },
+      "PreviewOut": {
+        "properties": {
+          "batch": {
+            "$ref": "#/components/schemas/BatchOut"
+          },
+          "delimiter": {
+            "title": "Delimiter",
+            "type": "string"
+          },
+          "encoding": {
+            "title": "Encoding",
+            "type": "string"
+          },
+          "from_preset": {
+            "title": "From Preset",
+            "type": "boolean"
+          },
+          "headers": {
+            "items": {
+              "$ref": "#/components/schemas/HeaderOut"
+            },
+            "title": "Headers",
+            "type": "array"
+          },
+          "mapping": {
+            "$ref": "#/components/schemas/ImportMapping"
+          },
+          "row_count": {
+            "title": "Row Count",
+            "type": "integer"
+          },
+          "sample_rows": {
+            "items": {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            "title": "Sample Rows",
+            "type": "array"
+          }
+        },
+        "required": [
+          "batch",
+          "encoding",
+          "delimiter",
+          "headers",
+          "sample_rows",
+          "row_count",
+          "mapping",
+          "from_preset"
+        ],
+        "title": "PreviewOut",
+        "type": "object"
+      },
       "ResolutionOut": {
         "properties": {
           "asset_class": {
@@ -1626,6 +2153,51 @@
           "candidates"
         ],
         "title": "ResolutionOut",
+        "type": "object"
+      },
+      "RowOut": {
+        "properties": {
+          "reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reason"
+          },
+          "row": {
+            "title": "Row",
+            "type": "integer"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          },
+          "summary": {
+            "anyOf": [
+              {
+                "additionalProperties": {
+                  "type": "string"
+                },
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Summary"
+          }
+        },
+        "required": [
+          "row",
+          "status",
+          "reason",
+          "summary"
+        ],
+        "title": "RowOut",
         "type": "object"
       },
       "SellPreviewOut": {
@@ -3170,6 +3742,392 @@
         "summary": "Me",
         "tags": [
           "auth"
+        ]
+      }
+    },
+    "/api/v1/import-presets": {
+      "get": {
+        "operationId": "list_presets_api_v1_import_presets_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/PresetOut"
+                  },
+                  "title": "Response List Presets Api V1 Import Presets Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "List Presets",
+        "tags": [
+          "imports"
+        ]
+      },
+      "post": {
+        "operationId": "create_preset_api_v1_import_presets_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PresetIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PresetOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Create Preset",
+        "tags": [
+          "imports"
+        ]
+      }
+    },
+    "/api/v1/import-presets/{preset_id}": {
+      "delete": {
+        "operationId": "delete_preset_api_v1_import_presets__preset_id__delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "preset_id",
+            "required": true,
+            "schema": {
+              "title": "Preset Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Delete Preset",
+        "tags": [
+          "imports"
+        ]
+      }
+    },
+    "/api/v1/imports": {
+      "get": {
+        "operationId": "history_api_v1_imports_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/BatchOut"
+                  },
+                  "title": "Response History Api V1 Imports Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "History",
+        "tags": [
+          "imports"
+        ]
+      },
+      "post": {
+        "operationId": "upload_api_v1_imports_post",
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/Body_upload_api_v1_imports_post"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PreviewOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Upload",
+        "tags": [
+          "imports"
+        ]
+      }
+    },
+    "/api/v1/imports/{batch_id}": {
+      "delete": {
+        "description": "Discard a preview, or undo a committed import: all its transactions are removed.",
+        "operationId": "undo_api_v1_imports__batch_id__delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "batch_id",
+            "required": true,
+            "schema": {
+              "title": "Batch Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Undo",
+        "tags": [
+          "imports"
+        ]
+      },
+      "get": {
+        "operationId": "read_api_v1_imports__batch_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "batch_id",
+            "required": true,
+            "schema": {
+              "title": "Batch Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PreviewOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Read",
+        "tags": [
+          "imports"
+        ]
+      }
+    },
+    "/api/v1/imports/{batch_id}/commit": {
+      "post": {
+        "operationId": "commit_api_v1_imports__batch_id__commit_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "batch_id",
+            "required": true,
+            "schema": {
+              "title": "Batch Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CommitIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BatchOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Commit",
+        "tags": [
+          "imports"
+        ]
+      }
+    },
+    "/api/v1/imports/{batch_id}/dry-run": {
+      "get": {
+        "operationId": "dry_run_api_v1_imports__batch_id__dry_run_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "batch_id",
+            "required": true,
+            "schema": {
+              "title": "Batch Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DryRunOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Dry Run",
+        "tags": [
+          "imports"
+        ]
+      }
+    },
+    "/api/v1/imports/{batch_id}/mapping": {
+      "put": {
+        "description": "Save the column mapping and return the dry run: what would be imported, nothing written.",
+        "operationId": "set_mapping_api_v1_imports__batch_id__mapping_put",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "batch_id",
+            "required": true,
+            "schema": {
+              "title": "Batch Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MappingIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DryRunOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Set Mapping",
+        "tags": [
+          "imports"
         ]
       }
     },
