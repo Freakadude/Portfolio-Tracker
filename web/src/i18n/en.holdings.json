@@ -1,0 +1,186 @@
+{
+  "assetClass": {
+    "ETF": "ETF",
+    "ETC": "ETC (commodity)",
+    "EQUITY": "Equity",
+    "BOND": "Bond",
+    "FUND": "Fund",
+    "CASH": "Cash",
+    "OTHER": "Other"
+  },
+  "transactions": {
+    "types": {
+      "buy": "Buy",
+      "sell": "Sell",
+      "dividend": "Dividend",
+      "interest": "Interest",
+      "fee": "Fee",
+      "tax": "Tax",
+      "split": "Split",
+      "transfer_in": "Transfer in",
+      "transfer_out": "Transfer out",
+      "deposit": "Deposit",
+      "withdrawal": "Withdrawal"
+    }
+  },
+  "delta": { "up": "gain", "down": "loss", "flat": "no change", "none": "" },
+  "asof": { "title": "Close of {{date}} ({{source}})" },
+  "holdings": {
+    "title": "Holdings",
+    "tabs": { "positions": "Positions", "instruments": "Instruments" },
+    "add": "Add instrument",
+    "showClosed": "Show closed positions",
+    "account": "Account",
+    "allAccounts": "All accounts",
+    "groupByAccount": "Group by account",
+    "empty": {
+      "title": "No holdings yet",
+      "body": "Add your first instrument, then record what you bought."
+    },
+    "noTransactions": {
+      "title": "No transactions yet",
+      "body": "Your instruments are set up. Record what you bought to see positions here.",
+      "action": "Add a transaction"
+    },
+    "columns": {
+      "name": "Instrument",
+      "account": "Account",
+      "quantity": "Units",
+      "avgCost": "Avg cost",
+      "cost": "Cost basis",
+      "price": "Price",
+      "value": "Market value",
+      "unrealized": "Unrealized",
+      "day": "Day change",
+      "weight": "Weight"
+    },
+    "totals": "Total",
+    "stale": "Stale",
+    "staleHint": "The latest close is more than 3 trading days old.",
+    "noPrice": "No price",
+    "unvalued_one": "{{count}} position has no price and is left out of the value totals.",
+    "unvalued_other": "{{count}} positions have no price and are left out of the value totals.",
+    "realized": "Realized",
+    "income": "Income",
+    "caption": "Positions with market value, profit and loss in euros"
+  },
+  "instruments": {
+    "title": "Instruments",
+    "filters": { "active": "Active", "archived": "Archived", "all": "All" },
+    "columns": {
+      "name": "Name",
+      "isin": "ISIN",
+      "class": "Class",
+      "listing": "Listing",
+      "lastClose": "Last close",
+      "status": "Status",
+      "actions": "Actions"
+    },
+    "manual": "Hand-priced",
+    "archive": "Archive",
+    "unarchive": "Restore",
+    "edit": "Edit",
+    "delete": "Delete",
+    "enterPrice": "Enter price",
+    "deleteConfirm": "Delete {{name}}? Its stored prices are kept in case you add it again.",
+    "blocked": "{{name}} is used by {{count}} transaction(s):",
+    "empty": {
+      "title": "No instruments yet",
+      "body": "Add an instrument by its ISIN, or by hand if it has no market price."
+    },
+    "caption": "Instruments you have added"
+  },
+  "addInstrument": {
+    "title": "Add instrument",
+    "byIsin": "By ISIN",
+    "byHand": "By hand",
+    "isin": "ISIN",
+    "isinHint": "For example IE00B5BMR087. Folio looks up where it trades.",
+    "lookup": "Look up",
+    "looking": "Looking up…",
+    "noListings": "No listing was found for this ISIN. You can add the instrument by hand.",
+    "pick": "Pick the listing used for prices",
+    "listingLabel": "{{exchange}} · {{ticker}} · {{currency}}",
+    "confirmed": "Currency confirmed by {{source}}",
+    "guess": "Currency not confirmed",
+    "name": "Name",
+    "assetClass": "Asset class",
+    "issuer": "Issuer",
+    "distribution": "Distribution",
+    "acc": "Accumulating",
+    "dist": "Distributing",
+    "none": "Not set",
+    "currency": "Currency",
+    "currencyHint": "Three letters, for example EUR.",
+    "handHint": "For things without a market price, such as an unlisted bond or a private holding. You enter the prices yourself.",
+    "submit": "Add instrument",
+    "nameRequired": "Give the instrument a name.",
+    "currencyRequired": "Enter a currency such as EUR.",
+    "pickRequired": "Pick a listing first."
+  },
+  "editInstrument": {
+    "title": "Edit {{name}}",
+    "tags": "Tags (comma separated)",
+    "ter": "Annual cost (TER, %)",
+    "save": "Save"
+  },
+  "priceEntry": {
+    "title": "Enter a price for {{name}}",
+    "date": "Date",
+    "close": "Closing price",
+    "submit": "Save price",
+    "hint": "A price you enter is kept: later fetches never overwrite it, and the change is logged."
+  },
+  "position": {
+    "back": "Back to holdings",
+    "price": "Latest close",
+    "holding": "Your holding",
+    "units": "Units",
+    "avgCost": "Average cost",
+    "costBasis": "Cost basis",
+    "marketValue": "Market value",
+    "unrealized": "Unrealized result",
+    "realized": "Realized result",
+    "income": "Income received",
+    "totalReturn": "Total return",
+    "dayChange": "Day change",
+    "weight": "Weight in portfolio",
+    "firstPurchase": "First purchase",
+    "native": "In {{currency}}",
+    "lots": "Open lots",
+    "lotsCaption": "Open lots with cost and result",
+    "lotColumns": {
+      "date": "Bought",
+      "units": "Units",
+      "cost": "Cost",
+      "avg": "Avg cost",
+      "value": "Value",
+      "result": "Result"
+    },
+    "matches": "How realized results arose",
+    "matchColumns": {
+      "sold": "Sold",
+      "units": "Units",
+      "cost": "Cost",
+      "proceeds": "Proceeds",
+      "result": "Result"
+    },
+    "history": "Transactions",
+    "historyColumns": {
+      "date": "Date",
+      "type": "Type",
+      "units": "Units",
+      "price": "Price",
+      "amount": "Amount"
+    },
+    "noPosition": "You hold none of this instrument.",
+    "chart": "Price chart",
+    "chartRanges": { "1M": "1M", "3M": "3M", "1Y": "1Y", "MAX": "Max" },
+    "showTable": "Show data as a table",
+    "showChart": "Show chart",
+    "tableCaption": "Closing prices",
+    "noPrices": "No prices stored yet. They are fetched after the instrument is added; you can also refresh from the System page.",
+    "buy": "Buy",
+    "sell": "Sell"
+  }
+}

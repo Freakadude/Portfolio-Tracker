@@ -22,12 +22,12 @@ Requirement ID → module → test → status (`todo`, `in progress`, `done`).
 | NFR-01 | folio/domain (no floats; Decimal end to end) | tests/unit/domain/test_ledger_properties.py (no-floats test, invariants), test_ledger_golden.py | in progress (domain done; services and API pending) |
 | FR-TX-03 | folio/domain/ledger.py (FIFO and AVG), account method switch in ledger_service | tests/unit/domain/test_ledger_golden.py, tests/integration/test_transactions_api.py | done |
 | FR-TX-04 | folio/domain/ledger.py preview_sell, POST /transactions/preview-sell | tests/unit/domain/test_ledger_golden.py, test_ledger_properties.py, tests/integration/test_transactions_api.py | in progress (UI pending) |
-| FR-INS-01 | folio/marketdata/resolve.py, isin.py, folio/api/routers/instruments.py | tests/integration/test_instruments_api.py (recorded OpenFIGI and Yahoo responses) | in progress (UI pending) |
-| FR-INS-02 | folio/instruments.py (manual instruments), prices endpoint | tests/integration/test_instruments_api.py | in progress (UI pending) |
-| FR-INS-03 | folio/instruments.py (edit, archive, delete) | tests/integration/test_instruments_api.py | in progress (UI pending) |
+| FR-INS-01 | folio/marketdata/resolve.py, isin.py, folio/api/routers/instruments.py | tests/integration/test_instruments_api.py (recorded OpenFIGI and Yahoo responses) | done |
+| FR-INS-02 | folio/instruments.py (manual instruments), prices endpoint, web AddInstrumentDialog | tests/integration/test_instruments_api.py, web/e2e/02-instruments.spec.ts | done |
+| FR-INS-03 | folio/instruments.py (edit, archive, delete), web InstrumentsTab | tests/integration/test_instruments_api.py, web/src/holdings.test.tsx (blocking transactions shown) | done |
 | FR-MD-01 | folio/marketdata/base.py (provider interface), fake.py | tests/integration/test_marketdata_fallback.py | done (jobs that use it follow) |
 | FR-MD-10 | folio/marketdata/budget.py (UsageTracker), http.py, GET /system/usage | tests/integration/test_marketdata_http.py, test_system_api.py (usage matches the counter exactly) | in progress (System page UI pending) |
-| FR-MD-11 | folio/marketdata/fallback.py, registry.py, prices.py (is_stale) | tests/integration/test_marketdata_fallback.py, test_marketdata_prices.py | in progress (stale marker in the UI pending) |
+| FR-MD-11 | folio/marketdata/fallback.py, registry.py, prices.py (is_stale) | tests/integration/test_marketdata_fallback.py, test_marketdata_prices.py | done |
 | FR-MD-02 | folio/marketdata/exchanges.py (calendars, job times), folio/jobs/market.py eod_job | tests/unit/test_exchanges.py, tests/integration/test_jobs_market.py | done |
 | FR-MD-03 | folio/jobs/market.py backfill_job, queued by POST /instruments, handled by the job-request poller | tests/integration/test_jobs_market.py, test_instruments_api.py, test_scheduler.py | done |
 | FR-MD-04 | folio/marketdata/prices.py (gaps, overrides), gap_job | tests/integration/test_marketdata_prices.py, test_jobs_market.py | done |
@@ -35,7 +35,7 @@ Requirement ID → module → test → status (`todo`, `in progress`, `done`).
 | FR-MD-07 | folio/marketdata/corporate_actions.py, folio/api/routers/corporate_actions.py, ledger_service.confirm_draft, jobs actions_job | tests/integration/test_corporate_actions.py (1:4 split quadruples quantity and keeps cost; dividend drafts) | in progress (Insights UI pending) |
 | FR-TX-01 | folio/ledger_service.py, folio/api/routers/transactions.py | tests/integration/test_transactions_api.py | in progress (UI pending) |
 | FR-TX-02 | folio/ledger_service.py (ECB prefill, override), fx-prefill endpoint | tests/integration/test_transactions_api.py | in progress (UI pending) |
-| FR-TX-05 | folio/positions.py, folio/api/routers/positions.py | tests/integration/test_positions_api.py (hand-computed metrics; reconciliation with invariants 1 and 2) | in progress (UI pending) |
+| FR-TX-05 | folio/positions.py, folio/api/routers/positions.py, web PositionDetail and Holdings | tests/integration/test_positions_api.py, web/src/position-detail.test.tsx, web/src/holdings.test.tsx, web/e2e/02-instruments.spec.ts | done |
 | FR-TX-06 | folio/ledger_service.py (rebuild, snapshot requests), folio/jobs/portfolio.py | tests/integration/test_transactions_api.py, test_portfolio.py (a backdated buy changes historical snapshots) | done |
 | FR-TX-07 | folio/imports/, folio/api/routers/imports.py | tests/integration/test_imports_api.py (fictional Dutch and English Degiro-shaped exports, comma decimals, re-import adds 0 rows, undo) | in progress (wizard UI pending) |
 | FR-PF-01 | folio/analytics/valuation.py, folio/portfolio.py, folio/api/routers/portfolio.py (summary) | tests/unit/analytics/test_valuation.py, tests/integration/test_portfolio.py (hand-computed periods) | in progress (overview UI pending) |

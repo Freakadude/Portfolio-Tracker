@@ -2,6 +2,12 @@
   "app": {
     "name": "Folio",
     "loading": "Loading…",
+    "close": "Close",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "edit": "Edit",
+    "add": "Add",
+    "more": "Load more",
     "retry": "Try again",
     "save": "Save",
     "saved": "Saved",

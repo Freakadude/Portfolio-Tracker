@@ -1,0 +1,296 @@
+import { screen, within } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { PositionDetail } from './pages/PositionDetail'
+import { GENERAL_US, mockApi, problem, renderAt } from './test-utils'
+
+// The chart draws on a canvas, which jsdom does not have: record what it is asked to draw.
+const chart = vi.hoisted(() => ({
+  series: { setData: vi.fn() },
+  timeScale: { fitContent: vi.fn(), setVisibleRange: vi.fn() },
+  remove: vi.fn(),
+  markers: vi.fn(),
+  created: vi.fn(),
+}))
+vi.mock('lightweight-charts', () => ({
+  ColorType: { Solid: 'solid' },
+  LineSeries: 'line',
+  createChart: (...args: unknown[]) => {
+    chart.created(...args)
+    return {
+      addSeries: () => chart.series,
+      timeScale: () => chart.timeScale,
+      remove: chart.remove,
+    }
+  },
+  createSeriesMarkers: (_series: unknown, markers: unknown) => chart.markers(markers),
+}))
+
+const detail = (over: Record<string, unknown> = {}) => ({
+  instrument: {
+    id: 1,
+    isin: 'IE00B5BMR087',
+    name: 'iShares Core S&P 500',
+    asset_class: 'ETF',
+    ticker: 'SXR8',
+    currency: 'EUR',
+  },
+  account_id: null,
+  as_of: null,
+  summary: {
+    quantity: '5',
+    avg_cost_eur: '120.1',
+    cost_basis_eur: '600.5',
+    market_value_eur: '700',
+    unrealized_pnl_eur: '99.5',
+    unrealized_ratio: '0.1657',
+    realized_pnl_eur: '346.5',
+    income_eur: '3',
+    total_return_eur: '449',
+    total_return_ratio: '0.2039',
+    day_change_eur: '10',
+    day_change_ratio: '0.0145',
+    weight: '0.6',
+    market_value_native: '700',
+    cost_basis_native: '600',
+    unrealized_pnl_native: '100',
+    first_trade_date: '2024-01-02',
+    price: {
+      date: '2024-04-10',
+      close: '140',
+      previous_close: '138',
+      source: 'yahoo',
+      overridden: false,
+      stale: false,
+    },
+    note: null,
+  },
+  lots: [
+    {
+      buy_transaction_id: 2,
+      account_id: 1,
+      trade_date: '2024-02-01',
+      open_quantity: '5',
+      cost_eur: '600.5',
+      avg_cost_eur: '120.1',
+      market_value_eur: '700',
+      unrealized_pnl_eur: '99.5',
+      unrealized_ratio: '0.1657',
+    },
+  ],
+  matches: [
+    {
+      sell_transaction_id: 3,
+      sell_date: '2024-03-01',
+      lot_buy_transaction_id: 1,
+      account_id: 1,
+      quantity: '10',
+      cost_eur: '1001',
+      proceeds_eur: '1298.67',
+      realized_pnl_eur: '297.67',
+    },
+    {
+      sell_transaction_id: 3,
+      sell_date: '2024-03-01',
+      lot_buy_transaction_id: 2,
+      account_id: 1,
+      quantity: '5',
+      cost_eur: '600.5',
+      proceeds_eur: '649.33',
+      realized_pnl_eur: '48.83',
+    },
+  ],
+  transactions: [
+    {
+      id: 3,
+      type: 'sell',
+      trade_date: '2024-03-01',
+      quantity: '15',
+      price: '130',
+      currency: 'EUR',
+      net_amount_eur: '1948',
+    },
+    {
+      id: 2,
+      type: 'buy',
+      trade_date: '2024-02-01',
+      quantity: '10',
+      price: '120',
+      currency: 'EUR',
+      net_amount_eur: '-1201',
+    },
+    {
+      id: 1,
+      type: 'buy',
+      trade_date: '2024-01-02',
+      quantity: '10',
+      price: '100',
+      currency: 'EUR',
+      net_amount_eur: '-1001',
+    },
+  ],
+  ...over,
+})
+
+const prices = [
+  { date: '2024-01-02', close: '100' },
+  { date: '2024-01-03', close: '101' },
+  { date: '2024-02-01', close: '120' },
+  { date: '2024-03-01', close: '130' },
+  { date: '2024-04-10', close: '140' },
+]
+
+beforeEach(() => vi.clearAllMocks())
+afterEach(() => vi.unstubAllGlobals())
+
+function show(detailBody: unknown = detail(), priceRows: unknown = prices) {
+  mockApi({
+    '/api/v1/settings/general': GENERAL_US,
+    '/api/v1/positions/1': detailBody,
+    '/api/v1/instruments/1/prices': priceRows,
+  })
+  return renderAt(<PositionDetail />, '/holdings/1', '/holdings/:instrumentId')
+}
+
+describe('position detail', () => {
+  it('shows the holding, lots, how realized results arose, and the history', async () => {
+    show()
+    expect(await screen.findByRole('heading', { name: 'iShares Core S&P 500' })).toBeInTheDocument()
+    expect(screen.getByText('SXR8 · IE00B5BMR087 · ETF')).toBeInTheDocument()
+    const stat = (label: string) => screen.getByText(label).closest('div')!
+    expect(stat('Cost basis')).toHaveTextContent('€600.50')
+    expect(stat('Market value')).toHaveTextContent('€700.00')
+    expect(stat('Unrealized result')).toHaveTextContent('+€99.50 ▲')
+    expect(stat('Total return')).toHaveTextContent('+€449.00 ▲')
+    expect(stat('Latest close')).toHaveTextContent('€140.00')
+    expect(stat('First purchase')).toHaveTextContent('2024-01-02')
+
+    const lots = screen.getByRole('table', { name: /open lots/i })
+    expect(within(lots).getAllByRole('row')).toHaveLength(2) // header + the one lot that remains
+    expect(lots).toHaveTextContent('2024-02-01')
+
+    const history = screen.getByRole('heading', { name: 'Transactions' }).closest('section')!
+    expect(
+      within(history)
+        .getAllByRole('row')
+        .map((r) => r.textContent),
+    ).toEqual([
+      expect.stringContaining('Date'),
+      expect.stringContaining('Sell'),
+      expect.stringContaining('Buy'),
+      expect.stringContaining('Buy'),
+    ])
+    const matches = screen
+      .getByRole('heading', { name: 'How realized results arose' })
+      .closest('section')!
+    expect(matches).toHaveTextContent('+€297.67 ▲')
+  })
+
+  it('links to buying and selling pre-filled for this instrument', async () => {
+    show()
+    expect(await screen.findByRole('link', { name: 'Buy' })).toHaveAttribute(
+      'href',
+      '/transactions?add=buy&instrument=1',
+    )
+    expect(screen.getByRole('link', { name: 'Sell' })).toHaveAttribute(
+      'href',
+      '/transactions?add=sell&instrument=1',
+    )
+  })
+
+  it('offers no Sell for something you do not hold', async () => {
+    const d = detail()
+    show({ ...d, summary: { ...d.summary, quantity: '0', market_value_eur: '0' }, lots: [] })
+    await screen.findByRole('link', { name: 'Buy' })
+    expect(screen.queryByRole('link', { name: 'Sell' })).toBeNull()
+  })
+
+  it('draws the price line and puts buy and sell markers on days that have a price', async () => {
+    show()
+    await screen.findByRole('img', { name: /Price chart: iShares Core S&P 500/ })
+    expect(chart.series.setData).toHaveBeenCalledWith([
+      { time: '2024-01-02', value: 100 },
+      { time: '2024-01-03', value: 101 },
+      { time: '2024-02-01', value: 120 },
+      { time: '2024-03-01', value: 130 },
+      { time: '2024-04-10', value: 140 },
+    ])
+    const markers = chart.markers.mock.calls[0][0] as {
+      time: string
+      shape: string
+      text: string
+    }[]
+    expect(markers.map((m) => [m.time, m.shape, m.text])).toEqual([
+      ['2024-01-02', 'arrowUp', 'Buy'],
+      ['2024-02-01', 'arrowUp', 'Buy'],
+      ['2024-03-01', 'arrowDown', 'Sell'],
+    ])
+  })
+
+  it('snaps a trade on a day without a close to the close before it', async () => {
+    const d = detail()
+    show({ ...d, transactions: [{ ...d.transactions[1], trade_date: '2024-02-03' }] }) // a Saturday
+    await screen.findByRole('img')
+    const markers = chart.markers.mock.calls[0][0] as { time: string }[]
+    expect(markers.map((m) => m.time)).toEqual(['2024-02-01'])
+  })
+
+  it('offers the same data as a table for anyone who cannot use the chart', async () => {
+    show()
+    await userEvent.click(await screen.findByRole('button', { name: 'Show data as a table' }))
+    const table = screen.getByRole('table', { name: 'Closing prices' })
+    expect(
+      within(table)
+        .getAllByRole('row')
+        .map((r) => r.textContent),
+    ).toEqual([
+      'DateClosing price',
+      '2024-04-10€140.00', // newest first
+      '2024-03-01€130.00',
+      '2024-02-01€120.00',
+      '2024-01-03€101.00',
+      '2024-01-02€100.00',
+    ])
+    expect(screen.queryByRole('img')).toBeNull()
+    await userEvent.click(screen.getByRole('button', { name: 'Show chart' }))
+    expect(await screen.findByRole('img')).toBeInTheDocument()
+  })
+
+  it('can zoom the chart to a range', async () => {
+    show()
+    await screen.findByRole('img')
+    await userEvent.click(screen.getByRole('button', { name: '3M' }))
+    expect(chart.timeScale.setVisibleRange).toHaveBeenLastCalledWith({
+      from: '2024-01-09',
+      to: '2024-04-10',
+    })
+    await userEvent.click(screen.getByRole('button', { name: 'Max' }))
+    expect(chart.timeScale.fitContent).toHaveBeenCalled()
+  })
+
+  it('shows the trading-currency figures next to euros for a foreign listing', async () => {
+    const d = detail()
+    show({ ...d, instrument: { ...d.instrument, currency: 'USD' } })
+    expect(await screen.findByText(/In USD: 700/)).toHaveTextContent('Cost basis 600')
+  })
+
+  it('says so when there are no prices yet', async () => {
+    show(detail(), [])
+    expect(await screen.findByText(/No prices stored yet/)).toBeInTheDocument()
+    expect(chart.created).not.toHaveBeenCalled()
+  })
+
+  it('explains an unknown instrument', async () => {
+    mockApi({
+      '/api/v1/settings/general': GENERAL_US,
+      '/api/v1/positions/1': problem(404, 'Not found', 'That instrument does not exist.'),
+      '/api/v1/instruments/1/prices': [],
+    })
+    renderAt(<PositionDetail />, '/holdings/1', '/holdings/:instrumentId')
+    expect(await screen.findByText('That instrument does not exist.')).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: /Back to holdings/ })).toHaveAttribute(
+      'href',
+      '/holdings',
+    )
+  })
+})

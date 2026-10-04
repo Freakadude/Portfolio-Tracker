@@ -33,11 +33,20 @@ export class ApiProblem extends Error {
   status: number
   title: string
   errors: FieldError[]
-  constructor(status: number, title: string, detail?: string, errors: FieldError[] = []) {
+  /** Any other fields the API put in the problem, such as the transactions blocking a delete. */
+  extra: Record<string, unknown>
+  constructor(
+    status: number,
+    title: string,
+    detail?: string,
+    errors: FieldError[] = [],
+    extra: Record<string, unknown> = {},
+  ) {
     super(detail || title)
     this.status = status
     this.title = title
     this.errors = errors
+    this.extra = extra
   }
 }
 
@@ -46,8 +55,13 @@ type Result<T> = { data?: T; error?: unknown; response: Response }
 export async function unwrap<T>(request: Promise<Result<T>>): Promise<T> {
   const { data, error, response } = await request
   if (!response.ok || error !== undefined) {
-    const p = (error ?? {}) as { title?: string; detail?: string; errors?: FieldError[] }
-    throw new ApiProblem(response.status, p.title ?? response.statusText, p.detail, p.errors)
+    const { title, detail, errors, ...extra } = (error ?? {}) as {
+      title?: string
+      detail?: string
+      errors?: FieldError[]
+      [key: string]: unknown
+    }
+    throw new ApiProblem(response.status, title ?? response.statusText, detail, errors, extra)
   }
   return data as T
 }

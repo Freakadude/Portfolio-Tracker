@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test'
 
-const PASSWORD = 'a long e2e passphrase'
+import { PASSWORD } from './helpers'
 
 // FR-SY-01: a fresh install reaches the empty Home through the setup wizard (in well under 5 minutes).
 test('fresh install: wizard to empty Home, then sign out and back in', async ({ page }) => {
