@@ -20,8 +20,8 @@ Requirement ID → module → test → status (`todo`, `in progress`, `done`).
 | ID | Module | Test | Status |
 | --- | --- | --- | --- |
 | NFR-01 | folio/domain (no floats; Decimal end to end) | tests/unit/domain/test_ledger_properties.py (no-floats test, invariants), test_ledger_golden.py | in progress (domain done; services and API pending) |
-| FR-TX-03 | folio/domain/ledger.py (FIFO and AVG); account switch in ledger service pending | tests/unit/domain/test_ledger_golden.py | in progress |
-| FR-TX-04 | folio/domain/ledger.py preview_sell; API pending | tests/unit/domain/test_ledger_golden.py, test_ledger_properties.py | in progress |
+| FR-TX-03 | folio/domain/ledger.py (FIFO and AVG), account method switch in ledger_service | tests/unit/domain/test_ledger_golden.py, tests/integration/test_transactions_api.py | done |
+| FR-TX-04 | folio/domain/ledger.py preview_sell, POST /transactions/preview-sell | tests/unit/domain/test_ledger_golden.py, test_ledger_properties.py, tests/integration/test_transactions_api.py | in progress (UI pending) |
 | FR-INS-01 | folio/marketdata/resolve.py, isin.py, folio/api/routers/instruments.py | tests/integration/test_instruments_api.py (recorded OpenFIGI and Yahoo responses) | in progress (UI pending) |
 | FR-INS-02 | folio/instruments.py (manual instruments), prices endpoint | tests/integration/test_instruments_api.py | in progress (UI pending) |
 | FR-INS-03 | folio/instruments.py (edit, archive, delete) | tests/integration/test_instruments_api.py | in progress (UI pending) |
@@ -33,9 +33,12 @@ Requirement ID → module → test → status (`todo`, `in progress`, `done`).
 | FR-MD-04 | folio/marketdata/prices.py (gaps, overrides), gap_job | tests/integration/test_marketdata_prices.py, test_jobs_market.py | done |
 | FR-MD-06 | folio/marketdata/fx.py, ecb.py | tests/integration/test_marketdata_fx.py | done |
 | FR-MD-07 | folio/marketdata/corporate_actions | - | todo |
-| FR-TX-01, 02, 05, 06 | folio/ledger_service, folio/api (transactions, positions) | - | todo |
+| FR-TX-01 | folio/ledger_service.py, folio/api/routers/transactions.py | tests/integration/test_transactions_api.py | in progress (UI pending) |
+| FR-TX-02 | folio/ledger_service.py (ECB prefill, override), fx-prefill endpoint | tests/integration/test_transactions_api.py | in progress (UI pending) |
+| FR-TX-05 | positions API | - | todo |
+| FR-TX-06 | folio/ledger_service.py (rebuild, snapshot requests) | tests/integration/test_transactions_api.py (value charts follow with snapshots) | in progress |
 | FR-TX-07 | folio/imports | - | todo |
 | FR-PF-01, FR-PF-10 | folio/analytics/valuation, snapshot job | - | todo |
 | FR-SY-06, FR-SY-07 (CLI restore) | folio/backup, folio/cli | - | todo |
-| FR-SY-08 | folio/audit (helper done), audit viewer API and UI | tests/integration/test_settings.py (settings audit) | in progress |
+| FR-SY-08 | folio/audit; instruments, transactions, accounts, prices, settings audited | tests/integration/test_settings.py, test_instruments_api.py, test_transactions_api.py | in progress (viewer pending) |
 | NFR-02 | UTC storage (UTCDateTime), exchange-local trading dates (Date columns), migration 0002 | tests/integration/test_schema.py | in progress (schema done; job scheduling in exchange time pending) |
