@@ -124,6 +124,7 @@
     "title": "Settings",
     "sections": {
       "general": "General",
+      "accounts": "Accounts",
       "providers": "Providers",
       "agent": "Agent",
       "schedules": "Schedules",

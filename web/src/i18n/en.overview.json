@@ -1,0 +1,176 @@
+{
+  "overview": {
+    "title": "Overview",
+    "periods": {
+      "label": "Period",
+      "1D": "1 day",
+      "1W": "1 week",
+      "1M": "1 month",
+      "3M": "3 months",
+      "YTD": "This year",
+      "1Y": "1 year",
+      "3Y": "3 years",
+      "5Y": "5 years",
+      "MAX": "All time",
+      "CUSTOM": "Custom"
+    },
+    "from": "From",
+    "to": "To",
+    "account": "Account",
+    "allAccounts": "All accounts",
+    "addInstrument": "Add an instrument",
+    "importCsv": "Import a CSV",
+    "value": "Value",
+    "contributions": "Invested (net)",
+    "totalPnl": "Total result",
+    "dayChange": "Today",
+    "periodPnl": "Result in this period",
+    "income": "Income in this period",
+    "costs": "Costs in this period",
+    "range": "{{start}} to {{end}}",
+    "pricesAsOf": "Prices of {{date}}",
+    "noPrices": "No prices stored yet.",
+    "unvalued_one": "{{count}} holding has no price yet and is left out of the value.",
+    "unvalued_other": "{{count}} holdings have no price yet and are left out of the value.",
+    "customInvalid": "Pick a start and an end date, the start not after the end."
+  },
+  "insights": {
+    "title": "Insights",
+    "splits": {
+      "title": "Proposed stock splits",
+      "empty": "No splits are waiting for you.",
+      "caption": "Splits found at a price provider",
+      "columns": {
+        "instrument": "Instrument",
+        "exDate": "Effective",
+        "ratio": "Ratio",
+        "effect": "Effect",
+        "actions": "Actions"
+      },
+      "ratio": "{{ratio}} new units per old unit",
+      "effect": "{{account}}: {{before}} to {{after}} units, cost basis stays {{cost}}",
+      "confirm": "Confirm",
+      "dismiss": "Dismiss",
+      "confirmed": "Split applied."
+    },
+    "dividends": {
+      "title": "Proposed dividends",
+      "intro": "Folio worked these out from the units you held before the ex-date. Check the amount against your broker, then confirm.",
+      "empty": "No dividends are waiting for you.",
+      "caption": "Dividends proposed by Folio",
+      "columns": {
+        "date": "Date",
+        "instrument": "Instrument",
+        "account": "Account",
+        "units": "Units",
+        "amount": "Amount (€)",
+        "actions": "Actions"
+      },
+      "amountFor": "Amount in euro for {{name}}",
+      "confirm": "Confirm",
+      "delete": "Delete",
+      "deleteConfirm": "Delete the proposed dividend of {{name}} on {{date}}? It will not be proposed again."
+    }
+  },
+  "system": {
+    "title": "System",
+    "usage": {
+      "title": "Price provider calls today",
+      "caption": "Calls made today per provider",
+      "columns": {
+        "provider": "Provider",
+        "calls": "Calls",
+        "budget": "Daily limit",
+        "remaining": "Left",
+        "state": "State"
+      },
+      "unlimited": "No limit",
+      "enabled": "On",
+      "disabled": "Off",
+      "noKey": "No key"
+    },
+    "jobs": {
+      "title": "Jobs",
+      "refresh": "Refresh prices now",
+      "queued": "Asked the worker to refresh prices. It starts within a few seconds.",
+      "runsCaption": "Recent job runs",
+      "requestsCaption": "Requests waiting for the worker",
+      "requests": "Requests",
+      "runs": "Recent runs",
+      "columns": {
+        "job": "Job",
+        "started": "Started",
+        "duration": "Took",
+        "status": "Result",
+        "log": "Message",
+        "created": "Asked",
+        "error": "Problem"
+      },
+      "seconds": "{{count}} s",
+      "none": "Nothing has run yet.",
+      "noRequests": "No requests waiting.",
+      "status": {
+        "ok": "Done",
+        "error": "Failed",
+        "running": "Running",
+        "partial": "Partly done",
+        "pending": "Waiting",
+        "done": "Done",
+        "failed": "Failed"
+      }
+    },
+    "audit": {
+      "title": "Audit log",
+      "caption": "Changes made to your data, newest first",
+      "filters": {
+        "entity": "Kind of record",
+        "actor": "Who",
+        "from": "From",
+        "to": "To",
+        "all": "All"
+      },
+      "columns": {
+        "when": "When",
+        "who": "Who",
+        "action": "Action",
+        "record": "Record",
+        "changes": "Changes"
+      },
+      "before": "before",
+      "after": "after",
+      "empty": "Nothing recorded for these filters.",
+      "more": "Load more"
+    }
+  },
+  "accounts": {
+    "title": "Accounts",
+    "caption": "Your broker accounts",
+    "columns": {
+      "name": "Name",
+      "broker": "Broker",
+      "method": "Cost basis method",
+      "transactions": "Transactions",
+      "actions": "Actions"
+    },
+    "methods": {
+      "FIFO": "First in, first out",
+      "AVG": "Average cost"
+    },
+    "inactive": "Archived",
+    "add": "Add account",
+    "addTitle": "Add account",
+    "editTitle": "Edit {{name}}",
+    "name": "Account name",
+    "broker": "Broker (optional)",
+    "method": "Cost basis method",
+    "methodHint": "How a sale picks the units it sells. Changing it recalculates the whole account.",
+    "save": "Save account",
+    "required": "This is required.",
+    "edit": "Edit",
+    "archive": "Archive",
+    "unarchive": "Restore",
+    "delete": "Delete",
+    "deleteConfirm": "Delete the account {{name}}?",
+    "switchWarning": "Switching to {{method}} recalculates every lot, position and realized result of this account, and the history of your portfolio value. Nothing is lost, and you can switch back. Continue?"
+  }
+}

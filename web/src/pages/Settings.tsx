@@ -1,10 +1,12 @@
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
+import { AccountsTab } from '../components/AccountsTab'
 import { SectionForm } from '../components/SectionForm'
 import { cn } from '../lib/cn'
 
 const SECTIONS = [
   'general',
+  'accounts',
   'providers',
   'agent',
   'schedules',
@@ -42,9 +44,9 @@ export function Settings() {
         role="tabpanel"
         id="settings-panel"
         aria-labelledby={`tab-${section}`}
-        className="max-w-xl"
+        className={section === 'accounts' ? 'max-w-4xl' : 'max-w-xl'}
       >
-        <SectionForm key={section} section={section} />
+        {section === 'accounts' ? <AccountsTab /> : <SectionForm key={section} section={section} />}
       </div>
     </div>
   )

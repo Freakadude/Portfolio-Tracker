@@ -54,7 +54,10 @@ describe('routing gate', () => {
   })
 
   it('shows the empty Home with navigation once signed in', async () => {
-    mockApi({ needs_owner: false, authenticated: true, has_account: true, setup_complete: true })
+    mockApi(
+      { needs_owner: false, authenticated: true, has_account: true, setup_complete: true },
+      { '/api/v1/accounts': () => Response.json([]) },
+    )
     renderApp('/')
     expect(
       await screen.findByText('Add your first instrument to start tracking your portfolio.'),

@@ -3,27 +3,22 @@ import { Route, Routes } from 'react-router-dom'
 import { Gate, Loading } from './components/Gate'
 import { Layout } from './components/Layout'
 import { Holdings } from './pages/Holdings'
+import { Home } from './pages/Home'
+import { Insights } from './pages/Insights'
 import { ImportWizard } from './pages/ImportWizard'
 import { Transactions } from './pages/Transactions'
 import { Login } from './pages/Login'
 import { Placeholder } from './pages/Placeholder'
 import { Settings } from './pages/Settings'
 import { Setup } from './pages/Setup'
+import { System } from './pages/System'
 
 // The chart library is large, so the position page is only loaded when it is opened.
 const PositionDetail = lazy(() =>
   import('./pages/PositionDetail').then((m) => ({ default: m.PositionDetail })),
 )
 
-const PAGES = [
-  'dashboards',
-  'insights',
-  'news',
-  'strategies',
-  'watchlist',
-  'reports',
-  'system',
-] as const
+const PAGES = ['dashboards', 'news', 'strategies', 'watchlist', 'reports'] as const
 
 export function App() {
   return (
@@ -32,7 +27,7 @@ export function App() {
       <Route path="/setup" element={<Setup />} />
       <Route element={<Gate />}>
         <Route element={<Layout />}>
-          <Route index element={<Placeholder page="home" />} />
+          <Route index element={<Home />} />
           {PAGES.map((page) => (
             <Route key={page} path={page} element={<Placeholder page={page} />} />
           ))}
@@ -47,8 +42,10 @@ export function App() {
               </Suspense>
             }
           />
+          <Route path="insights" element={<Insights />} />
+          <Route path="system" element={<System />} />
           <Route path="settings" element={<Settings />} />
-          <Route path="*" element={<Placeholder page="home" />} />
+          <Route path="*" element={<Home />} />
         </Route>
       </Route>
     </Routes>
