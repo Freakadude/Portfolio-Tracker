@@ -51,6 +51,9 @@ class Secret(Base):
     name: Mapped[str] = mapped_column(String(100), unique=True)
     ciphertext: Mapped[str] = mapped_column(Text)
 
+    def __repr__(self) -> str:
+        return f"Secret(name={self.name!r}, ciphertext=<redacted>)"
+
 
 class AuditLog(Base):
     """Append-only (FR-SY-08)."""
