@@ -1,11 +1,14 @@
 import hmac
 import secrets
+import time
+import uuid
 
 from starlette.middleware.base import BaseHTTPMiddleware, RequestResponseEndpoint
 from starlette.requests import Request
 from starlette.responses import Response
 
 from folio.api.errors import problem
+from folio.logging import correlation_id, get_logger
 
 CSRF_COOKIE = "folio_csrf"
 CSRF_HEADER = "x-csrf-token"
@@ -59,3 +62,29 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
         response.headers.setdefault("Referrer-Policy", "no-referrer")
         response.headers.setdefault("X-Frame-Options", "DENY")
         return response
+
+
+class RequestLogMiddleware(BaseHTTPMiddleware):
+    """Assigns a request ID, echoes it as X-Request-ID and writes one JSON access-log line."""
+
+    async def dispatch(self, request: Request, call_next: RequestResponseEndpoint) -> Response:
+        rid = uuid.uuid4().hex
+        token = correlation_id.set(rid)
+        log = get_logger("folio.access")
+        started = time.perf_counter()
+        try:
+            response = await call_next(request)
+            response.headers["X-Request-ID"] = rid
+            log.info(
+                "request",
+                method=request.method,
+                path=request.url.path,
+                status=response.status_code,
+                duration_ms=round((time.perf_counter() - started) * 1000, 1),
+            )
+            return response
+        except Exception:
+            log.exception("unhandled error", method=request.method, path=request.url.path)
+            raise
+        finally:
+            correlation_id.reset(token)

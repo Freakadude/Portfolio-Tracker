@@ -8,3 +8,4 @@
 - Auth: Argon2id passwords, DB-backed sessions (HttpOnly, SameSite=Strict, Secure over HTTPS, 30-day remember), persisted login throttle (5 failures / 15 min), CSRF double-submit cookie, CSP and security headers, RFC 9457 errors, Alembic migration 0001 [FR-SY-02, NFR-07].
 - Encrypted secret store (Fernet, HKDF-derived key), masked display, redacted repr [FR-SY-05].
 - Setup wizard API (owner, first account, complete) and typed settings sections with masked write-only secrets and audit diffs; audit-log helper [FR-SY-01, FR-SY-09, FR-SY-05, FR-SY-08].
+- JSON logging with request IDs and secret scrubbing, `/healthz` and `/readyz`, CLI (`init`, `migrate`, `create-user`, `reset-password`, `web`, `worker` stub), healthcheck probe, built-UI serving [NFR-09, FR-SY-05].

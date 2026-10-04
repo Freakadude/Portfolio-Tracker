@@ -6,6 +6,7 @@ from sqlalchemy.orm import Session
 
 from folio.db.models import Secret
 from folio.security.keys import derive_key
+from folio.security.redact import register
 
 
 class SecretDecryptError(Exception):
@@ -31,6 +32,7 @@ class SecretStore:
         return self._db.scalar(select(Secret).where(Secret.name == name))
 
     def set(self, name: str, value: str) -> None:
+        register(value)
         ciphertext = self._fernet.encrypt(value.encode()).decode()
         row = self._row(name)
         if row is None:
@@ -43,9 +45,11 @@ class SecretStore:
         if row is None:
             return None
         try:
-            return self._fernet.decrypt(row.ciphertext.encode()).decode()
+            value = self._fernet.decrypt(row.ciphertext.encode()).decode()
         except InvalidToken as exc:
             raise SecretDecryptError(f"cannot decrypt secret {name!r}") from exc
+        register(value)
+        return value
 
     def masked(self, name: str) -> str | None:
         value = self.get(name)
