@@ -11,3 +11,4 @@
 - JSON logging with request IDs and secret scrubbing, `/healthz` and `/readyz`, CLI (`init`, `migrate`, `create-user`, `reset-password`, `web`, `worker` stub), healthcheck probe, built-UI serving [NFR-09, FR-SY-05].
 - Web shell (React, Vite, Tailwind): login, 5-step setup wizard, app shell with empty states for every page, generic settings pages with masked secrets, light/dark themes, i18n layer (English), generated API client, Vitest and Playwright tests [FR-SY-01, FR-SY-09, NFR-10].
 - SQLite folder is created automatically for file databases.
+- Container and CI: multi-stage Dockerfile (non-root, read-only root fs), Portainer-ready docker-compose.yml, GitHub Actions (python, web with e2e, multi-arch image build, gitleaks), pre-commit hooks (gitleaks, ruff, eslint, prettier), `.gitattributes` for LF line endings [NFR-07, NFR-10].

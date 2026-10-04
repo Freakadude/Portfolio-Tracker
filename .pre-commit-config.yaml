@@ -1,0 +1,38 @@
+repos:
+  - repo: https://github.com/gitleaks/gitleaks
+    rev: v8.30.1
+    hooks:
+      - id: gitleaks
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v6.0.0
+    hooks:
+      - id: check-merge-conflict
+      - id: check-yaml
+      - id: end-of-file-fixer
+        exclude: ^(web/src/api/schema\.d\.ts|uv\.lock|web/package-lock\.json)$
+      - id: trailing-whitespace
+        exclude: ^(web/src/api/schema\.d\.ts|\.claude/)
+  - repo: local
+    hooks:
+      - id: ruff-check
+        name: ruff check
+        entry: uv run ruff check
+        language: system
+        types: [python]
+      - id: ruff-format
+        name: ruff format
+        entry: uv run ruff format --check
+        language: system
+        types: [python]
+      - id: eslint
+        name: eslint
+        entry: npm --prefix web run lint --
+        language: system
+        files: ^web/.*\.(ts|tsx|js)$
+        pass_filenames: false
+      - id: prettier
+        name: prettier
+        entry: npm --prefix web run format:check
+        language: system
+        files: ^web/
+        pass_filenames: false

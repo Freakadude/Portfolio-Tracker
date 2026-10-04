@@ -1,0 +1,46 @@
+# Deploy as a Portainer stack on the Docker LXC. Reach it over the LAN or Tailscale only;
+# never put it behind a publicly exposed reverse proxy.
+services:
+  web:
+    image: folio:latest
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+    command: ["web"]
+    init: true
+    env_file: .env
+    volumes: ["folio-data:/data"]
+    ports: ["${FOLIO_LAN_IP:?set FOLIO_LAN_IP in .env}:8080:8080"] # LAN interface only
+    read_only: true
+    tmpfs: ["/tmp"]
+    security_opt: ["no-new-privileges:true"]
+    user: "10001:10001"
+    healthcheck:
+      test: ["CMD", "python", "-m", "folio.healthcheck", "http://localhost:8080/healthz"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+    restart: unless-stopped
+  worker:
+    image: folio:latest
+    command: ["worker"]
+    init: true
+    env_file: .env
+    volumes: ["folio-data:/data"]
+    read_only: true
+    tmpfs: ["/tmp"]
+    security_opt: ["no-new-privileges:true"]
+    user: "10001:10001"
+    depends_on:
+      web: { condition: service_healthy } # web runs migrations on start
+    restart: unless-stopped
+  ntfy:
+    image: binwiederhier/ntfy
+    command: ["serve"]
+    profiles: ["ntfy"]
+    volumes: ["ntfy-data:/var/lib/ntfy"]
+    ports: ["${FOLIO_LAN_IP:?set FOLIO_LAN_IP in .env}:8081:80"]
+    restart: unless-stopped
+volumes:
+  folio-data: {}
+  ntfy-data: {}
