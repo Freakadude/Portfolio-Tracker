@@ -36,9 +36,10 @@ Requirement ID → module → test → status (`todo`, `in progress`, `done`).
 | FR-TX-01 | folio/ledger_service.py, folio/api/routers/transactions.py | tests/integration/test_transactions_api.py | in progress (UI pending) |
 | FR-TX-02 | folio/ledger_service.py (ECB prefill, override), fx-prefill endpoint | tests/integration/test_transactions_api.py | in progress (UI pending) |
 | FR-TX-05 | folio/positions.py, folio/api/routers/positions.py | tests/integration/test_positions_api.py (hand-computed metrics; reconciliation with invariants 1 and 2) | in progress (UI pending) |
-| FR-TX-06 | folio/ledger_service.py (rebuild, snapshot requests) | tests/integration/test_transactions_api.py (value charts follow with snapshots) | in progress |
+| FR-TX-06 | folio/ledger_service.py (rebuild, snapshot requests), folio/jobs/portfolio.py | tests/integration/test_transactions_api.py, test_portfolio.py (a backdated buy changes historical snapshots) | done |
 | FR-TX-07 | folio/imports/, folio/api/routers/imports.py | tests/integration/test_imports_api.py (fictional Dutch and English Degiro-shaped exports, comma decimals, re-import adds 0 rows, undo) | in progress (wizard UI pending) |
-| FR-PF-01, FR-PF-10 | folio/analytics/valuation, snapshot job | - | todo |
+| FR-PF-01 | folio/analytics/valuation.py, folio/portfolio.py, folio/api/routers/portfolio.py (summary) | tests/unit/analytics/test_valuation.py, tests/integration/test_portfolio.py (hand-computed periods) | in progress (overview UI pending) |
+| FR-PF-10 | folio/portfolio.py (save_snapshots, lock_closed_years), folio/jobs/portfolio.py | tests/integration/test_portfolio.py (idempotent re-run; 1 January flagged and locked) | in progress (nightly schedule pending) |
 | FR-SY-06, FR-SY-07 (CLI restore) | folio/backup, folio/cli | - | todo |
 | FR-SY-08 | folio/audit; instruments, transactions, accounts, prices, settings audited | tests/integration/test_settings.py, test_instruments_api.py, test_transactions_api.py | in progress (viewer pending) |
 | NFR-02 | UTC storage (UTCDateTime), exchange-local trading dates (Date columns), migration 0002 | tests/integration/test_schema.py | in progress (schema done; job scheduling in exchange time pending) |

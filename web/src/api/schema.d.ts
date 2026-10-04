@@ -348,6 +348,46 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/portfolio/history": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * History
+         * @description The stored daily snapshots: value against net contributions.
+         */
+        get: operations["history_api_v1_portfolio_history_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/portfolio/summary": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Summary
+         * @description Value, net contributions, total P&L and the change over a period (FR-PF-01).
+         */
+        get: operations["summary_api_v1_portfolio_summary_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/positions": {
         parameters: {
             query?: never;
@@ -712,6 +752,13 @@ export interface components {
             /** Warning */
             warning: string | null;
         };
+        /** ChangeOut */
+        ChangeOut: {
+            /** Pnl Eur */
+            pnl_eur: string;
+            /** Pnl Ratio */
+            pnl_ratio: string | null;
+        };
         /** CommitIn */
         CommitIn: {
             /**
@@ -780,6 +827,22 @@ export interface components {
             index: number;
             /** Label */
             label: string;
+        };
+        /** HistoryPoint */
+        HistoryPoint: {
+            /**
+             * Date
+             * Format: date
+             */
+            date: string;
+            /** Is Peildatum */
+            is_peildatum: boolean;
+            /** Net Contributions Eur */
+            net_contributions_eur: string;
+            /** Unvalued Positions */
+            unvalued_positions: number;
+            /** Value Eur */
+            value_eur: string;
         };
         /**
          * ImportMapping
@@ -1066,6 +1129,35 @@ export interface components {
             /** Username */
             username: string;
         };
+        /** PeriodOut */
+        PeriodOut: {
+            /** Costs Eur */
+            costs_eur: string;
+            /**
+             * End
+             * Format: date
+             */
+            end: string;
+            /** Income Eur */
+            income_eur: string;
+            /** Key */
+            key: string;
+            /** Net Flows Eur */
+            net_flows_eur: string;
+            /** Pnl Eur */
+            pnl_eur: string;
+            /** Pnl Ratio */
+            pnl_ratio: string | null;
+            /**
+             * Start
+             * Format: date
+             */
+            start: string;
+            /** Value End Eur */
+            value_end_eur: string;
+            /** Value Start Eur */
+            value_start_eur: string;
+        };
         /** PositionDetailOut */
         PositionDetailOut: {
             /** Account Id */
@@ -1269,6 +1361,36 @@ export interface components {
             needs_owner: boolean;
             /** Setup Complete */
             setup_complete: boolean;
+        };
+        /** SummaryOut */
+        SummaryOut: {
+            /** Account Id */
+            account_id: number | null;
+            /**
+             * As Of
+             * Format: date
+             */
+            as_of: string;
+            /** Cash Eur */
+            cash_eur: string | null;
+            /** Costs Eur */
+            costs_eur: string;
+            day_change: components["schemas"]["ChangeOut"];
+            /** Income Eur */
+            income_eur: string;
+            /** Net Contributions Eur */
+            net_contributions_eur: string;
+            period: components["schemas"]["PeriodOut"];
+            /** Price Date */
+            price_date: string | null;
+            /** Total Pnl Eur */
+            total_pnl_eur: string;
+            /** Total Pnl Ratio */
+            total_pnl_ratio: string | null;
+            /** Unvalued Positions */
+            unvalued_positions: number;
+            /** Value Eur */
+            value_eur: string;
         };
         /** TotalsOut */
         TotalsOut: {
@@ -2418,6 +2540,73 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["folio__api__routers__instruments__PriceOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    history_api_v1_portfolio_history_get: {
+        parameters: {
+            query?: {
+                from?: string | null;
+                to?: string | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HistoryPoint"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    summary_api_v1_portfolio_summary_get: {
+        parameters: {
+            query?: {
+                period?: string;
+                as_of?: string | null;
+                account?: number | null;
+                from?: string | null;
+                to?: string | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SummaryOut"];
                 };
             };
             /** @description Validation Error */

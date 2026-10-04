@@ -223,6 +223,13 @@ class PortfolioSnapshot(Base):
     total_value_eur: Mapped[Decimal] = mapped_column(DecimalText)
     net_contributions_eur: Mapped[Decimal] = mapped_column(DecimalText)
     cash_eur: Mapped[Decimal] = mapped_column(DecimalText, default=Decimal(0))
+    income_eur: Mapped[Decimal] = mapped_column(
+        DecimalText, default=Decimal(0), server_default="0"
+    )  # cumulative dividends and interest
+    costs_eur: Mapped[Decimal] = mapped_column(
+        DecimalText, default=Decimal(0), server_default="0"
+    )  # cumulative standalone fees and taxes
+    unvalued_positions: Mapped[int] = mapped_column(Integer, default=0, server_default="0")
     positions: Mapped[Any] = mapped_column(JSON, default=list)
     is_peildatum: Mapped[bool] = mapped_column(Boolean, default=False)  # 1 January
     locked: Mapped[bool] = mapped_column(Boolean, default=False)  # peildatum once the year closes

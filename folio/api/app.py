@@ -12,6 +12,7 @@ from folio.api.routers import (
     health,
     imports,
     instruments,
+    portfolio,
     positions,
     transactions,
 )
@@ -64,6 +65,7 @@ def create_app(
     app.include_router(instruments.router, prefix=API_PREFIX)
     app.include_router(transactions.router, prefix=API_PREFIX)
     app.include_router(positions.router, prefix=API_PREFIX)
+    app.include_router(portfolio.router, prefix=API_PREFIX)
     app.include_router(imports.router, prefix=API_PREFIX)
     app.include_router(corporate_actions.router, prefix=API_PREFIX)
     app.include_router(health.router)

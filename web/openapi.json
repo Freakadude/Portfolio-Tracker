@@ -351,6 +351,33 @@
         "title": "CandidateOut",
         "type": "object"
       },
+      "ChangeOut": {
+        "properties": {
+          "pnl_eur": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Pnl Eur",
+            "type": "string"
+          },
+          "pnl_ratio": {
+            "anyOf": [
+              {
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Pnl Ratio"
+          }
+        },
+        "required": [
+          "pnl_eur",
+          "pnl_ratio"
+        ],
+        "title": "ChangeOut",
+        "type": "object"
+      },
       "CommitIn": {
         "properties": {
           "skip_errors": {
@@ -511,6 +538,42 @@
           "label"
         ],
         "title": "HeaderOut",
+        "type": "object"
+      },
+      "HistoryPoint": {
+        "properties": {
+          "date": {
+            "format": "date",
+            "title": "Date",
+            "type": "string"
+          },
+          "is_peildatum": {
+            "title": "Is Peildatum",
+            "type": "boolean"
+          },
+          "net_contributions_eur": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Net Contributions Eur",
+            "type": "string"
+          },
+          "unvalued_positions": {
+            "title": "Unvalued Positions",
+            "type": "integer"
+          },
+          "value_eur": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Value Eur",
+            "type": "string"
+          }
+        },
+        "required": [
+          "date",
+          "value_eur",
+          "net_contributions_eur",
+          "unvalued_positions",
+          "is_peildatum"
+        ],
+        "title": "HistoryPoint",
         "type": "object"
       },
       "ImportMapping": {
@@ -1584,6 +1647,80 @@
         "title": "OwnerIn",
         "type": "object"
       },
+      "PeriodOut": {
+        "properties": {
+          "costs_eur": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Costs Eur",
+            "type": "string"
+          },
+          "end": {
+            "format": "date",
+            "title": "End",
+            "type": "string"
+          },
+          "income_eur": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Income Eur",
+            "type": "string"
+          },
+          "key": {
+            "title": "Key",
+            "type": "string"
+          },
+          "net_flows_eur": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Net Flows Eur",
+            "type": "string"
+          },
+          "pnl_eur": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Pnl Eur",
+            "type": "string"
+          },
+          "pnl_ratio": {
+            "anyOf": [
+              {
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Pnl Ratio"
+          },
+          "start": {
+            "format": "date",
+            "title": "Start",
+            "type": "string"
+          },
+          "value_end_eur": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Value End Eur",
+            "type": "string"
+          },
+          "value_start_eur": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Value Start Eur",
+            "type": "string"
+          }
+        },
+        "required": [
+          "key",
+          "start",
+          "end",
+          "value_start_eur",
+          "value_end_eur",
+          "net_flows_eur",
+          "income_eur",
+          "costs_eur",
+          "pnl_eur",
+          "pnl_ratio"
+        ],
+        "title": "PeriodOut",
+        "type": "object"
+      },
       "PositionDetailOut": {
         "properties": {
           "account_id": {
@@ -2438,6 +2575,114 @@
           "setup_complete"
         ],
         "title": "SetupStatus",
+        "type": "object"
+      },
+      "SummaryOut": {
+        "properties": {
+          "account_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Account Id"
+          },
+          "as_of": {
+            "format": "date",
+            "title": "As Of",
+            "type": "string"
+          },
+          "cash_eur": {
+            "anyOf": [
+              {
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cash Eur"
+          },
+          "costs_eur": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Costs Eur",
+            "type": "string"
+          },
+          "day_change": {
+            "$ref": "#/components/schemas/ChangeOut"
+          },
+          "income_eur": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Income Eur",
+            "type": "string"
+          },
+          "net_contributions_eur": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Net Contributions Eur",
+            "type": "string"
+          },
+          "period": {
+            "$ref": "#/components/schemas/PeriodOut"
+          },
+          "price_date": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Price Date"
+          },
+          "total_pnl_eur": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Total Pnl Eur",
+            "type": "string"
+          },
+          "total_pnl_ratio": {
+            "anyOf": [
+              {
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Total Pnl Ratio"
+          },
+          "unvalued_positions": {
+            "title": "Unvalued Positions",
+            "type": "integer"
+          },
+          "value_eur": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Value Eur",
+            "type": "string"
+          }
+        },
+        "required": [
+          "as_of",
+          "price_date",
+          "account_id",
+          "value_eur",
+          "net_contributions_eur",
+          "income_eur",
+          "costs_eur",
+          "total_pnl_eur",
+          "total_pnl_ratio",
+          "unvalued_positions",
+          "cash_eur",
+          "day_change",
+          "period"
+        ],
+        "title": "SummaryOut",
         "type": "object"
       },
       "TotalsOut": {
@@ -4799,6 +5044,189 @@
         "summary": "Set Price",
         "tags": [
           "instruments"
+        ]
+      }
+    },
+    "/api/v1/portfolio/history": {
+      "get": {
+        "description": "The stored daily snapshots: value against net contributions.",
+        "operationId": "history_api_v1_portfolio_history_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "from",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "date",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "From"
+            }
+          },
+          {
+            "in": "query",
+            "name": "to",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "date",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "To"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/HistoryPoint"
+                  },
+                  "title": "Response History Api V1 Portfolio History Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "History",
+        "tags": [
+          "portfolio"
+        ]
+      }
+    },
+    "/api/v1/portfolio/summary": {
+      "get": {
+        "description": "Value, net contributions, total P&L and the change over a period (FR-PF-01).",
+        "operationId": "summary_api_v1_portfolio_summary_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "period",
+            "required": false,
+            "schema": {
+              "default": "1M",
+              "title": "Period",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "as_of",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "date",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "As Of"
+            }
+          },
+          {
+            "in": "query",
+            "name": "account",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Account"
+            }
+          },
+          {
+            "in": "query",
+            "name": "from",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "date",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "From"
+            }
+          },
+          {
+            "in": "query",
+            "name": "to",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "date",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "To"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SummaryOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Summary",
+        "tags": [
+          "portfolio"
         ]
       }
     },
