@@ -3,6 +3,8 @@ import { Route, Routes } from 'react-router-dom'
 import { Gate, Loading } from './components/Gate'
 import { Layout } from './components/Layout'
 import { Holdings } from './pages/Holdings'
+import { ImportWizard } from './pages/ImportWizard'
+import { Transactions } from './pages/Transactions'
 import { Login } from './pages/Login'
 import { Placeholder } from './pages/Placeholder'
 import { Settings } from './pages/Settings'
@@ -14,7 +16,6 @@ const PositionDetail = lazy(() =>
 )
 
 const PAGES = [
-  'transactions',
   'dashboards',
   'insights',
   'news',
@@ -36,6 +37,8 @@ export function App() {
             <Route key={page} path={page} element={<Placeholder page={page} />} />
           ))}
           <Route path="holdings" element={<Holdings />} />
+          <Route path="transactions" element={<Transactions />} />
+          <Route path="transactions/import" element={<ImportWizard />} />
           <Route
             path="holdings/:instrumentId"
             element={

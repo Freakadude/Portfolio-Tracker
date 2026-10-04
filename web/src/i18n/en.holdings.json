@@ -8,21 +8,6 @@
     "CASH": "Cash",
     "OTHER": "Other"
   },
-  "transactions": {
-    "types": {
-      "buy": "Buy",
-      "sell": "Sell",
-      "dividend": "Dividend",
-      "interest": "Interest",
-      "fee": "Fee",
-      "tax": "Tax",
-      "split": "Split",
-      "transfer_in": "Transfer in",
-      "transfer_out": "Transfer out",
-      "deposit": "Deposit",
-      "withdrawal": "Withdrawal"
-    }
-  },
   "delta": { "up": "gain", "down": "loss", "flat": "no change", "none": "" },
   "asof": { "title": "Close of {{date}} ({{source}})" },
   "holdings": {
