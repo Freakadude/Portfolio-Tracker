@@ -13,4 +13,4 @@ Requirement ID → module → test → status (`todo`, `in progress`, `done`).
 | NFR-07 | folio/api/app, docker/, docker-compose.yml | tests/integration/test_security_headers.py | todo |
 | NFR-09 | folio/logging, folio/api/health | tests/integration/test_health.py, test_logging.py | todo |
 | NFR-10 | CI, pre-commit, pyproject | CI workflow | todo |
-| NFR-01 (groundwork) | folio/db/types | tests/unit/test_decimal_type.py | todo |
+| NFR-01 (groundwork) | folio/db/types | tests/unit/test_decimal_type.py | done |
