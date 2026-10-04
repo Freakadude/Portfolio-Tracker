@@ -103,6 +103,37 @@ def gap_job(ctx: JobContext, days: int = GAP_WINDOW_DAYS) -> JobResult:
     return run_job(ctx, "gaps", body, {"days": days})
 
 
+def refresh_job(ctx: JobContext) -> JobResult:
+    """ "Refresh prices now": the newest closes for everything tracked, then the ECB rates."""
+
+    def body(db: Session, log: JobLog) -> None:
+        today = ctx.today()
+        prices = PriceService(db, ctx.chain_for(db))
+        tracked = tracked_listings(db)
+        if not tracked:
+            log.info("Nothing is tracked yet.")
+        for listing, instrument in tracked:
+            try:
+                summary = prices.update_latest(listing_ref(listing, instrument.isin), today)
+                db.commit()
+                log.info(
+                    f"{listing.ticker}: {summary.stored} new or changed closes ({summary.source})"
+                )
+            except ProviderError as exc:
+                db.rollback()
+                log.error(f"{listing.ticker}: {exc}")
+        currencies = needed_currencies(db)
+        if currencies:
+            floor = first_transaction_date(db) or today - timedelta(days=365 * FX_FLOOR_YEARS)
+            try:
+                changed = FxService(db, ctx.ecb_for(db)).catch_up(currencies, today, floor)
+                log.info(f"ECB rates for {', '.join(sorted(currencies))}: {changed} new or changed")
+            except ProviderError as exc:
+                log.error(f"ECB rates: {exc}")
+
+    return run_job(ctx, "refresh", body)
+
+
 def actions_job(ctx: JobContext) -> JobResult:
     """Look for splits and dividends on everything held, and propose them (FR-MD-07)."""
 

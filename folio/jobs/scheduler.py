@@ -26,7 +26,14 @@ from folio.config import Settings
 from folio.db.base import utcnow
 from folio.db.models_ledger import JobRequest
 from folio.jobs.context import JobContext
-from folio.jobs.market import actions_job, backfill_job, eod_job, fx_job, gap_job
+from folio.jobs.market import (
+    actions_job,
+    backfill_job,
+    eod_job,
+    fx_job,
+    gap_job,
+    refresh_job,
+)
 from folio.jobs.portfolio import snapshots_job
 from folio.jobs.runner import JobLog, JobResult, run_job
 from folio.logging import get_logger
@@ -68,6 +75,25 @@ def backup_job(ctx: JobContext, settings: Settings, *, include_secrets: bool = T
     return run_job(ctx, "backup", body)
 
 
+# What each job needs in its parameters (used by the API and the command line).
+JOB_PARAMS: dict[str, tuple[str, ...]] = {
+    "backfill": ("listing_id",),
+    "eod": ("mic",),
+    "fx": (),
+    "gaps": (),
+    "snapshots": (),
+    "actions": (),
+    "backup": (),
+    "refresh": (),
+}
+
+
+def _refresh(ctx: JobContext) -> JobResult:
+    result = refresh_job(ctx)
+    snapshots_job(ctx)  # new closes change the recent values
+    return result
+
+
 def handlers(
     ctx: JobContext, settings: Settings
 ) -> dict[str, Callable[[dict[str, object]], JobResult]]:
@@ -80,6 +106,7 @@ def handlers(
         "gaps": lambda p: gap_job(ctx),
         "actions": lambda p: actions_job(ctx),
         "backup": lambda p: backup_job(ctx, settings),
+        "refresh": lambda p: _refresh(ctx),
     }
 
 

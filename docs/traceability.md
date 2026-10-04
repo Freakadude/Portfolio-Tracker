@@ -26,7 +26,7 @@ Requirement ID → module → test → status (`todo`, `in progress`, `done`).
 | FR-INS-02 | folio/instruments.py (manual instruments), prices endpoint | tests/integration/test_instruments_api.py | in progress (UI pending) |
 | FR-INS-03 | folio/instruments.py (edit, archive, delete) | tests/integration/test_instruments_api.py | in progress (UI pending) |
 | FR-MD-01 | folio/marketdata/base.py (provider interface), fake.py | tests/integration/test_marketdata_fallback.py | done (jobs that use it follow) |
-| FR-MD-10 | folio/marketdata/budget.py (UsageTracker), http.py | tests/integration/test_marketdata_http.py | in progress (usage endpoint pending) |
+| FR-MD-10 | folio/marketdata/budget.py (UsageTracker), http.py, GET /system/usage | tests/integration/test_marketdata_http.py, test_system_api.py (usage matches the counter exactly) | in progress (System page UI pending) |
 | FR-MD-11 | folio/marketdata/fallback.py, registry.py, prices.py (is_stale) | tests/integration/test_marketdata_fallback.py, test_marketdata_prices.py | in progress (stale marker in the UI pending) |
 | FR-MD-02 | folio/marketdata/exchanges.py (calendars, job times), folio/jobs/market.py eod_job | tests/unit/test_exchanges.py, tests/integration/test_jobs_market.py | done |
 | FR-MD-03 | folio/jobs/market.py backfill_job, queued by POST /instruments, handled by the job-request poller | tests/integration/test_jobs_market.py, test_instruments_api.py, test_scheduler.py | done |
@@ -42,5 +42,5 @@ Requirement ID → module → test → status (`todo`, `in progress`, `done`).
 | FR-PF-10 | folio/portfolio.py (save_snapshots, lock_closed_years), folio/jobs/portfolio.py | tests/integration/test_portfolio.py (idempotent re-run; 1 January flagged and locked) | done |
 | FR-SY-06 | folio/backup.py (VACUUM INTO, integrity check, 14 daily + 8 weekly, extra folder), jobs/scheduler.py (03:00) | tests/integration/test_backup.py, test_scheduler.py | done |
 | FR-SY-07 (CLI restore) | folio/backup.py restore_backup, folio/cli.py restore | tests/integration/test_backup.py (restore recreates identical positions), test_demo_cli.py | done |
-| FR-SY-08 | folio/audit; instruments, transactions, accounts, prices, settings audited | tests/integration/test_settings.py, test_instruments_api.py, test_transactions_api.py | in progress (viewer pending) |
+| FR-SY-08 | folio/audit; instruments, transactions, accounts, prices, settings audited | tests/integration/test_settings.py, test_instruments_api.py, test_transactions_api.py | in progress (viewer API done, UI pending) |
 | NFR-02 | UTC storage (UTCDateTime), exchange-local trading dates (Date columns), migration 0002 | tests/integration/test_schema.py | in progress (schema done; job scheduling in exchange time pending) |

@@ -40,6 +40,26 @@ export interface paths {
         patch: operations["update_account_api_v1_accounts__account_id__patch"];
         trace?: never;
     };
+    "/api/v1/audit": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Audit
+         * @description The append-only change log, newest first, with old and new values (FR-SY-08).
+         */
+        get: operations["audit_api_v1_audit_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/auth/login": {
         parameters: {
             query?: never;
@@ -511,6 +531,64 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/system/jobs": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Jobs */
+        get: operations["jobs_api_v1_system_jobs_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/system/jobs/{job}/run": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Run Job
+         * @description Ask the worker to run a job now ("refresh prices now"). It is queued and picked up
+         *     within a few seconds; the outcome appears in the job list.
+         */
+        post: operations["run_job_api_v1_system_jobs__job__run_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/system/usage": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Usage
+         * @description Calls made to each provider today (UTC) against its daily budget (FR-MD-10).
+         */
+        get: operations["usage_api_v1_system_usage_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/transactions": {
         parameters: {
             query?: never;
@@ -693,6 +771,35 @@ export interface components {
             transaction_ids: number[];
             /** Type */
             type: string;
+        };
+        /** AuditOut */
+        AuditOut: {
+            /** Action */
+            action: string;
+            /** Actor */
+            actor: string;
+            /** Diff */
+            diff: {
+                [key: string]: unknown;
+            } | null;
+            /** Entity */
+            entity: string;
+            /** Entity Id */
+            entity_id: string | null;
+            /** Id */
+            id: number;
+            /**
+             * Ts
+             * Format: date-time
+             */
+            ts: string;
+        };
+        /** AuditPage */
+        AuditPage: {
+            /** Items */
+            items: components["schemas"]["AuditOut"][];
+            /** Next Cursor */
+            next_cursor: number | null;
         };
         /** BatchOut */
         BatchOut: {
@@ -988,6 +1095,17 @@ export interface components {
             name: string;
             /** Ticker */
             ticker: string | null;
+        };
+        /** JobsOut */
+        JobsOut: {
+            /** Available */
+            available: {
+                [key: string]: string[];
+            };
+            /** Requests */
+            requests: components["schemas"]["RequestOut"][];
+            /** Runs */
+            runs: components["schemas"]["RunOut"][];
         };
         /** LastClose */
         LastClose: {
@@ -1306,6 +1424,28 @@ export interface components {
             /** Sample Rows */
             sample_rows: string[][];
         };
+        /** RequestOut */
+        RequestOut: {
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Error */
+            error: string | null;
+            /** Finished At */
+            finished_at: string | null;
+            /** Id */
+            id: number;
+            /** Job */
+            job: string;
+            /** Params */
+            params: {
+                [key: string]: unknown;
+            };
+            /** Status */
+            status: string;
+        };
         /** ResolutionOut */
         ResolutionOut: {
             /** Asset Class */
@@ -1333,6 +1473,37 @@ export interface components {
             summary: {
                 [key: string]: string;
             } | null;
+        };
+        /** RunOut */
+        RunOut: {
+            /** Duration Seconds */
+            duration_seconds: number | null;
+            /** Finished At */
+            finished_at: string | null;
+            /** Id */
+            id: number;
+            /** Job */
+            job: string;
+            /** Log */
+            log: string | null;
+            /** Params */
+            params: {
+                [key: string]: unknown;
+            };
+            /**
+             * Started At
+             * Format: date-time
+             */
+            started_at: string;
+            /** Status */
+            status: string;
+        };
+        /** RunRequestIn */
+        RunRequestIn: {
+            /** Params */
+            params?: {
+                [key: string]: unknown;
+            };
         };
         /** SellPreviewOut */
         SellPreviewOut: {
@@ -1566,6 +1737,21 @@ export interface components {
             items: components["schemas"]["TransactionOut"][];
             /** Next Cursor */
             next_cursor: string | null;
+        };
+        /** UsageOut */
+        UsageOut: {
+            /** Calls Today */
+            calls_today: number;
+            /** Daily Budget */
+            daily_budget: number | null;
+            /** Enabled */
+            enabled: boolean;
+            /** Has Key */
+            has_key: boolean | null;
+            /** Provider */
+            provider: string;
+            /** Remaining */
+            remaining: number | null;
         };
         /** ValidationError */
         ValidationError: {
@@ -1821,6 +2007,44 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["folio__api__routers__accounts__AccountOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    audit_api_v1_audit_get: {
+        parameters: {
+            query?: {
+                entity?: string | null;
+                entity_id?: string | null;
+                actor?: string | null;
+                action?: string | null;
+                from?: string | null;
+                to?: string | null;
+                limit?: number;
+                cursor?: number | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AuditPage"];
                 };
             };
             /** @description Validation Error */
@@ -2859,6 +3083,92 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["SetupStatus"];
+                };
+            };
+        };
+    };
+    jobs_api_v1_system_jobs_get: {
+        parameters: {
+            query?: {
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["JobsOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    run_job_api_v1_system_jobs__job__run_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                job: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RunRequestIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RequestOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    usage_api_v1_system_usage_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UsageOut"][];
                 };
             };
         };

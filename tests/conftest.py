@@ -13,6 +13,9 @@ from folio.security.users import create_user
 TEST_SECRET = "test-secret-key-0123456789abcdef0123456789abcdef"
 USERNAME = "owner"
 PASSWORD = "correct horse battery staple"
+# An invented provider key for tests that save and mask one (the allow comment keeps the
+# secret scanner quiet about this one clearly fake value).
+FAKE_API_KEY = "fake-provider-key-0123456789"  # gitleaks:allow
 
 
 @pytest.fixture
