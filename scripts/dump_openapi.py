@@ -17,7 +17,7 @@ def main() -> None:
             _env_file=None,  # type: ignore[call-arg]
         )
         app = create_app(settings, static_dir=Path(tmp) / "none")
-        sys.stdout.write(json.dumps(app.openapi(), indent=2, sort_keys=True))
+        sys.stdout.write(json.dumps(app.openapi(), indent=2, sort_keys=True) + "\n")
         app.state.engine.dispose()
 
 

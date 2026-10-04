@@ -46,7 +46,7 @@ jobs:
         run: |
           uv sync --frozen --project ..
           npm run gen:api
-          git diff --exit-code src/api/schema.d.ts
+          git diff --exit-code src/api/schema.d.ts openapi.json
       - name: End-to-end tests
         run: |
           npx playwright install --with-deps chromium

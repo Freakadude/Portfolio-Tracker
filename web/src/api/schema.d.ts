@@ -4,6 +4,42 @@
  */
 
 export interface paths {
+    "/api/v1/accounts": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Accounts */
+        get: operations["list_accounts_api_v1_accounts_get"];
+        put?: never;
+        /** Create Account */
+        post: operations["create_account_api_v1_accounts_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/accounts/{account_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Delete Account */
+        delete: operations["delete_account_api_v1_accounts__account_id__delete"];
+        options?: never;
+        head?: never;
+        /** Update Account */
+        patch: operations["update_account_api_v1_accounts__account_id__patch"];
+        trace?: never;
+    };
     "/api/v1/auth/login": {
         parameters: {
             query?: never;
@@ -49,6 +85,81 @@ export interface paths {
         get: operations["me_api_v1_auth_me_get"];
         put?: never;
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/instruments": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Instruments */
+        get: operations["list_instruments_api_v1_instruments_get"];
+        put?: never;
+        /** Create */
+        post: operations["create_api_v1_instruments_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/instruments/resolve": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Resolve */
+        get: operations["resolve_api_v1_instruments_resolve_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/instruments/{instrument_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Read */
+        get: operations["read_api_v1_instruments__instrument_id__get"];
+        put?: never;
+        post?: never;
+        /** Delete */
+        delete: operations["delete_api_v1_instruments__instrument_id__delete"];
+        options?: never;
+        head?: never;
+        /** Patch */
+        patch: operations["patch_api_v1_instruments__instrument_id__patch"];
+        trace?: never;
+    };
+    "/api/v1/instruments/{instrument_id}/prices": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Prices */
+        get: operations["prices_api_v1_instruments__instrument_id__prices_get"];
+        put?: never;
+        /**
+         * Set Price
+         * @description Enter or override one close by hand; audited and protected from later fetches.
+         */
+        post: operations["set_price_api_v1_instruments__instrument_id__prices_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -144,6 +255,82 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/transactions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Transactions */
+        get: operations["list_transactions_api_v1_transactions_get"];
+        put?: never;
+        /** Create */
+        post: operations["create_api_v1_transactions_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/transactions/fx-prefill": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Fx Prefill
+         * @description The ECB rate the form prefills for a trade date (the owner can overwrite it).
+         */
+        get: operations["fx_prefill_api_v1_transactions_fx_prefill_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/transactions/preview-sell": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Preview Sell
+         * @description Shows the lots a sell would consume and the realized result before anything is saved.
+         */
+        post: operations["preview_sell_api_v1_transactions_preview_sell_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/transactions/{transaction_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Delete */
+        delete: operations["delete_api_v1_transactions__transaction_id__delete"];
+        options?: never;
+        head?: never;
+        /** Update */
+        patch: operations["update_api_v1_transactions__transaction_id__patch"];
+        trace?: never;
+    };
     "/healthz": {
         parameters: {
             query?: never;
@@ -188,34 +375,160 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
-        /** AccountIn */
-        AccountIn: {
+        /** AccountChanges */
+        AccountChanges: {
+            /** Active */
+            active?: boolean | null;
             /** Broker */
             broker?: string | null;
-            /**
-             * Cost Basis Method
-             * @default FIFO
-             * @enum {string}
-             */
-            cost_basis_method: "FIFO" | "AVG";
-            /** Name */
-            name: string;
-        };
-        /** AccountOut */
-        AccountOut: {
-            /** Broker */
-            broker: string | null;
             /** Cost Basis Method */
-            cost_basis_method: string;
-            /** Id */
-            id: number;
+            cost_basis_method?: ("FIFO" | "AVG") | null;
             /** Name */
-            name: string;
+            name?: string | null;
+        };
+        /** CandidateOut */
+        CandidateOut: {
+            /** Confirmed By */
+            confirmed_by: string | null;
+            /** Currency */
+            currency: string;
+            /** Currency Confirmed */
+            currency_confirmed: boolean;
+            /** Exchange Name */
+            exchange_name: string;
+            /** Mic */
+            mic: string;
+            /** Ticker */
+            ticker: string;
+            /** Usable */
+            usable: boolean;
+            /** Warning */
+            warning: string | null;
+        };
+        /** FxPrefillOut */
+        FxPrefillOut: {
+            /** Currency */
+            currency: string;
+            /**
+             * Date
+             * Format: date
+             */
+            date: string;
+            /** Fx Rate To Eur */
+            fx_rate_to_eur: string;
+            /**
+             * Rate Date
+             * Format: date
+             */
+            rate_date: string;
+            /** Rate Per Eur */
+            rate_per_eur: string;
         };
         /** HTTPValidationError */
         HTTPValidationError: {
             /** Detail */
             detail?: components["schemas"]["ValidationError"][];
+        };
+        /** InstrumentChanges */
+        InstrumentChanges: {
+            /** Asset Class */
+            asset_class?: ("ETF" | "ETC" | "EQUITY" | "BOND" | "FUND" | "CASH" | "OTHER") | null;
+            /** Coupon Pct */
+            coupon_pct?: number | string | null;
+            /** Distribution */
+            distribution?: ("ACC" | "DIST") | null;
+            /** Domicile */
+            domicile?: string | null;
+            /** Issuer */
+            issuer?: string | null;
+            /** Maturity Date */
+            maturity_date?: string | null;
+            /** Name */
+            name?: string | null;
+            /** Rating */
+            rating?: string | null;
+            /** Status */
+            status?: ("active" | "archived") | null;
+            /** Tags */
+            tags?: string[] | null;
+            /** Ter Pct */
+            ter_pct?: number | string | null;
+        };
+        /** InstrumentOut */
+        InstrumentOut: {
+            /** Asset Class */
+            asset_class: string;
+            /** Coupon Pct */
+            coupon_pct: string | null;
+            /** Distribution */
+            distribution: string | null;
+            /** Domicile */
+            domicile: string | null;
+            /** Id */
+            id: number;
+            /** Isin */
+            isin: string | null;
+            /** Issuer */
+            issuer: string | null;
+            last_close: components["schemas"]["LastClose"] | null;
+            /** Listings */
+            listings: components["schemas"]["ListingOut"][];
+            /** Manual */
+            manual: boolean;
+            /** Maturity Date */
+            maturity_date: string | null;
+            /** Name */
+            name: string;
+            /** Rating */
+            rating: string | null;
+            /** Stale */
+            stale: boolean;
+            /** Status */
+            status: string;
+            /** Tags */
+            tags: string[];
+            /** Ter Pct */
+            ter_pct: string | null;
+        };
+        /** LastClose */
+        LastClose: {
+            /** Close */
+            close: string;
+            /**
+             * Date
+             * Format: date
+             */
+            date: string;
+            /** Overridden */
+            overridden: boolean;
+            /** Source */
+            source: string;
+        };
+        /** ListingChoice */
+        ListingChoice: {
+            /** Currency */
+            currency: string;
+            /** Mic */
+            mic: string;
+            /** Ticker */
+            ticker: string;
+        };
+        /** ListingOut */
+        ListingOut: {
+            /** Currency */
+            currency: string;
+            /** Id */
+            id: number;
+            /** Mic */
+            mic: string;
+            /** Primary */
+            primary: boolean;
+            /** Provider Symbols */
+            provider_symbols: {
+                [key: string]: string;
+            };
+            /** Ticker */
+            ticker: string;
         };
         /** LoginIn */
         LoginIn: {
@@ -229,10 +542,71 @@ export interface components {
             /** Username */
             username: string;
         };
+        /** ManualPriceIn */
+        ManualPriceIn: {
+            /** Close */
+            close: number | string;
+            /**
+             * Date
+             * Format: date
+             */
+            date: string;
+        };
+        /** MatchOut */
+        MatchOut: {
+            /** Cost Eur */
+            cost_eur: string;
+            /** Lot Buy Transaction Id */
+            lot_buy_transaction_id: number;
+            /** Lot Trade Date */
+            lot_trade_date: string | null;
+            /** Proceeds Eur */
+            proceeds_eur: string;
+            /** Quantity */
+            quantity: string;
+            /** Realized Pnl Eur */
+            realized_pnl_eur: string;
+        };
         /** MeOut */
         MeOut: {
             /** Username */
             username: string;
+        };
+        /** NewInstrument */
+        NewInstrument: {
+            /**
+             * Asset Class
+             * @enum {string}
+             */
+            asset_class: "ETF" | "ETC" | "EQUITY" | "BOND" | "FUND" | "CASH" | "OTHER";
+            /** Coupon Pct */
+            coupon_pct?: number | string | null;
+            /** Currency */
+            currency?: string | null;
+            /** Distribution */
+            distribution?: ("ACC" | "DIST") | null;
+            /** Domicile */
+            domicile?: string | null;
+            /** Isin */
+            isin?: string | null;
+            /** Issuer */
+            issuer?: string | null;
+            listing?: components["schemas"]["ListingChoice"] | null;
+            /**
+             * Manual
+             * @default false
+             */
+            manual: boolean;
+            /** Maturity Date */
+            maturity_date?: string | null;
+            /** Name */
+            name: string;
+            /** Rating */
+            rating?: string | null;
+            /** Tags */
+            tags?: string[];
+            /** Ter Pct */
+            ter_pct?: number | string | null;
         };
         /** OwnerIn */
         OwnerIn: {
@@ -240,6 +614,60 @@ export interface components {
             password: string;
             /** Username */
             username: string;
+        };
+        /** PriceOut */
+        PriceOut: {
+            /** Close */
+            close: string;
+            /**
+             * Date
+             * Format: date
+             */
+            date: string;
+            /** High */
+            high: string | null;
+            /** Low */
+            low: string | null;
+            /** Open */
+            open: string | null;
+            /** Overridden */
+            overridden: boolean;
+            /** Source */
+            source: string;
+            /** Volume */
+            volume: string | null;
+        };
+        /** ResolutionOut */
+        ResolutionOut: {
+            /** Asset Class */
+            asset_class: string;
+            /** Candidates */
+            candidates: components["schemas"]["CandidateOut"][];
+            /** Domicile */
+            domicile: string;
+            /** Isin */
+            isin: string;
+            /** Issuer */
+            issuer: string | null;
+            /** Name */
+            name: string;
+        };
+        /** SellPreviewOut */
+        SellPreviewOut: {
+            /** Cost Eur */
+            cost_eur: string;
+            /** Matches */
+            matches: components["schemas"]["MatchOut"][];
+            /** Net Proceeds Eur */
+            net_proceeds_eur: string;
+            /** Realized Pct */
+            realized_pct: string | null;
+            /** Realized Pnl Eur */
+            realized_pnl_eur: string;
+            /** Remaining Cost Basis Eur */
+            remaining_cost_basis_eur: string;
+            /** Remaining Quantity */
+            remaining_quantity: string;
         };
         /** SetupStatus */
         SetupStatus: {
@@ -251,6 +679,160 @@ export interface components {
             needs_owner: boolean;
             /** Setup Complete */
             setup_complete: boolean;
+        };
+        /**
+         * TransactionChanges
+         * @description Any subset of the input fields; the merged result is validated again.
+         */
+        TransactionChanges: {
+            /** Currency */
+            currency?: string | null;
+            /** Fees */
+            fees?: number | string | null;
+            /** Fees Currency */
+            fees_currency?: string | null;
+            /** Fees Fx Rate To Eur */
+            fees_fx_rate_to_eur?: number | string | null;
+            /** Fx Rate To Eur */
+            fx_rate_to_eur?: number | string | null;
+            /** Instrument Id */
+            instrument_id?: number | null;
+            /** Net Amount Eur */
+            net_amount_eur?: number | string | null;
+            /** Note */
+            note?: string | null;
+            /** Price */
+            price?: number | string | null;
+            /** Quantity */
+            quantity?: number | string | null;
+            /** Ratio */
+            ratio?: number | string | null;
+            /** Settle Date */
+            settle_date?: string | null;
+            /** Taxes */
+            taxes?: number | string | null;
+            /** Taxes Currency */
+            taxes_currency?: string | null;
+            /** Taxes Fx Rate To Eur */
+            taxes_fx_rate_to_eur?: number | string | null;
+            /** Trade Date */
+            trade_date?: string | null;
+        };
+        /** TransactionIn */
+        TransactionIn: {
+            /** Account Id */
+            account_id: number;
+            /** Currency */
+            currency?: string | null;
+            /**
+             * Fees
+             * @default 0
+             */
+            fees: number | string;
+            /** Fees Currency */
+            fees_currency?: string | null;
+            /** Fees Fx Rate To Eur */
+            fees_fx_rate_to_eur?: number | string | null;
+            /** Fx Rate To Eur */
+            fx_rate_to_eur?: number | string | null;
+            /** Instrument Id */
+            instrument_id?: number | null;
+            /** Net Amount Eur */
+            net_amount_eur?: number | string | null;
+            /** Note */
+            note?: string | null;
+            /** Price */
+            price?: number | string | null;
+            /** Quantity */
+            quantity?: number | string | null;
+            /** Ratio */
+            ratio?: number | string | null;
+            /** Settle Date */
+            settle_date?: string | null;
+            /**
+             * Taxes
+             * @default 0
+             */
+            taxes: number | string;
+            /** Taxes Currency */
+            taxes_currency?: string | null;
+            /** Taxes Fx Rate To Eur */
+            taxes_fx_rate_to_eur?: number | string | null;
+            /**
+             * Trade Date
+             * Format: date
+             */
+            trade_date: string;
+            /**
+             * Type
+             * @enum {string}
+             */
+            type: "buy" | "sell" | "dividend" | "interest" | "fee" | "tax" | "split" | "transfer_in" | "transfer_out" | "deposit" | "withdrawal";
+        };
+        /** TransactionOut */
+        TransactionOut: {
+            /** Account Id */
+            account_id: number;
+            /** Account Name */
+            account_name: string;
+            /** Currency */
+            currency: string;
+            /** External Ref */
+            external_ref: string | null;
+            /** Fees */
+            fees: string;
+            /** Fees Currency */
+            fees_currency: string;
+            /** Fees Fx Rate To Eur */
+            fees_fx_rate_to_eur: string;
+            /** Fx Rate To Eur */
+            fx_rate_to_eur: string;
+            /** Id */
+            id: number;
+            /** Import Batch Id */
+            import_batch_id: number | null;
+            /** Instrument Id */
+            instrument_id: number | null;
+            /** Instrument Name */
+            instrument_name: string | null;
+            /** Net Amount Eur */
+            net_amount_eur: string | null;
+            /** Note */
+            note: string | null;
+            /** Price */
+            price: string;
+            /** Quantity */
+            quantity: string;
+            /** Ratio */
+            ratio: string | null;
+            /** Settle Date */
+            settle_date: string | null;
+            /** Source */
+            source: string;
+            /** Status */
+            status: string;
+            /** Taxes */
+            taxes: string;
+            /** Taxes Currency */
+            taxes_currency: string;
+            /** Taxes Fx Rate To Eur */
+            taxes_fx_rate_to_eur: string;
+            /** Ticker */
+            ticker: string | null;
+            /**
+             * Trade Date
+             * Format: date
+             */
+            trade_date: string;
+            /** Type */
+            type: string;
+        };
+        /** TransactionPage */
+        TransactionPage: {
+            /** Items */
+            items: components["schemas"]["TransactionOut"][];
+            /** Next Cursor */
+            next_cursor: string | null;
         };
         /** ValidationError */
         ValidationError: {
@@ -265,6 +847,60 @@ export interface components {
             /** Error Type */
             type: string;
         };
+        /** AccountIn */
+        folio__api__routers__accounts__AccountIn: {
+            /** Broker */
+            broker?: string | null;
+            /**
+             * Cost Basis Method
+             * @default FIFO
+             * @enum {string}
+             */
+            cost_basis_method: "FIFO" | "AVG";
+            /** Name */
+            name: string;
+        };
+        /** AccountOut */
+        folio__api__routers__accounts__AccountOut: {
+            /** Active */
+            active: boolean;
+            /** Base Currency */
+            base_currency: string;
+            /** Broker */
+            broker: string | null;
+            /** Cost Basis Method */
+            cost_basis_method: string;
+            /** Id */
+            id: number;
+            /** Name */
+            name: string;
+            /** Transaction Count */
+            transaction_count: number;
+        };
+        /** AccountIn */
+        folio__api__routers__setup__AccountIn: {
+            /** Broker */
+            broker?: string | null;
+            /**
+             * Cost Basis Method
+             * @default FIFO
+             * @enum {string}
+             */
+            cost_basis_method: "FIFO" | "AVG";
+            /** Name */
+            name: string;
+        };
+        /** AccountOut */
+        folio__api__routers__setup__AccountOut: {
+            /** Broker */
+            broker: string | null;
+            /** Cost Basis Method */
+            cost_basis_method: string;
+            /** Id */
+            id: number;
+            /** Name */
+            name: string;
+        };
     };
     responses: never;
     parameters: never;
@@ -274,6 +910,123 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
+    list_accounts_api_v1_accounts_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["folio__api__routers__accounts__AccountOut"][];
+                };
+            };
+        };
+    };
+    create_account_api_v1_accounts_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["folio__api__routers__accounts__AccountIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["folio__api__routers__accounts__AccountOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_account_api_v1_accounts__account_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                account_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_account_api_v1_accounts__account_id__patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                account_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AccountChanges"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["folio__api__routers__accounts__AccountOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     login_api_v1_auth_login_post: {
         parameters: {
             query?: never;
@@ -341,6 +1094,265 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["MeOut"];
+                };
+            };
+        };
+    };
+    list_instruments_api_v1_instruments_get: {
+        parameters: {
+            query?: {
+                status?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InstrumentOut"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_api_v1_instruments_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["NewInstrument"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InstrumentOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    resolve_api_v1_instruments_resolve_get: {
+        parameters: {
+            query: {
+                isin: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ResolutionOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    read_api_v1_instruments__instrument_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                instrument_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InstrumentOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_api_v1_instruments__instrument_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                instrument_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    patch_api_v1_instruments__instrument_id__patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                instrument_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["InstrumentChanges"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InstrumentOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    prices_api_v1_instruments__instrument_id__prices_get: {
+        parameters: {
+            query?: {
+                from?: string | null;
+                to?: string | null;
+            };
+            header?: never;
+            path: {
+                instrument_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PriceOut"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    set_price_api_v1_instruments__instrument_id__prices_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                instrument_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ManualPriceIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PriceOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
                 };
             };
         };
@@ -426,7 +1438,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["AccountIn"];
+                "application/json": components["schemas"]["folio__api__routers__setup__AccountIn"];
             };
         };
         responses: {
@@ -436,7 +1448,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["AccountOut"];
+                    "application/json": components["schemas"]["folio__api__routers__setup__AccountOut"];
                 };
             };
             /** @description Validation Error */
@@ -517,6 +1529,206 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["SetupStatus"];
+                };
+            };
+        };
+    };
+    list_transactions_api_v1_transactions_get: {
+        parameters: {
+            query?: {
+                account?: number | null;
+                instrument?: number | null;
+                type?: string | null;
+                from?: string | null;
+                to?: string | null;
+                status?: string;
+                limit?: number;
+                cursor?: string | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TransactionPage"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_api_v1_transactions_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TransactionIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TransactionOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    fx_prefill_api_v1_transactions_fx_prefill_get: {
+        parameters: {
+            query: {
+                currency: string;
+                date: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FxPrefillOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    preview_sell_api_v1_transactions_preview_sell_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TransactionIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SellPreviewOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_api_v1_transactions__transaction_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                transaction_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_api_v1_transactions__transaction_id__patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                transaction_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TransactionChanges"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TransactionOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
                 };
             };
         };
