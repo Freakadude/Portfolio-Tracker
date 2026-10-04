@@ -1,8 +1,11 @@
 # Changelog
 
-## Unreleased
+## Phase 0 — Foundations (2026-10-04)
 
-### Phase 0 — Foundations
+Released as the state of `main` after the commit "ci: pin GitHub Actions to exact release tags". CI green: 60 Python tests, 6 web tests, 2 Playwright tests, multi-arch image build, pip-audit and npm audit clean, gitleaks clean. Requirements closed: FR-SY-01, FR-SY-02, FR-SY-05, FR-SY-09 (shell), NFR-01 (groundwork), NFR-07, NFR-09, NFR-10.
+
+Not yet verified: the compose stack has not been run (Docker is not installed on the dev machine, ADR 0003). Gate check for the owner: deploy the stack through Portainer on the LXC, then open `/healthz` and the setup wizard over the LAN or tailnet.
+
 - Repo conventions: CLAUDE.md, ADRs, traceability, shared Claude Code permission rules.
 - Python 3.12 uv project, ruff/mypy/pytest config, settings, SQLite engine (WAL) and `DecimalText` type with property tests [NFR-01].
 - Auth: Argon2id passwords, DB-backed sessions (HttpOnly, SameSite=Strict, Secure over HTTPS, 30-day remember), persisted login throttle (5 failures / 15 min), CSRF double-submit cookie, CSP and security headers, RFC 9457 errors, Alembic migration 0001 [FR-SY-02, NFR-07].

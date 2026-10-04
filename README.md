@@ -6,7 +6,7 @@ The build brief is [docs/requirements.md](docs/requirements.md). Progress per re
 
 ## Status
 
-Phase 0 (foundations) in progress.
+Phase 0 (foundations) is complete and waiting for the owner's gate check; Phase 1 (ledger and prices) is next.
 
 ## Outbound network destinations (NFR-08)
 
