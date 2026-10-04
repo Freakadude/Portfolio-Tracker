@@ -16,7 +16,10 @@ Folio is a self-hosted, single-user portfolio manager. The full build brief is `
 - Prefer few, well-maintained, pinned dependencies; justify heavy additions in an ADR.
 - Commit messages follow Conventional Commits and cite requirement IDs, e.g. `feat(ledger): FIFO lot matching [FR-TX-03]`.
 - Agent prompts live in `folio/agent/prompts/` as versioned files; write the agent evaluation scenarios before tuning prompts.
-- Local dev: `uv run folio web --reload`, `uv run folio worker`, `npm run dev` in `web/`.
+- Local dev: `uv run folio web --reload`, `uv run folio worker`, `npm run dev` in `web/`. Web checks, run in `web/`: `npm run lint`, `typecheck`, `test`, `e2e`.
+- The pre-commit hooks call `uv` and `npm`, so both must be on PATH when committing. On this Windows machine that means adding `C:\Program Files\nodejs` and `C:\Users\gerge\.local\bin`.
+- Docker is not installed on the dev machine; CI builds the image (ADR 0003).
+- Write files that contain non-ASCII characters (for example the euro sign) with the editor tools, not shell heredocs, which break on them here.
 
 ## Standing order: commit and push to GitHub
 
