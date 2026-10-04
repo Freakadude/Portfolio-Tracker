@@ -39,11 +39,14 @@ class ProviderConfig(BaseModel):
 
 def _default_providers() -> dict[str, ProviderConfig]:
     return {
-        "eodhd": ProviderConfig(priority=1, daily_call_budget=20),
-        "twelvedata": ProviderConfig(priority=2, daily_call_budget=800),
+        "eodhd": ProviderConfig(priority=1, daily_call_budget=20),  # used once a key is saved
+        # Unofficial, but on by default (owner decision, ADR 0006): it is the only free source
+        # with deep history for Xetra and Amsterdam listings.
+        "yahoo": ProviderConfig(priority=2),
+        "twelvedata": ProviderConfig(priority=3, daily_call_budget=800),  # needs a key
         "openfigi": ProviderConfig(priority=1),
+        "ecb": ProviderConfig(priority=1),
         "fred": ProviderConfig(priority=1),
-        "yfinance": ProviderConfig(enabled=False, priority=3),  # unofficial; off by default
     }
 
 

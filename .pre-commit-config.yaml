@@ -9,9 +9,9 @@ repos:
       - id: check-merge-conflict
       - id: check-yaml
       - id: end-of-file-fixer
-        exclude: ^(web/src/api/schema\.d\.ts|uv\.lock|web/package-lock\.json)$
+        exclude: ^(web/src/api/schema\.d\.ts|uv\.lock|web/package-lock\.json|tests/fixtures/providers/)
       - id: trailing-whitespace
-        exclude: ^(web/src/api/schema\.d\.ts|\.claude/)
+        exclude: ^(web/src/api/schema\.d\.ts|\.claude/|tests/fixtures/providers/)
   - repo: local
     hooks:
       - id: ruff-check

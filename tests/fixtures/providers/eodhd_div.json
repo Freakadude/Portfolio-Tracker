@@ -1,0 +1,4 @@
+[
+  {"date": "2024-04-26", "declarationDate": "2024-04-17", "recordDate": "2024-04-29", "paymentDate": "2024-05-08", "period": "Quarterly", "value": 1.75, "unadjustedValue": 1.75, "currency": "EUR"},
+  {"date": "2024-02-05", "declarationDate": "2024-01-24", "recordDate": "2024-02-06", "paymentDate": "2024-02-14", "period": "Quarterly", "value": 1.45, "unadjustedValue": 1.45, "currency": "EUR"}
+]

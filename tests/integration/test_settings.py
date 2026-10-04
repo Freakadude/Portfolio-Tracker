@@ -50,10 +50,9 @@ def test_defaults_match_the_spec_and_owner_decisions(signed_in: TestClient) -> N
     )
     general = signed_in.get("/api/v1/settings/general").json()
     assert general["timezone"] == "Europe/Amsterdam"
-    assert (
-        signed_in.get("/api/v1/settings/providers").json()["providers"]["yfinance"]["enabled"]
-        is False
-    )
+    providers = signed_in.get("/api/v1/settings/providers").json()["providers"]
+    assert providers["yahoo"]["enabled"] is True  # owner decision: Yahoo fallback on (ADR 0006)
+    assert providers["eodhd"]["daily_call_budget"] == 20
 
 
 def test_validation_errors_are_problem_json_in_plain_language(signed_in: TestClient) -> None:

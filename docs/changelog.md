@@ -4,6 +4,7 @@
 
 - Ledger domain: lots, FIFO and average cost, splits, transfers, income and cash flows, sell preview, position and portfolio metrics; property tests for invariants 1-5 and hand-computed golden scenarios; 85 percent coverage gate on `domain/` and `analytics/` in CI [FR-TX-03, FR-TX-04, NFR-01]. See ADR 0005.
 - Schema (migration 0002): instrument, listing, ledger_transaction (table name avoids the SQL keyword), lot, lot_match, position, corporate_action, import batches and presets, price_bar, fx_rate, portfolio_snapshot, provider_call, job_request and job_run. A partial unique index on (account, external_ref) makes imports idempotent and lets an undone import be re-run. A test fails if models and migrations drift apart [NFR-02].
+- Market-data providers: provider interface, Yahoo, EODHD, Twelve Data, OpenFIGI and ECB adapters, retry with backoff, per-provider daily call budgets, circuit breaker, ordered fallback with the source recorded on every result; Yahoo on by default. Recorded real responses for Yahoo, OpenFIGI and ECB [FR-MD-01, FR-MD-10, FR-MD-11]. See ADR 0006.
 
 ## Phase 0 — Foundations (2026-10-04)
 
