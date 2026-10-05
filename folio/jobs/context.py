@@ -10,7 +10,7 @@ from sqlalchemy.orm import Session, sessionmaker
 
 from folio.config import Settings
 from folio.db.engine import make_engine, make_session_factory
-from folio.marketdata.budget import CircuitBreaker
+from folio.marketdata.budget import CircuitBreaker, UsageTracker
 from folio.marketdata.ecb import EcbRates
 from folio.marketdata.fallback import ProviderChain
 from folio.marketdata.runtime import make_provider_factory, make_usage_tracker
@@ -26,6 +26,7 @@ class JobContext:
     chain_for: Callable[[Session], ProviderChain]
     ecb_for: Callable[[Session], EcbRates]
     now: Callable[[], datetime] = field(default=_utc_now)
+    usage: UsageTracker | None = None  # lets the quote job keep budget for the nightly closes
 
     def today(self) -> date:
         return self.now().date()
@@ -45,4 +46,5 @@ def build_context(settings: Settings) -> JobContext:
         session_factory=factory,
         chain_for=lambda db: providers(db).chain(),
         ecb_for=lambda db: providers(db).ecb(),
+        usage=usage,
     )

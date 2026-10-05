@@ -32,7 +32,9 @@ from folio.jobs.market import (
     eod_job,
     fx_job,
     gap_job,
+    quotes_job,
     refresh_job,
+    retention_job,
 )
 from folio.jobs.portfolio import snapshots_job
 from folio.jobs.runner import JobLog, JobResult, run_job
@@ -85,6 +87,8 @@ JOB_PARAMS: dict[str, tuple[str, ...]] = {
     "actions": (),
     "backup": (),
     "refresh": (),
+    "quotes": (),
+    "retention": (),
 }
 
 
@@ -107,6 +111,8 @@ def handlers(
         "actions": lambda p: actions_job(ctx),
         "backup": lambda p: backup_job(ctx, settings),
         "refresh": lambda p: _refresh(ctx),
+        "quotes": lambda p: quotes_job(ctx),
+        "retention": lambda p: retention_job(ctx),
     }
 
 
@@ -178,6 +184,8 @@ def build_schedules() -> list[Schedule]:
         Schedule("gaps", CronTrigger(hour=22, minute=0, **local)),
         Schedule("snapshots", CronTrigger(hour=23, minute=0, **local)),
         Schedule("backup", CronTrigger(hour=3, minute=0, **local)),
+        Schedule("retention", CronTrigger(hour=3, minute=30, **local)),
+        Schedule("quotes", CronTrigger(minute="*/15", timezone="UTC")),  # FR-MD-05
         Schedule("actions", CronTrigger(day_of_week="sun", hour=9, minute=0, **local)),
     ]
     return schedules
@@ -222,6 +230,14 @@ def run_backup() -> None:
 
 def run_actions() -> None:
     actions_job(_rt()[0])
+
+
+def run_quotes() -> None:
+    quotes_job(_rt()[0], only_if_open=True)
+
+
+def run_retention() -> None:
+    retention_job(_rt()[0])
 
 
 def run_requests() -> None:

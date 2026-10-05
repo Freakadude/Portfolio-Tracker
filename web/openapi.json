@@ -5468,6 +5468,41 @@
             "title": "Date",
             "type": "string"
           },
+          "delayed_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Delayed At"
+          },
+          "delayed_price": {
+            "anyOf": [
+              {
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Delayed Price"
+          },
+          "delayed_source": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Delayed Source"
+          },
           "overridden": {
             "title": "Overridden",
             "type": "boolean"
@@ -5499,7 +5534,10 @@
           "previous_close",
           "source",
           "overridden",
-          "stale"
+          "stale",
+          "delayed_price",
+          "delayed_at",
+          "delayed_source"
         ],
         "title": "PriceOut",
         "type": "object"

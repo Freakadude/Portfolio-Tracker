@@ -15,6 +15,7 @@ from folio.marketdata.base import ProviderError
 from folio.marketdata.http import HttpClient, check_status
 
 BASE = "https://data-api.ecb.europa.eu/service/data/EXR"
+DEPOSIT_RATE_URL = "https://data-api.ecb.europa.eu/service/data/FM/D.U2.EUR.4F.KR.DFR.LEV"
 
 
 @dataclass(frozen=True)
@@ -46,6 +47,33 @@ class EcbRates:
             return []  # the API answers 404 when the range holds no observations
         check_status(self.name, response)
         return parse_csv(response.text)
+
+    def deposit_rate(self, start: date, end: date | None = None) -> list[tuple[date, Decimal]]:
+        """The ECB deposit facility rate, in percent, one observation per calendar day."""
+        params = {"startPeriod": start.isoformat(), "format": "csvdata"}
+        if end is not None:
+            params["endPeriod"] = end.isoformat()
+        response = self._http.request("GET", DEPOSIT_RATE_URL, params=params)
+        if response.status_code == 404:
+            return []
+        check_status(self.name, response)
+        return parse_rate_csv(response.text)
+
+
+def parse_rate_csv(text: str) -> list[tuple[date, Decimal]]:
+    reader = csv.DictReader(io.StringIO(text))
+    if reader.fieldnames is None or "OBS_VALUE" not in reader.fieldnames:
+        raise ProviderError("The ECB sent a response that could not be read.")
+    points: list[tuple[date, Decimal]] = []
+    for row in reader:
+        raw = (row.get("OBS_VALUE") or "").strip()
+        if not raw:
+            continue
+        try:
+            points.append((date.fromisoformat(row["TIME_PERIOD"]), Decimal(raw)))
+        except (InvalidOperation, ValueError, KeyError) as exc:
+            raise ProviderError("The ECB sent a rate that could not be read.") from exc
+    return sorted(points)
 
 
 def parse_csv(text: str) -> list[FxObservation]:

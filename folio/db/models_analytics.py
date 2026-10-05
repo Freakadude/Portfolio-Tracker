@@ -1,10 +1,10 @@
 """Phase 2 tables: classification, watchlists, delayed quotes, dashboards and live events."""
 
-from datetime import datetime
+from datetime import date, datetime
 from decimal import Decimal
 from typing import Any
 
-from sqlalchemy import JSON, Boolean, ForeignKey, Integer, String, Text, UniqueConstraint
+from sqlalchemy import JSON, Boolean, Date, ForeignKey, Integer, String, Text, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column
 
 from folio.db.base import Base, SoftDeleteMixin, utcnow
@@ -77,3 +77,24 @@ class AppEvent(Base):
     ts: Mapped[datetime] = mapped_column(UTCDateTime, default=utcnow, index=True)
     type: Mapped[str] = mapped_column(String(30))  # price_update | job_status
     payload: Mapped[Any] = mapped_column(JSON, default=dict)
+
+
+class MacroSeries(Base):
+    """A dated indicator (FR-MD-08): here first the ECB deposit facility rate, used as the
+    risk-free rate. Phase 3 adds the FRED series to the same tables."""
+
+    __tablename__ = "macro_series"
+
+    code: Mapped[str] = mapped_column(String(40), unique=True)
+    name: Mapped[str] = mapped_column(String(120))
+    source: Mapped[str] = mapped_column(String(20))
+    unit: Mapped[str] = mapped_column(String(20), default="percent")
+
+
+class MacroPoint(Base):
+    __tablename__ = "macro_point"
+    __table_args__ = (UniqueConstraint("series_id", "date"),)
+
+    series_id: Mapped[int] = mapped_column(ForeignKey("macro_series.id"), index=True)
+    date: Mapped[date] = mapped_column(Date)
+    value: Mapped[Decimal] = mapped_column(DecimalText)

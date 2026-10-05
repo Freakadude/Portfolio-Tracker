@@ -8,14 +8,15 @@ listed, with its market figures left empty rather than guessed.
 
 from __future__ import annotations
 
-from dataclasses import dataclass, field
-from datetime import date
+from dataclasses import dataclass, field, replace
+from datetime import date, datetime
 from decimal import Decimal
 
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from folio.db.models import Account
+from folio.db.models_analytics import Quote as QuoteRow
 from folio.db.models_ledger import Instrument, Listing, Lot, Position, PriceBar
 from folio.domain import Lot as DomainLot
 from folio.domain import PositionMetrics, PositionState, Quote, position_metrics
@@ -33,6 +34,9 @@ class PriceInfo:
     overridden: bool
     stale: bool
     previous_close: Decimal | None
+    delayed_price: Decimal | None = None  # a newer intraday quote, in the trading currency
+    delayed_at: datetime | None = None
+    delayed_source: str | None = None
 
 
 @dataclass
@@ -118,6 +122,21 @@ def primary_listing(db: Session, instrument_id: int) -> Listing | None:
     ).first()
 
 
+def _newer_quote(
+    db: Session, listing_id: int, close_date: date
+) -> tuple[Decimal, datetime, str] | None:
+    """The newest intraday quote, when it is from a later day than the last close."""
+    row = db.scalars(
+        select(QuoteRow)
+        .where(QuoteRow.listing_id == listing_id)
+        .order_by(QuoteRow.ts.desc())
+        .limit(1)
+    ).first()
+    if row is None or row.ts.date() <= close_date:
+        return None
+    return row.price, row.ts, row.source
+
+
 def quote_for(
     db: Session, instrument: Instrument, listing: Listing | None, valuation: date, today: date
 ) -> tuple[Quote | None, PriceInfo | None, str | None]:
@@ -152,6 +171,11 @@ def quote_for(
         stale=prices.is_stale(listing_ref(listing, instrument.isin), today),
         previous_close=previous.close if previous else None,
     )
+    delayed = _newer_quote(db, listing.id, bar.date) if valuation >= today else None
+    if delayed is not None:
+        info = replace(
+            info, delayed_price=delayed[0], delayed_at=delayed[1], delayed_source=delayed[2]
+        )
     quote = Quote(bar.close, rate, previous.close if previous else None, prev_rate)
     return quote, info, None
 

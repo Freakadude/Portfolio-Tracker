@@ -37,6 +37,9 @@ class PriceOut(BaseModel):
     source: str
     overridden: bool
     stale: bool
+    delayed_price: Decimal | None  # a newer intraday quote, trading currency
+    delayed_at: dt.datetime | None  # when it was quoted (UTC); label it "delayed"
+    delayed_source: str | None
 
 
 class PositionMetricsOut(BaseModel):
@@ -142,6 +145,9 @@ def _price(info: PriceInfo | None) -> PriceOut | None:
             source=info.source,
             overridden=info.overridden,
             stale=info.stale,
+            delayed_price=info.delayed_price,
+            delayed_at=info.delayed_at,
+            delayed_source=info.delayed_source,
         )
     )
 

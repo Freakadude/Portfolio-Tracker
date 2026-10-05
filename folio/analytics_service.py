@@ -44,6 +44,7 @@ from folio.db.models_ledger import (
     Listing,
     PriceBar,
 )
+from folio.marketdata.macro import DEPOSIT_RATE, MacroService
 from folio.portfolio import InstrumentAt, Valuation
 from folio.settings_schema import AnalyticsSettings
 from folio.settings_store import load_section
@@ -433,9 +434,10 @@ def risk_free_rate(db: Session, on: date) -> Decimal:
 
 
 def deposit_rate(db: Session, on: date) -> Decimal | None:
-    """ECB deposit facility rate in force on `on`, or None while the series is not stored."""
-    del db, on
-    return None
+    """ECB deposit facility rate in force on `on` as a fraction, or None while the series is
+    not stored."""
+    percent = MacroService(db).value_on(DEPOSIT_RATE, on)
+    return None if percent is None else percent / 100
 
 
 @dataclass(frozen=True)

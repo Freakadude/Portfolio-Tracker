@@ -3,6 +3,7 @@
 from datetime import UTC, date, datetime
 from decimal import Decimal
 
+import httpx
 import pytest
 from sqlalchemy import select
 
@@ -24,6 +25,12 @@ TRADING_DAY = date(2025, 12, 23)
 def db(settings: Settings):  # type: ignore[no-untyped-def]
     with make_session_factory(make_engine(settings.db_url))() as session:
         yield session
+
+
+def ecb_answer(request: httpx.Request) -> httpx.Response:
+    """The recorded exchange rates for the EXR dataset and the deposit rate for FM."""
+    name = "ecb_dfr.csv" if "/FM/" in str(request.url) else "ecb_exr.csv"
+    return respond(name, content_type="text/csv")
 
 
 def runs(db) -> list[JobRun]:  # type: ignore[no-untyped-def]
@@ -144,7 +151,7 @@ def test_gap_job_repairs_missing_days(settings: Settings, db) -> None:  # type: 
 def test_fx_job_fetches_rates_for_currencies_in_use(settings: Settings, db) -> None:  # type: ignore[no-untyped-def]
     make_listing(db, ticker="AAA", currency="USD", isin="IE0000000001")
     db.commit()
-    ecb = Scripted(lambda r: respond("ecb_exr.csv", content_type="text/csv"))
+    ecb = Scripted(ecb_answer)
     ctx = make_ctx(settings, [], ecb=ecb, now=datetime(2025, 1, 6, 17, 0, tzinfo=UTC))
     result = fx_job(ctx)
     assert result.status == "ok" and "USD" in result.log
@@ -157,9 +164,10 @@ def test_fx_job_fetches_rates_for_currencies_in_use(settings: Settings, db) -> N
 def test_fx_job_with_only_euro_holdings_does_nothing(settings: Settings, db) -> None:  # type: ignore[no-untyped-def]
     make_listing(db)
     db.commit()
-    ecb = Scripted(lambda r: respond("ecb_exr.csv"))
+    ecb = Scripted(ecb_answer)
     result = fx_job(make_ctx(settings, [], ecb=ecb))
-    assert "nothing to fetch" in result.log and ecb.requests == []
+    assert "no exchange rates to fetch" in result.log
+    assert all("/FM/" in str(r.url) for r in ecb.requests)  # only the deposit rate was asked for
 
 
 def test_a_crashing_job_is_recorded_and_does_not_escape(settings: Settings, db) -> None:  # type: ignore[no-untyped-def]
@@ -209,7 +217,7 @@ def test_fx_job_with_two_currencies_does_not_lock_on_the_call_counter(
     db.commit()
     factory = make_session_factory(make_engine(settings.db_url))
     usage = make_usage_tracker(factory)
-    ecb = Scripted(lambda r: respond("ecb_exr.csv", content_type="text/csv"))
+    ecb = Scripted(ecb_answer)
     ctx = JobContext(
         session_factory=factory,
         chain_for=lambda session: ProviderChain([]),
@@ -218,6 +226,6 @@ def test_fx_job_with_two_currencies_does_not_lock_on_the_call_counter(
     )
     result = fx_job(ctx)
     assert result.status == "ok", result.log
-    assert usage.usage_today() == {"ecb": 2}  # one counted call per currency
+    assert usage.usage_today() == {"ecb": 3}  # one counted call per currency, one for the rate
     db.expire_all()
     assert {r.currency for r in db.scalars(select(FxRate))} == {"USD", "GBP"}

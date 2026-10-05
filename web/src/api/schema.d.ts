@@ -2512,6 +2512,12 @@ export interface components {
              * Format: date
              */
             date: string;
+            /** Delayed At */
+            delayed_at: string | null;
+            /** Delayed Price */
+            delayed_price: string | null;
+            /** Delayed Source */
+            delayed_source: string | null;
             /** Overridden */
             overridden: boolean;
             /** Previous Close */

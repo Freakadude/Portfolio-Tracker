@@ -55,6 +55,13 @@ class UsageTracker:
                 )
             return int(db.scalar(self._count_query(provider, day)) or 0)
 
+    def remaining(self, provider: str) -> int | None:
+        """Calls left today, or None when the provider has no daily limit."""
+        limit = self._limit_for(provider)
+        if limit <= 0:
+            return None
+        return max(0, limit - self.usage_today().get(provider, 0))
+
     def usage_today(self) -> dict[str, int]:
         with self._factory() as db:
             rows = db.execute(

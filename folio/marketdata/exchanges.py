@@ -103,6 +103,15 @@ def trading_days(mic: str, start: date, end: date) -> list[date]:
     return [ts.date() for ts in cal.sessions_in_range(lo, hi)]
 
 
+def is_open(mic: str, at: datetime) -> bool:
+    """Whether the exchange is trading at the moment `at` (timezone-aware)."""
+    cal = calendar(mic)
+    stamp = pd.Timestamp(at).tz_convert("UTC").floor("min")
+    if stamp < cal.first_minute or stamp > cal.last_minute:
+        return False
+    return bool(cal.is_open_on_minute(stamp, ignore_breaks=True))
+
+
 def previous_trading_day(mic: str, day: date) -> date | None:
     """The latest session on or before `day`."""
     days = trading_days(mic, day - timedelta(days=14), day)

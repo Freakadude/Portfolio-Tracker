@@ -9,13 +9,24 @@ from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from folio.db.models_ledger import Instrument, LedgerTransaction, Listing
+from folio.events import prune_events
 from folio.jobs.context import JobContext
 from folio.jobs.runner import JobLog, JobResult, run_job
 from folio.marketdata import exchanges
 from folio.marketdata.base import ProviderError
 from folio.marketdata.corporate_actions import propose_all
 from folio.marketdata.fx import FxService, needed_currencies
+from folio.marketdata.macro import MacroService
 from folio.marketdata.prices import PriceService, listing_ref, tracked_listings
+from folio.marketdata.quotes import (
+    EOD_MARGIN,
+    QuoteService,
+    held_listings,
+    listing_refs,
+    open_now,
+    prune_quotes,
+)
+from folio.settings_store import load_section
 
 FX_FLOOR_YEARS = 5  # how far back to fetch rates when no transaction needs more
 GAP_WINDOW_DAYS = 30
@@ -65,17 +76,24 @@ def eod_job(
 
 
 def fx_job(ctx: JobContext) -> JobResult:
-    """Fetch ECB reference rates for every currency in use."""
+    """Fetch ECB reference rates for every currency in use, and the ECB deposit facility rate
+    (the default risk-free rate)."""
 
     def body(db: Session, log: JobLog) -> None:
-        currencies = needed_currencies(db)
-        if not currencies:
-            log.info("No foreign currency in use; nothing to fetch.")
-            return
         today = ctx.today()
         floor = first_transaction_date(db) or today - timedelta(days=365 * FX_FLOOR_YEARS)
-        changed = FxService(db, ctx.ecb_for(db)).catch_up(currencies, today, floor)
-        log.info(f"ECB rates for {', '.join(sorted(currencies))}: {changed} new or changed")
+        currencies = needed_currencies(db)
+        if currencies:
+            changed = FxService(db, ctx.ecb_for(db)).catch_up(currencies, today, floor)
+            log.info(f"ECB rates for {', '.join(sorted(currencies))}: {changed} new or changed")
+        else:
+            log.info("No foreign currency in use; no exchange rates to fetch.")
+        db.commit()
+        try:
+            changed = MacroService(db).update_deposit_rate(ctx.ecb_for(db), today, floor)
+            log.info(f"ECB deposit facility rate: {changed} new or changed")
+        except ProviderError as exc:
+            log.error(f"ECB deposit facility rate: {exc}")
 
     return run_job(ctx, "fx", body)
 
@@ -132,6 +150,51 @@ def refresh_job(ctx: JobContext) -> JobResult:
                 log.error(f"ECB rates: {exc}")
 
     return run_job(ctx, "refresh", body)
+
+
+QUOTE_RETENTION_FLOOR_DAYS = 1
+
+
+def quotes_job(ctx: JobContext, only_if_open: bool = False) -> JobResult:
+    """Delayed quotes for held listings on exchanges that are open now (FR-MD-05), within the
+    call budget and never at the expense of the nightly closes. The scheduler passes
+    `only_if_open`, so a quarter of an hour with every market closed leaves no run record."""
+    if only_if_open:
+        with ctx.session_factory() as db:
+            if not open_now(held_listings(db), ctx.now()):
+                return JobResult(0, "quotes", "skipped", "No held listing is on an open market.")
+
+    def body(db: Session, log: JobLog) -> None:
+        now = ctx.now()
+        listings = open_now(held_listings(db), now)
+        if not listings:
+            log.info("No held listing is on an open market.")
+            return
+        reserve = len(tracked_listings(db)) + EOD_MARGIN
+        service = QuoteService(db, ctx.chain_for(db), ctx.usage)
+        summary = service.refresh(listing_refs(listings), now, reserve)
+        if summary.source is None:
+            why = "; ".join(f"{p}: {r}" for p, r in summary.skipped.items())
+            log.info(f"No quotes fetched ({why or 'no provider is enabled'}).")
+            return
+        log.info(f"{summary.stored} new quote(s) for {len(listings)} listing(s) ({summary.source})")
+        for provider, reason in summary.skipped.items():
+            log.info(f"{provider} not used: {reason}")
+
+    return run_job(ctx, "quotes", body)
+
+
+def retention_job(ctx: JobContext) -> JobResult:
+    """Prune what has a retention period (FR-SY-09): old quotes, and the live-update events
+    that the browser has long since read."""
+
+    def body(db: Session, log: JobLog) -> None:
+        keep = load_section(db, "retention")
+        quotes = prune_quotes(db, ctx.now(), int(keep.quotes_days))  # type: ignore[attr-defined]
+        events = prune_events(db, ctx.now())
+        log.info(f"Pruned {quotes} old quote(s) and {events} old event(s).")
+
+    return run_job(ctx, "retention", body)
 
 
 def actions_job(ctx: JobContext) -> JobResult:

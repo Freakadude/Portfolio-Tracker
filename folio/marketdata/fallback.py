@@ -89,8 +89,19 @@ class ProviderChain:
             f"dividends for {listing.ticker}", lambda p: p.get_dividends(listing, start, end)
         )
 
-    def get_quotes(self, listings: Sequence[ListingRef]) -> FetchResult[dict[int, Quote]]:
-        return self._first("quotes", lambda p: p.get_quotes(listings))
+    def get_quotes(
+        self,
+        listings: Sequence[ListingRef],
+        allow: Callable[[PriceProvider], bool] | None = None,
+    ) -> FetchResult[dict[int, Quote]]:
+        """`allow` can keep a provider out of this request (the quote budget reserve)."""
+
+        def ask(provider: PriceProvider) -> dict[int, Quote]:
+            if allow is not None and not allow(provider):
+                raise ProviderError("kept in reserve for the nightly closes")
+            return provider.get_quotes(listings)
+
+        return self._first("quotes", ask)
 
     def probe(self, symbol: str) -> FetchResult[SymbolMeta] | None:
         """Ask the providers, in order, to confirm what they know about a symbol."""
