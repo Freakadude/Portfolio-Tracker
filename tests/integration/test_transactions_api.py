@@ -505,7 +505,7 @@ def test_a_backdated_buy_rebuilds_lots_and_positions_and_asks_for_new_snapshots(
         0
     ]  # ordered by the buy transaction id: March first, then the backdated one
     assert [(q, c) for _, q, c, _ in lots] == [(D(10), D(1200)), (D(5), D(500))]
-    requests = db.scalars(select(JobRequest)).all()
+    requests = db.scalars(select(JobRequest).where(JobRequest.job == "snapshots")).all()
     assert [(r.job, r.params, r.status) for r in requests] == [
         ("snapshots", {"from": "2024-01-02"}, "pending")
     ]
@@ -628,7 +628,9 @@ def test_switching_the_cost_basis_method_recomputes_and_is_audited(
     assert len(tables(db, a)[0]) == 1  # one pooled lot
     audit = db.scalars(select(AuditLog).where(AuditLog.action == "cost_basis_method")).one()
     assert audit.diff == {"cost_basis_method": {"old": "FIFO", "new": "AVG"}}
-    assert db.scalars(select(JobRequest)).one().params == {"from": "2024-01-02"}
+    assert db.scalars(select(JobRequest).where(JobRequest.job == "snapshots")).one().params == {
+        "from": "2024-01-02"
+    }
 
     api.patch(f"/api/v1/accounts/{a}", json={"cost_basis_method": "FIFO"})
     assert position(db, a).realized_pnl_eur == D("346.5")  # and back again

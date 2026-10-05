@@ -75,9 +75,9 @@ Requirement ID → module → test → status (`todo`, `in progress`, `done`).
 | ID | Module | Test | Status |
 | --- | --- | --- | --- |
 | FR-ST-01 | folio/strategies/schema.py, parse.py (line numbers), diff.py, service.py, folio/api/routers/strategies.py, migration 0006, ADR 0020 | tests/unit/strategies/test_parse.py (syntax, bad value, unknown rule type and missing field each name their line), tests/integration/test_strategies_api.py (immutable versions, form and YAML views, side-by-side diff) | in progress (API done; editor pending) |
-| FR-ST-02 | folio/strategies/service.py (set_mode), strategy.mode | tests/integration/test_strategies_api.py (activating one makes the other a shadow; audited) | in progress (modes done; shadow signals with the rules engine) |
-| FR-ST-03 | | | todo |
-| FR-ST-04 | | | todo |
+| FR-ST-02 | folio/strategies/service.py (set_mode), signals.py (shadow flag), GET /strategies/signals | tests/integration/test_strategies_api.py (activating one makes the other a shadow; audited), tests/integration/test_rules_job.py (shadow signals stored and marked, listed only with shadow=true) | in progress (backend done; Strategies page pending) |
+| FR-ST-03 | folio/strategies/inputs.py, rules.py, folio/jobs/strategies.py (rules_job), jobs/requests.request_rules from the ledger service, scheduler (after EOD, refresh, nightly), POST /strategies/run, ADR 0021 | tests/unit/strategies/test_rules.py (every rule type), tests/integration/test_rules_job.py (a breaking transaction gives a signal on the next 5-second poll) | done (Strategies page shows it in commit 8) |
+| FR-ST-04 | folio/strategies/signals.py (dedup key, cooldown, worsen_step) | tests/unit/strategies/test_rules.py (property: one fire per cooldown), tests/integration/test_rules_job.py (cooldown, worsening, a cleared condition fires again) | done |
 | FR-ST-05 | | | todo |
 | FR-ST-07 | folio/strategies/agent_context.py, folio/agent/schema.py | tests/unit/strategies/test_parse.py (principles and theses word for word; strict schema with departs_from_principles) | done (the agent that reads them is Phase 4) |
 | FR-MD-08 | folio/marketdata/macro.py (groundwork) | | todo |

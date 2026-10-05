@@ -145,7 +145,8 @@ def test_refresh_prices_now_fetches_closes_and_redoes_the_recent_snapshots(
     closes = db.scalars(select(PriceBar).where(PriceBar.listing_id == listing.id)).all()
     assert closes and max(c.date for c in closes) == date(2024, 1, 12)
     jobs = [j["job"] for j in api.get("/api/v1/system/jobs").json()["runs"]]
-    assert jobs == ["snapshots", "refresh"]  # the closes first, then the values they change
+    # newest first: the closes, then the values they change, then the rules they may breach
+    assert jobs == ["rules", "snapshots", "refresh"]
     assert db.query(PortfolioSnapshot).count() >= 10
 
 

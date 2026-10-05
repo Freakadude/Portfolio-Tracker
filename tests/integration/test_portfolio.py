@@ -595,7 +595,9 @@ def test_switching_cash_tracking_is_audited_and_rebuilds_the_snapshots(  # type:
 ) -> None:
     r = api.patch(f"/api/v1/accounts/{book['account']}", json={"track_cash": True})
     assert r.status_code == 200 and r.json()["track_cash"] is True
-    request = db.scalars(select(JobRequest).order_by(JobRequest.id.desc())).first()
+    request = db.scalars(
+        select(JobRequest).where(JobRequest.job == "snapshots").order_by(JobRequest.id.desc())
+    ).first()
     assert request is not None and request.job == "snapshots"
     assert request.params == {"from": "2024-01-02"}  # the first transaction of the account
     audit = api.get("/api/v1/audit", params={"entity": "account"}).json()["items"]

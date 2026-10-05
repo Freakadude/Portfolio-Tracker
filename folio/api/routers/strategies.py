@@ -1,9 +1,10 @@
 """Strategies (FR-ST-01, FR-ST-02): YAML or form, immutable versions, diffs, active and shadow."""
 
 import datetime as dt
-from typing import Any, Literal
+from decimal import Decimal
+from typing import Annotated, Any, Literal
 
-from fastapi import APIRouter
+from fastapi import APIRouter, Query
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
@@ -12,11 +13,14 @@ from folio.api.deps import DbDep, UserDep
 from folio.api.errors import ApiError
 from folio.db.models_analytics import Sleeve
 from folio.db.models_ledger import Instrument
-from folio.db.models_strategy import Strategy, StrategyVersion
+from folio.db.models_strategy import Signal, Strategy, StrategyVersion
+from folio.jobs.requests import request_rules
 from folio.strategies import service
 from folio.strategies.diff import side_by_side
+from folio.strategies.inputs import build
 from folio.strategies.parse import Problem, StrategyError, to_json
-from folio.strategies.schema import StrategyDocument
+from folio.strategies.rules import evaluate
+from folio.strategies.schema import StrategyDef, StrategyDocument
 from folio.strategies.starter import starter_yaml
 
 router = APIRouter(prefix="/strategies", tags=["strategies"])
@@ -217,6 +221,92 @@ def create(body: StrategyInput, _user: UserDep, db: DbDep) -> StrategyOut:
     return _out(db, strategy)
 
 
+class SignalOut(BaseModel):
+    id: int
+    strategy_id: int | None
+    strategy_name: str | None
+    version: int | None
+    rule_id: str
+    rule_type: str
+    subject: str
+    ts: dt.datetime
+    severity: str
+    title: str
+    message: str
+    value: Decimal | None
+    state: str
+    shadow: bool
+
+
+class RuleStatusOut(BaseModel):
+    rule_id: str
+    rule_type: str
+    ready: bool
+    reason: str | None
+
+
+class SleeveNowOut(BaseModel):
+    id: str
+    weight: Decimal
+    target: Decimal | None
+    soft_band_pp: Decimal | None
+    hard_band_pp: Decimal | None
+
+
+class StatusOut(BaseModel):
+    rules: list[RuleStatusOut]
+    sleeves: list[SleeveNowOut]
+    conditions_true: int
+
+
+@router.get("/signals", response_model=list[SignalOut])
+def list_signals(
+    _user: UserDep,
+    db: DbDep,
+    strategy_id: int | None = None,
+    shadow: bool | None = None,
+    limit: Annotated[int, Query(ge=1, le=500)] = 100,
+) -> list[SignalOut]:
+    """Signals, newest first. Shadow signals appear only here, never in the inbox (FR-ST-02)."""
+    query = (
+        select(Signal, StrategyVersion, Strategy)
+        .join(StrategyVersion, StrategyVersion.id == Signal.strategy_version_id, isouter=True)
+        .join(Strategy, Strategy.id == StrategyVersion.strategy_id, isouter=True)
+        .order_by(Signal.ts.desc(), Signal.id.desc())
+        .limit(limit)
+    )
+    if strategy_id is not None:
+        query = query.where(StrategyVersion.strategy_id == strategy_id)
+    if shadow is not None:
+        query = query.where(Signal.shadow.is_(shadow))
+    return [
+        SignalOut(
+            id=sig.id,
+            strategy_id=None if strat is None else strat.id,
+            strategy_name=None if strat is None else strat.name,
+            version=None if ver is None else ver.version,
+            rule_id=sig.rule_id,
+            rule_type=sig.rule_type,
+            subject=sig.subject,
+            ts=sig.ts,
+            severity=sig.severity,
+            title=str((sig.payload or {}).get("title") or sig.message),
+            message=sig.message,
+            value=sig.value,
+            state=sig.state,
+            shadow=sig.shadow,
+        )
+        for sig, ver, strat in db.execute(query)
+    ]
+
+
+@router.post("/run", status_code=202)
+def run_now(_user: UserDep, db: DbDep) -> dict[str, str]:
+    """Check the rules now; the worker picks the request up within seconds."""
+    request_rules(db)
+    return {"status": "queued"}
+
+
 @router.get("/{strategy_id}", response_model=StrategyOut)
 def get_strategy(strategy_id: int, _user: UserDep, db: DbDep) -> StrategyOut:
     return _out(db, _load(db, strategy_id))
@@ -275,3 +365,32 @@ def set_mode(strategy_id: int, body: ModeIn, _user: UserDep, db: DbDep) -> list[
 @router.delete("/{strategy_id}", status_code=204)
 def delete(strategy_id: int, _user: UserDep, db: DbDep) -> None:
     service.delete(db, _load(db, strategy_id))
+
+
+@router.get("/{strategy_id}/status", response_model=StatusOut)
+def rule_status(strategy_id: int, _user: UserDep, db: DbDep) -> StatusOut:
+    """Which rules can fire and which are waiting (for a target, a band, data), and where each
+    sleeve stands now against the latest version."""
+    strategy = _load(db, strategy_id)
+    version = service.latest(db, strategy)
+    definition = StrategyDef.model_validate(version.definition)
+    today = dt.date.today()
+    inputs = build(db, definition, today, version.created_at.date())
+    evaluation = evaluate(definition, inputs)
+    return StatusOut(
+        rules=[
+            RuleStatusOut(rule_id=r.rule_id, rule_type=r.rule_type, ready=r.ready, reason=r.reason)
+            for r in evaluation.statuses
+        ],
+        sleeves=[
+            SleeveNowOut(
+                id=spec.id,
+                weight=inputs.sleeves[spec.id].weight,
+                target=spec.target_pct,
+                soft_band_pp=spec.soft_band_pp,
+                hard_band_pp=spec.hard_band_pp,
+            )
+            for spec in definition.sleeves
+        ],
+        conditions_true=len(evaluation.findings),
+    )

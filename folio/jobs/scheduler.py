@@ -38,6 +38,7 @@ from folio.jobs.market import (
 )
 from folio.jobs.portfolio import snapshots_job
 from folio.jobs.runner import JobLog, JobResult, run_job
+from folio.jobs.strategies import rules_job
 from folio.logging import get_logger
 from folio.marketdata import exchanges
 
@@ -89,12 +90,14 @@ JOB_PARAMS: dict[str, tuple[str, ...]] = {
     "refresh": (),
     "quotes": (),
     "retention": (),
+    "rules": (),
 }
 
 
 def _refresh(ctx: JobContext) -> JobResult:
     result = refresh_job(ctx)
     snapshots_job(ctx)  # new closes change the recent values
+    rules_job(ctx)  # and may move a sleeve out of its band
     return result
 
 
@@ -113,6 +116,7 @@ def handlers(
         "refresh": lambda p: _refresh(ctx),
         "quotes": lambda p: quotes_job(ctx),
         "retention": lambda p: retention_job(ctx),
+        "rules": lambda p: rules_job(ctx),
     }
 
 
@@ -185,6 +189,7 @@ def build_schedules() -> list[Schedule]:
         Schedule("snapshots", CronTrigger(hour=23, minute=0, **local)),
         Schedule("backup", CronTrigger(hour=3, minute=0, **local)),
         Schedule("retention", CronTrigger(hour=3, minute=30, **local)),
+        Schedule("rules", CronTrigger(hour=23, minute=15, **local)),  # after the snapshots
         Schedule("quotes", CronTrigger(minute="*/15", timezone="UTC")),  # FR-MD-05
         Schedule("actions", CronTrigger(day_of_week="sun", hour=9, minute=0, **local)),
     ]
@@ -208,7 +213,10 @@ def _rt() -> tuple[JobContext, Settings]:
 
 
 def run_eod(mic: str) -> None:
-    eod_job(_rt()[0], mic, only_if_tracked=True)
+    ctx = _rt()[0]
+    result = eod_job(ctx, mic, only_if_tracked=True)
+    if result.status == "ok":
+        rules_job(ctx)  # new closes can breach a band or a level (FR-ST-03)
 
 
 def run_fx() -> None:
@@ -238,6 +246,10 @@ def run_quotes() -> None:
 
 def run_retention() -> None:
     retention_job(_rt()[0])
+
+
+def run_rules() -> None:
+    rules_job(_rt()[0])
 
 
 def run_requests() -> None:

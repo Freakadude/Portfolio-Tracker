@@ -38,7 +38,7 @@ from folio.domain import (
     preview_sell,
     rebuild,
 )
-from folio.jobs.requests import enqueue
+from folio.jobs.requests import enqueue, request_rules
 from folio.marketdata.fx import FxService, FxUnavailable
 
 TransactionType = Literal[
@@ -385,6 +385,7 @@ def _rebuild_or_reject(db: Session, account: Account) -> None:
 def request_snapshot_rebuild(db: Session, from_date: date) -> None:
     """Portfolio snapshots from this date forward are stale (FR-TX-06); the worker redoes them."""
     enqueue(db, "snapshots", {"from": from_date.isoformat()})
+    request_rules(db)  # a change can move a sleeve out of its band (FR-ST-03)
 
 
 # --- create, update, delete ----------------------------------------------------------------------

@@ -1,0 +1,13 @@
+# ADR 0021: The rules engine and signals: pure checks, dedup keys, cooldowns
+
+Status: accepted (2026-10-05)
+
+## Decisions
+- **Rules are pure functions.** `folio/strategies/inputs.py` gathers what the rules look at from the Phase 2 analytics context: sleeve weights (through the strategy's own member lists, so a shadow strategy is measured on its own sleeves), a year of euro closes per holding, the time-weighted index, daily returns per sleeve, macro series, stale prices and tracked cash. `folio/strategies/rules.py` then decides, with one function per rule type and no database access. Drift is computed with `analytics.allocation.drift`, the function the charts use, so a signal never contradicts a dashboard. The module is under strict typing and the coverage gate.
+- **A rule says why it cannot fire.** Each rule reports whether it is ready or waiting, and for what: no target or band yet (Q3), no contribution plan (Q4), no account tracking cash (Q7), no data for a macro series, or (for `concentration_limit`) the ETF holdings that arrive in Phase 4. The Strategies page shows this, so a silent rule is never a mystery.
+- **Three texts per finding.** The inbox message may carry amounts and names; the push text carries no euro amounts; the anonymous push text carries neither amounts nor names (FR-NT-07). The texts are composed from the numbers, not produced by removing amounts afterwards.
+- **Dedup key, cooldown, worsening.** A finding's key is the rule, the subject and, where it matters, the variant: a soft and a hard band breach are different events, as are two different days of a large move. A key that fires is remembered with its time and measured value (in the `setting` table, per strategy). While the condition holds it fires again only after the rule's cooldown, or earlier once it has worsened by the rule's `worsen_step` from where it last fired. A condition that clears is forgotten, so a new breach fires at once (FR-ST-04). Repeats that are held back are not stored.
+- **When rules run.** After each exchange's closes, after a manual refresh, nightly after the snapshots, after any transaction change (the ledger service queues one `rules` request; the worker polls every five seconds, well inside the one-minute acceptance of FR-ST-03), and on demand from the Strategies page. Shadow strategies run in the same pass; their signals are stored with `shadow = true` and never become notifications.
+
+## Consequences
+Signals are an event log, not a status board: "what is wrong now" is answered by the rule status endpoint, which evaluates the rules on request; "what happened" by the signal list. Notifications (next commit) consume new, non-shadow signals.

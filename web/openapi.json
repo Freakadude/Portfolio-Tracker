@@ -4276,6 +4276,41 @@
         "title": "RowOut",
         "type": "object"
       },
+      "RuleStatusOut": {
+        "properties": {
+          "ready": {
+            "title": "Ready",
+            "type": "boolean"
+          },
+          "reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reason"
+          },
+          "rule_id": {
+            "title": "Rule Id",
+            "type": "string"
+          },
+          "rule_type": {
+            "title": "Rule Type",
+            "type": "string"
+          }
+        },
+        "required": [
+          "rule_id",
+          "rule_type",
+          "ready",
+          "reason"
+        ],
+        "title": "RuleStatusOut",
+        "type": "object"
+      },
       "RunOut": {
         "properties": {
           "duration_seconds": {
@@ -4490,6 +4525,114 @@
           "setup_complete"
         ],
         "title": "SetupStatus",
+        "type": "object"
+      },
+      "SignalOut": {
+        "properties": {
+          "id": {
+            "title": "Id",
+            "type": "integer"
+          },
+          "message": {
+            "title": "Message",
+            "type": "string"
+          },
+          "rule_id": {
+            "title": "Rule Id",
+            "type": "string"
+          },
+          "rule_type": {
+            "title": "Rule Type",
+            "type": "string"
+          },
+          "severity": {
+            "title": "Severity",
+            "type": "string"
+          },
+          "shadow": {
+            "title": "Shadow",
+            "type": "boolean"
+          },
+          "state": {
+            "title": "State",
+            "type": "string"
+          },
+          "strategy_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Strategy Id"
+          },
+          "strategy_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Strategy Name"
+          },
+          "subject": {
+            "title": "Subject",
+            "type": "string"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          },
+          "ts": {
+            "format": "date-time",
+            "title": "Ts",
+            "type": "string"
+          },
+          "value": {
+            "anyOf": [
+              {
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Value"
+          },
+          "version": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Version"
+          }
+        },
+        "required": [
+          "id",
+          "strategy_id",
+          "strategy_name",
+          "version",
+          "rule_id",
+          "rule_type",
+          "subject",
+          "ts",
+          "severity",
+          "title",
+          "message",
+          "value",
+          "state",
+          "shadow"
+        ],
+        "title": "SignalOut",
         "type": "object"
       },
       "SimPositionOut": {
@@ -4794,6 +4937,64 @@
         "title": "SleeveIn",
         "type": "object"
       },
+      "SleeveNowOut": {
+        "properties": {
+          "hard_band_pp": {
+            "anyOf": [
+              {
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Hard Band Pp"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "soft_band_pp": {
+            "anyOf": [
+              {
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Soft Band Pp"
+          },
+          "target": {
+            "anyOf": [
+              {
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Target"
+          },
+          "weight": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Weight",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "weight",
+          "target",
+          "soft_band_pp",
+          "hard_band_pp"
+        ],
+        "title": "SleeveNowOut",
+        "type": "object"
+      },
       "SleeveOut": {
         "properties": {
           "band_pct": {
@@ -4953,6 +5154,35 @@
           "definition"
         ],
         "title": "StarterOut",
+        "type": "object"
+      },
+      "StatusOut": {
+        "properties": {
+          "conditions_true": {
+            "title": "Conditions True",
+            "type": "integer"
+          },
+          "rules": {
+            "items": {
+              "$ref": "#/components/schemas/RuleStatusOut"
+            },
+            "title": "Rules",
+            "type": "array"
+          },
+          "sleeves": {
+            "items": {
+              "$ref": "#/components/schemas/SleeveNowOut"
+            },
+            "title": "Sleeves",
+            "type": "array"
+          }
+        },
+        "required": [
+          "rules",
+          "sleeves",
+          "conditions_true"
+        ],
+        "title": "StatusOut",
         "type": "object"
       },
       "StrategyInput": {
@@ -10663,6 +10893,32 @@
         ]
       }
     },
+    "/api/v1/strategies/run": {
+      "post": {
+        "description": "Check the rules now; the worker picks the request up within seconds.",
+        "operationId": "run_now_api_v1_strategies_run_post",
+        "responses": {
+          "202": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": {
+                    "type": "string"
+                  },
+                  "title": "Response Run Now Api V1 Strategies Run Post",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Run Now",
+        "tags": [
+          "strategies"
+        ]
+      }
+    },
     "/api/v1/strategies/schema": {
       "get": {
         "description": "The JSON Schema of the strategy document, for the form view and editors.",
@@ -10682,6 +10938,88 @@
           }
         },
         "summary": "Json Schema",
+        "tags": [
+          "strategies"
+        ]
+      }
+    },
+    "/api/v1/strategies/signals": {
+      "get": {
+        "description": "Signals, newest first. Shadow signals appear only here, never in the inbox (FR-ST-02).",
+        "operationId": "list_signals_api_v1_strategies_signals_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "strategy_id",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Strategy Id"
+            }
+          },
+          {
+            "in": "query",
+            "name": "shadow",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Shadow"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 100,
+              "maximum": 500,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/SignalOut"
+                  },
+                  "title": "Response List Signals Api V1 Strategies Signals Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "List Signals",
         "tags": [
           "strategies"
         ]
@@ -10896,6 +11234,49 @@
           }
         },
         "summary": "Set Mode",
+        "tags": [
+          "strategies"
+        ]
+      }
+    },
+    "/api/v1/strategies/{strategy_id}/status": {
+      "get": {
+        "description": "Which rules can fire and which are waiting (for a target, a band, data), and where each\nsleeve stands now against the latest version.",
+        "operationId": "rule_status_api_v1_strategies__strategy_id__status_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "strategy_id",
+            "required": true,
+            "schema": {
+              "title": "Strategy Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StatusOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Rule Status",
         "tags": [
           "strategies"
         ]

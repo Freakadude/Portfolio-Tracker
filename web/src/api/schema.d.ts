@@ -1061,6 +1061,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/strategies/run": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Run Now
+         * @description Check the rules now; the worker picks the request up within seconds.
+         */
+        post: operations["run_now_api_v1_strategies_run_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/strategies/schema": {
         parameters: {
             query?: never;
@@ -1073,6 +1093,26 @@ export interface paths {
          * @description The JSON Schema of the strategy document, for the form view and editors.
          */
         get: operations["json_schema_api_v1_strategies_schema_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/strategies/signals": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Signals
+         * @description Signals, newest first. Shadow signals appear only here, never in the inbox (FR-ST-02).
+         */
+        get: operations["list_signals_api_v1_strategies_signals_get"];
         put?: never;
         post?: never;
         delete?: never;
@@ -1151,6 +1191,27 @@ export interface paths {
          *     (FR-ST-02) and syncs the sleeve targets.
          */
         post: operations["set_mode_api_v1_strategies__strategy_id__mode_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/strategies/{strategy_id}/status": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Rule Status
+         * @description Which rules can fire and which are waiting (for a target, a band, data), and where each
+         *     sleeve stands now against the latest version.
+         */
+        get: operations["rule_status_api_v1_strategies__strategy_id__status_get"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -2750,6 +2811,17 @@ export interface components {
                 [key: string]: string;
             } | null;
         };
+        /** RuleStatusOut */
+        RuleStatusOut: {
+            /** Ready */
+            ready: boolean;
+            /** Reason */
+            reason: string | null;
+            /** Rule Id */
+            rule_id: string;
+            /** Rule Type */
+            rule_type: string;
+        };
         /** RunOut */
         RunOut: {
             /** Duration Seconds */
@@ -2827,6 +2899,40 @@ export interface components {
             needs_owner: boolean;
             /** Setup Complete */
             setup_complete: boolean;
+        };
+        /** SignalOut */
+        SignalOut: {
+            /** Id */
+            id: number;
+            /** Message */
+            message: string;
+            /** Rule Id */
+            rule_id: string;
+            /** Rule Type */
+            rule_type: string;
+            /** Severity */
+            severity: string;
+            /** Shadow */
+            shadow: boolean;
+            /** State */
+            state: string;
+            /** Strategy Id */
+            strategy_id: number | null;
+            /** Strategy Name */
+            strategy_name: string | null;
+            /** Subject */
+            subject: string;
+            /** Title */
+            title: string;
+            /**
+             * Ts
+             * Format: date-time
+             */
+            ts: string;
+            /** Value */
+            value: string | null;
+            /** Version */
+            version: number | null;
         };
         /** SimPositionOut */
         SimPositionOut: {
@@ -2909,6 +3015,19 @@ export interface components {
             /** Target Pct */
             target_pct?: number | string | null;
         };
+        /** SleeveNowOut */
+        SleeveNowOut: {
+            /** Hard Band Pp */
+            hard_band_pp: string | null;
+            /** Id */
+            id: string;
+            /** Soft Band Pp */
+            soft_band_pp: string | null;
+            /** Target */
+            target: string | null;
+            /** Weight */
+            weight: string;
+        };
         /** SleeveOut */
         SleeveOut: {
             /** Band Pct */
@@ -2951,6 +3070,15 @@ export interface components {
             };
             /** Yaml */
             yaml: string;
+        };
+        /** StatusOut */
+        StatusOut: {
+            /** Conditions True */
+            conditions_true: number;
+            /** Rules */
+            rules: components["schemas"]["RuleStatusOut"][];
+            /** Sleeves */
+            sleeves: components["schemas"]["SleeveNowOut"][];
         };
         /**
          * StrategyInput
@@ -5785,6 +5913,28 @@ export interface operations {
             };
         };
     };
+    run_now_api_v1_strategies_run_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: string;
+                    };
+                };
+            };
+        };
+    };
     json_schema_api_v1_strategies_schema_get: {
         parameters: {
             query?: never;
@@ -5803,6 +5953,39 @@ export interface operations {
                     "application/json": {
                         [key: string]: unknown;
                     };
+                };
+            };
+        };
+    };
+    list_signals_api_v1_strategies_signals_get: {
+        parameters: {
+            query?: {
+                strategy_id?: number | null;
+                shadow?: boolean | null;
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SignalOut"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
                 };
             };
         };
@@ -5943,6 +6126,37 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["StrategySummary"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    rule_status_api_v1_strategies__strategy_id__status_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                strategy_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StatusOut"];
                 };
             };
             /** @description Validation Error */

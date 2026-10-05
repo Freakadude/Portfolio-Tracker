@@ -268,7 +268,7 @@ def test_requests_for_ledger_edits_rebuild_snapshots(settings: Settings, db) -> 
     create_transaction(db, TransactionIn(account_id=account.id, instrument_id=instrument.id, type="buy", trade_date=date(2024, 1, 2), quantity=D(10), price=D(100)))  # fmt: skip
     db.commit()
     ctx = make_ctx(settings, [], now=datetime(2024, 1, 12, 18, tzinfo=UTC))
-    assert process_job_requests(ctx, settings) == 1  # the request the transaction queued
+    assert process_job_requests(ctx, settings) == 2  # the snapshot rebuild and the rules check
     db.expire_all()
     first = db.scalars(select(PortfolioSnapshot).order_by(PortfolioSnapshot.date)).first()
     assert first is not None and first.date == date(2024, 1, 2) and first.total_value_eur == 1000

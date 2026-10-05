@@ -164,7 +164,9 @@ def test_confirming_a_one_to_four_split_quadruples_the_quantity_and_keeps_the_co
         and audit.diff["ratio"] == "4"
         and audit.diff["transactions"] == [tx.id]
     )
-    assert [j.params for j in db.scalars(select(JobRequest))] == [{"from": "2024-02-01"}]
+    assert [
+        j.params for j in db.scalars(select(JobRequest).where(JobRequest.job == "snapshots"))
+    ] == [{"from": "2024-02-01"}]
 
     again = api.post(f"/api/v1/corporate-actions/{action_id}/confirm")
     assert again.status_code == 409 and "already applied" in again.json()["detail"]
