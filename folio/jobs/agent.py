@@ -21,6 +21,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from folio.agent import budget
+from folio.agent.lifecycle import expire_due
 from folio.agent.run import run_agent
 from folio.agent.tools import untrusted
 from folio.db.models_insight import AgentRun, NewsCluster
@@ -129,6 +130,8 @@ def agent_run_job(
 def agent_tick(ctx: JobContext) -> int:
     """Run whatever is due; returns how many runs were made."""
     with ctx.session_factory() as db:
+        expire_due(db, ctx.now())  # items past their expiry leave the open list (FR-AG-05)
+        db.commit()
         if ctx.llm_for(db) is None:
             return 0
         due = due_runs(db, ctx.now())[:MAX_PER_TICK]

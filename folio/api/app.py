@@ -24,6 +24,7 @@ from folio.api.routers import (
     notifications,
     portfolio,
     positions,
+    recommendations,
     reports,
     sleeves,
     strategies,
@@ -99,6 +100,7 @@ def create_app(
     app.include_router(notifications.router, prefix=API_PREFIX)
     app.include_router(alerts.router, prefix=API_PREFIX)
     app.include_router(agent.router, prefix=API_PREFIX)
+    app.include_router(recommendations.router, prefix=API_PREFIX)
     app.include_router(health.router)
     mount_spa(app, static_dir or STATIC_DIR)  # last: its catch-all route must not shadow the API
     return app

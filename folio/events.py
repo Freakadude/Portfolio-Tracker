@@ -15,6 +15,7 @@ from folio.db.models_analytics import AppEvent
 
 PRICE_UPDATE = "price_update"
 JOB_STATUS = "job_status"
+RECOMMENDATION = "recommendation"
 KEEP = timedelta(days=1)
 
 

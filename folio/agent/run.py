@@ -42,6 +42,7 @@ from folio.agent.tools import TOOL_DEFS, ToolBox
 from folio.agent.validate import Checked, Past, Rec, Verdict, check_output
 from folio.db.models_insight import AgentRun, Recommendation
 from folio.db.models_ledger import Instrument, PriceBar
+from folio.events import RECOMMENDATION, publish_event
 from folio.instruments import primary_listing
 from folio.news.normalize import canonical_url
 from folio.notify.service import notify
@@ -126,6 +127,7 @@ def _store_accepted(db: Session, run: AgentRun, rec: Rec, now: dt.datetime) -> R
     )
     db.add(row)
     db.flush()
+    publish_event(db, RECOMMENDATION, {"id": row.id, "status": "new", "what": "created"})
     return row
 
 

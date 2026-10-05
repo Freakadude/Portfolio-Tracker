@@ -1375,6 +1375,49 @@ export interface paths {
         patch: operations["update_alert_api_v1_price_alerts__alert_id__patch"];
         trace?: never;
     };
+    "/api/v1/recommendations": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Recommendations
+         * @description Recommendations, newest first. `open` is what needs a decision: new or seen, and not past
+         *     its expiry. Items the code gate refused are not advice and are listed only in the run trace.
+         */
+        get: operations["list_recommendations_api_v1_recommendations_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/recommendations/{rec_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** One Recommendation */
+        get: operations["one_recommendation_api_v1_recommendations__rec_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /**
+         * Decide
+         * @description Mark it seen, accept it (optionally as draft transactions), reject it with a reason, or
+         *     snooze it for a number of days.
+         */
+        patch: operations["decide_api_v1_recommendations__rec_id__patch"];
+        trace?: never;
+    };
     "/api/v1/reports/realized": {
         parameters: {
             query?: never;
@@ -2787,6 +2830,29 @@ export interface components {
             /** Widget Count */
             widget_count: number;
         };
+        /** DecisionIn */
+        DecisionIn: {
+            /**
+             * Action
+             * @enum {string}
+             */
+            action: "seen" | "accept" | "reject" | "snooze";
+            /**
+             * Create Drafts
+             * @default false
+             */
+            create_drafts: boolean;
+            /** Days */
+            days?: number | null;
+            /** Note */
+            note?: string | null;
+        };
+        /** DecisionOut */
+        DecisionOut: {
+            /** Drafts */
+            drafts: number[];
+            recommendation: components["schemas"]["RecommendationDetailOut"];
+        };
         /** DeliveryOut */
         DeliveryOut: {
             /** Attempts */
@@ -4016,6 +4082,148 @@ export interface components {
             quantity: string;
             /** Result Eur */
             result_eur: string;
+        };
+        /** RecEvidenceOut */
+        RecEvidenceOut: {
+            /** Kind */
+            kind: string;
+            /** Note */
+            note: string;
+            /** Ref */
+            ref: string;
+        };
+        /** RecOrderOut */
+        RecOrderOut: {
+            /** Amount Eur */
+            amount_eur: string;
+            /** Currency */
+            currency: string | null;
+            /** Instrument Id */
+            instrument_id: number;
+            /** Name */
+            name: string;
+            /** Price */
+            price: string;
+            /** Quantity */
+            quantity: string;
+            /** Side */
+            side: string;
+            /** Sleeve */
+            sleeve: string;
+        };
+        /** RecommendationDetailOut */
+        RecommendationDetailOut: {
+            /** Action Type */
+            action_type: string;
+            /**
+             * Ai Label
+             * @default AI-generated, not financial advice.
+             */
+            ai_label: string;
+            /** Calculation Id */
+            calculation_id: number | null;
+            /** Confidence */
+            confidence: string;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Departs From Principles */
+            departs_from_principles: string | null;
+            /** Evidence */
+            evidence: components["schemas"]["RecEvidenceOut"][];
+            /**
+             * Expires At
+             * Format: date-time
+             */
+            expires_at: string;
+            /** Id */
+            id: number;
+            /** Linked Transaction Ids */
+            linked_transaction_ids: number[];
+            /** Orders */
+            orders: components["schemas"]["RecOrderOut"][];
+            /** Plan Current */
+            plan_current: boolean | null;
+            /** Rationale */
+            rationale: string;
+            /** Remainder Eur */
+            remainder_eur: string | null;
+            /** Run Id */
+            run_id: number;
+            /** Severity */
+            severity: string;
+            /** Snoozed Until */
+            snoozed_until: string | null;
+            /** Sources */
+            sources: string[];
+            /** Status */
+            status: string;
+            /** Subjects */
+            subjects: string[];
+            /** Summary */
+            summary: string;
+            /** Title */
+            title: string;
+            /** User Note */
+            user_note: string | null;
+            /** What Would Change This */
+            what_would_change_this: string;
+        };
+        /** RecommendationOut */
+        RecommendationOut: {
+            /** Action Type */
+            action_type: string;
+            /**
+             * Ai Label
+             * @default AI-generated, not financial advice.
+             */
+            ai_label: string;
+            /** Calculation Id */
+            calculation_id: number | null;
+            /** Confidence */
+            confidence: string;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Departs From Principles */
+            departs_from_principles: string | null;
+            /** Evidence */
+            evidence: components["schemas"]["RecEvidenceOut"][];
+            /**
+             * Expires At
+             * Format: date-time
+             */
+            expires_at: string;
+            /** Id */
+            id: number;
+            /** Linked Transaction Ids */
+            linked_transaction_ids: number[];
+            /** Rationale */
+            rationale: string;
+            /** Run Id */
+            run_id: number;
+            /** Severity */
+            severity: string;
+            /** Snoozed Until */
+            snoozed_until: string | null;
+            /** Sources */
+            sources: string[];
+            /** Status */
+            status: string;
+            /** Subjects */
+            subjects: string[];
+            /** Summary */
+            summary: string;
+            /** Title */
+            title: string;
+            /** User Note */
+            user_note: string | null;
+            /** What Would Change This */
+            what_would_change_this: string;
         };
         /** ReconcileIn */
         ReconcileIn: {
@@ -7956,6 +8164,104 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["AlertOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_recommendations_api_v1_recommendations_get: {
+        parameters: {
+            query?: {
+                status?: string;
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RecommendationOut"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    one_recommendation_api_v1_recommendations__rec_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                rec_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RecommendationDetailOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    decide_api_v1_recommendations__rec_id__patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                rec_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DecisionIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DecisionOut"];
                 };
             };
             /** @description Validation Error */

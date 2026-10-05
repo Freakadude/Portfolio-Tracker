@@ -1845,6 +1845,73 @@
         "title": "DashboardSummary",
         "type": "object"
       },
+      "DecisionIn": {
+        "properties": {
+          "action": {
+            "enum": [
+              "seen",
+              "accept",
+              "reject",
+              "snooze"
+            ],
+            "title": "Action",
+            "type": "string"
+          },
+          "create_drafts": {
+            "default": false,
+            "title": "Create Drafts",
+            "type": "boolean"
+          },
+          "days": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Days"
+          },
+          "note": {
+            "anyOf": [
+              {
+                "maxLength": 1000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Note"
+          }
+        },
+        "required": [
+          "action"
+        ],
+        "title": "DecisionIn",
+        "type": "object"
+      },
+      "DecisionOut": {
+        "properties": {
+          "drafts": {
+            "items": {
+              "type": "integer"
+            },
+            "title": "Drafts",
+            "type": "array"
+          },
+          "recommendation": {
+            "$ref": "#/components/schemas/RecommendationDetailOut"
+          }
+        },
+        "required": [
+          "recommendation",
+          "drafts"
+        ],
+        "title": "DecisionOut",
+        "type": "object"
+      },
       "DeliveryOut": {
         "properties": {
           "attempts": {
@@ -6087,6 +6154,432 @@
           "result_eur"
         ],
         "title": "RealizedOut",
+        "type": "object"
+      },
+      "RecEvidenceOut": {
+        "properties": {
+          "kind": {
+            "title": "Kind",
+            "type": "string"
+          },
+          "note": {
+            "title": "Note",
+            "type": "string"
+          },
+          "ref": {
+            "title": "Ref",
+            "type": "string"
+          }
+        },
+        "required": [
+          "kind",
+          "ref",
+          "note"
+        ],
+        "title": "RecEvidenceOut",
+        "type": "object"
+      },
+      "RecOrderOut": {
+        "properties": {
+          "amount_eur": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Amount Eur",
+            "type": "string"
+          },
+          "currency": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Currency"
+          },
+          "instrument_id": {
+            "title": "Instrument Id",
+            "type": "integer"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "price": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Price",
+            "type": "string"
+          },
+          "quantity": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Quantity",
+            "type": "string"
+          },
+          "side": {
+            "title": "Side",
+            "type": "string"
+          },
+          "sleeve": {
+            "title": "Sleeve",
+            "type": "string"
+          }
+        },
+        "required": [
+          "side",
+          "sleeve",
+          "instrument_id",
+          "name",
+          "quantity",
+          "price",
+          "currency",
+          "amount_eur"
+        ],
+        "title": "RecOrderOut",
+        "type": "object"
+      },
+      "RecommendationDetailOut": {
+        "properties": {
+          "action_type": {
+            "title": "Action Type",
+            "type": "string"
+          },
+          "ai_label": {
+            "default": "AI-generated, not financial advice.",
+            "title": "Ai Label",
+            "type": "string"
+          },
+          "calculation_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Calculation Id"
+          },
+          "confidence": {
+            "title": "Confidence",
+            "type": "string"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "departs_from_principles": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Departs From Principles"
+          },
+          "evidence": {
+            "items": {
+              "$ref": "#/components/schemas/RecEvidenceOut"
+            },
+            "title": "Evidence",
+            "type": "array"
+          },
+          "expires_at": {
+            "format": "date-time",
+            "title": "Expires At",
+            "type": "string"
+          },
+          "id": {
+            "title": "Id",
+            "type": "integer"
+          },
+          "linked_transaction_ids": {
+            "items": {
+              "type": "integer"
+            },
+            "title": "Linked Transaction Ids",
+            "type": "array"
+          },
+          "orders": {
+            "items": {
+              "$ref": "#/components/schemas/RecOrderOut"
+            },
+            "title": "Orders",
+            "type": "array"
+          },
+          "plan_current": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Plan Current"
+          },
+          "rationale": {
+            "title": "Rationale",
+            "type": "string"
+          },
+          "remainder_eur": {
+            "anyOf": [
+              {
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Remainder Eur"
+          },
+          "run_id": {
+            "title": "Run Id",
+            "type": "integer"
+          },
+          "severity": {
+            "title": "Severity",
+            "type": "string"
+          },
+          "snoozed_until": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Snoozed Until"
+          },
+          "sources": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Sources",
+            "type": "array"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          },
+          "subjects": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Subjects",
+            "type": "array"
+          },
+          "summary": {
+            "title": "Summary",
+            "type": "string"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          },
+          "user_note": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "User Note"
+          },
+          "what_would_change_this": {
+            "title": "What Would Change This",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "run_id",
+          "created_at",
+          "action_type",
+          "severity",
+          "subjects",
+          "title",
+          "summary",
+          "rationale",
+          "calculation_id",
+          "evidence",
+          "sources",
+          "confidence",
+          "departs_from_principles",
+          "what_would_change_this",
+          "expires_at",
+          "status",
+          "user_note",
+          "snoozed_until",
+          "linked_transaction_ids",
+          "orders",
+          "remainder_eur",
+          "plan_current"
+        ],
+        "title": "RecommendationDetailOut",
+        "type": "object"
+      },
+      "RecommendationOut": {
+        "properties": {
+          "action_type": {
+            "title": "Action Type",
+            "type": "string"
+          },
+          "ai_label": {
+            "default": "AI-generated, not financial advice.",
+            "title": "Ai Label",
+            "type": "string"
+          },
+          "calculation_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Calculation Id"
+          },
+          "confidence": {
+            "title": "Confidence",
+            "type": "string"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "departs_from_principles": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Departs From Principles"
+          },
+          "evidence": {
+            "items": {
+              "$ref": "#/components/schemas/RecEvidenceOut"
+            },
+            "title": "Evidence",
+            "type": "array"
+          },
+          "expires_at": {
+            "format": "date-time",
+            "title": "Expires At",
+            "type": "string"
+          },
+          "id": {
+            "title": "Id",
+            "type": "integer"
+          },
+          "linked_transaction_ids": {
+            "items": {
+              "type": "integer"
+            },
+            "title": "Linked Transaction Ids",
+            "type": "array"
+          },
+          "rationale": {
+            "title": "Rationale",
+            "type": "string"
+          },
+          "run_id": {
+            "title": "Run Id",
+            "type": "integer"
+          },
+          "severity": {
+            "title": "Severity",
+            "type": "string"
+          },
+          "snoozed_until": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Snoozed Until"
+          },
+          "sources": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Sources",
+            "type": "array"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          },
+          "subjects": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Subjects",
+            "type": "array"
+          },
+          "summary": {
+            "title": "Summary",
+            "type": "string"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          },
+          "user_note": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "User Note"
+          },
+          "what_would_change_this": {
+            "title": "What Would Change This",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "run_id",
+          "created_at",
+          "action_type",
+          "severity",
+          "subjects",
+          "title",
+          "summary",
+          "rationale",
+          "calculation_id",
+          "evidence",
+          "sources",
+          "confidence",
+          "departs_from_principles",
+          "what_would_change_this",
+          "expires_at",
+          "status",
+          "user_note",
+          "snoozed_until",
+          "linked_transaction_ids"
+        ],
+        "title": "RecommendationOut",
         "type": "object"
       },
       "ReconcileIn": {
@@ -14651,6 +15144,160 @@
         "summary": "Update Alert",
         "tags": [
           "alerts"
+        ]
+      }
+    },
+    "/api/v1/recommendations": {
+      "get": {
+        "description": "Recommendations, newest first. `open` is what needs a decision: new or seen, and not past\nits expiry. Items the code gate refused are not advice and are listed only in the run trace.",
+        "operationId": "list_recommendations_api_v1_recommendations_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "status",
+            "required": false,
+            "schema": {
+              "default": "open",
+              "pattern": "^(open|all|new|seen|accepted|rejected|snoozed|expired)$",
+              "title": "Status",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 50,
+              "maximum": 200,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/RecommendationOut"
+                  },
+                  "title": "Response List Recommendations Api V1 Recommendations Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "List Recommendations",
+        "tags": [
+          "recommendations"
+        ]
+      }
+    },
+    "/api/v1/recommendations/{rec_id}": {
+      "get": {
+        "operationId": "one_recommendation_api_v1_recommendations__rec_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "rec_id",
+            "required": true,
+            "schema": {
+              "title": "Rec Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RecommendationDetailOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "One Recommendation",
+        "tags": [
+          "recommendations"
+        ]
+      },
+      "patch": {
+        "description": "Mark it seen, accept it (optionally as draft transactions), reject it with a reason, or\nsnooze it for a number of days.",
+        "operationId": "decide_api_v1_recommendations__rec_id__patch",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "rec_id",
+            "required": true,
+            "schema": {
+              "title": "Rec Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DecisionIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DecisionOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Decide",
+        "tags": [
+          "recommendations"
         ]
       }
     },

@@ -1,0 +1,14 @@
+# ADR 0032: The recommendation lifecycle
+
+Status: accepted (2026-10-05)
+
+## Decisions
+- **Statuses and who moves them.** A recommendation is `new` when the agent makes it, `seen` once the owner has looked, then `accepted`, `rejected` or `snoozed` by the owner, or `expired` by the clock. Items the code gate refused are `refused`: they exist only in the run trace and are invisible to the list, the detail view and every decision. `accepted`, `rejected` and `expired` are final; a snoozed item returns as `new` when its time is up.
+- **The open list is computed, not waiting for a job.** "Open" means new or seen and not past its expiry, evaluated against the clock on every request, so an item leaves the list the moment it expires, even if the worker has not run. The worker's five-minute check also writes the change (and wakes snoozed items), and does so whether or not the agent is on, so the stored status catches up and the audit log says what happened.
+- **Accept can make draft transactions, but only while the advice still holds.** "Accept and make drafts" re-runs the stored calculation with the strategy version it was made under and the same inputs, today; if the orders differ (a transaction was recorded, a price moved enough to change a whole unit) the request is refused with the reason and the item stays open, because drafts from a stale order list are exactly the kind of number the agent was not allowed to invent. The owner can still accept without drafts and record the trades by hand, or ask for a new review. The drafts use the same path as the strategy calculators' drafts (status draft, source strategy), carry a note naming the recommendation, are linked to it, and are confirmed one by one on Insights.
+- **Rejecting asks for a reason but does not need one.** A one-line reason (line breaks flattened, 300 characters) is kept on the item and returned to later runs by `get_recommendation_history`, so the agent can see "I never add to gold in March". The anti-churn rule ignores rejected and expired items: only advice that is still live, or was followed, blocks its opposite.
+- **Every decision is audited and announced.** Each decision (and each expiry, by the worker) writes the audit log with the old and new status and the note, and publishes a `recommendation` event on the live stream so open pages update without a reload; creation does too. A "seen" mark that changes nothing writes nothing.
+- **The AI label travels with the item.** Every item carries the line "AI-generated, not financial advice" in the API as well as in the inbox text, so no client can show one without it.
+
+## Consequences
+Because "open" depends on the clock, two clients never disagree about what is waiting. A calculation that goes stale because of an unrelated trade is refused even though the advice might still be fine; the remedy (accept without drafts, or a new review) is one click.
