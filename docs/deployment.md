@@ -4,8 +4,8 @@ CI builds the image on every green push to `main` and publishes it to the GitHub
 
 ## One-time setup
 
-1. **Let Portainer pull the image.** The repository is private, so its image is too. In GitHub, create a personal access token (classic) with only the `read:packages` scope (Settings, Developer settings). In Portainer, Registries, Add registry, Custom registry: URL `ghcr.io`, your GitHub user name, the token as the password. Enter the token in Portainer only; never in a file or a chat. (If you would rather not use a token, make the package public in GitHub, Packages, Package settings. The image contains no secrets, but it is your choice.)
-2. **Create the stack.** Portainer, Stacks, Add stack, Repository: `https://github.com/Freakadude/Portfolio-Tracker`, reference `refs/heads/main`, compose path `docker-compose.yml` (for a private repository add your GitHub credentials there too). Or use the Web editor and paste the file.
+1. **Make the image public.** The package has its own visibility, separate from the repository's, and it is not on the repository's settings page: open https://github.com/users/Freakadude/packages/container/portfolio-tracker/settings (or your profile, Packages, `portfolio-tracker`, Package settings), Danger Zone, Change visibility, Public. The image holds Folio's code but no secrets or data. A private image with a token in Portainer's Registries did not work: Portainer's connection test asks for write access, and even with it the stack's pull went out without the login ("unauthorized").
+2. **Create the stack.** Portainer, Stacks, Add stack, Repository: `https://github.com/Freakadude/Portfolio-Tracker`, reference `refs/heads/main`, compose path `docker-compose.yml`. Or use the Web editor and paste the file.
 3. **Set the environment variables** in the stack's panel:
 
    | Variable | Value |

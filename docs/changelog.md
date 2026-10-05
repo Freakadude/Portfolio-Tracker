@@ -30,7 +30,7 @@ Also changed outside the feature list: a news feed on a non-standard port could 
 
 ## Deployment (between Phases 4 and 5)
 
-- The container image is now published by CI to the GitHub Container Registry after every green push to `main`, and `docker-compose.yml` pulls it and takes its settings from the stack's environment variables, so a Portainer stack needs no checkout, no build and no `.env` file. Updating is "Update the stack" with "Re-pull image"; going back is pinning an earlier `sha-` tag. The one-time setup is in `docs/deployment.md`. See ADR 0033. The first publish can only be proven by the first green push to `main`, and the registry access (a read-only token in Portainer, or a public package) is yours to set up.
+- The container image is now published by CI to the GitHub Container Registry after every green push to `main`, and `docker-compose.yml` pulls it and takes its settings from the stack's environment variables, so a Portainer stack needs no checkout, no build and no `.env` file. Updating is "Update the stack" with "Re-pull image"; going back is pinning an earlier `sha-` tag. The one-time setup is in `docs/deployment.md`. See ADR 0033. The first publish can only be proven by the first green push to `main`, and the image is a public package (Portainer did not pass a registry login to the stack's pull). Folio is reachable on port 8555 (`FOLIO_WEB_PORT` changes it). Deployed through Portainer by the owner on 2026-10-06.
 
 ## Phase 3 — Strategies and alerts (code complete, awaiting owner gate)
 
