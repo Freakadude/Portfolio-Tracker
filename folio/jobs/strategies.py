@@ -8,6 +8,7 @@ from sqlalchemy.orm import Session
 
 from folio.jobs.context import JobContext
 from folio.jobs.runner import JobLog, JobResult, run_job
+from folio.notify.service import consume_signals
 from folio.strategies import service
 from folio.strategies.inputs import build
 from folio.strategies.rules import evaluate
@@ -31,5 +32,9 @@ def rules_job(ctx: JobContext) -> JobResult:
                 f"{len(evaluation.findings)} condition(s) true, {len(fired)} new signal(s), "
                 f"{waiting} rule(s) waiting for data or numbers"
             )
+
+        notified = consume_signals(db, now)  # the inbox shows them at once
+        if notified:
+            log.info(f"{notified} new item(s) in the inbox")
 
     return run_job(ctx, "rules", body)

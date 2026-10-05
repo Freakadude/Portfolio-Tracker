@@ -660,6 +660,103 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/notifications": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Inbox
+         * @description Newest first, filtered by type (source), severity, read state and subject.
+         */
+        get: operations["inbox_api_v1_notifications_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/notifications/deliveries": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Deliveries
+         * @description The delivery log, newest first: every push per channel, with retries and errors.
+         */
+        get: operations["deliveries_api_v1_notifications_deliveries_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/notifications/read": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Mark Read
+         * @description Mark items read (or unread again), by id or all at once.
+         */
+        post: operations["mark_read_api_v1_notifications_read_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/notifications/test/{channel}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Send Test
+         * @description Send a test push through one channel now, with the saved settings (FR-NT-02).
+         */
+        post: operations["send_test_api_v1_notifications_test__channel__post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/notifications/unread": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Unread Count */
+        get: operations["unread_count_api_v1_notifications_unread_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/portfolio/allocation": {
         parameters: {
             query?: never;
@@ -1903,6 +2000,11 @@ export interface components {
             /** Points */
             points: string | null;
         };
+        /** CountOut */
+        CountOut: {
+            /** Unread */
+            unread: number;
+        };
         /** DashboardChanges */
         DashboardChanges: {
             /** Filters */
@@ -1954,6 +2056,27 @@ export interface components {
             sort_order: number;
             /** Widget Count */
             widget_count: number;
+        };
+        /** DeliveryOut */
+        DeliveryOut: {
+            /** Attempts */
+            attempts: number;
+            /** Channel */
+            channel: string;
+            /** Id */
+            id: number;
+            /** Last Error */
+            last_error: string | null;
+            /** Merged Into Id */
+            merged_into_id: number | null;
+            /** Next Attempt At */
+            next_attempt_at: string | null;
+            /** Notification Id */
+            notification_id: number;
+            /** Sent At */
+            sent_at: string | null;
+            /** Status */
+            status: string;
         };
         /** DiffOut */
         DiffOut: {
@@ -2184,6 +2307,15 @@ export interface components {
              * @enum {string}
              */
             type_mode: "sign" | "column";
+        };
+        /** InboxOut */
+        InboxOut: {
+            /** Items */
+            items: components["schemas"]["NotificationOut"][];
+            /** Total */
+            total: number;
+            /** Unread */
+            unread: number;
         };
         /** IncomeOut */
         IncomeOut: {
@@ -2541,6 +2673,32 @@ export interface components {
             /** Ter Pct */
             ter_pct?: number | string | null;
         };
+        /** NotificationOut */
+        NotificationOut: {
+            /** Body */
+            body: string;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Deliveries */
+            deliveries: components["schemas"]["DeliveryOut"][];
+            /** Id */
+            id: number;
+            /** Link */
+            link: string | null;
+            /** Read At */
+            read_at: string | null;
+            /** Severity */
+            severity: string;
+            /** Source */
+            source: string;
+            /** Subject */
+            subject: string;
+            /** Title */
+            title: string;
+        };
         /** OrderIn */
         OrderIn: {
             /** Ids */
@@ -2782,6 +2940,21 @@ export interface components {
             message: string;
             /** Path */
             path: string;
+        };
+        /** ReadIn */
+        ReadIn: {
+            /**
+             * All
+             * @default false
+             */
+            all: boolean;
+            /** Ids */
+            ids?: number[];
+            /**
+             * Read
+             * @default true
+             */
+            read: boolean;
         };
         /** RealizedOut */
         RealizedOut: {
@@ -3316,6 +3489,13 @@ export interface components {
             name: string;
             /** Widget Count */
             widget_count: number;
+        };
+        /** TestOut */
+        TestOut: {
+            /** Error */
+            error: string | null;
+            /** Ok */
+            ok: boolean;
         };
         /** TotalsOut */
         TotalsOut: {
@@ -5290,6 +5470,158 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["folio__api__routers__macro__SeriesOut"][];
+                };
+            };
+        };
+    };
+    inbox_api_v1_notifications_get: {
+        parameters: {
+            query?: {
+                severity?: string | null;
+                source?: string | null;
+                status?: "unread" | "read" | "all";
+                subject?: string | null;
+                limit?: number;
+                offset?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InboxOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    deliveries_api_v1_notifications_deliveries_get: {
+        parameters: {
+            query?: {
+                status?: string | null;
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DeliveryOut"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    mark_read_api_v1_notifications_read_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ReadIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CountOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    send_test_api_v1_notifications_test__channel__post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                channel: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TestOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    unread_count_api_v1_notifications_unread_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CountOut"];
                 };
             };
         };

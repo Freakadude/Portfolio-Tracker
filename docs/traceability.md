@@ -81,12 +81,12 @@ Requirement ID → module → test → status (`todo`, `in progress`, `done`).
 | FR-ST-05 | folio/strategies/calculators.py (allocator, trim, rebalance), planning.py (holdings, targets, realized result via the sell preview, drafts), POST /strategies/{id}/calculate, POST /strategies/orders/to-drafts | tests/unit/strategies/test_calculators.py (property: allocator orders plus remainder equal the new cash exactly; trim never below target; rebalance ends inside the bands), tests/integration/test_calculators_api.py (shortfalls first, realized result per sale, drafts change nothing until confirmed) | done (Strategies page panel in commit 8) |
 | FR-ST-07 | folio/strategies/agent_context.py, folio/agent/schema.py | tests/unit/strategies/test_parse.py (principles and theses word for word; strict schema with departs_from_principles) | done (the agent that reads them is Phase 4) |
 | FR-MD-08 | folio/marketdata/fred.py, ecb.py (any series), macro.py, folio/jobs/macro.py (daily, then the rules), settings section macro, GET /macro/series, POST /macro/refresh, dashboards macro_overlay data, ADR 0022 | tests/integration/test_macro.py (FRED and ECB fixtures stored idempotently; no key skips; a strategy series fires its macro_threshold rule; the widget shows the real yield and the dollar in separate panes) | in progress (backend done; the chart on the web in commit 9) |
-| FR-NT-01 | | | todo |
-| FR-NT-02 | | | todo |
-| FR-NT-03 | | | todo |
-| FR-NT-04 | | | todo |
-| FR-NT-05 | | | todo |
-| FR-NT-06 | | | todo |
-| FR-NT-07 | | | todo |
-| FR-NT-08 | | | todo |
+| FR-NT-01 | folio/notify/service.py (inbox, notification event), folio/api/routers/notifications.py (filters, bulk read, unread count), ADR 0023 | tests/integration/test_notifications.py (filters by type, severity, read state and subject; bulk and all) | in progress (backend done; inbox page and bell pending) |
+| FR-NT-02 | folio/notify/channels.py (Home Assistant, ntfy behind one interface), POST /notifications/test/{channel} | tests/integration/test_notifications.py (documented requests through a mock transport; errors explained; send test with saved settings) | in progress (backend done; Send test button pending; your phone check is in the gate) |
+| FR-NT-03 | settings notifications.routing (severity x channel), folio/notify/service.notify | tests/integration/test_notifications.py (changing a cell changes the next item; unset channels skipped; channel none) | in progress (backend done; matrix editor pending) |
+| FR-NT-04 | folio/notify/dispatch.py (quiet hours, daily cap) | tests/integration/test_notifications.py (no high push at 23:00, sent at 07:30, critical through; the sixth push waits for the morning) | done |
+| FR-NT-05 | folio/notify/dispatch.py (merge by subject within an hour; medium batched hourly) | tests/integration/test_notifications.py (three items, one push "3 updates on equity"; a fourth within the hour waits) | done |
+| FR-NT-06 | folio/notify/digest.py, folio/jobs/notify.py (daily after 18:30, weekly on Sundays) | tests/integration/test_notifications.py (digest in the inbox and as a push without amounts; written once per day after its time) | done |
+| FR-NT-07 | folio/strategies/rules.py (three texts per finding), folio/notify/dispatch.push_text | tests/unit/strategies/test_rules.py (no euro amounts in any rule push; no names in the private one), tests/integration/test_notifications.py (default push has no euro figure; names mode hides the subject) | done |
+| FR-NT-08 | notification_delivery (attempts, last_error), dispatch retries after 1 and 5 minutes, GET /notifications/deliveries | tests/integration/test_notifications.py (three attempts, then failed with the channel error, shown in the log) | done |
 | FR-SY-10 | | | todo |

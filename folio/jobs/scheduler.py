@@ -37,6 +37,7 @@ from folio.jobs.market import (
     refresh_job,
     retention_job,
 )
+from folio.jobs.notify import notify_job
 from folio.jobs.portfolio import snapshots_job
 from folio.jobs.runner import JobLog, JobResult, run_job
 from folio.jobs.strategies import rules_job
@@ -48,6 +49,7 @@ log = get_logger("folio.scheduler")
 LOCAL_TZ = "Europe/Amsterdam"
 MISFIRE_GRACE_SECONDS = 6 * 3600
 POLL_SECONDS = 5
+NOTIFY_SECONDS = 60  # pushes, digests and new signals (FR-NT-04 to FR-NT-06)
 
 
 # --- job requests -------------------------------------------------------------------------------
@@ -266,6 +268,10 @@ def run_requests() -> None:
     process_job_requests(ctx, settings)
 
 
+def run_notify() -> None:
+    notify_job(_rt()[0])
+
+
 _MODULE = "folio.jobs.scheduler"
 
 
@@ -305,6 +311,14 @@ def make_scheduler(
                 id=schedule.job_id,
                 replace_existing=True,
             )
+    scheduler.add_job(
+        f"{_MODULE}:run_notify",
+        "interval",
+        seconds=NOTIFY_SECONDS,
+        id="notify",
+        replace_existing=True,
+        misfire_grace_time=NOTIFY_SECONDS,
+    )
     scheduler.add_job(
         f"{_MODULE}:run_requests",
         "interval",

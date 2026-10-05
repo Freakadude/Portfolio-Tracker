@@ -100,12 +100,40 @@ class SchedulesSettings(Section):
         return v
 
 
+PushChannel = Literal["home_assistant", "ntfy"]
+Route = Literal["critical", "high", "medium", "low", "info", "digest"]
+
+
+def _default_routing() -> dict[Route, list[PushChannel]]:
+    """Spec section 13: critical, high and medium reach the phone (medium batched hourly),
+    low and info stay in the inbox and the digest; the digest itself is pushed."""
+    both: list[PushChannel] = ["home_assistant", "ntfy"]
+    return {
+        "critical": list(both),
+        "high": list(both),
+        "medium": list(both),
+        "low": [],
+        "info": [],
+        "digest": list(both),
+    }
+
+
 class NotificationsSettings(Section):
     SECRETS: ClassVar[tuple[str, ...]] = ("home_assistant_token", "ntfy_token")
-    channel: Literal["home_assistant", "ntfy", "web_push", "none"] = "home_assistant"  # Q5
+    # the phone channel chosen in the setup wizard; "none" switches phone pushes off (Q5)
+    channel: Literal["home_assistant", "ntfy", "web_push", "none"] = "home_assistant"
+    # severity (and "digest") -> the channels that get a push; a channel that is not set up
+    # is skipped (FR-NT-03)
+    routing: dict[Route, list[PushChannel]] = Field(default_factory=_default_routing)
     quiet_hours_start: str = "22:00"
     quiet_hours_end: str = "07:30"
-    daily_push_cap: int = Field(default=5, ge=0)
+    daily_push_cap: int = Field(default=5, ge=0)  # critical pushes do not count
+    # lock-screen privacy: "amounts" leaves out euro amounts, "names" also instrument names
+    push_privacy: Literal["amounts", "names"] = "amounts"
+    digest_daily: bool = True
+    digest_daily_time: str = "18:30"
+    digest_weekly: bool = True  # Sundays, after the daily digest
+    app_url: str | None = Field(default=None, max_length=300)  # where a tap on a push leads
     home_assistant_url: str | None = None
     home_assistant_service: str | None = None  # e.g. notify.mobile_app_<device>
     ntfy_url: str | None = None
@@ -113,7 +141,7 @@ class NotificationsSettings(Section):
     home_assistant_token: str | None = None
     ntfy_token: str | None = None
 
-    @field_validator("quiet_hours_start", "quiet_hours_end")
+    @field_validator("quiet_hours_start", "quiet_hours_end", "digest_daily_time")
     @classmethod
     def _hhmm(cls, v: str) -> str:
         if not _HHMM.match(v):

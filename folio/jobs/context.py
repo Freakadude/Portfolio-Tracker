@@ -15,6 +15,9 @@ from folio.marketdata.ecb import EcbRates
 from folio.marketdata.fallback import ProviderChain
 from folio.marketdata.fred import FredSeries
 from folio.marketdata.runtime import make_provider_factory, make_usage_tracker
+from folio.notify.channels import Channel
+from folio.notify.service import build_channels
+from folio.security.secrets import SecretStore
 
 
 def _utc_now() -> datetime:
@@ -29,6 +32,7 @@ class JobContext:
     now: Callable[[], datetime] = field(default=_utc_now)
     usage: UsageTracker | None = None  # lets the quote job keep budget for the nightly closes
     fred_for: Callable[[Session], FredSeries | None] = field(default=lambda db: None)
+    channels_for: Callable[[Session], dict[str, Channel]] = field(default=lambda db: {})
 
     def today(self) -> date:
         return self.now().date()
@@ -50,4 +54,7 @@ def build_context(settings: Settings) -> JobContext:
         ecb_for=lambda db: providers(db).ecb(),
         usage=usage,
         fred_for=lambda db: providers(db).fred(),
+        channels_for=lambda db: build_channels(
+            db, SecretStore(db, settings.require_secret_key()).get
+        ),
     )

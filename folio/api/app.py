@@ -16,6 +16,7 @@ from folio.api.routers import (
     imports,
     instruments,
     macro,
+    notifications,
     portfolio,
     positions,
     reports,
@@ -86,6 +87,7 @@ def create_app(
     app.include_router(watchlists.router, prefix=API_PREFIX)
     app.include_router(strategies.router, prefix=API_PREFIX)
     app.include_router(macro.router, prefix=API_PREFIX)
+    app.include_router(notifications.router, prefix=API_PREFIX)
     app.include_router(health.router)
     mount_spa(app, static_dir or STATIC_DIR)  # last: its catch-all route must not shadow the API
     return app

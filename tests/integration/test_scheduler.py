@@ -101,7 +101,7 @@ def test_jobs_are_registered_by_importable_name_with_catch_up_settings(settings:
         jobs = {job.id: job for job in scheduler.get_jobs()}
     finally:
         scheduler.shutdown()
-    assert set(jobs) == {s.job_id for s in build_schedules()} | {"job-requests"}
+    assert set(jobs) == {s.job_id for s in build_schedules()} | {"job-requests", "notify"}
     eod = jobs["eod-XETR"]
     assert eod.func_ref == "folio.jobs.scheduler:run_eod" and eod.args == ("XETR",)
     assert jobs["snapshots"].func_ref == "folio.jobs.scheduler:run_snapshots"
@@ -125,7 +125,9 @@ def test_the_schedule_survives_a_restart_without_duplicates(settings: Settings) 
     try:
         jobs = reader.get_jobs()
         ids = [job.id for job in jobs]
-        assert sorted(ids) == sorted({s.job_id for s in build_schedules()} | {"job-requests"})
+        assert sorted(ids) == sorted(
+            {s.job_id for s in build_schedules()} | {"job-requests", "notify"}
+        )
         assert len(ids) == len(set(ids))  # persisted once, however often the worker started
         assert all(job.next_run_time is not None for job in jobs)
     finally:
