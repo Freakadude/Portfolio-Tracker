@@ -216,6 +216,65 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/calendar/events": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Events
+         * @description Events from `past_days` ago to `days` ahead, soonest first.
+         */
+        get: operations["list_events_api_v1_calendar_events_get"];
+        put?: never;
+        /** Create Event */
+        post: operations["create_event_api_v1_calendar_events_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/calendar/events/{event_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Delete Event */
+        delete: operations["delete_event_api_v1_calendar_events__event_id__delete"];
+        options?: never;
+        head?: never;
+        /** Change Event */
+        patch: operations["change_event_api_v1_calendar_events__event_id__patch"];
+        trace?: never;
+    };
+    "/api/v1/calendar/refresh": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Refresh
+         * @description Ask the worker to write the ready-made dates and, if switched on, fetch earnings dates.
+         */
+        post: operations["refresh_api_v1_calendar_refresh_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/corporate-actions": {
         parameters: {
             query?: never;
@@ -2776,6 +2835,72 @@ export interface components {
             kind: "allocator" | "trim" | "rebalance";
             /** Sleeve */
             sleeve?: string | null;
+        };
+        /** CalendarEventChanges */
+        CalendarEventChanges: {
+            /** Date */
+            date?: string | null;
+            /** Detail */
+            detail?: string | null;
+            /** Instrument Id */
+            instrument_id?: number | null;
+            /** Title */
+            title?: string | null;
+        };
+        /** CalendarEventIn */
+        CalendarEventIn: {
+            /**
+             * Date
+             * Format: date
+             */
+            date: string;
+            /**
+             * Detail
+             * @default
+             */
+            detail: string;
+            /** Instrument Id */
+            instrument_id?: number | null;
+            /**
+             * Kind
+             * @default custom
+             * @enum {string}
+             */
+            kind: "earnings" | "central_bank" | "custom";
+            /** Title */
+            title: string;
+        };
+        /** CalendarEventOut */
+        CalendarEventOut: {
+            /** Brief Done */
+            brief_done: boolean;
+            /**
+             * Date
+             * Format: date
+             */
+            date: string;
+            /** Detail */
+            detail: string;
+            /** Id */
+            id: number;
+            /** In Days */
+            in_days: number;
+            /** Instrument Id */
+            instrument_id: number | null;
+            /** Instrument Name */
+            instrument_name: string | null;
+            /**
+             * Kind
+             * @enum {string}
+             */
+            kind: "earnings" | "central_bank" | "custom";
+            /**
+             * Source
+             * @enum {string}
+             */
+            source: "shipped" | "eodhd" | "owner";
+            /** Title */
+            title: string;
         };
         /** CandidateOut */
         CandidateOut: {
@@ -5996,6 +6121,157 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["MeOut"];
+                };
+            };
+        };
+    };
+    list_events_api_v1_calendar_events_get: {
+        parameters: {
+            query?: {
+                days?: number;
+                past_days?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CalendarEventOut"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_event_api_v1_calendar_events_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CalendarEventIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CalendarEventOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_event_api_v1_calendar_events__event_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    change_event_api_v1_calendar_events__event_id__patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CalendarEventChanges"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CalendarEventOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    refresh_api_v1_calendar_refresh_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: boolean;
+                    };
                 };
             };
         };

@@ -34,6 +34,7 @@ from folio.db.models_insight import (
 from folio.db.models_ledger import Instrument, PriceBar
 from folio.db.models_strategy import Signal
 from folio.instruments import primary_listing
+from folio.news.calendar import upcoming
 from folio.positions import load_positions
 from folio.strategies import service as strategies
 from folio.strategies.agent_context import principles_and_theses
@@ -187,8 +188,8 @@ TOOL_DEFS: list[dict[str, Any]] = [
     ),
     _tool(
         "get_upcoming_events",
-        "Known earnings dates and central bank meetings in the next days, when a source "
-        "provides them.",
+        "Dated events in the next days: earnings of directly held companies, central bank "
+        "decisions and events the owner added. Dates only; it says nothing about the outcome.",
         _obj({"days": {"type": "integer"}}),
     ),
 ]
@@ -711,8 +712,29 @@ class ToolBox:
         }
 
     def _events(self, args: Mapping[str, Any]) -> dict[str, Any]:
+        days = max(1, min(int(args.get("days") or 7), 60))
+        today = self.now.date()
+        events = upcoming(self.db, today, days)
+        names = {
+            i.id: i.name
+            for i in self.db.scalars(
+                select(Instrument).where(
+                    Instrument.id.in_([e.instrument_id for e in events if e.instrument_id])
+                )
+            )
+        }
         return {
-            "days": int(args.get("days") or 7),
-            "events": [],
-            "note": "No event calendar is configured yet.",
+            "days": days,
+            "events": [
+                {
+                    "date": e.event_date.isoformat(),
+                    "in_days": (e.event_date - today).days,
+                    "kind": e.kind,
+                    "title": e.title,
+                    "instrument": names.get(e.instrument_id) if e.instrument_id else None,
+                    "detail": e.detail or None,
+                }
+                for e in events
+            ],
+            "note": None if events else "No dated events in this window.",
         }

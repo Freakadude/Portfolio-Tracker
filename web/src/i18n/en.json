@@ -188,6 +188,8 @@
     "digest_weekly": "Weekly digest on Sundays",
     "app_url": "Folio address for links in pushes (e.g. https://folio.your-tailnet.ts.net)",
     "series": "Series fetched every morning (JSON)",
+    "earnings_eodhd": "Fetch earnings dates from EODHD",
+    "earnings_days": "How far ahead to ask for (days)",
     "triage": "Assess stories with the AI",
     "min_relevance": "Smallest relevance worth assessing (0 to 1)",
     "unlinked_per_day": "Stories linked to nothing to read per day",

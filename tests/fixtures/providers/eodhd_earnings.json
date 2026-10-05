@@ -1,0 +1,41 @@
+{
+  "type": "Earnings",
+  "description": "Historical and upcoming earnings",
+  "from": "2026-10-06",
+  "to": "2026-12-05",
+  "earnings": [
+    {
+      "code": "ASML.AS",
+      "report_date": "2026-10-14",
+      "date": "2026-09-30",
+      "before_after_market": "BeforeMarket",
+      "currency": "EUR",
+      "actual": null,
+      "estimate": 5.32,
+      "difference": null,
+      "percent": null
+    },
+    {
+      "code": "AAPL.US",
+      "report_date": "2026-10-29",
+      "date": "2026-09-30",
+      "before_after_market": "AfterMarket",
+      "currency": "USD",
+      "actual": null,
+      "estimate": 1.78,
+      "difference": null,
+      "percent": null
+    },
+    {
+      "code": "ASML.AS",
+      "report_date": null,
+      "date": "2026-12-31",
+      "before_after_market": null,
+      "currency": "EUR",
+      "actual": null,
+      "estimate": null,
+      "difference": null,
+      "percent": null
+    }
+  ]
+}

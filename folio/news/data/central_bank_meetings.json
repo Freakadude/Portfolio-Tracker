@@ -1,0 +1,21 @@
+{
+  "note": "Decision days of the ECB Governing Council's monetary policy meetings and of the Federal Open Market Committee, from the schedules the two banks publish. Check them against ecb.europa.eu and federalreserve.gov (the owner gate asks for it); any row can be edited or deleted in Folio.",
+  "events": [
+    {"id": "ecb-2026-02-05", "kind": "central_bank", "date": "2026-02-05", "title": "ECB monetary policy decision"},
+    {"id": "ecb-2026-03-19", "kind": "central_bank", "date": "2026-03-19", "title": "ECB monetary policy decision"},
+    {"id": "ecb-2026-04-30", "kind": "central_bank", "date": "2026-04-30", "title": "ECB monetary policy decision"},
+    {"id": "ecb-2026-06-11", "kind": "central_bank", "date": "2026-06-11", "title": "ECB monetary policy decision"},
+    {"id": "ecb-2026-07-23", "kind": "central_bank", "date": "2026-07-23", "title": "ECB monetary policy decision"},
+    {"id": "ecb-2026-09-10", "kind": "central_bank", "date": "2026-09-10", "title": "ECB monetary policy decision"},
+    {"id": "ecb-2026-10-29", "kind": "central_bank", "date": "2026-10-29", "title": "ECB monetary policy decision"},
+    {"id": "ecb-2026-12-17", "kind": "central_bank", "date": "2026-12-17", "title": "ECB monetary policy decision"},
+    {"id": "fomc-2026-01-28", "kind": "central_bank", "date": "2026-01-28", "title": "Federal Reserve (FOMC) rate decision"},
+    {"id": "fomc-2026-03-18", "kind": "central_bank", "date": "2026-03-18", "title": "Federal Reserve (FOMC) rate decision"},
+    {"id": "fomc-2026-04-29", "kind": "central_bank", "date": "2026-04-29", "title": "Federal Reserve (FOMC) rate decision"},
+    {"id": "fomc-2026-06-17", "kind": "central_bank", "date": "2026-06-17", "title": "Federal Reserve (FOMC) rate decision"},
+    {"id": "fomc-2026-07-29", "kind": "central_bank", "date": "2026-07-29", "title": "Federal Reserve (FOMC) rate decision"},
+    {"id": "fomc-2026-09-16", "kind": "central_bank", "date": "2026-09-16", "title": "Federal Reserve (FOMC) rate decision"},
+    {"id": "fomc-2026-10-28", "kind": "central_bank", "date": "2026-10-28", "title": "Federal Reserve (FOMC) rate decision"},
+    {"id": "fomc-2026-12-09", "kind": "central_bank", "date": "2026-12-09", "title": "Federal Reserve (FOMC) rate decision"}
+  ]
+}

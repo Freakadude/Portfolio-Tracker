@@ -108,6 +108,7 @@ class AgentSettings(Section):
             "daily_review": "claude-sonnet-5-5",
             "event_run": "claude-sonnet-5-5",
             "weekly_review": "claude-opus-5-5",
+            "event_brief": "claude-sonnet-5-5",
             "contribution_plan": "claude-sonnet-5-5",
             "on_demand": "claude-sonnet-5-5",
             "news_triage": "claude-haiku-4-5-20251001",
@@ -270,6 +271,14 @@ class NewsSettings(Section):
     display_impact: int = Field(default=0, ge=0, le=100)  # the News page's default minimum
 
 
+class CalendarSettings(Section):
+    """The event calendar (FR-NW-09). The ECB and Fed dates come ready-made; earnings dates of
+    directly held equities need EODHD's earnings calendar, so they stay off until switched on."""
+
+    earnings_eodhd: bool = False
+    earnings_days: int = Field(default=60, ge=7, le=180)  # how far ahead to ask for
+
+
 class AnalyticsSettings(Section):
     """The risk-free rate for the Sharpe ratio (FR-PF-06): the ECB deposit facility rate, or a
     fixed percentage when the owner prefers one (or the ECB series is not yet loaded)."""
@@ -291,4 +300,5 @@ SECTIONS: dict[str, type[Section]] = {
     "macro": MacroSettings,
     "lookthrough": LookThroughSettings,
     "news": NewsSettings,
+    "calendar": CalendarSettings,
 }

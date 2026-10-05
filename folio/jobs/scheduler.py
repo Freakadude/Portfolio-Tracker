@@ -28,6 +28,7 @@ from folio.config import Settings
 from folio.db.base import utcnow
 from folio.db.models_ledger import JobRequest
 from folio.jobs.agent import agent_run_job, agent_tick, outcomes_job
+from folio.jobs.calendar import calendar_job, event_briefs_job
 from folio.jobs.context import JobContext
 from folio.jobs.lookthrough import lookthrough_job
 from folio.jobs.macro import macro_job
@@ -105,6 +106,7 @@ JOB_PARAMS: dict[str, tuple[str, ...]] = {
     "news": ("source_id",),
     "agent_run": ("run_type",),
     "outcomes": (),
+    "calendar": (),
     "quarterly_review": ("quarter",),
 }
 
@@ -134,6 +136,7 @@ def handlers(
         "rules": lambda p: rules_job(ctx),
         "macro": lambda p: macro_job(ctx),
         "outcomes": lambda p: outcomes_job(ctx),
+        "calendar": lambda p: calendar_job(ctx),
         "quarterly_review": lambda p: quarterly_review_job(
             ctx, None if not p.get("quarter") else str(p["quarter"])
         ),
@@ -230,6 +233,11 @@ def build_schedules() -> list[Schedule]:
         Schedule(
             "quarterly_review", CronTrigger(month="1,4,7,10", day=1, hour=8, minute=0, **local)
         ),
+        # ready-made central bank dates and earnings dates, weekly (FR-NW-09)
+        Schedule("calendar", CronTrigger(day_of_week="mon", hour=6, minute=30, **local)),
+        # the evening brief for tomorrow's events; the job itself waits for 18:00 local time, so a
+        # worker that was down at 18:00 still catches up later in the evening
+        Schedule("event_briefs", CronTrigger(minute="*/15", hour="18-23", **local)),
         # issuers publish holdings daily; a monthly refresh is what FR-MD-09 asks for
         Schedule("lookthrough", CronTrigger(day=1, hour=6, minute=0, **local)),
         # every 15 minutes from 07:00 to 23:00 local time and hourly overnight (FR-NW-02);
@@ -315,6 +323,14 @@ def run_outcomes() -> None:
 
 def run_quarterly_review() -> None:
     quarterly_review_job(_rt()[0])
+
+
+def run_calendar() -> None:
+    calendar_job(_rt()[0])
+
+
+def run_event_briefs() -> None:
+    event_briefs_job(_rt()[0])
 
 
 def run_lookthrough() -> None:

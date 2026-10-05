@@ -26,6 +26,8 @@ documentation and must be checked against a real response once a key exists:
 - `eodhd_*.json` - EODHD EOD, search, dividends, splits and real-time responses, and
   `eodhd_fundamentals_etf.json`, the `ETF_Data.Holdings` part of a fundamentals document (invented
   constituents)
+- `eodhd_earnings.json` - the `calendar/earnings` response for two held equities (invented dates and
+  estimates, plus a row without a report date); the call's weight (1) is also from the docs
 - `twelvedata_*.json` - Twelve Data time series, quote and error responses
 - `openfigi_warning.json` - OpenFIGI's "No identifier found." shape
 - `yahoo_not_found.json` - the shape of Yahoo's error body (written from memory of the format)

@@ -224,3 +224,25 @@ class Recommendation(Base):
         JSON, default=dict
     )  # subject -> close, for FR-AG-06
     outcome: Mapped[Any] = mapped_column(JSON, default=dict)  # {} until measured (FR-AG-06)
+
+
+# --- Event calendar (FR-NW-09) -------------------------------------------------------------------
+
+
+class CalendarEvent(Base, SoftDeleteMixin):
+    """A dated event the owner should know about: a company's earnings, a central bank meeting or
+    one the owner added. Rows are soft-deleted, so an event the owner removed is not brought back
+    by the next sync of the ready-made dates."""
+
+    __tablename__ = "calendar_event"
+
+    kind: Mapped[str] = mapped_column(String(14))  # earnings | central_bank | custom
+    event_date: Mapped[date] = mapped_column(Date, index=True)
+    title: Mapped[str] = mapped_column(String(200))
+    instrument_id: Mapped[int | None] = mapped_column(
+        ForeignKey("instrument.id"), default=None, index=True
+    )
+    source: Mapped[str] = mapped_column(String(10))  # shipped | eodhd | owner
+    external_id: Mapped[str] = mapped_column(String(80), default="", index=True)
+    detail: Mapped[str] = mapped_column(Text, default="")
+    brief_sent_at: Mapped[datetime | None] = mapped_column(UTCDateTime, default=None)

@@ -6,11 +6,51 @@ import { useInstruments } from '../api/queries'
 import { EmptyState } from '../components/display'
 import { Alert, Field, Input, Select } from '../components/ui'
 import { useNews, useNewsSources, type NewsFilters } from '../news/api'
+import { CalendarTab } from '../news/CalendarTab'
 import { StoryCard } from '../news/StoryCard'
 
-/** The News page (FR-NW-07): stories linked to what you hold, filtered by holding (directly or
- * through an ETF), impact, direction, source and date. */
+/** The News page: stories (FR-NW-07) and the event calendar (FR-NW-09). */
 export function News() {
+  const { t } = useTranslation()
+  const [params, setParams] = useSearchParams()
+  const tab = params.get('tab') === 'calendar' ? 'calendar' : 'stories'
+  const choose = (next: 'stories' | 'calendar') => {
+    const copy = new URLSearchParams(params)
+    if (next === 'stories') copy.delete('tab')
+    else copy.set('tab', next)
+    setParams(copy)
+  }
+  return (
+    <div className="space-y-4">
+      <h1 className="text-2xl font-semibold">{t('news.title')}</h1>
+      <div
+        role="tablist"
+        aria-label={t('news.title')}
+        className="flex gap-2 border-b border-border"
+      >
+        {(['stories', 'calendar'] as const).map((id) => (
+          <button
+            key={id}
+            role="tab"
+            type="button"
+            aria-selected={tab === id}
+            onClick={() => choose(id)}
+            className={`min-h-10 px-3 text-sm ${
+              tab === id ? 'border-b-2 border-primary font-medium' : 'text-muted hover:underline'
+            }`}
+          >
+            {t(`news.tabs.${id}`)}
+          </button>
+        ))}
+      </div>
+      {tab === 'calendar' ? <CalendarTab /> : <Stories />}
+    </div>
+  )
+}
+
+/** Stories linked to what you hold, filtered by holding (directly or through an ETF), impact,
+ * direction, source and date. */
+function Stories() {
   const { t } = useTranslation()
   const [params] = useSearchParams()
   const [filters, setFilters] = useState<NewsFilters>({ sort: 'time' })
@@ -26,7 +66,6 @@ export function News() {
     )
   return (
     <div className="space-y-4">
-      <h1 className="text-2xl font-semibold">{t('news.title')}</h1>
       <form
         aria-label={t('news.filters')}
         className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4"

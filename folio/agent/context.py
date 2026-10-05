@@ -30,6 +30,12 @@ RUN_TASKS = {
         "A contribution is due: look at the allocator's result and say where the new money "
         "should go."
     ),
+    "event_brief": (
+        "A brief the evening before a dated event (see the focus). Say what the event is, what "
+        "it could mean for the holdings it touches, what to watch for and which of the owner's "
+        "principles or theses it bears on. Make a recommendation only if something needs a "
+        "decision before the event."
+    ),
     "on_demand": "The owner asked for an analysis.",
 }
 

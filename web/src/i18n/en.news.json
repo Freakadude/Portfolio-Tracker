@@ -1,6 +1,10 @@
 {
   "news": {
     "title": "News",
+    "tabs": {
+      "stories": "Stories",
+      "calendar": "Calendar"
+    },
     "filters": "Filter the news",
     "filter": {
       "holding": "Holding",
@@ -98,6 +102,48 @@
       "macroHint": "Series codes such as DFII10, comma separated. A rate decision links to the sleeves that watch them.",
       "enabled": "Enabled",
       "cancel": "Cancel"
+    }
+  },
+  "calendar": {
+    "upcoming": "Coming up",
+    "caption": "Dated events in the next 90 days",
+    "empty": "No dated events in the next 90 days. Add your own, or press Refresh dates for the ready-made ones.",
+    "date": "Date",
+    "event": "Event",
+    "source": "Source",
+    "actions": "Actions",
+    "today": "today",
+    "inDays_one": "in {{count}} day",
+    "inDays_other": "in {{count}} days",
+    "daysAgo_one": "{{count}} day ago",
+    "daysAgo_other": "{{count}} days ago",
+    "sources": {
+      "shipped": "Ready-made",
+      "eodhd": "EODHD",
+      "owner": "You"
+    },
+    "add": "Add an event",
+    "addTitle": "Add an event",
+    "editTitle": "Change an event",
+    "edit": "Change {{title}}",
+    "editButton": "Change",
+    "delete": "Delete {{title}}",
+    "deleteButton": "Delete",
+    "deleteConfirm": "Delete \"{{title}}\" on {{date}}?",
+    "refresh": "Refresh dates",
+    "refreshQueued": "Asked the worker to refresh the dates. Reload in a moment.",
+    "verify": "The ready-made dates (ECB and Federal Reserve decisions) come from the banks' published schedules: check them against ecb.europa.eu and federalreserve.gov. The evening before an event Folio sends a short brief from the agent, or a plain reminder when the agent is off.",
+    "settings": "Earnings dates",
+    "settingsHelp": "Earnings dates of the equities you hold come from EODHD's earnings calendar, which needs a plan that includes it. Until you switch it on, add earnings dates yourself.",
+    "form": "Event",
+    "required": "This is required.",
+    "save": "Save event",
+    "fields": {
+      "title": "Title",
+      "date": "Date",
+      "instrument": "About (optional)",
+      "none": "Nothing in particular",
+      "detail": "Note (optional)"
     }
   }
 }

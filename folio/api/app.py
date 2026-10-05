@@ -12,6 +12,7 @@ from folio.api.routers import (
     alerts,
     analytics,
     auth,
+    calendar,
     corporate_actions,
     dashboards,
     events,
@@ -99,6 +100,7 @@ def create_app(
     app.include_router(strategy_review.router, prefix=API_PREFIX)
     app.include_router(macro.router, prefix=API_PREFIX)
     app.include_router(news.router, prefix=API_PREFIX)
+    app.include_router(calendar.router, prefix=API_PREFIX)
     app.include_router(notifications.router, prefix=API_PREFIX)
     app.include_router(alerts.router, prefix=API_PREFIX)
     app.include_router(agent.router, prefix=API_PREFIX)

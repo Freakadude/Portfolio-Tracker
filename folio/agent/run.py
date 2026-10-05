@@ -199,7 +199,7 @@ def run_agent(
         _persist(db, run, now, checked, data, raw_text, outcome, deliver=True)
         run.digest = checked.digest
         outcome.digest = checked.digest
-        if run_type in ("daily_review", "weekly_review"):
+        if run_type in ("daily_review", "weekly_review", "event_brief"):
             _digest_item(db, run_type, checked, outcome, now)
         finish_run(
             db,
@@ -369,7 +369,11 @@ def _digest_item(
 ) -> None:
     """The run's digest as an info item, so a quiet day is visible too ("nothing needs
     attention")."""
-    title = "Daily review" if run_type == "daily_review" else "Weekly review"
+    title = {
+        "daily_review": "Daily review",
+        "weekly_review": "Weekly review",
+        "event_brief": "Event brief",
+    }.get(run_type, "Review")
     body = checked.digest or "The review made no comment."
     extra = (
         f"{len(outcome.accepted)} recommendation(s) made."

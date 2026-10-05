@@ -29,7 +29,14 @@ from folio.notify.service import notify
 from folio.settings_schema import AgentSettings, GeneralSettings, ModelPrice
 from folio.settings_store import load_section
 
-AGENT_RUN_TYPES = ("daily_review", "event_run", "weekly_review", "contribution_plan", "on_demand")
+AGENT_RUN_TYPES = (
+    "daily_review",
+    "event_run",
+    "weekly_review",
+    "contribution_plan",
+    "on_demand",
+    "event_brief",
+)
 NEWS_RUN_TYPES = ("news_link", "news_assess")
 ZERO = Decimal(0)
 
@@ -60,7 +67,10 @@ class Standing:
 
 
 def agent_settings(db: Session) -> AgentSettings:
-    return AgentSettings.model_validate(load_section(db, "agent").model_dump())
+    cfg = AgentSettings.model_validate(load_section(db, "agent").model_dump())
+    # settings saved before a run type existed have no model for it: fall back to the default
+    cfg.models = {**AgentSettings().models, **cfg.models}
+    return cfg
 
 
 def timezone_of(db: Session) -> ZoneInfo:

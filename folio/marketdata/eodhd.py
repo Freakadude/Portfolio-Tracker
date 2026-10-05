@@ -28,6 +28,7 @@ from folio.marketdata.http import HttpClient, check_status
 BASE = "https://eodhd.com/api"
 FUNDAMENTALS_WEIGHT = 10  # EODHD counts one fundamentals request as ten API calls
 NEWS_WEIGHT = 5  # and one news request as five
+EARNINGS_WEIGHT = 1  # an earnings calendar request, per the documentation: check on a real key
 
 
 def _dec(value: Any) -> Decimal | None:
@@ -130,6 +131,12 @@ class EodhdProvider:
         symbols. Costs five calls of the budget."""
         symbol = listing.symbol_for(self.name)
         return self._call("news", symbol, {"s": symbol, "limit": limit, "offset": 0}, NEWS_WEIGHT)
+
+    def get_earnings(self, symbols: Sequence[str], start: date, end: date) -> Any:
+        """The earnings calendar for some symbols between two dates: `{"earnings": [...]}` with the
+        report date, the period end and an estimate. Needs a plan that includes the calendar."""
+        params = {"symbols": ",".join(symbols), "from": start.isoformat(), "to": end.isoformat()}
+        return self._call("calendar/earnings", None, params, EARNINGS_WEIGHT)
 
     def probe(self, symbol: str) -> SymbolMeta | None:
         return None  # EODHD states the currency in its search results instead
