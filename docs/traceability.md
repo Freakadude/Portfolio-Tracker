@@ -19,7 +19,7 @@ Requirement ID → module → test → status (`todo`, `in progress`, `done`).
 
 | ID | Module | Test | Status |
 | --- | --- | --- | --- |
-| NFR-01 | folio/domain (no floats; Decimal end to end) | tests/unit/domain/test_ledger_properties.py (no-floats test, invariants), test_ledger_golden.py | in progress (domain done; services and API pending) |
+| NFR-01 | folio/domain (no floats; Decimal end to end) | tests/unit/domain/test_ledger_properties.py (no-floats test, invariants), test_ledger_golden.py | done (domain, services, API and web numbers all Decimal or string; the web converts rates with BigInt, web/src/lib/decimal.test.ts) |
 | FR-TX-03 | folio/domain/ledger.py (FIFO and AVG), account method switch in ledger_service, web AccountsTab (warning before recalculating) | tests/unit/domain/test_ledger_golden.py, tests/integration/test_transactions_api.py, web/src/overview.test.tsx, web/e2e/05-overview-and-system.spec.ts (average cost leaves 320,40 where FIFO leaves 360,60) | done |
 | FR-TX-04 | folio/domain/ledger.py preview_sell, POST /transactions/preview-sell | tests/unit/domain/test_ledger_golden.py, test_ledger_properties.py, tests/integration/test_transactions_api.py, web/src/transaction-form.test.tsx, web/e2e/03-transactions.spec.ts (hand-computed sale across two lots, oversell explained) | done |
 | FR-INS-01 | folio/marketdata/resolve.py, isin.py, folio/api/routers/instruments.py | tests/integration/test_instruments_api.py (recorded OpenFIGI and Yahoo responses) | done |
@@ -43,4 +43,4 @@ Requirement ID → module → test → status (`todo`, `in progress`, `done`).
 | FR-SY-06 | folio/backup.py (VACUUM INTO, integrity check, 14 daily + 8 weekly, extra folder), jobs/scheduler.py (03:00) | tests/integration/test_backup.py, test_scheduler.py | done |
 | FR-SY-07 (CLI restore) | folio/backup.py restore_backup, folio/cli.py restore | tests/integration/test_backup.py (restore recreates identical positions), test_demo_cli.py | done |
 | FR-SY-08 | folio/audit; instruments, transactions, accounts, prices, settings audited | tests/integration/test_settings.py, test_instruments_api.py, test_transactions_api.py | done (audit viewer with before and after: web/src/overview.test.tsx, web/e2e/05-overview-and-system.spec.ts) |
-| NFR-02 | UTC storage (UTCDateTime), exchange-local trading dates (Date columns), migration 0002 | tests/integration/test_schema.py | in progress (schema done; job scheduling in exchange time pending) |
+| NFR-02 | UTC storage (UTCDateTime), exchange-local trading dates (Date columns), migration 0002 | tests/integration/test_schema.py, tests/integration/test_scheduler.py, tests/unit/test_exchanges.py (jobs run at close + 2 h in exchange time) | done |

@@ -1,6 +1,14 @@
 # Changelog
 
-## Phase 1 — Ledger and prices (in progress)
+## Phase 1 — Ledger and prices (code complete, awaiting owner gate)
+
+Every Phase 1 requirement is implemented and covered by automated tests: 398 Python tests, 79 web unit tests and 10 Playwright tests, with CI green on `main` (13c2420). Requirements closed: FR-INS-01 to 03, FR-MD-01 to 04, 06, 07, 10, 11, FR-TX-01 to 07, FR-PF-01, FR-PF-10, FR-SY-06, FR-SY-07 (CLI restore), FR-SY-08, NFR-01, NFR-02.
+
+Not yet verified, and needed before Phase 2:
+- **Owner gate:** import your real Degiro export locally (never commit it) and check that every position's quantity and cost basis match the statement to the cent. Use Transactions, Import CSV; the first guess for the columns is filled in, check it, then save the mapping under a name for next time.
+- **Deployment:** the compose stack has still not been run (no Docker on the dev machine). Deploy it through Portainer, open `/healthz`, then the app.
+- Live provider calls (Yahoo, OpenFIGI, ECB) were only exercised through recorded responses; EODHD and Twelve Data fixtures are derived from their documentation. The first real lookup of an ISIN is your check that they behave.
+
 
 - Ledger domain: lots, FIFO and average cost, splits, transfers, income and cash flows, sell preview, position and portfolio metrics; property tests for invariants 1-5 and hand-computed golden scenarios; 85 percent coverage gate on `domain/` and `analytics/` in CI [FR-TX-03, FR-TX-04, NFR-01]. See ADR 0005.
 - Schema (migration 0002): instrument, listing, ledger_transaction (table name avoids the SQL keyword), lot, lot_match, position, corporate_action, import batches and presets, price_bar, fx_rate, portfolio_snapshot, provider_call, job_request and job_run. A partial unique index on (account, external_ref) makes imports idempotent and lets an undone import be re-run. A test fails if models and migrations drift apart [NFR-02].
