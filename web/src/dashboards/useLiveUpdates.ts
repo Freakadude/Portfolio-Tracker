@@ -22,6 +22,12 @@ export function useLiveUpdates() {
       void queryClient.invalidateQueries({ queryKey: ['drafts'] })
     }
     source.addEventListener('notification', inbox)
+    // the agent made or changed a recommendation: Insights, the widgets and the run list
+    const recommendation = () => {
+      for (const key of ['recommendations', 'agent', 'widget-data'])
+        void queryClient.invalidateQueries({ queryKey: [key] })
+    }
+    source.addEventListener('recommendation', recommendation)
     return () => source.close()
   }, [queryClient])
 }

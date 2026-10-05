@@ -1,0 +1,144 @@
+{
+  "recs": {
+    "title": "Recommendations from the AI agent",
+    "show": "Show",
+    "status": {
+      "open": "Waiting for you",
+      "accepted": "Accepted",
+      "rejected": "Rejected",
+      "snoozed": "Snoozed",
+      "expired": "Expired"
+    },
+    "empty": {
+      "open": "Nothing is waiting for a decision.",
+      "accepted": "Nothing accepted yet.",
+      "rejected": "Nothing rejected.",
+      "snoozed": "Nothing snoozed.",
+      "expired": "Nothing has expired."
+    },
+    "label": "AI-generated, not financial advice. Folio's own calculators work out every order; the agent only chooses what to look at and explains why.",
+    "runNow": "Run a review now",
+    "queued": "Asked the worker for a review. New recommendations appear here when it is done.",
+    "budget": "AI cost this month: {{spent}} of {{budget}} EUR.",
+    "noKey": "Add your Anthropic API key under Settings, Agent to switch the agent on.",
+    "paused": "The budget is used up; the agent is paused.",
+    "ai": "AI-generated",
+    "departs": "Departs from your principles",
+    "departsWhy": "Why:",
+    "confidence": "Confidence: {{level}}",
+    "expires": "Expires {{date}}",
+    "severity": {
+      "all": "All",
+      "info": "Info",
+      "low": "Low",
+      "medium": "Medium",
+      "high": "High",
+      "critical": "Critical"
+    },
+    "action": {
+      "direct_contribution": "Direct new money",
+      "trim": "Trim",
+      "rebalance": "Rebalance",
+      "hold": "Hold",
+      "review_thesis": "Review a thesis",
+      "watch": "Watch",
+      "hedge_check": "Check the hedge",
+      "info": "For information"
+    },
+    "orders": "Orders from the calculator",
+    "columns": {
+      "side": "Side",
+      "name": "Instrument",
+      "quantity": "Units",
+      "price": "Price",
+      "amount": "Amount"
+    },
+    "side": { "buy": "Buy", "sell": "Sell" },
+    "stale": "The portfolio or the prices have changed since this advice was made, so its order list is out of date. Ask for a new review before making drafts.",
+    "evidence": "Evidence and sources",
+    "kind": {
+      "signal": "Signal",
+      "news_cluster": "News",
+      "metric": "Data",
+      "macro_series": "Macro series",
+      "web_source": "Web page"
+    },
+    "openStory": "Open the story",
+    "yourReason": "Your reason: {{note}}",
+    "accept": "Accept",
+    "acceptDrafts": "Accept and make draft transactions",
+    "whatIf": "Open in What-if",
+    "reject": "Reject",
+    "reason": "Why? (optional, one line)",
+    "confirmReject": "Reject it",
+    "seen": "Mark as seen",
+    "snoozeFor": "Remind me in",
+    "snoozeDays": "Days to snooze",
+    "snooze": "Snooze",
+    "days_one": "{{count}} day",
+    "days_other": "{{count}} days",
+    "draftsMade": "{{count}} draft transaction made.",
+    "confirmDrafts": "Confirm them below, under Orders from your strategy."
+  },
+  "agentSettings": {
+    "intro": "The AI agent reads your strategy, signals and news every weekday evening and proposes recommendations, which Folio's code checks before you see them. It never trades and cannot change your records. Switch it off at any time: rules, alerts and notifications keep working.",
+    "month": "Cost in {{month}}",
+    "spent": "{{spent}} of {{budget}} EUR ({{left}} left)",
+    "newsShare": "Used by news triage",
+    "newsSpent": "{{spent}} of {{share}} EUR",
+    "runs": "Runs",
+    "runsValue": "{{month}} this month, {{today}} today (cap {{cap}} a day)",
+    "state": "State",
+    "on": "On",
+    "off": "Switched off",
+    "noKey": "Waiting for an API key",
+    "paused": "Paused: the budget is used up",
+    "test": "Test the key",
+    "saveKeyFirst": "Save your Anthropic API key first.",
+    "testOk": "The key works ({{model}}). The test cost {{cost}} EUR.",
+    "pricesHint": "The prices are list prices in US dollars per million tokens: check them against Anthropic's pricing page. A model without a price cannot be used, because its cost could not be limited."
+  },
+  "runs": {
+    "title": "AI agent runs",
+    "empty": "The agent has not run yet.",
+    "caption": "Agent runs",
+    "columns": {
+      "when": "When",
+      "what": "Run",
+      "status": "Status",
+      "items": "Recommendations",
+      "cost": "Cost (EUR)",
+      "actions": ""
+    },
+    "type": {
+      "daily_review": "Daily review",
+      "event_run": "Event run",
+      "weekly_review": "Weekly review",
+      "contribution_plan": "Contribution plan",
+      "on_demand": "On demand",
+      "news_assess": "News triage",
+      "test": "Key test"
+    },
+    "status": {
+      "ok": "Done",
+      "failed": "Failed",
+      "budget": "Stopped by the budget",
+      "running": "Running"
+    },
+    "items": "{{made}} shown, {{refused}} refused",
+    "trace": "Trace of run",
+    "tokens": "{{input}} tokens in, {{output}} out, {{cached}} read from the cache, {{searches}} web searches.",
+    "prompts": "Prompts: {{labels}}",
+    "verdicts": "Verdicts on each recommendation",
+    "shown": "Shown",
+    "refused": "Refused",
+    "toolCalls": "Tool calls ({{count}})",
+    "errored": "failed",
+    "findings": "What it found",
+    "context": "What it was told",
+    "answer": "Its answer"
+  },
+  "signalsWidget": {
+    "signal": "Signal"
+  }
+}

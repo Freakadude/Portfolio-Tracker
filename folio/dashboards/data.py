@@ -8,7 +8,7 @@ from __future__ import annotations
 from collections import defaultdict
 from collections.abc import Callable, Sequence
 from dataclasses import dataclass
-from datetime import date, timedelta
+from datetime import UTC, date, datetime, time, timedelta
 from decimal import Decimal
 from typing import Any
 
@@ -22,7 +22,9 @@ from folio.analytics.risk import drawdown
 from folio.analytics.series import bridge, monthly_returns, rebase
 from folio.dashboards.widgets import WIDGET_TYPES, BaseConfig
 from folio.db.models_analytics import MacroPoint, MacroSeries
+from folio.db.models_insight import NewsAssessment, NewsCluster, NewsLink, Recommendation
 from folio.db.models_ledger import Instrument, LedgerTransaction, Listing, PriceBar
+from folio.db.models_strategy import Signal
 from folio.positions import load_positions
 
 ZERO = Decimal(0)
@@ -794,6 +796,106 @@ def _macro_window(env: Env, cfg: Any) -> tuple[date, date]:
     return env.today - timedelta(days=_PERIOD_DAYS.get(period, 366)), env.today
 
 
+SEVERITY_ORDER = ("info", "low", "medium", "high", "critical")
+NEWS_DAYS = 7
+SIGNAL_DAYS = 14
+FEED_ROWS = 8
+
+
+def _end_of(day: date) -> datetime:
+    return datetime.combine(day, time.max, UTC)
+
+
+def news_feed(env: Env, cfg: Any) -> dict[str, Any]:
+    """The latest stories linked to what you hold, with their assessment (FR-NW-07)."""
+    floor = datetime.combine(env.today - timedelta(days=NEWS_DAYS), time.min, UTC)
+    query = select(NewsCluster).where(
+        NewsCluster.relevance > 0,
+        NewsCluster.last_seen >= floor,
+        NewsCluster.last_seen <= _end_of(env.today),
+    )
+    if cfg.min_impact:
+        query = query.where(NewsCluster.max_impact >= cfg.min_impact)
+    names = {i.id: i.name for i in env.db.scalars(select(Instrument))}
+    stories = []
+    for c in env.db.scalars(query.order_by(NewsCluster.last_seen.desc()).limit(FEED_ROWS)):
+        latest = env.db.scalars(
+            select(NewsAssessment)
+            .where(NewsAssessment.cluster_id == c.id)
+            .order_by(NewsAssessment.id.desc())
+        ).first()
+        links = env.db.scalars(
+            select(NewsLink)
+            .where(NewsLink.cluster_id == c.id)
+            .order_by(NewsLink.relevance.desc())
+            .limit(3)
+        )
+        stories.append(
+            {
+                "id": c.id,
+                "title": c.title,
+                "last_seen": c.last_seen.isoformat(),
+                "impact": None if latest is None else latest.impact_score,
+                "direction": None if latest is None else latest.direction,
+                "links": [names.get(k.instrument_id or 0, k.sleeve or "?") for k in links],
+            }
+        )
+    if not stories:
+        return _empty(
+            "No stories linked to your holdings yet. Check your sources under Settings, News."
+        )
+    return {"stories": stories}
+
+
+def signals(env: Env, cfg: Any) -> dict[str, Any]:
+    """What is waiting for you: open recommendations, then the strategy's recent signals at or
+    above the chosen severity (FR-ST-04, FR-AG-05)."""
+    now = _end_of(env.today)
+    minimum = 0 if cfg.severity == "all" else SEVERITY_ORDER.index(cfg.severity)
+    items: list[dict[str, Any]] = []
+    for r in env.db.scalars(
+        select(Recommendation)
+        .where(Recommendation.status.in_(("new", "seen")), Recommendation.expires_at > now)
+        .order_by(Recommendation.id.desc())
+        .limit(FEED_ROWS)
+    ):
+        if SEVERITY_ORDER.index(r.severity) < minimum:
+            continue
+        items.append(
+            {
+                "kind": "recommendation",
+                "id": r.id,
+                "title": r.title,
+                "severity": r.severity,
+                "time": r.created_at.isoformat(),
+                "departs": bool(r.departs_from_principles),
+            }
+        )
+    floor = datetime.combine(env.today - timedelta(days=SIGNAL_DAYS), time.min, UTC)
+    for sig in env.db.scalars(
+        select(Signal)
+        .where(Signal.shadow.is_(False), Signal.ts >= floor, Signal.ts <= now)
+        .order_by(Signal.ts.desc())
+        .limit(30)
+    ):
+        if SEVERITY_ORDER.index(sig.severity) < minimum:
+            continue
+        items.append(
+            {
+                "kind": "signal",
+                "id": sig.id,
+                "title": str((sig.payload or {}).get("title") or sig.message),
+                "severity": sig.severity,
+                "time": sig.ts.isoformat(),
+                "departs": False,
+            }
+        )
+    if not items:
+        return _empty("Nothing is waiting for you.")
+    items.sort(key=lambda i: (-SEVERITY_ORDER.index(i["severity"]), i["kind"] != "recommendation"))
+    return {"items": items[:FEED_ROWS]}
+
+
 def macro_overlay(env: Env, cfg: Any) -> dict[str, Any]:
     stored = list(env.db.scalars(select(MacroSeries).order_by(MacroSeries.id)))
     if not stored:
@@ -851,14 +953,7 @@ def macro_overlay(env: Env, cfg: Any) -> dict[str, Any]:
     return out
 
 
-# --- widgets whose data arrives in later phases --------------------------------------------------
-
-
-def _later(reason: str) -> Callable[[Env, Any], dict[str, Any]]:
-    def build(env: Env, cfg: Any) -> dict[str, Any]:
-        return {"unavailable": True, "reason": reason}
-
-    return build
+# --- notes -------------------------------------------------------------------------------------
 
 
 def note(env: Env, cfg: Any) -> dict[str, Any]:
@@ -882,8 +977,8 @@ COMPUTE: dict[str, Callable[[Env, Any], dict[str, Any]]] = {
     "attribution": attribution,
     "income": income,
     "macro_overlay": macro_overlay,
-    "news_feed": _later("News arrives in Phase 4."),
-    "signals": _later("Recommendations and alerts arrive in Phase 3."),
+    "news_feed": news_feed,
+    "signals": signals,
     "note": note,
 }
 

@@ -200,8 +200,8 @@
     "attribution": "How much each position added to or took from your return, in euro and in percentage points.",
     "income": "Dividends and interest by month.",
     "macro_overlay": "An economic indicator against a position (later).",
-    "news_feed": "News linked to what you hold (later).",
-    "signals": "Recommendations and alerts waiting for you (later).",
+    "news_feed": "Stories linked to what you hold, with their impact.",
+    "signals": "Recommendations and strategy signals waiting for you.",
     "note": "Your own text."
   },
   "widgetOptions": {
@@ -241,6 +241,8 @@
     "text": "Text",
     "series_code": "Indicator",
     "second_code": "Second indicator",
-    "macroAuto": "Automatic (the first stored)"
+    "macroAuto": "Automatic (the first stored)",
+    "min_impact": "Smallest impact to show",
+    "severity": "At least this severity"
   }
 }

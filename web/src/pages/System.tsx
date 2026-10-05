@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next'
 import { api, errorMessage, unwrap } from '../api/client'
 import { useAudit, useJobs, useSystemUsage, type AuditFilters } from '../api/queries'
 import { Badge } from '../components/display'
+import { RunsPanel } from '../agent/RunsPanel'
 import { SystemInfo } from '../notify/SystemInfo'
 import { Alert, Button, Field, Input, Select } from '../components/ui'
 
@@ -15,6 +16,7 @@ export function System() {
       <SystemInfo />
       <Usage />
       <Jobs />
+      <RunsPanel />
       <AuditLog />
     </div>
   )

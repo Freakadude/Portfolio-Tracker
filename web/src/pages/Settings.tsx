@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next'
 import { AccountsTab } from '../components/AccountsTab'
 import { SleevesTab } from '../components/SleevesTab'
 import { SectionForm } from '../components/SectionForm'
+import { AgentTab } from '../agent/AgentTab'
 import { MacroTab } from '../notify/MacroTab'
 import { NewsTab } from '../news/NewsTab'
 import { NotificationsTab } from '../notify/NotificationsTab'
@@ -53,7 +54,7 @@ export function Settings() {
         id="settings-panel"
         aria-labelledby={`tab-${section}`}
         className={
-          ['accounts', 'sleeves', 'notifications', 'macro', 'news'].includes(section)
+          ['accounts', 'sleeves', 'notifications', 'macro', 'news', 'agent'].includes(section)
             ? 'max-w-4xl'
             : 'max-w-xl'
         }
@@ -68,6 +69,8 @@ export function Settings() {
           <MacroTab />
         ) : section === 'news' ? (
           <NewsTab />
+        ) : section === 'agent' ? (
+          <AgentTab />
         ) : (
           <SectionForm key={section} section={section} />
         )}

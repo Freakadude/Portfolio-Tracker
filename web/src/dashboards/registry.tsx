@@ -8,6 +8,7 @@ import {
   ValueHistoryWidget,
 } from './widgets/History'
 import { KpiWidget } from './widgets/Kpi'
+import { NewsFeedWidget, SignalsWidget } from './widgets/Feeds'
 import { LookThroughWidget } from './widgets/LookThrough'
 import { MacroWidget } from './widgets/Macro'
 import {
@@ -18,7 +19,7 @@ import {
   IncomeWidget,
   MonthlyReturnsWidget,
 } from './widgets/Returns'
-import { NoteWidget, UnavailableWidget } from './widgets/Simple'
+import { NoteWidget } from './widgets/Simple'
 
 export type ScopeKind = 'portfolio' | 'account' | 'sleeve' | 'instrument'
 
@@ -81,14 +82,6 @@ export const KPI_METRICS = [
   'sharpe',
   'beta',
 ] as const // fmt: skip
-
-const later = def(UnavailableWidget, {
-  chart: false,
-  drillsTo: 'none',
-  scopes: ['portfolio'],
-  period: false,
-  fields: [],
-})
 
 const DEFS: Record<string, Omit<WidgetDef, 'type'>> = {
   kpi: def(KpiWidget, {
@@ -256,8 +249,27 @@ const DEFS: Record<string, Omit<WidgetDef, 'type'>> = {
       { key: 'instrument_id', kind: 'instrument' },
     ],
   }),
-  news_feed: later,
-  signals: later,
+  news_feed: def(NewsFeedWidget, {
+    chart: false,
+    drillsTo: 'the story on the News page',
+    scopes: ['portfolio'],
+    period: false,
+    fields: [{ key: 'min_impact', kind: 'number', min: 0, max: 100 }],
+  }),
+  signals: def(SignalsWidget, {
+    chart: false,
+    drillsTo: 'the recommendation on Insights, or the strategy',
+    scopes: ['portfolio'],
+    period: false,
+    fields: [
+      {
+        key: 'severity',
+        kind: 'select',
+        options: ['all', 'low', 'medium', 'high', 'critical'],
+        labels: 'recs.severity',
+      },
+    ],
+  }),
   note: def(NoteWidget, {
     chart: false,
     drillsTo: 'none',

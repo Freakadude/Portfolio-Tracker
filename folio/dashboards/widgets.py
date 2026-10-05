@@ -154,7 +154,7 @@ class NewsConfig(BaseConfig):
 
 
 class SignalsConfig(BaseConfig):
-    severity: Literal["all", "info", "warning", "critical"] = "all"
+    severity: Literal["all", "low", "medium", "high", "critical"] = "all"  # at least this
 
 
 class NoteConfig(BaseConfig):

@@ -473,11 +473,11 @@ def test_performance_comparison_lists_the_portfolio_and_flagged_benchmarks(api, 
     assert D(out["series"][1]["points"][0]["value"]) == 100
 
 
-def test_widgets_that_wait_for_later_phases_say_so(api, book) -> None:
-    for kind in ("news_feed", "signals"):  # look-through arrived in Phase 4
-        out = one(api, kind)
-        assert out["unavailable"] is True and out["reason"]
+def test_the_note_widget_keeps_its_text_and_quiet_feeds_say_so(api, book) -> None:
     assert one(api, "note", {"text": "# Plan"}) == {"text": "# Plan"}
+    for kind in ("news_feed", "signals"):  # nothing linked and nothing waiting yet
+        out = one(api, kind)
+        assert out["empty"] is True and out["reason"]
 
 
 def test_one_failing_widget_does_not_fail_the_others(api, book) -> None:
