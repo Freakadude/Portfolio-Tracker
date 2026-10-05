@@ -1,6 +1,6 @@
 import { useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
-import { useNavigate } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { toNumber } from '../../lib/format'
 import { useFormat } from '../../lib/useFormat'
 import { ChartFrame, DataTable } from '../charts/ChartFrame'
@@ -139,6 +139,14 @@ export function PerformanceWidget({ data }: WidgetProps<PerformanceData>) {
   return (
     <div className="flex h-full flex-col gap-2">
       <p className="text-xs text-muted">{t('widgets.rebased')}</p>
+      {data.suggest_benchmark && (
+        <p className="text-xs text-muted">
+          {t('widgets.benchmarkHint')}{' '}
+          <Link to="/holdings" className="underline">
+            {t('widgets.benchmarkHintLink')}
+          </Link>
+        </p>
+      )}
       <ChartFrame
         chart={
           <TimeChart

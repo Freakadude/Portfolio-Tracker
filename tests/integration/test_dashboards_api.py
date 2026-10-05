@@ -197,9 +197,9 @@ def test_options_that_do_not_exist_are_refused(api) -> None:
     assert missing.status_code == 404
 
 
-def test_the_widget_library_lists_all_eighteen(api) -> None:
+def test_the_widget_library_lists_all_nineteen(api) -> None:
     library = api.get("/api/v1/dashboard-widgets").json()
-    assert len(library) == 18
+    assert len(library) == 19
     kpi = next(w for w in library if w["type"] == "kpi")
     assert (kpi["width"], kpi["height"], kpi["defaults"]["metric"]) == (3, 3, "value")
 
@@ -407,6 +407,10 @@ def test_returns_widgets(api, book) -> None:
     steps = {s["label"]: D(s["amount_eur"]) for s in bridge["steps"]}
     assert steps["start"] == 0 and steps["contributions"] == 1098
     assert steps["F fund"] == 90 and steps["end"] == 1188  # the 3 of income is not in the value
+    attribution = one(api, "attribution", {"period": "YTD"})
+    assert D(attribution["portfolio_pnl_eur"]) == 93  # 90 of price gain and 3 of income
+    assert sum(D(r["pnl_eur"]) for r in attribution["rows"]) == D(attribution["portfolio_pnl_eur"])
+    assert attribution["rows"][0]["name"] == "F fund" and D(attribution["rows"][0]["pnl_eur"]) == 93
     income = one(api, "income", {"period": "YTD"})
     assert income["months"] == [{"month": "2024-01", "dividends": "3", "interest": "0"}]
     assert D(income["total_eur"]) == 3
@@ -459,8 +463,10 @@ def test_performance_comparison_lists_the_portfolio_and_flagged_benchmarks(api, 
     for bar in bars_for("XETR", date(2024, 1, 1), date(2024, 1, 12), first_close=50):
         db.add(PriceBar(listing_id=listing.id, date=bar.date, close=bar.close, source="x"))
     db.commit()
+    assert one(api, "performance_comparison", {"period": "YTD"})["suggest_benchmark"] is True
     api.patch(f"/api/v1/instruments/{bench.id}", json={"is_benchmark": True})
     out = one(api, "performance_comparison", {"period": "YTD"})
+    assert out["suggest_benchmark"] is False  # one is chosen now
     assert [s["key"] for s in out["series"]] == ["portfolio", f"benchmark:{bench.id}"]
     assert D(out["series"][1]["points"][0]["value"]) == 100
 

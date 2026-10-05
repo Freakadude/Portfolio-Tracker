@@ -13,6 +13,8 @@ import {
   type TransactionFilters,
 } from '../api/queries'
 import { Badge, Dialog, EmptyState } from '../components/display'
+import { QuickAdd } from '../components/QuickAdd'
+import { Reconcile } from '../components/Reconcile'
 import { TransactionForm, TYPES, type TxType } from '../components/TransactionForm'
 import { Alert, Button, Field, Input, Select } from '../components/ui'
 import { useFormat } from '../lib/useFormat'
@@ -38,6 +40,8 @@ export function Transactions() {
   const list = useTransactions(filters)
   const [editing, setEditing] = useState<Transaction | undefined>()
   const [adding, setAdding] = useState(() => params.has('add'))
+  const [quick, setQuick] = useState(false)
+  const [reconciling, setReconciling] = useState(false)
   const [initial] = useState(() => {
     const type = params.get('add')
     return {
@@ -96,6 +100,12 @@ export function Transactions() {
           >
             {t('transactions.import')}
           </Link>
+          <Button variant="secondary" onClick={() => setReconciling(true)}>
+            {t('reconcile.open')}
+          </Button>
+          <Button variant="secondary" onClick={() => setQuick(true)}>
+            {t('quickAdd.title')}
+          </Button>
           <Button onClick={() => setAdding(true)}>{t('transactions.add')}</Button>
         </div>
       </div>
@@ -295,6 +305,8 @@ export function Transactions() {
       >
         <TransactionForm editing={editing} initial={initial} onDone={closeForm} />
       </Dialog>
+      <QuickAdd open={quick} onClose={() => setQuick(false)} />
+      <Reconcile open={reconciling} onClose={() => setReconciling(false)} />
     </div>
   )
 }

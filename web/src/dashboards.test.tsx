@@ -9,7 +9,13 @@ import { squarify } from './dashboards/charts/Treemap'
 import { REGISTRY, WIDGET_TYPES } from './dashboards/registry'
 import { useLiveUpdates } from './dashboards/useLiveUpdates'
 import { AllocationWidget, DriftBarsWidget } from './dashboards/widgets/Composition'
-import { HeatmapWidget, IncomeWidget, MonthlyReturnsWidget } from './dashboards/widgets/Returns'
+import { PerformanceWidget } from './dashboards/widgets/History'
+import {
+  AttributionWidget,
+  HeatmapWidget,
+  IncomeWidget,
+  MonthlyReturnsWidget,
+} from './dashboards/widgets/Returns'
 import { Markdown } from './dashboards/widgets/Simple'
 import { Dashboards } from './pages/Dashboards'
 import { Home } from './pages/Home'
@@ -55,8 +61,8 @@ const where = () => screen.getByTestId('where').textContent
 // --- the library -----------------------------------------------------------------------------
 
 describe('the widget registry', () => {
-  it('knows the eighteen widgets of the library', () => {
-    expect(WIDGET_TYPES).toHaveLength(18)
+  it('knows the nineteen widgets of the library', () => {
+    expect(WIDGET_TYPES).toHaveLength(19)
   })
   it('gives every chart a drill-down target (FR-DB-06)', () => {
     const charts = Object.values(REGISTRY).filter((d) => d.chart)
@@ -262,6 +268,70 @@ describe('drift', () => {
     )
     await userEvent.click(screen.getByRole('button', { name: /^core: \+40[.,]0 pp/ }))
     expect(where()).toBe('/holdings?group_by=sleeve&value=core')
+  })
+})
+
+describe('performance comparison', () => {
+  it('suggests a benchmark while none is chosen (Q9)', async () => {
+    mockApi({ '/api/v1/settings/general': GENERAL_US })
+    page(
+      <PerformanceWidget
+        data={{
+          suggest_benchmark: true,
+          series: [
+            {
+              key: 'portfolio',
+              label: 'Portfolio',
+              points: [{ date: '2024-01-02', value: '100' }],
+            },
+          ],
+        }}
+        config={{}}
+        filters={{}}
+      />,
+    )
+    expect(screen.getByText(/No benchmark chosen yet/)).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: 'Open instruments' })).toHaveAttribute(
+      'href',
+      '/holdings',
+    )
+  })
+})
+
+describe('attribution (FR-PF-07)', () => {
+  const rows = [
+    { key: '7', name: 'Acme', pnl_eur: '90', points: '0.0612' },
+    { key: '9', name: 'Beta', pnl_eur: '-30', points: '-0.0204' },
+    { key: 'other', name: 'Other (costs and interest)', pnl_eur: '-2', points: '-0.0014' },
+  ]
+
+  it('shows points on the bars, opens the position, and gives euro and points in the table', async () => {
+    mockApi({ '/api/v1/settings/general': GENERAL_US })
+    page(
+      <AttributionWidget
+        data={{ total_return: '0.0394', portfolio_pnl_eur: '58', rows }}
+        config={{}}
+        filters={{}}
+      />,
+    )
+    await userEvent.click(screen.getByRole('button', { name: /^Acme: \+6[.,]1 pp/ }))
+    expect(where()).toBe('/holdings?group_by=instrument&value=Acme')
+    expect(screen.getByText(/Return of the period/)).toBeInTheDocument()
+    await userEvent.click(screen.getByRole('button', { name: 'Show data as a table' }))
+    const table = screen.getByRole('table', { name: 'Contribution to return' })
+    expect(within(table).getByText('Beta').closest('tr')).toHaveTextContent(/30[.,]00.*-2[.,]04 pp/)
+  })
+
+  it('falls back to euro when there are no points to show', () => {
+    mockApi({ '/api/v1/settings/general': GENERAL_US })
+    page(
+      <AttributionWidget
+        data={{ total_return: null, portfolio_pnl_eur: '58', rows: [{ ...rows[0], points: null }] }}
+        config={{}}
+        filters={{}}
+      />,
+    )
+    expect(screen.getByRole('button', { name: /^Acme: \+.*90/ })).toBeInTheDocument()
   })
 })
 

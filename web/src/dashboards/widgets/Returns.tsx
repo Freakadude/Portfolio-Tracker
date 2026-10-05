@@ -2,10 +2,17 @@ import { useTranslation } from 'react-i18next'
 import { Link, useNavigate } from 'react-router-dom'
 import { SIGNS, direction, toNumber } from '../../lib/format'
 import { useFormat } from '../../lib/useFormat'
-import { Columns, Waterfall, type WaterfallRow } from '../charts/Bars'
+import {
+  Columns,
+  DivergingBars,
+  Waterfall,
+  type DivergingRow,
+  type WaterfallRow,
+} from '../charts/Bars'
 import { ChartFrame, DataTable } from '../charts/ChartFrame'
 import { SERIES, divergeFill } from '../charts/palette'
 import type {
+  AttributionData,
   BridgeData,
   CorrelationData,
   HeatmapData,
@@ -291,6 +298,65 @@ export function BridgeWidget({ data }: WidgetProps<BridgeData>) {
           caption={t('widgets.return_bridge')}
           head={[t('widgets.step'), t('widgets.amount')]}
           rows={rows.map((r) => [r.key, r.text])}
+        />
+      }
+    />
+  )
+}
+
+/** What each position added to or took from the return of the period (FR-PF-07). The bars are in
+ * percentage points; the table adds the euro amounts, which sum to the portfolio's result. */
+export function AttributionWidget({ data }: WidgetProps<AttributionData>) {
+  const { t } = useTranslation()
+  const { eur, num, pct } = useFormat()
+  const navigate = useNavigate()
+  if (data.empty) return <p className="text-sm text-muted">{data.reason}</p>
+  const rows = data.rows ?? []
+  // without a capital base there are no points to show, so the bars fall back to euro
+  const inPoints = rows.every((r) => r.points !== null)
+  const rowsOut: DivergingRow[] = rows.map((r) => {
+    const amount = Number(r.pnl_eur)
+    const points = r.points === null ? null : Number(r.points)
+    const dir = direction(inPoints ? points : amount, inPoints ? 0.00005 : 0.005)
+    return {
+      key: r.name,
+      value: inPoints ? (points ?? 0) : amount,
+      text: inPoints
+        ? `${SIGNS[dir]}${num(Math.abs(points ?? 0) * 100, 1)} pp`
+        : `${SIGNS[dir]}${eur(Math.abs(amount), 0)}`,
+      onSelect:
+        r.key === 'other'
+          ? undefined
+          : () => navigate(`/holdings?group_by=instrument&value=${encodeURIComponent(r.name)}`),
+    }
+  })
+  return (
+    <ChartFrame
+      chart={
+        <div className="space-y-2">
+          {data.total_return != null && (
+            <p className="text-sm text-muted">
+              {t('widgets.attributionTotal', { value: pct(data.total_return, 2) })}
+            </p>
+          )}
+          <DivergingBars
+            rows={rowsOut}
+            label={t('widgets.attribution')}
+            positive="var(--diverge-pos)"
+            negative="var(--diverge-neg)"
+          />
+          <p className="text-xs text-muted">{t('widgets.attributionNote')}</p>
+        </div>
+      }
+      table={
+        <DataTable
+          caption={t('widgets.attribution')}
+          head={[t('widgets.step'), t('widgets.contribution'), t('widgets.points')]}
+          rows={rows.map((r) => [
+            r.name,
+            eur(r.pnl_eur),
+            r.points === null ? '–' : `${num(Number(r.points) * 100, 2)} pp`,
+          ])}
         />
       }
     />

@@ -126,6 +126,14 @@ export interface BridgeData extends Empty {
   steps?: { label: string; amount_eur: string; kind: 'total' | 'delta' }[]
 }
 
+export interface AttributionData extends Empty {
+  start?: string
+  end?: string
+  portfolio_pnl_eur?: string
+  total_return?: string | null
+  rows?: { key: string; name: string; pnl_eur: string; points: string | null }[]
+}
+
 export interface IncomeData extends Empty {
   months?: { month: string; dividends: string; interest: string }[]
   total_eur?: string
@@ -150,6 +158,7 @@ export interface PriceChartData extends Empty {
 }
 
 export interface PerformanceData extends Empty {
+  suggest_benchmark?: boolean
   start?: string
   end?: string
   series?: { key: string; label: string; points: { date: string; value: string }[] }[]

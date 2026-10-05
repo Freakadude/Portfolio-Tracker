@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { isPositiveDecimal, parseDecimal, reciprocal, trimDecimal } from './decimal'
+import { isPositiveDecimal, parseDecimal, reciprocal, trimDecimal, wholeUnits } from './decimal'
 
 describe('parsing', () => {
   it('reads dot and comma decimals exactly', () => {
@@ -57,5 +57,23 @@ describe('trimming', () => {
     expect(trimDecimal('1.0000')).toBe('1')
     expect(trimDecimal('100')).toBe('100')
     expect(trimDecimal('0.9132420091')).toBe('0.9132420091')
+  })
+})
+
+describe('splitting an amount into whole units', () => {
+  it('floors exactly, so the leftover stays in cash', () => {
+    expect(wholeUnits('1000', '60', '45.5')).toBe(13) // 600 / 45.5 = 13.19
+    expect(wholeUnits('1000', '40', '100')).toBe(4) // exactly 4, not 3.999...
+    expect(wholeUnits('0.3', '100', '0.1')).toBe(3) // floats would give 2
+    expect(wholeUnits('1000,00', '12,5', '25')).toBe(5)
+  })
+  it('gives null for anything that is not a usable number', () => {
+    expect(wholeUnits('', '50', '10')).toBeNull()
+    expect(wholeUnits('100', 'x', '10')).toBeNull()
+    expect(wholeUnits('100', '50', '0')).toBeNull()
+    expect(wholeUnits('-100', '50', '10')).toBeNull()
+  })
+  it('allows a zero weight', () => {
+    expect(wholeUnits('100', '0', '10')).toBe(0)
   })
 })

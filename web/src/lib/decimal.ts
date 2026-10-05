@@ -39,3 +39,17 @@ export function reciprocal(rate: string, places = 10): string | null {
 export function trimDecimal(text: string): string {
   return text.includes('.') ? text.replace(/0+$/, '').replace(/\.$/, '') : text
 }
+
+/** How many whole units `amount` buys at `price` when `weightPct` percent of it is spent on
+ * them: floor(amount x weight / 100 / price), computed exactly. Null when an input is not a
+ * positive number. Whole units only (owner decision Q8); the leftover stays in cash. */
+export function wholeUnits(amount: string, weightPct: string, price: string): number | null {
+  const a = parseDecimal(amount)
+  const w = parseDecimal(weightPct)
+  const p = parseDecimal(price)
+  if (!a || !w || !p || a.value <= 0n || w.value < 0n || p.value <= 0n) return null
+  // (A/10^sa) x (W/10^sw) / 100 / (P/10^sp) = A x W x 10^sp / (100 x P x 10^(sa+sw))
+  const numerator = a.value * w.value * 10n ** BigInt(p.scale)
+  const denominator = 100n * p.value * 10n ** BigInt(a.scale + w.scale)
+  return Number(numerator / denominator)
+}

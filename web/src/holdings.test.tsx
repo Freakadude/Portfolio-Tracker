@@ -126,6 +126,26 @@ function api(extra: Record<string, unknown> = {}, rows = [position(), loss, unpr
 }
 
 describe('the positions table', () => {
+  it('labels a newer intraday quote as delayed, with its time (FR-MD-05)', async () => {
+    const quoted = position({
+      price: {
+        date: '2024-04-10',
+        close: '140',
+        previous_close: '138',
+        source: 'yahoo',
+        overridden: false,
+        stale: false,
+        delayed_price: '141.5',
+        delayed_at: '2024-04-11T14:32:00+00:00',
+      },
+    })
+    api({}, [quoted])
+    renderAt(<Holdings />)
+    const row = (await screen.findByText('iShares Core S&P 500')).closest('tr') as HTMLElement
+    expect(within(row).getByText('Delayed 14:32')).toBeInTheDocument()
+    expect(row).toHaveTextContent('141.5 EUR')
+  })
+
   it('shows each position with figures in the chosen number format', async () => {
     api()
     renderAt(<Holdings />)

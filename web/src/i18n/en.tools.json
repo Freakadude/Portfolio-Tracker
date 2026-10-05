@@ -1,0 +1,101 @@
+{
+  "quickAdd": {
+    "title": "Quick add",
+    "intro": "Add several buys at once. They are saved together: if one row has a problem, nothing is saved. To spread an amount, fill in the amount and a share for each row, then press Split the amount; you can still change the units.",
+    "account": "Account",
+    "date": "Date",
+    "amount": "Amount to spend (EUR)",
+    "amountHint": "Optional. Only used by Split the amount.",
+    "rows": "Buys",
+    "row": "Buy {{n}}",
+    "instrument": "Instrument",
+    "choose": "Choose an instrument",
+    "weight": "Share (%)",
+    "units": "Units",
+    "price": "Price",
+    "fees": "Fees (EUR)",
+    "addRow": "Add another row",
+    "removeRow": "Remove row {{n}}",
+    "split": "Split the amount",
+    "weightTotal": "Shares add up to {{total}}%",
+    "save": "Save all",
+    "errors": {
+      "account": "Choose an account.",
+      "empty": "Fill in at least one row.",
+      "instrument": "Row {{n}}: choose an instrument.",
+      "units": "Row {{n}}: enter whole units, at least 1.",
+      "price": "Row {{n}}: enter the price paid, more than zero.",
+      "fees": "Row {{n}}: the fees must be a number."
+    }
+  },
+  "reconcile": {
+    "title": "Reconcile with your broker",
+    "open": "Reconcile",
+    "intro": "Paste the holdings your broker shows for a date, one per line with the ISIN and the number of units. Folio lists the differences with its own records. Nothing is changed.",
+    "account": "Account",
+    "date": "Date",
+    "paste": "Holdings from your broker",
+    "pasteHint": "An ISIN and a quantity on each line, separated by a tab, semicolon or spaces.",
+    "run": "Compare",
+    "nothing": "Paste at least one line with an ISIN and a quantity.",
+    "unreadable": "Could not read this line: {{line}}",
+    "result": "Result of the comparison",
+    "allMatch_one": "All {{count}} holding matches.",
+    "allMatch_other": "All {{count}} holdings match.",
+    "someDiffer_one": "{{count}} line differs; {{matches}} match.",
+    "someDiffer_other": "{{count}} lines differ; {{matches}} match.",
+    "columns": {
+      "instrument": "Instrument",
+      "ours": "In Folio",
+      "broker": "At the broker",
+      "difference": "Difference",
+      "status": "Result"
+    },
+    "status": {
+      "match": "Matches",
+      "difference": "Differs",
+      "missing_at_broker": "Not at the broker",
+      "unknown": "Not in Folio"
+    },
+    "showTransactions": "Show transactions"
+  },
+  "reports": {
+    "year": "Year",
+    "account": "Account",
+    "download": "Download CSV",
+    "disclaimer": "These figures come straight from your transactions and the lots they used. They support your tax return; they are not tax advice, and the rules that apply to you are yours to check.",
+    "totals": {
+      "realized": "Realized result",
+      "income": "Income (gross)",
+      "withholding": "Withholding tax",
+      "costs": "Costs"
+    },
+    "realized": {
+      "title": "Sales",
+      "none": "No sales in {{year}}.",
+      "columns": {
+        "instrument": "Instrument",
+        "account": "Account",
+        "units": "Units sold",
+        "proceeds": "Proceeds",
+        "cost": "Cost basis",
+        "result": "Result"
+      }
+    },
+    "income": {
+      "title": "Dividends and interest",
+      "none": "No income in {{year}}.",
+      "columns": {
+        "instrument": "Instrument",
+        "account": "Account",
+        "gross": "Gross",
+        "withholding": "Withholding",
+        "net": "Net"
+      }
+    },
+    "empty": {
+      "title": "No reports yet",
+      "body": "Reports appear once you have recorded a sale, a dividend or interest."
+    }
+  }
+}

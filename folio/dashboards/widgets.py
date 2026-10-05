@@ -130,6 +130,10 @@ class BridgeConfig(BaseConfig):
     pass
 
 
+class AttributionConfig(BaseConfig):
+    pass
+
+
 class IncomeConfig(BaseConfig):
     pass
 
@@ -176,6 +180,7 @@ WIDGET_TYPES: dict[str, WidgetType] = {
         WidgetType("correlation_matrix", CorrelationConfig, 6, 6, "widgets.correlation"),
         WidgetType("drawdown", DrawdownConfig, 8, 4, "widgets.drawdown"),
         WidgetType("return_bridge", BridgeConfig, 8, 5, "widgets.return_bridge"),
+        WidgetType("attribution", AttributionConfig, 6, 5, "widgets.attribution"),
         WidgetType("income", IncomeConfig, 8, 4, "widgets.income"),
         WidgetType("macro_overlay", MacroConfig, 8, 5, "widgets.macro_overlay"),
         WidgetType("news_feed", NewsConfig, 6, 6, "widgets.news_feed"),

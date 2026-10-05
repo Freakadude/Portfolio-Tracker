@@ -473,6 +473,41 @@ def return_bridge(env: Env, cfg: Any) -> dict[str, Any]:
     }
 
 
+def attribution(env: Env, cfg: Any) -> dict[str, Any]:
+    """What each position contributed to the period's result, in euro and in points of the return;
+    the euro figures add up to the portfolio's result (FR-PF-07)."""
+    ctx = context(env, account_of(cfg, env))
+    if ctx.empty:
+        return _empty("Add a transaction to see what each position contributed.")
+    start, end = window_of(ctx, period_of(cfg, env, "1Y"), env)
+    result = svc.attribution_for(ctx, start, end)
+    if result is None:
+        return _empty("Nothing happened in this period to attribute.")
+    meta = svc.load_meta(env.db, ctx.instruments)
+    rows: list[dict[str, Any]] = []
+    for c in sorted(result.attribution.contributions, key=lambda x: -abs(x.pnl_eur)):
+        if c.key == svc.OTHER:
+            name = "Other (costs and interest)"
+        else:
+            found = meta.get(int(c.key))
+            name = found.name if found else str(c.key)
+        rows.append(
+            {
+                "key": str(c.key),
+                "name": name,
+                "pnl_eur": str(c.pnl_eur),
+                "points": s(c.points),
+            }
+        )
+    return {
+        "start": result.start.isoformat(),
+        "end": result.end.isoformat(),
+        "portfolio_pnl_eur": str(result.portfolio_pnl_eur),
+        "total_return": s(result.attribution.total_return),
+        "rows": rows,
+    }
+
+
 def income(env: Env, cfg: Any) -> dict[str, Any]:
     account = account_of(cfg, env)
     ctx = context(env, account)
@@ -613,9 +648,10 @@ def price_chart(env: Env, cfg: Any) -> dict[str, Any]:
 
 def performance(env: Env, cfg: Any) -> dict[str, Any]:
     refs = list(cfg.series)
+    benchmarks = svc.benchmark_ids(env.db)
     if not refs:
         refs = [{"kind": "portfolio", "id": None}] + [
-            {"kind": "benchmark", "id": i} for i in svc.benchmark_ids(env.db)
+            {"kind": "benchmark", "id": i} for i in benchmarks
         ]
     else:
         refs = [r.model_dump() for r in refs]
@@ -658,6 +694,7 @@ def performance(env: Env, cfg: Any) -> dict[str, Any]:
     return {
         "start": ctx.days[first].isoformat(),
         "end": ctx.days[last].isoformat(),
+        "suggest_benchmark": not benchmarks,  # none chosen yet (owner decision Q9)
         "series": [
             {
                 "key": x["key"],
@@ -706,6 +743,7 @@ COMPUTE: dict[str, Callable[[Env, Any], dict[str, Any]]] = {
     "correlation_matrix": correlation,
     "drawdown": drawdown_chart,
     "return_bridge": return_bridge,
+    "attribution": attribution,
     "income": income,
     "macro_overlay": _later("Macro indicators arrive with the strategies in Phase 3."),
     "news_feed": _later("News arrives in Phase 4."),

@@ -9,6 +9,7 @@ import {
 } from './widgets/History'
 import { KpiWidget } from './widgets/Kpi'
 import {
+  AttributionWidget,
   BridgeWidget,
   CorrelationWidget,
   HeatmapWidget,
@@ -201,6 +202,13 @@ const DEFS: Record<string, Omit<WidgetDef, 'type'>> = {
   return_bridge: def(BridgeWidget, {
     chart: true,
     drillsTo: 'the holdings list filtered to the position, or transactions',
+    scopes: PORTFOLIO_ACCOUNT,
+    period: true,
+    fields: [],
+  }),
+  attribution: def(AttributionWidget, {
+    chart: true,
+    drillsTo: 'the holdings list filtered to the position',
     scopes: PORTFOLIO_ACCOUNT,
     period: true,
     fields: [],
