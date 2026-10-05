@@ -219,9 +219,7 @@ def restore(
 
 @app.command("run-job")
 def run_job_cmd(
-    name: Annotated[
-        str, typer.Argument(help="eod, fx, gaps, snapshots, actions, backfill, backup")
-    ],
+    name: Annotated[str, typer.Argument(help="eod, fx, gaps, backup, macro, news, agent_run, ...")],
     param: Annotated[
         list[str] | None,
         typer.Option("--param", "-p", help="key=value, for example mic=XETR or listing_id=3"),

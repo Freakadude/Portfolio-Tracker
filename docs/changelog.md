@@ -1,6 +1,19 @@
 # Changelog
 
-## Phase 4 — News and AI agent (in progress)
+## Phase 4 — News and AI agent (code complete, awaiting owner gate)
+
+Every Phase 4 requirement is implemented and covered by automated tests: 951 Python tests (including ten agent evaluation scenarios), 195 web unit tests and 33 Playwright tests. Requirements closed: FR-MD-09, FR-PF-05, FR-NW-01 to 08, FR-NW-10, FR-AG-01 to 05, FR-AG-09 and FR-AG-10. Deferred to Phase 5 on purpose: FR-AG-06 to 08 (track record, weekly deep review, "Ask the portfolio") and FR-NW-09 (event calendar). Each recommendation already stores the price of its subject when it is made, which gives the Phase 5 track record its starting point.
+
+Not yet verified, and needed before Phase 5 (owner gate):
+- **The Anthropic key and prices:** under Settings, Agent, paste your API key and press "Test the key" (it costs a fraction of a cent). Check the price table against Anthropic's pricing page: the defaults are from memory, and the budget (5 EUR a month, hard stop) is only as accurate as they are.
+- **A real ETF holdings file:** open an ETF you hold, upload the issuer's holdings CSV, check the preview (the right columns, the share of the fund read) and save. The Look-through widget should then list the largest underlying companies. The test files were written to look like iShares and generic exports, so this is also the check that a real file parses.
+- **News feeds:** Settings, News, preview the ECB and Federal Reserve feeds and add the news feed of one issuer; check the preview shows real headlines. The feeds in the tests were recorded in the same format but not downloaded from the live sites.
+- **A daily review:** let one run (weekdays 19:30, or "Run a review now" on Insights), then read what it recommended, its trace and its cost on the System page. Accept one piece of advice with draft transactions and confirm or drop them.
+- **Deployment:** the worker now also runs the news check (every 15 minutes in the daytime, hourly overnight), the monthly look-through refresh and the agent; redeploy both containers through Portainer.
+- Still open from earlier gates: Phases 1 to 3 (your real Degiro import and the TWR/XIRR check, a push on your phone, your strategy, FRED macro data) and the first Portainer deployment.
+
+Also changed outside the feature list: a news feed on a non-standard port could not be fetched because its robots.txt was looked up on the standard port (fixed with a regression test).
+
 
 - Fixed: a news feed on a non-standard port (a local feed, for example) had its robots.txt looked up on the standard port and could not be fetched; the robots.txt is now read from the same address and port as the feed [FR-NW-02].
 - News sources and fetching: a list of sources under Settings (the ECB's and the Federal Reserve's press-release feeds and EODHD's news for your tickers come ready; you add issuer feeds), each with a language, a trust weight, how often to check and the macro series it speaks to. A feed can be previewed (its last ten items) before it is saved. Fetching is polite: conditional requests (a "not modified" answer costs no parsing), robots.txt obeyed, ten seconds between requests to one site, and a failing source waits longer each time (up to a day) and shows its error in Settings and on the System page. Only the headline, a summary of at most 500 characters, the link and the time are stored; article pages are never fetched. EODHD news costs five calls of the daily budget per ticker and only runs while the closes' share is safe [FR-NW-01, FR-NW-02, FR-NW-03]. See ADR 0026.
