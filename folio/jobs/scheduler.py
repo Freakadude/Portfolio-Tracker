@@ -45,7 +45,7 @@ from folio.jobs.news import news_job
 from folio.jobs.notify import notify_job
 from folio.jobs.portfolio import snapshots_job
 from folio.jobs.runner import JobLog, JobResult, run_job
-from folio.jobs.strategies import rules_job
+from folio.jobs.strategies import quarterly_review_job, rules_job
 from folio.logging import get_logger
 from folio.marketdata import exchanges
 
@@ -105,6 +105,7 @@ JOB_PARAMS: dict[str, tuple[str, ...]] = {
     "news": ("source_id",),
     "agent_run": ("run_type",),
     "outcomes": (),
+    "quarterly_review": ("quarter",),
 }
 
 
@@ -133,6 +134,9 @@ def handlers(
         "rules": lambda p: rules_job(ctx),
         "macro": lambda p: macro_job(ctx),
         "outcomes": lambda p: outcomes_job(ctx),
+        "quarterly_review": lambda p: quarterly_review_job(
+            ctx, None if not p.get("quarter") else str(p["quarter"])
+        ),
         "agent_run": lambda p: agent_run_job(
             ctx,
             "daily_review" if p.get("run_type") == "daily_review" else "on_demand",
@@ -222,6 +226,10 @@ def build_schedules() -> list[Schedule]:
         Schedule("macro", CronTrigger(hour=7, minute=0, **local)),
         # after the closes, so a horizon that just passed finds its price (FR-AG-06)
         Schedule("outcomes", CronTrigger(hour=23, minute=30, **local)),
+        # the first morning after a quarter ends (FR-ST-08)
+        Schedule(
+            "quarterly_review", CronTrigger(month="1,4,7,10", day=1, hour=8, minute=0, **local)
+        ),
         # issuers publish holdings daily; a monthly refresh is what FR-MD-09 asks for
         Schedule("lookthrough", CronTrigger(day=1, hour=6, minute=0, **local)),
         # every 15 minutes from 07:00 to 23:00 local time and hourly overnight (FR-NW-02);
@@ -303,6 +311,10 @@ def run_macro() -> None:
 
 def run_outcomes() -> None:
     outcomes_job(_rt()[0])
+
+
+def run_quarterly_review() -> None:
+    quarterly_review_job(_rt()[0])
 
 
 def run_lookthrough() -> None:

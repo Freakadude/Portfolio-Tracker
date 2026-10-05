@@ -1894,6 +1894,47 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/strategy-review": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Review
+         * @description The summary of a quarter for the active strategy: drift by sleeve, signals fired and what
+         *     became of the agent's advice. Written by code, not by a model.
+         */
+        get: operations["get_review_api_v1_strategy_review_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/strategy-review/post": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Post Review
+         * @description Put the review of a finished quarter in the inbox; a quarter gets one item only.
+         */
+        post: operations["post_review_api_v1_strategy_review_post_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/system/info": {
         parameters: {
             query?: never;
@@ -4403,6 +4444,61 @@ export interface components {
             /** Xirr */
             xirr: string | null;
         };
+        /** ReviewPointOut */
+        ReviewPointOut: {
+            /**
+             * Day
+             * Format: date
+             */
+            day: string;
+            /** Drift Pp */
+            drift_pp: string;
+            /** Weight */
+            weight: string;
+        };
+        /** ReviewPostedOut */
+        ReviewPostedOut: {
+            /** Posted */
+            posted: boolean;
+            /** Quarter */
+            quarter: string;
+        };
+        /** ReviewRecommendationsOut */
+        ReviewRecommendationsOut: {
+            /** By Action */
+            by_action: {
+                [key: string]: number;
+            };
+            /** By Status */
+            by_status: {
+                [key: string]: number;
+            };
+            /** Made */
+            made: number;
+        };
+        /** ReviewSignalOut */
+        ReviewSignalOut: {
+            /** Count */
+            count: number;
+            /** Rule Id */
+            rule_id: string;
+            /** Worst Severity */
+            worst_severity: string;
+        };
+        /** ReviewSleeveOut */
+        ReviewSleeveOut: {
+            /** Days Outside Hard */
+            days_outside_hard: number;
+            /** Days Outside Soft */
+            days_outside_soft: number;
+            /** Id */
+            id: string;
+            /** Month Ends */
+            month_ends: components["schemas"]["ReviewPointOut"][];
+            /** Target Pct */
+            target_pct: string | null;
+            worst: components["schemas"]["ReviewPointOut"] | null;
+        };
         /** RiskOut */
         RiskOut: {
             /** Annual Return */
@@ -4838,6 +4934,36 @@ export interface components {
             name: string;
             /** Versions */
             versions: components["schemas"]["VersionSummary"][];
+        };
+        /** StrategyReviewOut */
+        StrategyReviewOut: {
+            /** Complete */
+            complete: boolean;
+            /** Days With Data */
+            days_with_data: number;
+            /**
+             * End
+             * Format: date
+             */
+            end: string;
+            /** Notes */
+            notes: string[];
+            /** Quarter */
+            quarter: string;
+            recommendations: components["schemas"]["ReviewRecommendationsOut"];
+            /** Signals */
+            signals: components["schemas"]["ReviewSignalOut"][];
+            /** Sleeves */
+            sleeves: components["schemas"]["ReviewSleeveOut"][];
+            /**
+             * Start
+             * Format: date
+             */
+            start: string;
+            /** Strategy */
+            strategy: string;
+            /** Text */
+            text: string;
         };
         /** StrategySummary */
         StrategySummary: {
@@ -9261,6 +9387,69 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["VersionOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_review_api_v1_strategy_review_get: {
+        parameters: {
+            query?: {
+                /** @description like 2026Q3; default the last quarter */
+                quarter?: string | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StrategyReviewOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    post_review_api_v1_strategy_review_post_post: {
+        parameters: {
+            query?: {
+                quarter?: string | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReviewPostedOut"];
                 };
             };
             /** @description Validation Error */

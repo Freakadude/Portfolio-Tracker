@@ -28,6 +28,7 @@ from folio.api.routers import (
     reports,
     sleeves,
     strategies,
+    strategy_review,
     system,
     transactions,
     watchlists,
@@ -95,6 +96,7 @@ def create_app(
     app.include_router(sleeves.router, prefix=API_PREFIX)
     app.include_router(watchlists.router, prefix=API_PREFIX)
     app.include_router(strategies.router, prefix=API_PREFIX)
+    app.include_router(strategy_review.router, prefix=API_PREFIX)
     app.include_router(macro.router, prefix=API_PREFIX)
     app.include_router(news.router, prefix=API_PREFIX)
     app.include_router(notifications.router, prefix=API_PREFIX)

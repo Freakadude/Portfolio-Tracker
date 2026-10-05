@@ -61,6 +61,12 @@ def due_runs(db: Session, now: dt.datetime) -> list[Due]:
     after_review_time = (local.hour, local.minute) >= (hour, minute)
     if local.weekday() < 5 and after_review_time and not _ran(db, "daily", today):
         due.append(Due("daily_review", "daily"))
+    if local.weekday() == 6:  # the weekly deep review, Sunday evening (FR-AG-07)
+        w_hour, w_minute = (int(p) for p in cfg.weekly_review_time.split(":"))
+        iso = local.isocalendar()
+        week = f"weekly:{iso.year}-W{iso.week:02d}"
+        if (local.hour, local.minute) >= (w_hour, w_minute) and not _ran(db, week, None):
+            due.append(Due("weekly_review", week))
     recent = now - dt.timedelta(hours=24)
     handled: set[str] = set()
     for sig in db.scalars(

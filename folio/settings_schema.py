@@ -102,6 +102,7 @@ class AgentSettings(Section):
     web_search_domains: list[str] = Field(default_factory=list)
     privacy_mode: bool = True
     daily_review_time: str = "19:30"  # local time, weekdays
+    weekly_review_time: str = "18:00"  # local time, Sunday (FR-AG-07)
     models: dict[str, str] = Field(
         default_factory=lambda: {
             "daily_review": "claude-sonnet-5-5",
@@ -120,7 +121,7 @@ class AgentSettings(Section):
     )  # when no ECB rate is stored
     anthropic_api_key: str | None = None
 
-    @field_validator("daily_review_time")
+    @field_validator("daily_review_time", "weekly_review_time")
     @classmethod
     def _time(cls, v: str) -> str:
         parts = v.split(":")

@@ -209,5 +209,31 @@
       "drop": "Drop",
       "dropFor": "Drop the order for {{name}}"
     }
+  },
+  "strategyReview": {
+    "title": "Quarterly review",
+    "link": "Quarterly review",
+    "back": "Back to strategies",
+    "quarter": "Quarter",
+    "notOver": "This quarter is not over yet, so the review is a preview and cannot be sent to the inbox.",
+    "sendToInbox": "Put in the inbox",
+    "posted": "Put in the inbox.",
+    "alreadyPosted": "This quarter already has its item in the inbox.",
+    "noStrategy": "Make a strategy active to get a review.",
+    "sleevesCaption": "Drift of each sleeve from its target",
+    "sleeve": "Sleeve",
+    "target": "Target",
+    "monthEnds": "Month ends",
+    "furthest": "Furthest from target",
+    "outside": "Days outside a band",
+    "outsideValue": "{{hard}} hard, {{soft}} soft",
+    "noTarget": "no target",
+    "signals": "Signals that fired",
+    "noSignals": "No signals fired.",
+    "times": "{{count}} time(s), worst {{severity}}",
+    "recommendations": "The agent's advice",
+    "madeNone": "The agent made no recommendations.",
+    "made": "{{count}} made: {{detail}}",
+    "daysWithData": "{{count}} day(s) of portfolio history in this quarter."
   }
 }

@@ -7000,6 +7000,157 @@
         "title": "ReturnsOut",
         "type": "object"
       },
+      "ReviewPointOut": {
+        "properties": {
+          "day": {
+            "format": "date",
+            "title": "Day",
+            "type": "string"
+          },
+          "drift_pp": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Drift Pp",
+            "type": "string"
+          },
+          "weight": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Weight",
+            "type": "string"
+          }
+        },
+        "required": [
+          "day",
+          "weight",
+          "drift_pp"
+        ],
+        "title": "ReviewPointOut",
+        "type": "object"
+      },
+      "ReviewPostedOut": {
+        "properties": {
+          "posted": {
+            "title": "Posted",
+            "type": "boolean"
+          },
+          "quarter": {
+            "title": "Quarter",
+            "type": "string"
+          }
+        },
+        "required": [
+          "quarter",
+          "posted"
+        ],
+        "title": "ReviewPostedOut",
+        "type": "object"
+      },
+      "ReviewRecommendationsOut": {
+        "properties": {
+          "by_action": {
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "title": "By Action",
+            "type": "object"
+          },
+          "by_status": {
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "title": "By Status",
+            "type": "object"
+          },
+          "made": {
+            "title": "Made",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "made",
+          "by_status",
+          "by_action"
+        ],
+        "title": "ReviewRecommendationsOut",
+        "type": "object"
+      },
+      "ReviewSignalOut": {
+        "properties": {
+          "count": {
+            "title": "Count",
+            "type": "integer"
+          },
+          "rule_id": {
+            "title": "Rule Id",
+            "type": "string"
+          },
+          "worst_severity": {
+            "title": "Worst Severity",
+            "type": "string"
+          }
+        },
+        "required": [
+          "rule_id",
+          "count",
+          "worst_severity"
+        ],
+        "title": "ReviewSignalOut",
+        "type": "object"
+      },
+      "ReviewSleeveOut": {
+        "properties": {
+          "days_outside_hard": {
+            "title": "Days Outside Hard",
+            "type": "integer"
+          },
+          "days_outside_soft": {
+            "title": "Days Outside Soft",
+            "type": "integer"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "month_ends": {
+            "items": {
+              "$ref": "#/components/schemas/ReviewPointOut"
+            },
+            "title": "Month Ends",
+            "type": "array"
+          },
+          "target_pct": {
+            "anyOf": [
+              {
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Target Pct"
+          },
+          "worst": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ReviewPointOut"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "target_pct",
+          "month_ends",
+          "worst",
+          "days_outside_hard",
+          "days_outside_soft"
+        ],
+        "title": "ReviewSleeveOut",
+        "type": "object"
+      },
       "RiskOut": {
         "properties": {
           "annual_return": {
@@ -8403,6 +8554,79 @@
           "versions"
         ],
         "title": "StrategyOut",
+        "type": "object"
+      },
+      "StrategyReviewOut": {
+        "properties": {
+          "complete": {
+            "title": "Complete",
+            "type": "boolean"
+          },
+          "days_with_data": {
+            "title": "Days With Data",
+            "type": "integer"
+          },
+          "end": {
+            "format": "date",
+            "title": "End",
+            "type": "string"
+          },
+          "notes": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Notes",
+            "type": "array"
+          },
+          "quarter": {
+            "title": "Quarter",
+            "type": "string"
+          },
+          "recommendations": {
+            "$ref": "#/components/schemas/ReviewRecommendationsOut"
+          },
+          "signals": {
+            "items": {
+              "$ref": "#/components/schemas/ReviewSignalOut"
+            },
+            "title": "Signals",
+            "type": "array"
+          },
+          "sleeves": {
+            "items": {
+              "$ref": "#/components/schemas/ReviewSleeveOut"
+            },
+            "title": "Sleeves",
+            "type": "array"
+          },
+          "start": {
+            "format": "date",
+            "title": "Start",
+            "type": "string"
+          },
+          "strategy": {
+            "title": "Strategy",
+            "type": "string"
+          },
+          "text": {
+            "title": "Text",
+            "type": "string"
+          }
+        },
+        "required": [
+          "quarter",
+          "start",
+          "end",
+          "complete",
+          "strategy",
+          "sleeves",
+          "signals",
+          "recommendations",
+          "days_with_data",
+          "notes",
+          "text"
+        ],
+        "title": "StrategyReviewOut",
         "type": "object"
       },
       "StrategySummary": {
@@ -16781,6 +17005,108 @@
           }
         },
         "summary": "Get Version",
+        "tags": [
+          "strategies"
+        ]
+      }
+    },
+    "/api/v1/strategy-review": {
+      "get": {
+        "description": "The summary of a quarter for the active strategy: drift by sleeve, signals fired and what\nbecame of the agent's advice. Written by code, not by a model.",
+        "operationId": "get_review_api_v1_strategy_review_get",
+        "parameters": [
+          {
+            "description": "like 2026Q3; default the last quarter",
+            "in": "query",
+            "name": "quarter",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "like 2026Q3; default the last quarter",
+              "title": "Quarter"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StrategyReviewOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Review",
+        "tags": [
+          "strategies"
+        ]
+      }
+    },
+    "/api/v1/strategy-review/post": {
+      "post": {
+        "description": "Put the review of a finished quarter in the inbox; a quarter gets one item only.",
+        "operationId": "post_review_api_v1_strategy_review_post_post",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "quarter",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Quarter"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReviewPostedOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Post Review",
         "tags": [
           "strategies"
         ]

@@ -12,6 +12,7 @@ from folio.notify.alerts import evaluate_alerts
 from folio.notify.service import consume_signals
 from folio.strategies import service
 from folio.strategies.inputs import build
+from folio.strategies.review import Quarter, gather, post
 from folio.strategies.rules import evaluate
 from folio.strategies.signals import record
 
@@ -41,3 +42,27 @@ def rules_job(ctx: JobContext) -> JobResult:
             log.info(f"{notified} new item(s) in the inbox")
 
     return run_job(ctx, "rules", body)
+
+
+def quarterly_review_job(ctx: JobContext, quarter: str | None = None) -> JobResult:
+    """The review of the quarter that just ended (or the one named), as one inbox item
+    (FR-ST-08). Safe to run again: a quarter gets one item."""
+
+    def body(db: Session, log: JobLog) -> None:
+        today = ctx.today()
+        wanted = Quarter.parse(quarter) if quarter else Quarter.of(today).previous()
+        if wanted.end >= today:
+            log.info(f"{wanted.label} is not over yet.")
+            return
+        review = gather(db, wanted, today)
+        if review is None:
+            log.info("No active strategy; nothing to review.")
+            return
+        item = post(db, review, ctx.now())
+        log.info(
+            f"Review of {wanted.label} posted to the inbox."
+            if item is not None
+            else f"{wanted.label} already has its review."
+        )
+
+    return run_job(ctx, "quarterly_review", body, {"quarter": quarter})

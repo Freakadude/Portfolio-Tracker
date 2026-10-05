@@ -201,6 +201,7 @@
     "display_impact": "News page minimum impact",
     "news_share_eur": "Share of the budget news may use (EUR)",
     "daily_review_time": "Daily review time (weekdays)",
+    "weekly_review_time": "Weekly deep review time (Sunday)",
     "prices": "Model prices, US dollars per million tokens (JSON)",
     "web_search_usd_per_1000": "Web search price per 1000 (USD)",
     "usd_per_eur_fallback": "Dollars per euro when no ECB rate is stored"

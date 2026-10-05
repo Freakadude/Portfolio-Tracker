@@ -58,9 +58,14 @@ export function Strategies() {
     <div className="space-y-4">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <h1 className="text-2xl font-semibold">{t('nav.strategies')}</h1>
-        <Button onClick={() => create.mutate()} disabled={create.isPending}>
-          {t('strategies.new')}
-        </Button>
+        <div className="flex items-center gap-3">
+          <Link to="/strategies/review" className="text-sm hover:underline">
+            {t('strategyReview.link')}
+          </Link>
+          <Button onClick={() => create.mutate()} disabled={create.isPending}>
+            {t('strategies.new')}
+          </Button>
+        </div>
       </div>
       {create.isError && <Alert>{errorMessage(create.error)}</Alert>}
       {list.data.length === 0 ? (
