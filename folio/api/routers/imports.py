@@ -8,9 +8,11 @@ from sqlalchemy.orm import Session
 
 from folio.api.deps import DbDep, UserDep
 from folio.api.errors import ApiError
+from folio.api.routers.instruments import ProvidersDep
 from folio.db.models import Account
 from folio.db.models_ledger import ImportBatch, ImportPreset
 from folio.imports import service
+from folio.imports.instruments import add_missing, missing_instruments
 from folio.imports.mapping import ImportMapping, detect_preset
 from folio.imports.parse import MAX_BYTES, ParsedFile
 from folio.imports.service import ImportProblem
@@ -61,10 +63,19 @@ class RowOut(BaseModel):
     summary: dict[str, str] | None
 
 
+class MissingOut(BaseModel):
+    isin: str
+    name: str
+    exchange: str | None
+    currency: str | None
+    rows: int
+
+
 class DryRunOut(BaseModel):
     batch_id: int
     counts: dict[str, int]
     unknown_isins: list[str]
+    missing: list[MissingOut]  # what the file says about each unknown ISIN
     rows: list[RowOut]
     truncated: bool
     can_commit: bool
@@ -190,6 +201,46 @@ def set_mapping(batch_id: int, body: MappingIn, _user: UserDep, db: DbDep) -> Dr
         raise _problem(exc) from exc
 
 
+class AddInstrumentsIn(BaseModel):
+    by_hand: bool = False  # hand-priced instead of looked up
+
+
+class AddedOut(BaseModel):
+    isin: str
+    name: str
+    status: str  # added | manual | failed
+    detail: str
+
+
+class AddInstrumentsOut(BaseModel):
+    results: list[AddedOut]
+    dry_run: DryRunOut
+
+
+@router.post("/imports/{batch_id}/instruments", response_model=AddInstrumentsOut)
+def add_instruments(
+    batch_id: int, body: AddInstrumentsIn, _user: UserDep, db: DbDep, providers: ProvidersDep
+) -> AddInstrumentsOut:
+    """Add the instruments the file names but Folio does not know yet (FR-TX-07): looked up
+    by ISIN on the exchange the file names, or by hand. Then the review is run again."""
+    batch = _load(db, batch_id)
+    try:
+        before = service.dry_run(db, batch)
+        items = missing_instruments(
+            service.load_parsed(batch), service.load_mapping(batch), before.unknown_isins
+        )
+        added = add_missing(db, items, providers.figi(), providers.chain(), by_hand=body.by_hand)
+        db.flush()
+        return AddInstrumentsOut(
+            results=[
+                AddedOut(isin=a.isin, name=a.name, status=a.status, detail=a.detail) for a in added
+            ],
+            dry_run=_dry_run_out(batch, service.dry_run(db, batch)),
+        )
+    except ImportProblem as exc:
+        raise _problem(exc) from exc
+
+
 @router.get("/imports/{batch_id}/dry-run", response_model=DryRunOut)
 def dry_run(batch_id: int, _user: UserDep, db: DbDep) -> DryRunOut:
     batch = _load(db, batch_id)
@@ -210,6 +261,18 @@ def _dry_run_out(batch: ImportBatch, result: service.DryRun) -> DryRunOut:
         batch_id=batch.id,
         counts=counts,
         unknown_isins=result.unknown_isins,
+        missing=[
+            MissingOut(
+                isin=m.isin, name=m.name, exchange=m.exchange, currency=m.currency, rows=m.rows
+            )
+            for m in (
+                missing_instruments(
+                    service.load_parsed(batch), service.load_mapping(batch), result.unknown_isins
+                )
+                if result.unknown_isins
+                else []
+            )
+        ],
         rows=[
             RowOut(row=r.row_number, status=r.status, reason=r.reason, summary=r.summary)
             for r in shown

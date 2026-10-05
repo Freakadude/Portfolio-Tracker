@@ -109,7 +109,11 @@
   "import": {
     "title": "Import transactions",
     "back": "Back to transactions",
-    "steps": { "upload": "File", "map": "Columns", "review": "Review" },
+    "steps": {
+      "upload": "File",
+      "map": "Columns",
+      "review": "Review"
+    },
     "upload": {
       "account": "Account",
       "preset": "Saved mapping",
@@ -167,7 +171,6 @@
     },
     "review": {
       "counts": "{{new}} new · {{duplicate}} already imported · {{error}} with problems · {{skipped}} skipped",
-      "unknown": "These instruments are not added yet: {{isins}}. Add them under Holdings, then check again.",
       "caption": "Rows of the file and what would happen to each",
       "columns": {
         "row": "Row",
@@ -208,12 +211,37 @@
         "rows": "Rows",
         "actions": "Actions"
       },
-      "status": { "preview": "Not finished", "committed": "Imported", "undone": "Undone" },
+      "status": {
+        "preview": "Not finished",
+        "committed": "Imported",
+        "undone": "Undone"
+      },
       "rows": "{{imported}} imported · {{skipped}} left out",
       "undo": "Undo",
       "discard": "Discard",
       "undoConfirm": "Remove the transactions of {{file}}? The positions are recalculated.",
       "empty": "No imports yet."
+    },
+    "missing": {
+      "title_one": "{{count}} instrument in this file is not in Folio yet",
+      "title_other": "{{count}} instruments in this file are not in Folio yet",
+      "intro": "Folio can add them for you: each ISIN is looked up and the listing on the exchange named in the file is used, so prices can be fetched. What cannot be found can be added as hand-priced instruments instead, with the name and currency from the file; you can link them to a listing later.",
+      "columns": {
+        "isin": "ISIN",
+        "name": "Name in the file",
+        "exchange": "Exchange",
+        "currency": "Currency",
+        "rows": "Rows"
+      },
+      "lookUp": "Look them up and add them",
+      "byHand": "Add the rest by hand",
+      "working": "Looking up… this can take a minute for many instruments.",
+      "results": "What was added",
+      "status": {
+        "added": "{{name}} ({{isin}}): added, {{detail}}",
+        "manual": "{{name}} ({{isin}}): added by hand, {{detail}}",
+        "failed": "{{name}} ({{isin}}): not added. {{detail}}"
+      }
     }
   }
 }

@@ -110,6 +110,7 @@ export function ImportWizard() {
         <ReviewStep
           mapping={mapping}
           dry={dry}
+          onDry={setDry}
           onBack={() => setStep('map')}
           onDone={(batch) => {
             setDone(batch)
@@ -492,11 +493,13 @@ function MapStep({
 function ReviewStep({
   mapping,
   dry,
+  onDry,
   onBack,
   onDone,
 }: {
   mapping: ImportMapping
   dry: DryRun
+  onDry: (next: DryRun) => void
   onBack: () => void
   onDone: (b: ImportBatch) => void
 }) {
@@ -505,6 +508,7 @@ function ReviewStep({
   const [onlyProblems, setOnlyProblems] = useState(false)
   const [skipErrors, setSkipErrors] = useState(false)
   const [presetName, setPresetName] = useState('')
+  const [added, setAdded] = useState<AddedInstrument[]>([])
   const counts = { new: 0, duplicate: 0, error: 0, skipped: 0, ...dry.counts }
   const rows = onlyProblems ? dry.rows.filter((r) => r.status === 'error') : dry.rows
   const canCommit = counts.new > 0 && (counts.error === 0 || skipErrors)
@@ -534,8 +538,21 @@ function ReviewStep({
       <p role="status" className="font-medium">
         {t('import.review.counts', counts)}
       </p>
-      {dry.unknown_isins.length > 0 && (
-        <Alert>{t('import.review.unknown', { isins: dry.unknown_isins.join(', ') })}</Alert>
+      {dry.missing.length > 0 && (
+        <MissingInstruments dry={dry} onDry={onDry} onResults={setAdded} />
+      )}
+      {added.length > 0 && (
+        <ul className="space-y-1 text-sm" aria-label={t('import.missing.results')}>
+          {added.map((r) => (
+            <li key={r.isin} className={r.status === 'failed' ? 'text-danger' : ''}>
+              {t(`import.missing.status.${r.status}`, {
+                name: r.name,
+                isin: r.isin,
+                detail: r.detail,
+              })}
+            </li>
+          ))}
+        </ul>
       )}
       {counts.new === 0 && counts.error === 0 && <p>{t('import.review.nothing')}</p>}
 
@@ -730,6 +747,89 @@ function ImportHistory() {
           </table>
         </div>
       )}
+    </section>
+  )
+}
+
+/** The file names instruments Folio does not know yet (always so on a first import): add them
+ * here, looked up by ISIN on the exchange the file names, or by hand (FR-TX-07). */
+type AddedInstrument = { isin: string; name: string; status: string; detail: string }
+
+function MissingInstruments({
+  dry,
+  onDry,
+  onResults,
+}: {
+  dry: DryRun
+  onDry: (next: DryRun) => void
+  onResults: (results: AddedInstrument[]) => void
+}) {
+  const { t } = useTranslation()
+  const invalidate = useInvalidateLedger()
+  const add = useMutation({
+    mutationFn: (byHand: boolean) =>
+      unwrap(
+        api.POST('/api/v1/imports/{batch_id}/instruments', {
+          params: { path: { batch_id: dry.batch_id } },
+          body: { by_hand: byHand },
+        }),
+      ),
+    onSuccess: async (result) => {
+      await invalidate()
+      onResults(result.results)
+      onDry(result.dry_run)
+    },
+  })
+  return (
+    <section
+      aria-labelledby="missing-title"
+      className="space-y-3 rounded-md border border-border p-3"
+    >
+      <h3 id="missing-title" className="font-medium">
+        {t('import.missing.title', { count: dry.missing.length })}
+      </h3>
+      <p className="text-sm text-muted">{t('import.missing.intro')}</p>
+      <div className="overflow-x-auto">
+        <table className="w-full text-sm">
+          <caption className="sr-only">
+            {t('import.missing.title', { count: dry.missing.length })}
+          </caption>
+          <thead>
+            <tr className="border-b border-border text-left">
+              {(['isin', 'name', 'exchange', 'currency', 'rows'] as const).map((c) => (
+                <th key={c} scope="col" className="py-1 pr-3 font-medium">
+                  {t(`import.missing.columns.${c}`)}
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {dry.missing.map((m) => (
+              <tr key={m.isin} className="border-b border-border">
+                <td className="py-1 pr-3 font-mono text-xs">{m.isin}</td>
+                <td className="py-1 pr-3">{m.name || '–'}</td>
+                <td className="py-1 pr-3">{m.exchange ?? '–'}</td>
+                <td className="py-1 pr-3">{m.currency ?? '–'}</td>
+                <td className="py-1 pr-3 tabular-nums">{m.rows}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      <div className="flex flex-wrap items-center gap-2">
+        <Button onClick={() => add.mutate(false)} disabled={add.isPending}>
+          {t('import.missing.lookUp')}
+        </Button>
+        <Button variant="secondary" onClick={() => add.mutate(true)} disabled={add.isPending}>
+          {t('import.missing.byHand')}
+        </Button>
+        {add.isPending && (
+          <span role="status" className="text-sm text-muted">
+            {t('import.missing.working')}
+          </span>
+        )}
+      </div>
+      {add.isError && <Alert>{errorMessage(add.error)}</Alert>}
     </section>
   )
 }

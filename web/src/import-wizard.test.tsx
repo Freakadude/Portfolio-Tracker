@@ -51,6 +51,7 @@ const DRY = {
   batch_id: 5,
   counts: { new: 1, duplicate: 0, error: 1, skipped: 0 },
   unknown_isins: [],
+  missing: [],
   truncated: false,
   can_commit: false,
   rows: [
@@ -183,5 +184,84 @@ describe('the import wizard', () => {
     await screen.findByText(/1 new/)
     const put = calls.find((c) => c.method === 'PUT')
     expect(put?.body).toMatchObject({ mapping: { extra_fee_cols: [3] } })
+  })
+
+  it('adds the instruments a first import needs, then the rows can be imported (FR-TX-07)', async () => {
+    const missing = {
+      ...DRY,
+      counts: { new: 0, duplicate: 0, error: 2, skipped: 0 },
+      unknown_isins: ['IE00B5BMR087', 'US0378331005'],
+      missing: [
+        {
+          isin: 'IE00B5BMR087',
+          name: 'ISHARES CORE S&P 500 UCITS ETF',
+          exchange: 'XETR',
+          currency: 'EUR',
+          rows: 1,
+        },
+        { isin: 'US0378331005', name: 'APPLE INC', exchange: 'XNYS', currency: 'USD', rows: 1 },
+      ],
+      rows: [
+        {
+          row: 2,
+          status: 'error',
+          reason: 'IE00B5BMR087 is not added yet. Add the instrument first.',
+          summary: null,
+        },
+        {
+          row: 3,
+          status: 'error',
+          reason: 'US0378331005 is not added yet. Add the instrument first.',
+          summary: null,
+        },
+      ],
+    }
+    const fixed = {
+      ...DRY,
+      counts: { new: 2, duplicate: 0, error: 0, skipped: 0 },
+      rows: [],
+      missing: [],
+      can_commit: true,
+    }
+    const { calls } = mockApi({
+      ...ROUTES,
+      'POST /api/v1/imports': PREVIEW,
+      'PUT /api/v1/imports/5/mapping': missing,
+      'POST /api/v1/imports/5/instruments': {
+        results: [
+          {
+            isin: 'IE00B5BMR087',
+            name: 'iShares Core S&P 500',
+            status: 'added',
+            detail: 'Xetra · SXR8 · EUR',
+          },
+          {
+            isin: 'US0378331005',
+            name: 'APPLE INC',
+            status: 'failed',
+            detail: 'No listing Folio can price was found; add it by hand.',
+          },
+        ],
+        dry_run: fixed,
+      },
+    })
+    renderAt(<ImportWizard />)
+    await uploadFile()
+    await userEvent.click(await screen.findByRole('button', { name: 'Check the file' }))
+    expect(
+      await screen.findByRole('heading', {
+        name: '2 instruments in this file are not in Folio yet',
+      }),
+    ).toBeInTheDocument()
+    expect(screen.getByText('ISHARES CORE S&P 500 UCITS ETF').closest('tr')).toHaveTextContent(
+      'XETR',
+    )
+    await userEvent.click(screen.getByRole('button', { name: 'Look them up and add them' }))
+    expect(
+      await screen.findByText(/iShares Core S&P 500 \(IE00B5BMR087\): added, Xetra · SXR8 · EUR/),
+    ).toBeInTheDocument()
+    expect(screen.getByText(/APPLE INC \(US0378331005\): not added/)).toBeInTheDocument()
+    expect(calls.find((c) => c.path.endsWith('/instruments'))?.body).toEqual({ by_hand: false })
+    expect(screen.queryByRole('heading', { name: /not in Folio yet/ })).not.toBeInTheDocument() // the review was redone
   })
 })

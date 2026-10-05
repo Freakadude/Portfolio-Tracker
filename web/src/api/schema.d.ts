@@ -525,6 +525,27 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/imports/{batch_id}/instruments": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Add Instruments
+         * @description Add the instruments the file names but Folio does not know yet (FR-TX-07): looked up
+         *     by ISIN on the exchange the file names, or by hand. Then the review is run again.
+         */
+        post: operations["add_instruments_api_v1_imports__batch_id__instruments_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/imports/{batch_id}/mapping": {
         parameters: {
             query?: never;
@@ -1866,6 +1887,31 @@ export interface components {
             /** Type */
             type: string;
         };
+        /** AddInstrumentsIn */
+        AddInstrumentsIn: {
+            /**
+             * By Hand
+             * @default false
+             */
+            by_hand: boolean;
+        };
+        /** AddInstrumentsOut */
+        AddInstrumentsOut: {
+            dry_run: components["schemas"]["DryRunOut"];
+            /** Results */
+            results: components["schemas"]["AddedOut"][];
+        };
+        /** AddedOut */
+        AddedOut: {
+            /** Detail */
+            detail: string;
+            /** Isin */
+            isin: string;
+            /** Name */
+            name: string;
+            /** Status */
+            status: string;
+        };
         /** AgentUsageOut */
         AgentUsageOut: {
             /** Budget Eur */
@@ -2280,6 +2326,8 @@ export interface components {
             counts: {
                 [key: string]: number;
             };
+            /** Missing */
+            missing: components["schemas"]["MissingOut"][];
             /** Rows */
             rows: components["schemas"]["RowOut"][];
             /** Truncated */
@@ -2763,6 +2811,19 @@ export interface components {
         MeOut: {
             /** Username */
             username: string;
+        };
+        /** MissingOut */
+        MissingOut: {
+            /** Currency */
+            currency: string | null;
+            /** Exchange */
+            exchange: string | null;
+            /** Isin */
+            isin: string;
+            /** Name */
+            name: string;
+            /** Rows */
+            rows: number;
         };
         /** ModeIn */
         ModeIn: {
@@ -5268,6 +5329,41 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["DryRunOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    add_instruments_api_v1_imports__batch_id__instruments_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                batch_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AddInstrumentsIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AddInstrumentsOut"];
                 };
             };
             /** @description Validation Error */

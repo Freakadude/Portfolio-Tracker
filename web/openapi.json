@@ -187,6 +187,65 @@
         "title": "ActionOut",
         "type": "object"
       },
+      "AddInstrumentsIn": {
+        "properties": {
+          "by_hand": {
+            "default": false,
+            "title": "By Hand",
+            "type": "boolean"
+          }
+        },
+        "title": "AddInstrumentsIn",
+        "type": "object"
+      },
+      "AddInstrumentsOut": {
+        "properties": {
+          "dry_run": {
+            "$ref": "#/components/schemas/DryRunOut"
+          },
+          "results": {
+            "items": {
+              "$ref": "#/components/schemas/AddedOut"
+            },
+            "title": "Results",
+            "type": "array"
+          }
+        },
+        "required": [
+          "results",
+          "dry_run"
+        ],
+        "title": "AddInstrumentsOut",
+        "type": "object"
+      },
+      "AddedOut": {
+        "properties": {
+          "detail": {
+            "title": "Detail",
+            "type": "string"
+          },
+          "isin": {
+            "title": "Isin",
+            "type": "string"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          }
+        },
+        "required": [
+          "isin",
+          "name",
+          "status",
+          "detail"
+        ],
+        "title": "AddedOut",
+        "type": "object"
+      },
       "AgentUsageOut": {
         "properties": {
           "budget_eur": {
@@ -1515,6 +1574,13 @@
             "title": "Counts",
             "type": "object"
           },
+          "missing": {
+            "items": {
+              "$ref": "#/components/schemas/MissingOut"
+            },
+            "title": "Missing",
+            "type": "array"
+          },
           "rows": {
             "items": {
               "$ref": "#/components/schemas/RowOut"
@@ -1538,6 +1604,7 @@
           "batch_id",
           "counts",
           "unknown_isins",
+          "missing",
           "rows",
           "truncated",
           "can_commit"
@@ -3205,6 +3272,53 @@
           "username"
         ],
         "title": "MeOut",
+        "type": "object"
+      },
+      "MissingOut": {
+        "properties": {
+          "currency": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Currency"
+          },
+          "exchange": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Exchange"
+          },
+          "isin": {
+            "title": "Isin",
+            "type": "string"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "rows": {
+            "title": "Rows",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "isin",
+          "name",
+          "exchange",
+          "currency",
+          "rows"
+        ],
+        "title": "MissingOut",
         "type": "object"
       },
       "ModeIn": {
@@ -9706,6 +9820,59 @@
           }
         },
         "summary": "Dry Run",
+        "tags": [
+          "imports"
+        ]
+      }
+    },
+    "/api/v1/imports/{batch_id}/instruments": {
+      "post": {
+        "description": "Add the instruments the file names but Folio does not know yet (FR-TX-07): looked up\nby ISIN on the exchange the file names, or by hand. Then the review is run again.",
+        "operationId": "add_instruments_api_v1_imports__batch_id__instruments_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "batch_id",
+            "required": true,
+            "schema": {
+              "title": "Batch Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AddInstrumentsIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AddInstrumentsOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Add Instruments",
         "tags": [
           "imports"
         ]
