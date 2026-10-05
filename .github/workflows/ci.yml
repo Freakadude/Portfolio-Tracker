@@ -51,6 +51,13 @@ jobs:
         run: |
           npx playwright install --with-deps chromium
           npm run e2e
+      - name: Keep the Playwright traces of a failed run
+        if: failure()
+        uses: actions/upload-artifact@v7.0.1
+        with:
+          name: playwright-traces
+          path: web/test-results
+          retention-days: 7
 
   image:
     runs-on: ubuntu-latest

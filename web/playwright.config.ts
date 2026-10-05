@@ -15,6 +15,9 @@ export default defineConfig({
     cwd: '..',
     url: `http://127.0.0.1:${PORT}/healthz`,
     reuseExistingServer: false,
+    // the server's request log (with durations) explains a slow or stuck step in CI
+    stdout: process.env.CI ? 'pipe' : 'ignore',
+    stderr: 'pipe',
     timeout: 60_000,
     env: {
       FOLIO_SECRET_KEY: 'e2e-only-secret-key-0123456789abcdef0123456789',
