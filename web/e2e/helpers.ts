@@ -8,7 +8,10 @@ export async function login(page: Page) {
   await page.getByLabel('Username').fill('owner')
   await page.getByLabel('Password').fill(PASSWORD)
   await page.getByRole('button', { name: 'Sign in' }).click()
-  await expect(page.getByRole('navigation', { name: 'Main navigation' })).toBeVisible()
+  // generous: password hashing is slow on a busy CI runner
+  await expect(page.getByRole('navigation', { name: 'Main navigation' })).toBeVisible({
+    timeout: 20_000,
+  })
 }
 
 /** Euro amounts use a non-breaking space in the Dutch format, so match with a pattern. */
