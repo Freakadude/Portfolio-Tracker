@@ -24,6 +24,7 @@ from folio.db.models_ledger import (
     Position,
     PriceBar,
 )
+from folio.db.models_strategy import Strategy
 from folio.demo import DemoError, seed_demo
 from folio.portfolio import Valuation
 from tests.conftest import TEST_SECRET
@@ -83,6 +84,14 @@ def test_the_demo_shows_classification_sleeves_a_benchmark_and_a_watchlist(db) -
     assert not db.scalars(
         select(LedgerTransaction).where(LedgerTransaction.instrument_id == watched.id)
     ).all()
+    # an active strategy over the same sleeves leaves their targets as they were
+    (strategy,) = db.scalars(select(Strategy)).all()
+    assert (strategy.name, strategy.mode) == ("Demo strategy", "active")
+    assert {s.name: s.target_pct for s in db.scalars(select(Sleeve))} == {
+        "Core": 60,
+        "Growth": 25,
+        "Defensive": 15,
+    }
 
 
 def test_the_demo_is_deterministic(settings: Settings, db, tmp_path: Path) -> None:  # type: ignore[no-untyped-def]

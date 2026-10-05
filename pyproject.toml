@@ -14,6 +14,7 @@ dependencies = [
     "pydantic>=2.13.5",
     "pydantic-settings>=2.15.0",
     "python-multipart>=0.0.32",
+    "pyyaml>=6.0.3",
     "sqlalchemy>=2.1.3",
     "structlog>=26.1.0",
     "tenacity>=9.1.4",
@@ -30,7 +31,6 @@ dev = [
     "pip-audit>=2.10.1",
     "pytest>=9.1.1",
     "pytest-cov>=7.1.0",
-    "pyyaml>=6.0.3",
     "ruff>=0.16.10",
     "types-pyyaml>=6.0.12.20260906",
 ]
@@ -61,7 +61,13 @@ plugins = ["pydantic.mypy"]
 ignore_missing_imports = true
 
 [[tool.mypy.overrides]]
-module = ["folio.domain.*", "folio.analytics.*", "folio.security.*", "folio.db.*"]
+module = [
+    "folio.domain.*",
+    "folio.analytics.*",
+    "folio.security.*",
+    "folio.db.*",
+    "folio.strategies.*",
+]
 strict = true
 
 [tool.pytest.ini_options]

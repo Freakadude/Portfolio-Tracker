@@ -21,6 +21,9 @@ from folio.db.models_analytics import Sleeve, Watchlist, WatchlistItem
 from folio.db.models_ledger import FxRate, Instrument, LedgerTransaction, Listing, PriceBar
 from folio.ledger_service import TransactionIn, insert_transaction, normalize, rebuild_account
 from folio.portfolio import Valuation, save_snapshots
+from folio.strategies import service as strategies
+from folio.strategies.parse import to_yaml
+from folio.strategies.schema import StrategyDef
 
 CENT = Decimal("0.01")
 SEED = 20241004
@@ -130,6 +133,34 @@ def _weekdays(start: date, end: date) -> list[date]:
 
 def _round(value: float) -> Decimal:
     return Decimal(str(value)).quantize(CENT, ROUND_HALF_EVEN)
+
+
+def _demo_strategy(db: Session) -> None:
+    """An active strategy over the demo sleeves, with fictional targets and bands, so the
+    Strategies page, its rules and the calculators have something to work on."""
+    strategy = StrategyDef.model_validate(
+        {
+            "name": "Demo strategy",
+            "principles": [
+                "Direct new money to underweight sleeves before selling anything.",
+                "Trim only at the thresholds written here.",
+            ],
+            "sleeves": [
+                {"id": name, "target_pct": target, "soft_band_pp": band, "hard_band_pp": "10"}
+                for name, target, band in SLEEVES
+            ],
+            "rules": [
+                {"id": "drift", "type": "drift_band", "severity": "medium", "cooldown_days": 7},
+                {"id": "drawdown", "type": "drawdown", "threshold_pct": "20", "severity": "medium"},
+                {"id": "stale", "type": "stale_data", "severity": "high", "cooldown_days": 1},
+            ],
+            "contribution_plan": {"amount_eur": "500", "cadence": "monthly"},
+        }
+    )
+    created = strategies.create(
+        db, strategies.Parsed(strategy, to_yaml(strategy)), note="demo", actor="demo"
+    )
+    strategies.set_mode(db, created, "active", actor="demo")
 
 
 def seed_demo(db: Session, today: date) -> dict[str, int]:
@@ -264,6 +295,7 @@ def seed_demo(db: Session, today: date) -> dict[str, int]:
     )
 
     db.flush()
+    _demo_strategy(db)
     rebuild_account(db, account)
     valuation = Valuation.load(db)
     snapshots = save_snapshots(db, valuation, start, today, today)

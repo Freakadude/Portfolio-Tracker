@@ -1023,6 +1023,177 @@ export interface paths {
         patch: operations["update_sleeve_api_v1_sleeves__sleeve_id__patch"];
         trace?: never;
     };
+    "/api/v1/strategies": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Strategies */
+        get: operations["list_strategies_api_v1_strategies_get"];
+        put?: never;
+        /** Create */
+        post: operations["create_api_v1_strategies_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/strategies/check": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Check
+         * @description Validate without saving; returns both forms so the editor can switch views.
+         */
+        post: operations["check_api_v1_strategies_check_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/strategies/schema": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Json Schema
+         * @description The JSON Schema of the strategy document, for the form view and editors.
+         */
+        get: operations["json_schema_api_v1_strategies_schema_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/strategies/starter": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Starter
+         * @description A new strategy built from your sleeves, every target left empty (Q3).
+         */
+        get: operations["starter_api_v1_strategies_starter_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/strategies/{strategy_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Strategy */
+        get: operations["get_strategy_api_v1_strategies__strategy_id__get"];
+        put?: never;
+        post?: never;
+        /** Delete */
+        delete: operations["delete_api_v1_strategies__strategy_id__delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/strategies/{strategy_id}/diff": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Diff */
+        get: operations["diff_api_v1_strategies__strategy_id__diff_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/strategies/{strategy_id}/mode": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Set Mode
+         * @description Activate, shadow or switch off. Activating one makes the previous active one a shadow
+         *     (FR-ST-02) and syncs the sleeve targets.
+         */
+        post: operations["set_mode_api_v1_strategies__strategy_id__mode_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/strategies/{strategy_id}/versions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Save Version
+         * @description Save a new version. Earlier versions never change (FR-ST-01).
+         */
+        post: operations["save_version_api_v1_strategies__strategy_id__versions_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/strategies/{strategy_id}/versions/{number}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Version */
+        get: operations["get_version_api_v1_strategies__strategy_id__versions__number__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/system/jobs": {
         parameters: {
             query?: never;
@@ -1546,6 +1717,19 @@ export interface components {
             /** Pnl Ratio */
             pnl_ratio: string | null;
         };
+        /** CheckOut */
+        CheckOut: {
+            /** Definition */
+            definition: {
+                [key: string]: unknown;
+            } | null;
+            /** Ok */
+            ok: boolean;
+            /** Problems */
+            problems: components["schemas"]["ProblemOut"][];
+            /** Yaml */
+            yaml: string | null;
+        };
         /** CommitIn */
         CommitIn: {
             /**
@@ -1616,6 +1800,28 @@ export interface components {
             sort_order: number;
             /** Widget Count */
             widget_count: number;
+        };
+        /** DiffOut */
+        DiffOut: {
+            /** New Version */
+            new_version: number;
+            /** Old Version */
+            old_version: number;
+            /** Rows */
+            rows: components["schemas"]["DiffRowOut"][];
+        };
+        /** DiffRowOut */
+        DiffRowOut: {
+            /** Kind */
+            kind: string;
+            /** New Line */
+            new_line: number | null;
+            /** New Text */
+            new_text: string | null;
+            /** Old Line */
+            old_line: number | null;
+            /** Old Text */
+            old_text: string | null;
         };
         /** DrawdownPoint */
         DrawdownPoint: {
@@ -2101,6 +2307,14 @@ export interface components {
             /** Username */
             username: string;
         };
+        /** ModeIn */
+        ModeIn: {
+            /**
+             * Mode
+             * @enum {string}
+             */
+            mode: "active" | "shadow" | "off";
+        };
         /** NewInstrument */
         NewInstrument: {
             /**
@@ -2335,6 +2549,15 @@ export interface components {
             row_count: number;
             /** Sample Rows */
             sample_rows: string[][];
+        };
+        /** ProblemOut */
+        ProblemOut: {
+            /** Line */
+            line: number | null;
+            /** Message */
+            message: string;
+            /** Path */
+            path: string;
         };
         /** RealizedOut */
         RealizedOut: {
@@ -2694,6 +2917,8 @@ export interface components {
             id: number;
             /** Instrument Count */
             instrument_count: number;
+            /** Managed By */
+            managed_by: string | null;
             /** Name */
             name: string;
             /** Sort Order */
@@ -2717,6 +2942,57 @@ export interface components {
             value_eur: string;
             /** Weight */
             weight: string;
+        };
+        /** StarterOut */
+        StarterOut: {
+            /** Definition */
+            definition: {
+                [key: string]: unknown;
+            };
+            /** Yaml */
+            yaml: string;
+        };
+        /**
+         * StrategyInput
+         * @description The YAML text (kept as written) or the form's JSON (written out as YAML).
+         */
+        StrategyInput: {
+            /** Definition */
+            definition?: {
+                [key: string]: unknown;
+            } | null;
+            /** Note */
+            note?: string | null;
+            /** Yaml */
+            yaml?: string | null;
+        };
+        /** StrategyOut */
+        StrategyOut: {
+            current: components["schemas"]["VersionOut"];
+            /** Id */
+            id: number;
+            /** Mode */
+            mode: string;
+            /** Name */
+            name: string;
+            /** Versions */
+            versions: components["schemas"]["VersionSummary"][];
+        };
+        /** StrategySummary */
+        StrategySummary: {
+            /** Id */
+            id: number;
+            /** Mode */
+            mode: string;
+            /** Name */
+            name: string;
+            /**
+             * Updated At
+             * Format: date-time
+             */
+            updated_at: string;
+            /** Version */
+            version: number;
         };
         /** SummaryOut */
         SummaryOut: {
@@ -2971,6 +3247,36 @@ export interface components {
             msg: string;
             /** Error Type */
             type: string;
+        };
+        /** VersionOut */
+        VersionOut: {
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Definition */
+            definition: {
+                [key: string]: unknown;
+            };
+            /** Note */
+            note: string | null;
+            /** Version */
+            version: number;
+            /** Yaml */
+            yaml: string;
+        };
+        /** VersionSummary */
+        VersionSummary: {
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Note */
+            note: string | null;
+            /** Version */
+            version: number;
         };
         /** WatchlistIn */
         WatchlistIn: {
@@ -5380,6 +5686,330 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["SleeveOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_strategies_api_v1_strategies_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StrategySummary"][];
+                };
+            };
+        };
+    };
+    create_api_v1_strategies_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["StrategyInput"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StrategyOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    check_api_v1_strategies_check_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["StrategyInput"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CheckOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    json_schema_api_v1_strategies_schema_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+        };
+    };
+    starter_api_v1_strategies_starter_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StarterOut"];
+                };
+            };
+        };
+    };
+    get_strategy_api_v1_strategies__strategy_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                strategy_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StrategyOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_api_v1_strategies__strategy_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                strategy_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    diff_api_v1_strategies__strategy_id__diff_get: {
+        parameters: {
+            query: {
+                old: number;
+                new: number;
+            };
+            header?: never;
+            path: {
+                strategy_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DiffOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    set_mode_api_v1_strategies__strategy_id__mode_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                strategy_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ModeIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StrategySummary"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    save_version_api_v1_strategies__strategy_id__versions_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                strategy_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["StrategyInput"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StrategyOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_version_api_v1_strategies__strategy_id__versions__number__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                strategy_id: number;
+                number: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["VersionOut"];
                 };
             };
             /** @description Validation Error */

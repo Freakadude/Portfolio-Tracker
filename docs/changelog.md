@@ -1,5 +1,10 @@
 # Changelog
 
+## Phase 3 — Strategies and alerts (in progress)
+
+- Strategies: a strategy is a YAML document (spec appendix B) with sleeves, targets and bands, risk limits, typed rules, principles, theses and a contribution plan, every number optional (Q3). Every problem is reported with its line number; numbers are exact decimals. Each save adds an immutable version, two versions can be compared side by side, and the form view and the YAML view are interchangeable. One strategy is active; activating another turns the first into a shadow. The active strategy sets the sleeve targets and soft bands (the Sleeves settings then refuse target edits and say where to change them). A starter strategy is built from your sleeves with every target empty; the demo seed adds an active demo strategy [FR-ST-01, FR-ST-02]. See ADR 0020.
+- Principles and theses are handed to the agent word for word, and the agent's recommendation schema (spec appendix C) is committed with its `departs_from_principles` field [FR-ST-07].
+
 ## Phase 2 — Analytics and dashboards (code complete, awaiting owner gate)
 
 Every Phase 2 requirement is implemented and covered by automated tests: about 600 Python tests, 143 web unit tests and 23 Playwright tests. Requirements closed: FR-INS-04, FR-INS-05 (prices, notes and chart; alerts on watched items follow with notifications in Phase 3), FR-MD-05, FR-MD-12, FR-TX-08 to 12, FR-PF-02 to 04, FR-PF-06 to 09, FR-DB-01 to 08, NFR-03.

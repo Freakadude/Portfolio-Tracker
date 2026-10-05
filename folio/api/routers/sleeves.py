@@ -13,6 +13,7 @@ from folio.audit import write_audit
 from folio.db.base import utcnow
 from folio.db.models_analytics import Sleeve
 from folio.db.models_ledger import Instrument
+from folio.strategies.service import managing_strategy
 
 router = APIRouter(prefix="/sleeves", tags=["sleeves"])
 
@@ -24,6 +25,7 @@ class SleeveOut(BaseModel):
     band_pct: Decimal | None
     sort_order: int
     instrument_count: int
+    managed_by: str | None  # the active strategy that sets the target and band, if any
 
 
 class SleeveIn(BaseModel):
@@ -58,6 +60,7 @@ def _count(db: Session, sleeve_id: int) -> int:
 
 
 def _out(db: Session, sleeve: Sleeve) -> SleeveOut:
+    manager = managing_strategy(db)
     return SleeveOut(
         id=sleeve.id,
         name=sleeve.name,
@@ -65,6 +68,7 @@ def _out(db: Session, sleeve: Sleeve) -> SleeveOut:
         band_pct=sleeve.band_pct,
         sort_order=sleeve.sort_order,
         instrument_count=_count(db, sleeve.id),
+        managed_by=None if manager is None else manager.name,
     )
 
 
@@ -85,6 +89,18 @@ def _check_name(db: Session, name: str, ignore_id: int | None = None) -> str:
     return name
 
 
+def _check_unmanaged(db: Session, changes: dict[str, object]) -> None:
+    """While a strategy is active, it sets the targets and bands (ADR 0020)."""
+    manager = managing_strategy(db)
+    if manager is not None and ({"target_pct", "band_pct"} & set(changes)):
+        raise ApiError(
+            409,
+            "Set by the strategy",
+            f"Targets and bands come from the active strategy {manager.name}. "
+            "Change them in the strategy, or switch it off first.",
+        )
+
+
 @router.get("", response_model=list[SleeveOut])
 def list_sleeves(_user: UserDep, db: DbDep) -> list[SleeveOut]:
     rows = db.scalars(
@@ -95,6 +111,7 @@ def list_sleeves(_user: UserDep, db: DbDep) -> list[SleeveOut]:
 
 @router.post("", response_model=SleeveOut, status_code=201)
 def create_sleeve(body: SleeveIn, _user: UserDep, db: DbDep) -> SleeveOut:
+    _check_unmanaged(db, {k: v for k, v in body.model_dump().items() if v is not None})
     name = _check_name(db, body.name)
     last = db.scalar(select(func.max(Sleeve.sort_order))) or 0
     sleeve = Sleeve(
@@ -131,6 +148,7 @@ def reorder(body: OrderIn, _user: UserDep, db: DbDep) -> list[SleeveOut]:
 @router.patch("/{sleeve_id}", response_model=SleeveOut)
 def update_sleeve(sleeve_id: int, body: SleeveChanges, _user: UserDep, db: DbDep) -> SleeveOut:
     sleeve = _load(db, sleeve_id)
+    _check_unmanaged(db, body.model_dump(exclude_unset=True))
     diff: dict[str, dict[str, str | None]] = {}
     for key, value in body.model_dump(exclude_unset=True).items():
         if key == "name":

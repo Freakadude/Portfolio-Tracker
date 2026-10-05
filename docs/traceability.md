@@ -68,5 +68,25 @@ Requirement ID → module → test → status (`todo`, `in progress`, `done`).
 | FR-DB-05 | folio/dashboards/data.py (period_of, account_of) + web dashboards (folio/dashboards, web/src/dashboards) | tests/integration/test_dashboards_api.py (followed or ignored per widget), web/src/dashboards.test.tsx (one request carries the filters; custom range waits for both dates) | done |
 | FR-DB-07 | folio/dashboards/templates.py, GET /dashboard-templates, export and import + web dashboards (folio/dashboards, web/src/dashboards) | tests/integration/test_dashboards_api.py (each template renders on an empty portfolio; an export imports back identically), web/e2e/06-dashboards.spec.ts (a template builds a working dashboard), web/src/dashboards.test.tsx (import) | done |
 | FR-DB-08 | folio/dashboards/layout.py (derive: one column in the saved phone order) + web dashboards (folio/dashboards, web/src/dashboards) | tests/unit/test_dashboard_layout.py, web/e2e/06-dashboards.spec.ts (390 px: one column, no horizontal scroll) | done |
-
 | FR-DB-06 | web/src/dashboards/registry.tsx (drillsTo), charts and widgets, Holdings and Transactions read the address | web/src/dashboards.test.tsx (every chart has a target; slice, bar, cell and month clicks), web/e2e/06-dashboards.spec.ts (a donut slice opens the filtered holdings) | done |
+
+## Phase 3 — Strategies and alerts
+
+| ID | Module | Test | Status |
+| --- | --- | --- | --- |
+| FR-ST-01 | folio/strategies/schema.py, parse.py (line numbers), diff.py, service.py, folio/api/routers/strategies.py, migration 0006, ADR 0020 | tests/unit/strategies/test_parse.py (syntax, bad value, unknown rule type and missing field each name their line), tests/integration/test_strategies_api.py (immutable versions, form and YAML views, side-by-side diff) | in progress (API done; editor pending) |
+| FR-ST-02 | folio/strategies/service.py (set_mode), strategy.mode | tests/integration/test_strategies_api.py (activating one makes the other a shadow; audited) | in progress (modes done; shadow signals with the rules engine) |
+| FR-ST-03 | | | todo |
+| FR-ST-04 | | | todo |
+| FR-ST-05 | | | todo |
+| FR-ST-07 | folio/strategies/agent_context.py, folio/agent/schema.py | tests/unit/strategies/test_parse.py (principles and theses word for word; strict schema with departs_from_principles) | done (the agent that reads them is Phase 4) |
+| FR-MD-08 | folio/marketdata/macro.py (groundwork) | | todo |
+| FR-NT-01 | | | todo |
+| FR-NT-02 | | | todo |
+| FR-NT-03 | | | todo |
+| FR-NT-04 | | | todo |
+| FR-NT-05 | | | todo |
+| FR-NT-06 | | | todo |
+| FR-NT-07 | | | todo |
+| FR-NT-08 | | | todo |
+| FR-SY-10 | | | todo |
