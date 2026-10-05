@@ -176,6 +176,18 @@ def test_robots_txt_is_obeyed_and_cached_for_a_day() -> None:
     assert [r.url.path for r in scripted.requests].count("/robots.txt") == 2
 
 
+def test_robots_txt_is_asked_on_the_feeds_own_port() -> None:
+    scripted = Scripted(
+        lambda r: (
+            httpx.Response(404)
+            if r.url.path == "/robots.txt"
+            else httpx.Response(200, content=feed("ecb_press.xml"))
+        )
+    )
+    assert fetcher(scripted).get("http://127.0.0.1:8766/ecb_press.xml").status == "ok"
+    assert [str(r.url) for r in scripted.requests][0] == "http://127.0.0.1:8766/robots.txt"
+
+
 def test_no_robots_txt_means_nothing_is_disallowed_but_a_failing_site_is_left_alone() -> None:
     absent = Scripted(
         lambda r: httpx.Response(404) if "robots" in r.url.path else respond("ecb_dfr.csv")

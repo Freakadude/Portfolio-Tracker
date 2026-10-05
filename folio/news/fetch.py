@@ -50,6 +50,13 @@ def domain_of(url: str) -> str:
     return (urlsplit(url).hostname or "").lower()
 
 
+def origin_of(url: str) -> str:
+    """Scheme, host and port: where a site's robots.txt lives (a feed may be on a custom port)."""
+    parts = urlsplit(url)
+    port = f":{parts.port}" if parts.port else ""
+    return f"{parts.scheme or 'https'}://{domain_of(url)}{port}"
+
+
 class Fetcher:
     """Downloads feeds. Holds the robots.txt cache and the last-request times, so keep one
     instance for the whole worker process."""
@@ -81,13 +88,13 @@ class Fetcher:
 
     def _rules(self, url: str) -> RobotFileParser | None:
         domain = domain_of(url)
+        origin = origin_of(url)
         now = self._clock()
-        cached = self._robots.get(domain)
+        cached = self._robots.get(origin)
         if cached is not None and now - cached[0] < ROBOTS_TTL:
             return cached[1]
-        scheme = urlsplit(url).scheme or "https"
         self._pace(domain)
-        response = self._client_for(domain).request("GET", f"{scheme}://{domain}/robots.txt")
+        response = self._client_for(domain).request("GET", f"{origin}/robots.txt")
         rules: RobotFileParser | None = None
         if response.status_code == 200:
             rules = RobotFileParser()
@@ -97,7 +104,7 @@ class Fetcher:
                 f"{domain} could not give its robots.txt (HTTP {response.status_code})."
             )
         # 4xx: there is no robots.txt, so nothing is disallowed
-        self._robots[domain] = (now, rules)
+        self._robots[origin] = (now, rules)
         return rules
 
     def allowed(self, url: str) -> bool:
