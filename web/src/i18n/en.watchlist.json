@@ -19,10 +19,10 @@
     "removeLabel": "Remove {{name}} from the watchlist",
     "noteLabel": "Note for {{name}}",
     "notePlaceholder": "Why you are watching it",
-    "alertsLater": "Price alerts for watched instruments arrive with notifications in a later phase.",
     "empty": {
       "title": "Watchlist is empty",
       "body": "Pick an instrument above, or add a new one by ISIN. Folio fetches its prices every evening like it does for your holdings."
-    }
+    },
+    "alertsHint": "Open a chart to set price alerts: Folio tells you when a close crosses a level you choose."
   }
 }

@@ -7,6 +7,7 @@ import { useInstruments, usePrices } from '../api/queries'
 import { AddInstrumentDialog } from '../components/AddInstrumentDialog'
 import { Delta, EmptyState } from '../components/display'
 import { PriceChart } from '../components/PriceChart'
+import { PriceAlerts } from '../notify/PriceAlerts'
 import { Alert, Button, Card, Field, Input, Select } from '../components/ui'
 import { useFormat } from '../lib/useFormat'
 
@@ -219,8 +220,13 @@ function WatchlistBody({ list }: { list: List }) {
         </div>
       )}
 
-      {selected && <WatchChart instrumentId={selected.instrument_id} name={selected.name} />}
-      <p className="text-sm text-muted">{t('watchlist.alertsLater')}</p>
+      {selected && (
+        <>
+          <WatchChart instrumentId={selected.instrument_id} name={selected.name} />
+          <PriceAlerts instrumentId={selected.instrument_id} name={selected.name} />
+        </>
+      )}
+      <p className="text-sm text-muted">{t('watchlist.alertsHint')}</p>
       <AddInstrumentDialog
         open={adding}
         onClose={() => setAdding(false)}

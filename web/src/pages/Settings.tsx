@@ -3,6 +3,8 @@ import { useTranslation } from 'react-i18next'
 import { AccountsTab } from '../components/AccountsTab'
 import { SleevesTab } from '../components/SleevesTab'
 import { SectionForm } from '../components/SectionForm'
+import { MacroTab } from '../notify/MacroTab'
+import { NotificationsTab } from '../notify/NotificationsTab'
 import { cn } from '../lib/cn'
 
 const SECTIONS = [
@@ -17,6 +19,7 @@ const SECTIONS = [
   'language',
   'retention',
   'analytics',
+  'macro',
 ] as const
 
 export function Settings() {
@@ -47,12 +50,20 @@ export function Settings() {
         role="tabpanel"
         id="settings-panel"
         aria-labelledby={`tab-${section}`}
-        className={section === 'accounts' || section === 'sleeves' ? 'max-w-4xl' : 'max-w-xl'}
+        className={
+          ['accounts', 'sleeves', 'notifications', 'macro'].includes(section)
+            ? 'max-w-4xl'
+            : 'max-w-xl'
+        }
       >
         {section === 'accounts' ? (
           <AccountsTab />
         ) : section === 'sleeves' ? (
           <SleevesTab />
+        ) : section === 'notifications' ? (
+          <NotificationsTab />
+        ) : section === 'macro' ? (
+          <MacroTab />
         ) : (
           <SectionForm key={section} section={section} />
         )}

@@ -8,6 +8,7 @@ import {
   ValueHistoryWidget,
 } from './widgets/History'
 import { KpiWidget } from './widgets/Kpi'
+import { MacroWidget } from './widgets/Macro'
 import {
   AttributionWidget,
   BridgeWidget,
@@ -23,7 +24,7 @@ export type ScopeKind = 'portfolio' | 'account' | 'sleeve' | 'instrument'
 /** One option the side panel can edit, beyond the common ones (title, scope, period). */
 export interface OptionField {
   key: string
-  kind: 'select' | 'boolean' | 'number' | 'longtext' | 'instrument' | 'multi'
+  kind: 'select' | 'boolean' | 'number' | 'longtext' | 'instrument' | 'multi' | 'macro'
   options?: readonly string[]
   /** i18n prefix for the option labels: `${labels}.${option}` */
   labels?: string
@@ -220,7 +221,17 @@ const DEFS: Record<string, Omit<WidgetDef, 'type'>> = {
     period: true,
     fields: [],
   }),
-  macro_overlay: later,
+  macro_overlay: def(MacroWidget, {
+    chart: true,
+    drillsTo: 'the macro series list in Settings',
+    scopes: ['portfolio'],
+    period: true,
+    fields: [
+      { key: 'series_code', kind: 'macro' },
+      { key: 'second_code', kind: 'macro' },
+      { key: 'instrument_id', kind: 'instrument' },
+    ],
+  }),
   news_feed: later,
   signals: later,
   note: def(NoteWidget, {

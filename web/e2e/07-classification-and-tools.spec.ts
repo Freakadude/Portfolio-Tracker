@@ -71,7 +71,7 @@ test('the watchlist follows an instrument that is not held (FR-INS-05)', async (
     .getByRole('row', { name: /E2E Watched/ })
     .getByRole('button', { name: 'Chart' })
     .click()
-  await expect(page.getByRole('region', { name: 'E2E Watched' })).toBeVisible()
+  await expect(page.getByRole('region', { name: 'E2E Watched', exact: true })).toBeVisible()
 
   // it stays on the watchlist only: no position appears
   await page.getByRole('link', { name: 'Holdings' }).click()

@@ -60,7 +60,10 @@
       "title": "No strategy yet",
       "body": "Define your sleeves, targets and rules once the strategy editor is available."
     },
-    "watchlist": { "title": "Watchlist is empty", "body": "Track instruments you do not hold." },
+    "watchlist": {
+      "title": "Watchlist is empty",
+      "body": "Track instruments you do not hold."
+    },
     "reports": {
       "title": "No reports yet",
       "body": "Annual and tax-support reports appear once you have transactions."
@@ -133,7 +136,8 @@
       "language": "Language",
       "retention": "Retention",
       "sleeves": "Sleeves",
-      "analytics": "Analytics"
+      "analytics": "Analytics",
+      "macro": "Macro"
     },
     "secretSet": "A value is saved. Type a new one to replace it.",
     "secretUnset": "Not set",
@@ -175,11 +179,25 @@
     "agent_runs_days": "Keep agent runs (days)",
     "news_days": "Keep news (days)",
     "risk_free_source": "Risk-free rate for the Sharpe ratio",
-    "risk_free_fixed_pct": "Fixed risk-free rate (% a year)"
+    "risk_free_fixed_pct": "Fixed risk-free rate (% a year)",
+    "routing": "Routing (JSON)",
+    "push_privacy": "Lock-screen privacy",
+    "digest_daily": "Daily digest",
+    "digest_daily_time": "Daily digest time",
+    "digest_weekly": "Weekly digest on Sundays",
+    "app_url": "Folio address for links in pushes (e.g. https://folio.your-tailnet.ts.net)",
+    "series": "Series fetched every morning (JSON)"
   },
   "options": {
-    "number_format": { "eu": "€ 1.234,56", "us": "€1,234.56" },
-    "theme": { "system": "Follow system", "light": "Light", "dark": "Dark" },
+    "number_format": {
+      "eu": "€ 1.234,56",
+      "us": "€1,234.56"
+    },
+    "theme": {
+      "system": "Follow system",
+      "light": "Light",
+      "dark": "Dark"
+    },
     "risk_free_source": {
       "ecb_deposit": "ECB deposit facility rate",
       "fixed": "A fixed percentage"
@@ -190,6 +208,12 @@
       "web_push": "Web Push",
       "none": "None"
     },
-    "language": { "en": "English" }
+    "language": {
+      "en": "English"
+    },
+    "push_privacy": {
+      "amounts": "Leave out amounts",
+      "names": "Leave out amounts and names"
+    }
   }
 }

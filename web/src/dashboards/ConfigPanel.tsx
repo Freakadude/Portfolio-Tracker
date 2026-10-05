@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next'
 import { Dialog } from '../components/display'
 import { Alert, Button, Checkbox, Field, Input, Select, Textarea } from '../components/ui'
 import { useAccounts, useInstruments } from '../api/queries'
+import { useMacroSeries } from '../notify/api'
 import { errorMessage } from '../api/client'
 import {
   useSleeves,
@@ -76,6 +77,7 @@ export function ConfigPanel({
   const accounts = useAccounts()
   const sleeves = useSleeves()
   const instruments = useInstruments('active')
+  const macro = useMacroSeries()
   const set = (key: string, value: unknown) => setDraft((d) => ({ ...d, [key]: value }))
   const scope = (draft.scope as { kind: string; id: number | null } | undefined) ?? {
     kind: 'portfolio',
@@ -149,6 +151,25 @@ export function ConfigPanel({
                 onChange={(e) => set(f.key, Number(e.target.value))}
                 {...p}
               />
+            )}
+          </Field>
+        )
+      case 'macro':
+        return (
+          <Field key={f.key} label={label}>
+            {(p) => (
+              <Select
+                value={String(value ?? '')}
+                onChange={(e) => set(f.key, e.target.value || null)}
+                {...p}
+              >
+                <option value="">{t('widgetOptions.macroAuto')}</option>
+                {macro.data?.map((m) => (
+                  <option key={m.code} value={m.code}>
+                    {m.name}
+                  </option>
+                ))}
+              </Select>
             )}
           </Field>
         )

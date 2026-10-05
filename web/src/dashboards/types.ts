@@ -139,6 +139,13 @@ export interface IncomeData extends Empty {
   total_eur?: string
 }
 
+export interface MacroData extends Empty {
+  start?: string
+  end?: string
+  panes?: { code: string; name: string; unit: string; points: { date: string; value: string }[] }[]
+  instrument?: { id: number; name: string; points: { date: string; value: string }[] }
+}
+
 export interface PriceChartData extends Empty {
   instrument_id?: number
   name?: string

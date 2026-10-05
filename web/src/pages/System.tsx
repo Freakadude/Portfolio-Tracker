@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next'
 import { api, errorMessage, unwrap } from '../api/client'
 import { useAudit, useJobs, useSystemUsage, type AuditFilters } from '../api/queries'
 import { Badge } from '../components/display'
+import { SystemInfo } from '../notify/SystemInfo'
 import { Alert, Button, Field, Input, Select } from '../components/ui'
 
 export function System() {
@@ -11,6 +12,7 @@ export function System() {
   return (
     <div className="space-y-8">
       <h1 className="text-2xl font-semibold">{t('system.title')}</h1>
+      <SystemInfo />
       <Usage />
       <Jobs />
       <AuditLog />

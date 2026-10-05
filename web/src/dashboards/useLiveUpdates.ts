@@ -16,6 +16,12 @@ export function useLiveUpdates() {
     const jobs = () => void queryClient.invalidateQueries({ queryKey: ['system'] })
     source.addEventListener('price_update', prices)
     source.addEventListener('job_status', jobs)
+    // a new inbox item: the bell's count and the inbox (FR-NT-01)
+    const inbox = () => {
+      void queryClient.invalidateQueries({ queryKey: ['notifications'] })
+      void queryClient.invalidateQueries({ queryKey: ['drafts'] })
+    }
+    source.addEventListener('notification', inbox)
     return () => source.close()
   }, [queryClient])
 }

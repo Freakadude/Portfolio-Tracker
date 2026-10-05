@@ -1,0 +1,142 @@
+{
+  "bell": {
+    "label_one": "Inbox: {{count}} unread",
+    "label_other": "Inbox: {{count}} unread"
+  },
+  "inbox": {
+    "title": "Inbox",
+    "unread_one": "{{count}} unread",
+    "unread_other": "{{count}} unread",
+    "filters": "Filter the inbox",
+    "filter": {
+      "severity": "Severity",
+      "type": "Type",
+      "status": "Read",
+      "subject": "Subject",
+      "any": "Any"
+    },
+    "sources": {
+      "signal": "Strategy",
+      "alert": "Price alert",
+      "digest": "Digest",
+      "system": "System"
+    },
+    "status": {
+      "all": "All",
+      "unread": "Unread",
+      "read": "Read"
+    },
+    "markChosen_one": "Mark {{count}} as read",
+    "markChosen_other": "Mark {{count}} as read",
+    "markAll": "Mark all as read",
+    "markRead": "Mark as read",
+    "choose": "Choose {{title}}",
+    "isUnread": "unread",
+    "open": "Open",
+    "empty": "Nothing here. Folio puts signals from your strategy, price alerts and digests in this inbox.",
+    "delivery": {
+      "sent": "Sent to {{channel}} at {{when}}",
+      "queued": "Waiting for {{channel}}",
+      "held": "Held for {{channel}} until {{next}}",
+      "merged": "Sent to {{channel}} together with others",
+      "failed": "{{channel}} failed: {{error}}",
+      "skipped": "{{channel}} not set up"
+    }
+  },
+  "notifySettings": {
+    "channels": {
+      "home_assistant": "Home Assistant",
+      "ntfy": "ntfy",
+      "inbox": "Inbox"
+    },
+    "routes": {
+      "critical": "Critical",
+      "high": "High",
+      "medium": "Medium (batched hourly)",
+      "low": "Low",
+      "info": "Info",
+      "digest": "Digests"
+    },
+    "matrix": {
+      "title": "Which items reach your phone",
+      "intro": "Everything lands in the inbox. Tick where a push should go as well. Quiet hours and the daily cap apply to all but critical items.",
+      "severity": "Severity",
+      "cell": "{{route}} to {{channel}}",
+      "save": "Save routing",
+      "saved": "Routing saved; it applies to the next item."
+    },
+    "test": {
+      "title": "Test a channel",
+      "intro": "Sends a test push now with the saved address and token.",
+      "send": "Send a test to {{channel}}",
+      "ok": "Sent. Check your phone: it should show \"Folio test\"."
+    },
+    "log": {
+      "title": "Delivery log",
+      "empty": "No pushes yet.",
+      "columns": {
+        "item": "Item",
+        "channel": "Channel",
+        "status": "Status",
+        "attempts": "Attempts",
+        "when": "Sent",
+        "error": "Error"
+      },
+      "status": {
+        "sent": "Sent",
+        "queued": "Waiting",
+        "held": "Held",
+        "merged": "Merged",
+        "failed": "Failed",
+        "skipped": "Not set up"
+      }
+    }
+  },
+  "macroSettings": {
+    "intro": "Indicator series are fetched every morning and can be charted on a dashboard and watched by a strategy rule. FRED series need the free FRED key under Providers.",
+    "stored": "Series",
+    "columns": {
+      "name": "Name",
+      "code": "Code",
+      "source": "Source",
+      "last": "Latest",
+      "points": "Days stored"
+    },
+    "notListed": "no longer on the list",
+    "none": "Nothing yet",
+    "fetchNow": "Fetch now",
+    "queued": "Fetching within a few seconds."
+  },
+  "alerts": {
+    "title": "Price alerts for {{name}}",
+    "condition": "When it closes",
+    "conditions": {
+      "above": "Above",
+      "below": "Below"
+    },
+    "threshold": "Price",
+    "note": "Note (optional)",
+    "add": "Add alert",
+    "thresholdRequired": "Enter a price above zero.",
+    "armed": "Watching",
+    "fired": "Fired; waiting for the price to come back",
+    "paused": "Paused",
+    "pause": "Pause",
+    "resume": "Resume",
+    "delete": "Delete",
+    "deleteLabel": "Delete the alert {{condition}} {{threshold}}",
+    "heading": "Price alerts"
+  },
+  "systemInfo": {
+    "title": "This installation",
+    "version": "Version",
+    "database": "Database",
+    "backups": "Backups",
+    "backupsValue_one": "{{count}} file, {{size}}",
+    "backupsValue_other": "{{count}} files, {{size}}",
+    "free": "Free disk",
+    "agent": "AI agent this month",
+    "agentValue": "{{runs}} runs, {{cost}} of {{budget}} EUR",
+    "failed": "Failed jobs (24 h)"
+  }
+}

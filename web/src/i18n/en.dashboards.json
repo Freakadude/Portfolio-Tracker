@@ -21,7 +21,11 @@
     "edit": "Edit",
     "manage": "All dashboards",
     "filters": "Dashboard filters",
-    "breakpoints": { "lg": "desktop", "md": "tablet", "sm": "phone" },
+    "breakpoints": {
+      "lg": "desktop",
+      "md": "tablet",
+      "sm": "phone"
+    },
     "empty": {
       "title": "This dashboard is empty",
       "body": "Add a widget to start. Each shows one view of your portfolio, and you can arrange them by dragging."
@@ -153,15 +157,29 @@
       "income": "Income",
       "total_return": "Total return"
     },
-    "bridge": { "start": "Start value", "end": "End value", "contributions": "Money put in" },
-    "chartTypes": { "line": "Line", "candles": "Candles", "donut": "Donut", "treemap": "Treemap" },
+    "bridge": {
+      "start": "Start value",
+      "end": "End value",
+      "contributions": "Money put in"
+    },
+    "chartTypes": {
+      "line": "Line",
+      "candles": "Candles",
+      "donut": "Donut",
+      "treemap": "Treemap"
+    },
     "overlays": {
       "trades": "Your buys and sales",
       "ma50": "50-day average",
       "ma200": "200-day average",
       "volume": "Volume"
     },
-    "windows": { "90D": "90 days", "1Y": "1 year" }
+    "windows": {
+      "90D": "90 days",
+      "1Y": "1 year"
+    },
+    "rebasedShort": "100 at the start",
+    "macroSettings": "Choose the series in Settings, Macro"
   },
   "widgetHelp": {
     "kpi": "One figure with its change and trend: value, result, return, risk.",
@@ -216,6 +234,9 @@
     "look_through": "Look through ETFs",
     "columns": "Columns",
     "window": "Window",
-    "text": "Text"
+    "text": "Text",
+    "series_code": "Indicator",
+    "second_code": "Second indicator",
+    "macroAuto": "Automatic (the first stored)"
   }
 }

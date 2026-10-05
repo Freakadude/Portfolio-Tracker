@@ -2,6 +2,7 @@ import i18n from 'i18next'
 import { initReactI18next } from 'react-i18next'
 import en from './en.json'
 import dashboards from './en.dashboards.json'
+import notify from './en.notify.json'
 import sleeves from './en.sleeves.json'
 import strategies from './en.strategies.json'
 import tools from './en.tools.json'
@@ -24,6 +25,7 @@ export const resources = {
   ...whatIf,
   ...tools,
   ...strategies,
+  ...notify,
 }
 
 void i18n.use(initReactI18next).init({

@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next'
 import { NavLink, Outlet, useNavigate } from 'react-router-dom'
 import { api, unwrap } from '../api/client'
 import { STATUS_KEY } from '../api/hooks'
+import { Bell } from './Bell'
 import { Button } from './ui'
 import { cn } from '../lib/cn'
 import { useLiveUpdates } from '../dashboards/useLiveUpdates'
@@ -58,8 +59,9 @@ export function Layout() {
   return (
     <div className="flex min-h-screen flex-col md:flex-row">
       <aside className="border-b border-border bg-card md:w-56 md:border-b-0 md:border-r">
-        <div className="flex items-center justify-between px-4 py-3 md:block">
+        <div className="flex items-center justify-between gap-2 px-4 py-3">
           <span className="text-lg font-semibold">{t('app.name')}</span>
+          <Bell />
         </div>
         <nav
           aria-label={t('nav.main')}

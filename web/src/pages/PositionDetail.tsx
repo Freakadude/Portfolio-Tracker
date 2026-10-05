@@ -4,6 +4,7 @@ import { Link, useParams } from 'react-router-dom'
 import { ApiProblem, errorMessage } from '../api/client'
 import { usePositionDetail, usePrices } from '../api/queries'
 import { AsOf, Badge, EmptyState, Gain } from '../components/display'
+import { PriceAlerts } from '../notify/PriceAlerts'
 import { PriceChart } from '../components/PriceChart'
 import { Alert, Card } from '../components/ui'
 import { useFormat } from '../lib/useFormat'
@@ -153,6 +154,8 @@ export function PositionDetail() {
           !prices.isPending && <p className="text-muted">{t('position.noPrices')}</p>
         )}
       </section>
+
+      <PriceAlerts instrumentId={d.instrument.id} name={d.instrument.name} />
 
       {d.lots.length > 0 && (
         <section aria-labelledby="lots-h" className="space-y-2">
