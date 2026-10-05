@@ -115,6 +115,7 @@ class PositionState:
     income_eur: Decimal = ZERO
     invested_eur: Decimal = ZERO  # cumulative acquisition cost (buys and transfers in)
     proceeds_eur: Decimal = ZERO  # cumulative net sale proceeds
+    net_invested_eur: Decimal = ZERO  # money put in less money taken out (also by transfers)
     first_trade_date: date | None = None
 
     @property
@@ -247,7 +248,9 @@ def _apply_buy(state: LedgerState, tx: TxIn) -> None:
         raise LedgerError("A buy cannot have a negative price.")
     cost = qty * tx.price * tx.fx_rate + tx.fees_eur + tx.taxes_eur
     lot = Lot(tx.id, instrument, tx.trade_date, qty, cost, qty * tx.price)
-    _add_lot(state.position(instrument), lot, state.method)
+    pos = state.position(instrument)
+    _add_lot(pos, lot, state.method)
+    pos.net_invested_eur += cost
     state.net_contributions_eur += cost
 
 
@@ -279,6 +282,7 @@ def _apply_sell(state: LedgerState, tx: TxIn) -> None:
         )
     pos.realized_pnl_eur += net - total_cost
     pos.proceeds_eur += net
+    pos.net_invested_eur -= net
     state.net_contributions_eur -= net
 
 
@@ -287,14 +291,17 @@ def _apply_transfer_in(state: LedgerState, tx: TxIn) -> None:
     qty = _need_positive(tx, "quantity", tx.quantity)
     cost = tx.amount_eur if tx.amount_eur is not None else qty * tx.price * tx.fx_rate
     lot = Lot(tx.id, instrument, tx.trade_date, qty, cost, qty * tx.price)
-    _add_lot(state.position(instrument), lot, state.method)
+    pos = state.position(instrument)
+    _add_lot(pos, lot, state.method)
+    pos.net_invested_eur += cost
     state.net_contributions_eur += cost
 
 
 def _apply_transfer_out(state: LedgerState, tx: TxIn) -> None:
     instrument = _need_instrument(tx)
     qty = _need_positive(tx, "quantity", tx.quantity)
-    taken = _consume(state.position(instrument), tx, qty)
+    pos = state.position(instrument)
+    taken = _consume(pos, tx, qty)
     moved = ZERO
     for piece in taken:  # moving holdings is not a sale: proceeds equal cost, so no P&L
         moved += piece.cost_eur
@@ -309,6 +316,7 @@ def _apply_transfer_out(state: LedgerState, tx: TxIn) -> None:
                 ZERO,
             )
         )
+    pos.net_invested_eur -= moved
     state.net_contributions_eur -= moved
 
 

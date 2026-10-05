@@ -1,5 +1,9 @@
 # Changelog
 
+## Phase 2 — Analytics and dashboards (in progress)
+
+- Analytics maths: time-weighted return and XIRR, volatility, drawdown, Sharpe, beta, correlation matrix, attribution that adds up exactly, allocation with the single shared drift function, rebased series, monthly returns and the return bridge; per-position net invested in the ledger [FR-PF-03, FR-PF-04, FR-PF-06, FR-PF-07]. See ADR 0014.
+
 ## Phase 1 — Ledger and prices (code complete, awaiting owner gate)
 
 Every Phase 1 requirement is implemented and covered by automated tests: 398 Python tests, 79 web unit tests and 10 Playwright tests, with CI green on `main` (13c2420). Requirements closed: FR-INS-01 to 03, FR-MD-01 to 04, 06, 07, 10, 11, FR-TX-01 to 07, FR-PF-01, FR-PF-10, FR-SY-06, FR-SY-07 (CLI restore), FR-SY-08, NFR-01, NFR-02.
