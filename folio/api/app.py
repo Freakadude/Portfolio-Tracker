@@ -7,6 +7,7 @@ from folio.api.errors import install_error_handlers
 from folio.api.middleware import CsrfMiddleware, RequestLogMiddleware, SecurityHeadersMiddleware
 from folio.api.routers import (
     accounts,
+    alerts,
     analytics,
     auth,
     corporate_actions,
@@ -88,6 +89,7 @@ def create_app(
     app.include_router(strategies.router, prefix=API_PREFIX)
     app.include_router(macro.router, prefix=API_PREFIX)
     app.include_router(notifications.router, prefix=API_PREFIX)
+    app.include_router(alerts.router, prefix=API_PREFIX)
     app.include_router(health.router)
     mount_spa(app, static_dir or STATIC_DIR)  # last: its catch-all route must not shadow the API
     return app

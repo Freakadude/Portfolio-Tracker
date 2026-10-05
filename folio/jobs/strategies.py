@@ -8,6 +8,7 @@ from sqlalchemy.orm import Session
 
 from folio.jobs.context import JobContext
 from folio.jobs.runner import JobLog, JobResult, run_job
+from folio.notify.alerts import evaluate_alerts
 from folio.notify.service import consume_signals
 from folio.strategies import service
 from folio.strategies.inputs import build
@@ -17,11 +18,13 @@ from folio.strategies.signals import record
 
 def rules_job(ctx: JobContext) -> JobResult:
     def body(db: Session, log: JobLog) -> None:
+        today, now = ctx.today(), ctx.now()
+        alerts = evaluate_alerts(db, now)
+        if alerts:
+            log.info(f"{len(alerts)} price alert(s) fired")
         running = service.running(db)
         if not running:
             log.info("No active or shadow strategy; nothing to check.")
-            return
-        today, now = ctx.today(), ctx.now()
         for strategy, version, definition in running:
             inputs = build(db, definition, today, version.created_at.date())
             evaluation = evaluate(definition, inputs)

@@ -9,6 +9,7 @@ from sqlalchemy.orm import Session
 
 from folio.api.deps import DbDep, UserDep
 from folio.api.errors import ApiError
+from folio.db.base import utcnow
 from folio.db.models_ledger import Instrument, Listing, PriceBar
 from folio.events import PRICE_UPDATE, publish_event
 from folio.instruments import (
@@ -28,6 +29,8 @@ from folio.marketdata.prices import PriceService, listing_ref
 from folio.marketdata.registry import ProviderFactory
 from folio.marketdata.resolve import resolve_isin
 from folio.marketdata.runtime import make_provider_factory
+from folio.notify.alerts import evaluate_alerts
+from folio.notify.service import consume_signals
 
 router = APIRouter(prefix="/instruments", tags=["instruments"])
 
@@ -307,4 +310,8 @@ def set_price(instrument_id: int, body: ManualPriceIn, _user: UserDep, db: DbDep
         raise ApiError(409, "No listing", "This instrument has no listing to price.")
     bar = PriceService(db).set_manual_price(listing.id, body.date, body.close)
     publish_event(db, PRICE_UPDATE, {"listing_id": listing.id, "source": "manual"})  # FR-DB-04
+    # a hand-entered close can cross an alert level: check at once, the worker pushes it
+    now = utcnow()
+    if evaluate_alerts(db, now, [instrument.id]):
+        consume_signals(db, now)
     return bar

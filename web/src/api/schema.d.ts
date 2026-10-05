@@ -977,6 +977,42 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/price-alerts": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Alerts */
+        get: operations["list_alerts_api_v1_price_alerts_get"];
+        put?: never;
+        /** Create Alert */
+        post: operations["create_alert_api_v1_price_alerts_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/price-alerts/{alert_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Delete Alert */
+        delete: operations["delete_alert_api_v1_price_alerts__alert_id__delete"];
+        options?: never;
+        head?: never;
+        /** Update Alert */
+        patch: operations["update_alert_api_v1_price_alerts__alert_id__patch"];
+        trace?: never;
+    };
     "/api/v1/reports/realized": {
         parameters: {
             query?: never;
@@ -1809,6 +1845,58 @@ export interface components {
             transaction_ids: number[];
             /** Type */
             type: string;
+        };
+        /** AlertChanges */
+        AlertChanges: {
+            /** Active */
+            active?: boolean | null;
+            /** Condition */
+            condition?: ("above" | "below") | null;
+            /** Note */
+            note?: string | null;
+            /** Threshold */
+            threshold?: number | string | null;
+        };
+        /** AlertIn */
+        AlertIn: {
+            /**
+             * Condition
+             * @enum {string}
+             */
+            condition: "above" | "below";
+            /** Instrument Id */
+            instrument_id: number;
+            /** Note */
+            note?: string | null;
+            /** Threshold */
+            threshold: number | string;
+        };
+        /** AlertOut */
+        AlertOut: {
+            /** Active */
+            active: boolean;
+            /** Armed */
+            armed: boolean;
+            /** Condition */
+            condition: string;
+            /** Currency */
+            currency: string | null;
+            /** Id */
+            id: number;
+            /** Instrument Id */
+            instrument_id: number;
+            /** Instrument Name */
+            instrument_name: string;
+            /** Last Close */
+            last_close: string | null;
+            /** Last Fired At */
+            last_fired_at: string | null;
+            /** Met Now */
+            met_now: boolean | null;
+            /** Note */
+            note: string | null;
+            /** Threshold */
+            threshold: string;
         };
         /** AllocationOut */
         AllocationOut: {
@@ -5991,6 +6079,134 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["PositionDetailOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_alerts_api_v1_price_alerts_get: {
+        parameters: {
+            query?: {
+                instrument_id?: number | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AlertOut"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_alert_api_v1_price_alerts_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AlertIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AlertOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_alert_api_v1_price_alerts__alert_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                alert_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_alert_api_v1_price_alerts__alert_id__patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                alert_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AlertChanges"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AlertOut"];
                 };
             };
             /** @description Validation Error */
