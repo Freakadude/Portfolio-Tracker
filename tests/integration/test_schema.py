@@ -154,3 +154,72 @@ def test_provider_call_and_fx_rate_are_unique(db: Session) -> None:
     db.add(FxRate(date=date(2024, 1, 2), currency="USD", rate_per_eur=Decimal("1.1")))
     with pytest.raises(IntegrityError):
         db.commit()
+
+
+def test_phase_two_tables_round_trip(db: Session) -> None:
+    from folio.db.models_analytics import (
+        AppEvent,
+        Dashboard,
+        Quote,
+        Sleeve,
+        Watchlist,
+        WatchlistItem,
+        Widget,
+    )
+
+    sleeve = Sleeve(name="us_equity", target_pct=Decimal("40.5"), band_pct=Decimal("5"))
+    instrument = Instrument(name="Acme", asset_class="EQUITY")
+    db.add_all([sleeve, instrument])
+    db.flush()
+    instrument.sleeve_id = sleeve.id
+    instrument.region, instrument.sector, instrument.is_benchmark = "US", "Tech", True
+    listing = Listing(
+        instrument_id=instrument.id, exchange_mic="XNAS", ticker="ACME", currency="USD"
+    )
+    watchlist = Watchlist(name="Ideas")
+    dashboard = Dashboard(name="Home", layouts={"lg": [{"i": "1", "x": 0, "y": 0, "w": 6, "h": 4}]})
+    db.add_all([listing, watchlist, dashboard])
+    db.flush()
+    db.add_all(
+        [
+            WatchlistItem(watchlist_id=watchlist.id, instrument_id=instrument.id, note="later"),
+            Widget(
+                dashboard_id=dashboard.id, type="kpi", config={"metric": "value"}, grid={"x": 0}
+            ),
+            Quote(
+                listing_id=listing.id,
+                ts=datetime(2025, 3, 3, 14, 30, tzinfo=UTC),
+                price=Decimal("101.25"),
+                source="yahoo",
+            ),
+            AppEvent(type="price_update", payload={"listing_id": listing.id}),
+        ]
+    )
+    db.commit()
+
+    db.expire_all()
+    got = db.scalars(select(Sleeve)).one()
+    assert got.target_pct == Decimal("40.5") and got.band_pct == Decimal("5")
+    assert db.scalars(select(Quote)).one().price == Decimal("101.25")
+    assert db.scalars(select(Dashboard)).one().layouts["lg"][0]["w"] == 6
+    assert db.get(Instrument, instrument.id).is_benchmark is True  # type: ignore[union-attr]
+
+
+def test_a_watchlist_instrument_cannot_be_listed_twice(db: Session) -> None:
+    from folio.db.models_analytics import Watchlist, WatchlistItem
+
+    instrument = Instrument(name="Acme", asset_class="EQUITY")
+    watchlist = Watchlist(name="Ideas")
+    db.add_all([instrument, watchlist])
+    db.flush()
+    db.add(WatchlistItem(watchlist_id=watchlist.id, instrument_id=instrument.id))
+    db.flush()
+    db.add(WatchlistItem(watchlist_id=watchlist.id, instrument_id=instrument.id))
+    with pytest.raises(IntegrityError):
+        db.flush()
+
+
+def test_accounts_do_not_track_cash_unless_asked(db: Session) -> None:
+    account = _account(db)
+    db.commit()
+    assert account.track_cash is False

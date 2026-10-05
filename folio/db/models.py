@@ -76,7 +76,8 @@ class Account(Base, SoftDeleteMixin):
     cost_basis_method: Mapped[str] = mapped_column(String(10), default="FIFO")
     base_currency: Mapped[str] = mapped_column(String(3), default="EUR")
     active: Mapped[bool] = mapped_column(Boolean, default=True)
+    track_cash: Mapped[bool] = mapped_column(Boolean, default=False, server_default="0")  # FR-TX-09
 
 
 # Registers the Phase 1 tables on Base.metadata (Alembic and tests import this module).
-from folio.db import models_ledger  # noqa: E402, F401
+from folio.db import models_analytics, models_ledger  # noqa: E402, F401

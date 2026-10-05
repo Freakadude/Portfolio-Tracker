@@ -48,3 +48,5 @@ Requirement ID → module → test → status (`todo`, `in progress`, `done`).
 | FR-PF-04 | folio/analytics/allocation.py (allocate, drift) | tests/unit/analytics/test_attribution_allocation_series.py | in progress (pure maths done; API and UI pending) |
 | FR-PF-06 | folio/analytics/risk.py | tests/unit/analytics/test_risk.py (hand-worked volatility, drawdown, beta, correlation, gold vs equities) | in progress (pure maths done; API and UI pending) |
 | FR-PF-07 | folio/analytics/attribution.py | tests/unit/analytics/test_attribution_allocation_series.py (contributions sum exactly) | in progress (pure maths done; API and UI pending) |
+| FR-INS-04 | folio/db/models_analytics.py (Sleeve), Instrument region, sector, sleeve_id, migration 0004 | tests/integration/test_schema.py | in progress (schema done; API and UI pending) |
+| FR-INS-05 | folio/db/models_analytics.py (Watchlist, WatchlistItem); tracked_listings already prices every active instrument | tests/integration/test_schema.py | in progress (schema done; API and UI pending) |

@@ -44,6 +44,10 @@ class Instrument(Base, SoftDeleteMixin):
     rating: Mapped[str | None] = mapped_column(String(10), default=None)
     status: Mapped[str] = mapped_column(String(10), default="active")  # active | archived
     manual: Mapped[bool] = mapped_column(Boolean, default=False)  # priced by hand
+    region: Mapped[str | None] = mapped_column(String(40), default=None)
+    sector: Mapped[str | None] = mapped_column(String(60), default=None)
+    sleeve_id: Mapped[int | None] = mapped_column(ForeignKey("sleeve.id"), default=None)
+    is_benchmark: Mapped[bool] = mapped_column(Boolean, default=False, server_default="0")
 
 
 class Listing(Base):
