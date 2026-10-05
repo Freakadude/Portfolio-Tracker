@@ -506,6 +506,52 @@
         "title": "Body_upload_api_v1_imports_post",
         "type": "object"
       },
+      "CalculateIn": {
+        "additionalProperties": false,
+        "properties": {
+          "amount_eur": {
+            "anyOf": [
+              {
+                "exclusiveMinimum": 0.0,
+                "type": "number"
+              },
+              {
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Amount Eur"
+          },
+          "kind": {
+            "enum": [
+              "allocator",
+              "trim",
+              "rebalance"
+            ],
+            "title": "Kind",
+            "type": "string"
+          },
+          "sleeve": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sleeve"
+          }
+        },
+        "required": [
+          "kind"
+        ],
+        "title": "CalculateIn",
+        "type": "object"
+      },
       "CandidateOut": {
         "properties": {
           "confirmed_by": {
@@ -920,6 +966,115 @@
           "new_text"
         ],
         "title": "DiffRowOut",
+        "type": "object"
+      },
+      "DraftOrderIn": {
+        "additionalProperties": false,
+        "properties": {
+          "account_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Account Id"
+          },
+          "instrument_id": {
+            "title": "Instrument Id",
+            "type": "integer"
+          },
+          "price": {
+            "anyOf": [
+              {
+                "exclusiveMinimum": 0.0,
+                "type": "number"
+              },
+              {
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+                "type": "string"
+              }
+            ],
+            "title": "Price"
+          },
+          "quantity": {
+            "anyOf": [
+              {
+                "exclusiveMinimum": 0.0,
+                "type": "number"
+              },
+              {
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+                "type": "string"
+              }
+            ],
+            "title": "Quantity"
+          },
+          "side": {
+            "enum": [
+              "buy",
+              "sell"
+            ],
+            "title": "Side",
+            "type": "string"
+          }
+        },
+        "required": [
+          "side",
+          "instrument_id",
+          "quantity",
+          "price"
+        ],
+        "title": "DraftOrderIn",
+        "type": "object"
+      },
+      "DraftsIn": {
+        "additionalProperties": false,
+        "properties": {
+          "note": {
+            "anyOf": [
+              {
+                "maxLength": 500,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Note"
+          },
+          "orders": {
+            "items": {
+              "$ref": "#/components/schemas/DraftOrderIn"
+            },
+            "maxItems": 50,
+            "minItems": 1,
+            "title": "Orders",
+            "type": "array"
+          }
+        },
+        "required": [
+          "orders"
+        ],
+        "title": "DraftsIn",
+        "type": "object"
+      },
+      "DraftsOut": {
+        "properties": {
+          "transaction_ids": {
+            "items": {
+              "type": "integer"
+            },
+            "title": "Transaction Ids",
+            "type": "array"
+          }
+        },
+        "required": [
+          "transaction_ids"
+        ],
+        "title": "DraftsOut",
         "type": "object"
       },
       "DrawdownPoint": {
@@ -2839,6 +2994,95 @@
         "title": "OrderIn",
         "type": "object"
       },
+      "OrderOut": {
+        "properties": {
+          "account_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Account Id"
+          },
+          "amount_eur": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Amount Eur",
+            "type": "string"
+          },
+          "currency": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Currency"
+          },
+          "instrument_id": {
+            "title": "Instrument Id",
+            "type": "integer"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "price": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Price",
+            "type": "string"
+          },
+          "price_eur": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Price Eur",
+            "type": "string"
+          },
+          "quantity": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Quantity",
+            "type": "string"
+          },
+          "realized_pnl_eur": {
+            "anyOf": [
+              {
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Realized Pnl Eur"
+          },
+          "side": {
+            "title": "Side",
+            "type": "string"
+          },
+          "sleeve": {
+            "title": "Sleeve",
+            "type": "string"
+          }
+        },
+        "required": [
+          "side",
+          "sleeve",
+          "instrument_id",
+          "name",
+          "quantity",
+          "price",
+          "currency",
+          "price_eur",
+          "amount_eur",
+          "account_id",
+          "realized_pnl_eur"
+        ],
+        "title": "OrderOut",
+        "type": "object"
+      },
       "OwnerIn": {
         "properties": {
           "password": {
@@ -2933,6 +3177,54 @@
           "pnl_ratio"
         ],
         "title": "PeriodOut",
+        "type": "object"
+      },
+      "PlanOut": {
+        "properties": {
+          "after": {
+            "additionalProperties": {
+              "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+              "type": "string"
+            },
+            "title": "After",
+            "type": "object"
+          },
+          "before": {
+            "additionalProperties": {
+              "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+              "type": "string"
+            },
+            "title": "Before",
+            "type": "object"
+          },
+          "notes": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Notes",
+            "type": "array"
+          },
+          "orders": {
+            "items": {
+              "$ref": "#/components/schemas/OrderOut"
+            },
+            "title": "Orders",
+            "type": "array"
+          },
+          "remainder_eur": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Remainder Eur",
+            "type": "string"
+          }
+        },
+        "required": [
+          "orders",
+          "remainder_eur",
+          "notes",
+          "before",
+          "after"
+        ],
+        "title": "PlanOut",
         "type": "object"
       },
       "PositionDetailOut": {
@@ -10893,6 +11185,48 @@
         ]
       }
     },
+    "/api/v1/strategies/orders/to-drafts": {
+      "post": {
+        "description": "Copy calculator orders into draft transactions; each is confirmed on Insights.",
+        "operationId": "orders_to_drafts_api_v1_strategies_orders_to_drafts_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DraftsIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DraftsOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Orders To Drafts",
+        "tags": [
+          "strategies"
+        ]
+      }
+    },
     "/api/v1/strategies/run": {
       "post": {
         "description": "Check the rules now; the worker picks the request up within seconds.",
@@ -11117,6 +11451,59 @@
           }
         },
         "summary": "Get Strategy",
+        "tags": [
+          "strategies"
+        ]
+      }
+    },
+    "/api/v1/strategies/{strategy_id}/calculate": {
+      "post": {
+        "description": "Allocator, trim or rebalance on today's holdings with the latest version's targets\n(FR-ST-05). Nothing is saved; the orders can be copied into draft transactions.",
+        "operationId": "calculate_orders_api_v1_strategies__strategy_id__calculate_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "strategy_id",
+            "required": true,
+            "schema": {
+              "title": "Strategy Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CalculateIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlanOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Calculate Orders",
         "tags": [
           "strategies"
         ]

@@ -1061,6 +1061,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/strategies/orders/to-drafts": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Orders To Drafts
+         * @description Copy calculator orders into draft transactions; each is confirmed on Insights.
+         */
+        post: operations["orders_to_drafts_api_v1_strategies_orders_to_drafts_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/strategies/run": {
         parameters: {
             query?: never;
@@ -1154,6 +1174,27 @@ export interface paths {
         post?: never;
         /** Delete */
         delete: operations["delete_api_v1_strategies__strategy_id__delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/strategies/{strategy_id}/calculate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Calculate Orders
+         * @description Allocator, trim or rebalance on today's holdings with the latest version's targets
+         *     (FR-ST-05). Nothing is saved; the orders can be copied into draft transactions.
+         */
+        post: operations["calculate_orders_api_v1_strategies__strategy_id__calculate_post"];
+        delete?: never;
         options?: never;
         head?: never;
         patch?: never;
@@ -1752,6 +1793,18 @@ export interface components {
             /** Preset Id */
             preset_id?: number | null;
         };
+        /** CalculateIn */
+        CalculateIn: {
+            /** Amount Eur */
+            amount_eur?: number | string | null;
+            /**
+             * Kind
+             * @enum {string}
+             */
+            kind: "allocator" | "trim" | "rebalance";
+            /** Sleeve */
+            sleeve?: string | null;
+        };
         /** CandidateOut */
         CandidateOut: {
             /** Confirmed By */
@@ -1883,6 +1936,34 @@ export interface components {
             old_line: number | null;
             /** Old Text */
             old_text: string | null;
+        };
+        /** DraftOrderIn */
+        DraftOrderIn: {
+            /** Account Id */
+            account_id?: number | null;
+            /** Instrument Id */
+            instrument_id: number;
+            /** Price */
+            price: number | string;
+            /** Quantity */
+            quantity: number | string;
+            /**
+             * Side
+             * @enum {string}
+             */
+            side: "buy" | "sell";
+        };
+        /** DraftsIn */
+        DraftsIn: {
+            /** Note */
+            note?: string | null;
+            /** Orders */
+            orders: components["schemas"]["DraftOrderIn"][];
+        };
+        /** DraftsOut */
+        DraftsOut: {
+            /** Transaction Ids */
+            transaction_ids: number[];
         };
         /** DrawdownPoint */
         DrawdownPoint: {
@@ -2425,6 +2506,31 @@ export interface components {
             /** Ids */
             ids: number[];
         };
+        /** OrderOut */
+        OrderOut: {
+            /** Account Id */
+            account_id: number | null;
+            /** Amount Eur */
+            amount_eur: string;
+            /** Currency */
+            currency: string | null;
+            /** Instrument Id */
+            instrument_id: number;
+            /** Name */
+            name: string;
+            /** Price */
+            price: string;
+            /** Price Eur */
+            price_eur: string;
+            /** Quantity */
+            quantity: string;
+            /** Realized Pnl Eur */
+            realized_pnl_eur: string | null;
+            /** Side */
+            side: string;
+            /** Sleeve */
+            sleeve: string;
+        };
         /** OwnerIn */
         OwnerIn: {
             /** Password */
@@ -2460,6 +2566,23 @@ export interface components {
             value_end_eur: string;
             /** Value Start Eur */
             value_start_eur: string;
+        };
+        /** PlanOut */
+        PlanOut: {
+            /** After */
+            after: {
+                [key: string]: string;
+            };
+            /** Before */
+            before: {
+                [key: string]: string;
+            };
+            /** Notes */
+            notes: string[];
+            /** Orders */
+            orders: components["schemas"]["OrderOut"][];
+            /** Remainder Eur */
+            remainder_eur: string;
         };
         /** PositionDetailOut */
         PositionDetailOut: {
@@ -5913,6 +6036,39 @@ export interface operations {
             };
         };
     };
+    orders_to_drafts_api_v1_strategies_orders_to_drafts_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DraftsIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DraftsOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     run_now_api_v1_strategies_run_post: {
         parameters: {
             query?: never;
@@ -6058,6 +6214,41 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    calculate_orders_api_v1_strategies__strategy_id__calculate_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                strategy_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CalculateIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PlanOut"];
+                };
             };
             /** @description Validation Error */
             422: {

@@ -15,10 +15,12 @@ from folio.db.models_analytics import Sleeve
 from folio.db.models_ledger import Instrument
 from folio.db.models_strategy import Signal, Strategy, StrategyVersion
 from folio.jobs.requests import request_rules
+from folio.ledger_service import TransactionError
 from folio.strategies import service
 from folio.strategies.diff import side_by_side
 from folio.strategies.inputs import build
 from folio.strategies.parse import Problem, StrategyError, to_json
+from folio.strategies.planning import DraftOrder, calculate, to_drafts
 from folio.strategies.rules import evaluate
 from folio.strategies.schema import StrategyDef, StrategyDocument
 from folio.strategies.starter import starter_yaml
@@ -307,6 +309,78 @@ def run_now(_user: UserDep, db: DbDep) -> dict[str, str]:
     return {"status": "queued"}
 
 
+class CalculateIn(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    kind: Literal["allocator", "trim", "rebalance"]
+    amount_eur: Decimal | None = Field(default=None, gt=0)  # new cash; default: the plan's
+    sleeve: str | None = None  # trim only this sleeve, down to its target
+
+
+class OrderOut(BaseModel):
+    side: str
+    sleeve: str
+    instrument_id: int
+    name: str
+    quantity: Decimal
+    price: Decimal
+    currency: str | None
+    price_eur: Decimal
+    amount_eur: Decimal
+    account_id: int | None
+    realized_pnl_eur: Decimal | None
+
+
+class PlanOut(BaseModel):
+    orders: list[OrderOut]
+    remainder_eur: Decimal
+    notes: list[str]
+    before: dict[str, Decimal]
+    after: dict[str, Decimal]
+
+
+class DraftOrderIn(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    side: Literal["buy", "sell"]
+    instrument_id: int
+    quantity: Decimal = Field(gt=0)
+    price: Decimal = Field(gt=0)
+    account_id: int | None = None
+
+
+class DraftsIn(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    orders: list[DraftOrderIn] = Field(min_length=1, max_length=50)
+    note: str | None = Field(default=None, max_length=500)
+
+
+class DraftsOut(BaseModel):
+    transaction_ids: list[int]
+
+
+@router.post("/orders/to-drafts", response_model=DraftsOut, status_code=201)
+def orders_to_drafts(body: DraftsIn, _user: UserDep, db: DbDep) -> DraftsOut:
+    """Copy calculator orders into draft transactions; each is confirmed on Insights."""
+    for order in body.orders:
+        if order.quantity != order.quantity.to_integral_value():
+            raise ApiError(422, "Whole units only", "Orders are in whole units.")
+    try:
+        rows = to_drafts(
+            db,
+            [
+                DraftOrder(o.side, o.instrument_id, o.quantity, o.price, o.account_id)
+                for o in body.orders
+            ],
+            dt.date.today(),
+            body.note,
+        )
+    except TransactionError as exc:
+        raise ApiError(422, "Cannot make drafts", str(exc)) from exc
+    return DraftsOut(transaction_ids=[r.id for r in rows])
+
+
 @router.get("/{strategy_id}", response_model=StrategyOut)
 def get_strategy(strategy_id: int, _user: UserDep, db: DbDep) -> StrategyOut:
     return _out(db, _load(db, strategy_id))
@@ -393,4 +467,37 @@ def rule_status(strategy_id: int, _user: UserDep, db: DbDep) -> StatusOut:
             for spec in definition.sleeves
         ],
         conditions_true=len(evaluation.findings),
+    )
+
+
+@router.post("/{strategy_id}/calculate", response_model=PlanOut)
+def calculate_orders(strategy_id: int, body: CalculateIn, _user: UserDep, db: DbDep) -> PlanOut:
+    """Allocator, trim or rebalance on today's holdings with the latest version's targets
+    (FR-ST-05). Nothing is saved; the orders can be copied into draft transactions."""
+    strategy = _load(db, strategy_id)
+    definition = StrategyDef.model_validate(service.latest(db, strategy).definition)
+    if body.sleeve is not None and definition.sleeve(body.sleeve) is None:
+        raise ApiError(404, "Not found", f"The strategy has no sleeve {body.sleeve}.")
+    result = calculate(db, definition, body.kind, dt.date.today(), body.amount_eur, body.sleeve)
+    return PlanOut(
+        orders=[
+            OrderOut(
+                side=o.side,
+                sleeve=o.sleeve,
+                instrument_id=o.instrument_id,
+                name=o.name,
+                quantity=o.quantity,
+                price=o.price,
+                currency=o.currency,
+                price_eur=o.price_eur,
+                amount_eur=o.amount_eur,
+                account_id=o.account_id,
+                realized_pnl_eur=result.realized.get(n),
+            )
+            for n, o in enumerate(result.plan.orders)
+        ],
+        remainder_eur=result.plan.remainder_eur,
+        notes=result.plan.notes,
+        before=result.before,
+        after=result.after,
     )
