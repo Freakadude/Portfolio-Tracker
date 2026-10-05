@@ -1661,8 +1661,12 @@ export interface components {
         FiltersIn: {
             /** Account */
             account?: number | null;
+            /** End */
+            end?: string | null;
             /** Period */
             period?: string | null;
+            /** Start */
+            start?: string | null;
         };
         /** FxPrefillOut */
         FxPrefillOut: {

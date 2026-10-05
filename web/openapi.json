@@ -906,6 +906,18 @@
             ],
             "title": "Account"
           },
+          "end": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "End"
+          },
           "period": {
             "anyOf": [
               {
@@ -916,6 +928,18 @@
               }
             ],
             "title": "Period"
+          },
+          "start": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Start"
           }
         },
         "title": "FiltersIn",
