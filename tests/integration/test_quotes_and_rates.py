@@ -236,7 +236,11 @@ def test_the_retention_job_prunes_old_quotes_and_events(api, db, settings) -> No
     result = retention_job(make_ctx(settings, [], now=now))
     assert result.status == "ok" and "1 old quote(s) and 1 old event(s)" in result.log
     assert [q.price for q in quotes(db)] == [D(2)]
-    assert len(db.scalars(select(AppEvent)).all()) == 1
+    kinds = sorted(e.type for e in db.scalars(select(AppEvent)))
+    assert kinds == [
+        "job_status",
+        "price_update",
+    ]  # the old event is gone, the fresh one and this run's stay
     assert prune_events(db, now) == 0
 
 

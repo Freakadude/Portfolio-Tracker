@@ -165,6 +165,258 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/dashboard-templates": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Templates */
+        get: operations["templates_api_v1_dashboard_templates_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/dashboard-widgets": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Widget Library */
+        get: operations["widget_library_api_v1_dashboard_widgets_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/dashboards": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Dashboards */
+        get: operations["list_dashboards_api_v1_dashboards_get"];
+        put?: never;
+        /** Create Dashboard */
+        post: operations["create_dashboard_api_v1_dashboards_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/dashboards/default": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Default Dashboard
+         * @description The dashboard Home opens. The very first visit creates the Overview template.
+         */
+        get: operations["default_dashboard_api_v1_dashboards_default_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/dashboards/import": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Import Dashboard */
+        post: operations["import_dashboard_api_v1_dashboards_import_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/dashboards/order": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Reorder */
+        put: operations["reorder_api_v1_dashboards_order_put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/dashboards/{dashboard_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Read Dashboard */
+        get: operations["read_dashboard_api_v1_dashboards__dashboard_id__get"];
+        put?: never;
+        post?: never;
+        /** Delete Dashboard */
+        delete: operations["delete_dashboard_api_v1_dashboards__dashboard_id__delete"];
+        options?: never;
+        head?: never;
+        /** Update Dashboard */
+        patch: operations["update_dashboard_api_v1_dashboards__dashboard_id__patch"];
+        trace?: never;
+    };
+    "/api/v1/dashboards/{dashboard_id}/default": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Make Default */
+        post: operations["make_default_api_v1_dashboards__dashboard_id__default_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/dashboards/{dashboard_id}/duplicate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Duplicate Dashboard */
+        post: operations["duplicate_dashboard_api_v1_dashboards__dashboard_id__duplicate_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/dashboards/{dashboard_id}/export": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Export Dashboard */
+        get: operations["export_dashboard_api_v1_dashboards__dashboard_id__export_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/dashboards/{dashboard_id}/layout": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Save Layout
+         * @description Save the arrangement of widgets; each breakpoint (lg, md, sm) is kept as sent.
+         */
+        put: operations["save_layout_api_v1_dashboards__dashboard_id__layout_put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/dashboards/{dashboard_id}/widgets": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Add Widget */
+        post: operations["add_widget_api_v1_dashboards__dashboard_id__widgets_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/dashboards/{dashboard_id}/widgets/{widget_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Remove Widget */
+        delete: operations["remove_widget_api_v1_dashboards__dashboard_id__widgets__widget_id__delete"];
+        options?: never;
+        head?: never;
+        /** Update Widget */
+        patch: operations["update_widget_api_v1_dashboards__dashboard_id__widgets__widget_id__patch"];
+        trace?: never;
+    };
+    "/api/v1/events": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Events
+         * @description A stream of price_update and job_status events. `seconds` ends the stream after that
+         *     long (0: until the browser disconnects); the browser reconnects and resumes by itself.
+         */
+        get: operations["events_api_v1_events_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/import-presets": {
         parameters: {
             query?: never;
@@ -1038,6 +1290,27 @@ export interface paths {
         patch: operations["edit_item_api_v1_watchlists__watchlist_id__items__item_id__patch"];
         trace?: never;
     };
+    "/api/v1/widgets/data": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Widgets Data
+         * @description The data of many widgets in one request, so a dashboard shares one analytics context.
+         *     A widget that cannot be drawn reports its own error without failing the others.
+         */
+        post: operations["widgets_data_api_v1_widgets_data_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/healthz": {
         parameters: {
             query?: never;
@@ -1292,6 +1565,58 @@ export interface components {
             /** Points */
             points: string | null;
         };
+        /** DashboardChanges */
+        DashboardChanges: {
+            /** Filters */
+            filters?: {
+                [key: string]: unknown;
+            } | null;
+            /** Name */
+            name?: string | null;
+        };
+        /** DashboardIn */
+        DashboardIn: {
+            /** Name */
+            name: string;
+            /** Template */
+            template?: string | null;
+        };
+        /** DashboardOut */
+        DashboardOut: {
+            /** Filters */
+            filters: {
+                [key: string]: unknown;
+            };
+            /** Id */
+            id: number;
+            /** Is Default */
+            is_default: boolean;
+            /** Layouts */
+            layouts: {
+                [key: string]: {
+                    [key: string]: unknown;
+                }[];
+            };
+            /** Name */
+            name: string;
+            /** Sort Order */
+            sort_order: number;
+            /** Widgets */
+            widgets: components["schemas"]["WidgetOut"][];
+        };
+        /** DashboardSummary */
+        DashboardSummary: {
+            /** Id */
+            id: number;
+            /** Is Default */
+            is_default: boolean;
+            /** Name */
+            name: string;
+            /** Sort Order */
+            sort_order: number;
+            /** Widget Count */
+            widget_count: number;
+        };
         /** DrawdownPoint */
         DrawdownPoint: {
             /**
@@ -1331,6 +1656,13 @@ export interface components {
             quantity_after: string;
             /** Quantity Before */
             quantity_before: string;
+        };
+        /** FiltersIn */
+        FiltersIn: {
+            /** Account */
+            account?: number | null;
+            /** Period */
+            period?: string | null;
         };
         /** FxPrefillOut */
         FxPrefillOut: {
@@ -1382,6 +1714,13 @@ export interface components {
             unvalued_positions: number;
             /** Value Eur */
             value_eur: string;
+        };
+        /** ImportIn */
+        ImportIn: {
+            /** Document */
+            document: {
+                [key: string]: unknown;
+            };
         };
         /**
          * ImportMapping
@@ -1639,6 +1978,30 @@ export interface components {
             overridden: boolean;
             /** Source */
             source: string;
+        };
+        /** LayoutIn */
+        LayoutIn: {
+            /** Layouts */
+            layouts: {
+                [key: string]: {
+                    [key: string]: unknown;
+                }[];
+            };
+        };
+        /** LibraryEntry */
+        LibraryEntry: {
+            /** Defaults */
+            defaults: {
+                [key: string]: unknown;
+            };
+            /** Height */
+            height: number;
+            /** Title Key */
+            title_key: string;
+            /** Type */
+            type: string;
+            /** Width */
+            width: number;
         };
         /** ListingChoice */
         ListingChoice: {
@@ -2381,6 +2744,17 @@ export interface components {
             /** Value Eur */
             value_eur: string;
         };
+        /** TemplateOut */
+        TemplateOut: {
+            /** Description */
+            description: string;
+            /** Key */
+            key: string;
+            /** Name */
+            name: string;
+            /** Widget Count */
+            widget_count: number;
+        };
         /** TotalsOut */
         TotalsOut: {
             /** Cost Basis Eur */
@@ -2607,6 +2981,76 @@ export interface components {
             items: components["schemas"]["ItemOut"][];
             /** Name */
             name: string;
+        };
+        /** WidgetChanges */
+        WidgetChanges: {
+            /** Config */
+            config: {
+                [key: string]: unknown;
+            };
+        };
+        /** WidgetIn */
+        WidgetIn: {
+            /** Config */
+            config?: {
+                [key: string]: unknown;
+            };
+            /** Grid */
+            grid?: {
+                [key: string]: number;
+            } | null;
+            /** Type */
+            type: string;
+        };
+        /** WidgetOut */
+        WidgetOut: {
+            /** Config */
+            config: {
+                [key: string]: unknown;
+            };
+            /** Grid */
+            grid: {
+                [key: string]: number;
+            };
+            /** Id */
+            id: number;
+            /** Type */
+            type: string;
+        };
+        /** WidgetRequest */
+        WidgetRequest: {
+            /** Config */
+            config?: {
+                [key: string]: unknown;
+            };
+            /** Key */
+            key: string;
+            /** Type */
+            type: string;
+        };
+        /** WidgetResult */
+        WidgetResult: {
+            /** Data */
+            data?: {
+                [key: string]: unknown;
+            } | null;
+            /** Error */
+            error?: string | null;
+        };
+        /** WidgetsDataIn */
+        WidgetsDataIn: {
+            /** As Of */
+            as_of?: string | null;
+            filters?: components["schemas"]["FiltersIn"];
+            /** Requests */
+            requests: components["schemas"]["WidgetRequest"][];
+        };
+        /** WidgetsDataOut */
+        WidgetsDataOut: {
+            /** Results */
+            results: {
+                [key: string]: components["schemas"]["WidgetResult"];
+            };
         };
         /** YearReportOut */
         YearReportOut: {
@@ -3081,6 +3525,545 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ActionOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    templates_api_v1_dashboard_templates_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TemplateOut"][];
+                };
+            };
+        };
+    };
+    widget_library_api_v1_dashboard_widgets_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LibraryEntry"][];
+                };
+            };
+        };
+    };
+    list_dashboards_api_v1_dashboards_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DashboardSummary"][];
+                };
+            };
+        };
+    };
+    create_dashboard_api_v1_dashboards_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DashboardIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DashboardOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    default_dashboard_api_v1_dashboards_default_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DashboardOut"];
+                };
+            };
+        };
+    };
+    import_dashboard_api_v1_dashboards_import_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ImportIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DashboardOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    reorder_api_v1_dashboards_order_put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["OrderIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DashboardSummary"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    read_dashboard_api_v1_dashboards__dashboard_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                dashboard_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DashboardOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_dashboard_api_v1_dashboards__dashboard_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                dashboard_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_dashboard_api_v1_dashboards__dashboard_id__patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                dashboard_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DashboardChanges"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DashboardOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    make_default_api_v1_dashboards__dashboard_id__default_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                dashboard_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DashboardOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    duplicate_dashboard_api_v1_dashboards__dashboard_id__duplicate_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                dashboard_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DashboardOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    export_dashboard_api_v1_dashboards__dashboard_id__export_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                dashboard_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    save_layout_api_v1_dashboards__dashboard_id__layout_put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                dashboard_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["LayoutIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DashboardOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    add_widget_api_v1_dashboards__dashboard_id__widgets_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                dashboard_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["WidgetIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DashboardOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    remove_widget_api_v1_dashboards__dashboard_id__widgets__widget_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                dashboard_id: number;
+                widget_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DashboardOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_widget_api_v1_dashboards__dashboard_id__widgets__widget_id__patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                dashboard_id: number;
+                widget_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["WidgetChanges"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DashboardOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    events_api_v1_events_get: {
+        parameters: {
+            query?: {
+                last_event_id?: number | null;
+                seconds?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
                 };
             };
             /** @description Validation Error */
@@ -5000,6 +5983,39 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["WatchlistOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    widgets_data_api_v1_widgets_data_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["WidgetsDataIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WidgetsDataOut"];
                 };
             };
             /** @description Validation Error */

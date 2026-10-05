@@ -11,6 +11,7 @@ from sqlalchemy.orm import Session
 
 from folio.db.base import utcnow
 from folio.db.models_ledger import JobRun
+from folio.events import JOB_STATUS, publish_event
 from folio.jobs.context import JobContext
 from folio.logging import correlation_id, get_logger
 
@@ -76,6 +77,7 @@ def run_job(
             row.status = status
             row.finished_at = ctx.now()
             row.log = "\n".join(job_log.lines)
+            publish_event(db, JOB_STATUS, {"job": name, "status": status, "run_id": run_id})
             db.commit()
     log.info("job finished", job=name, status=status, run_id=run_id)
     return JobResult(run_id, name, status, "\n".join(job_log.lines))

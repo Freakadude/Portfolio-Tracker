@@ -1,0 +1,14 @@
+# ADR 0018: Dashboards as stored layouts, batched widget data and server-sent events
+
+Status: accepted (2026-10-05)
+
+## Decisions
+- **A dashboard is a list of widgets plus one layout per breakpoint.** The server validates what the browser saves: a widget's type must be in the library and its options must parse (unknown options are refused, defaults are filled in), and a layout must place each of the dashboard's widgets at most once inside the grid of its breakpoint (12 columns on desktop, 8 on tablet, 1 on phone). The tablet and phone layouts are derived from the desktop one until the owner arranges them, and are kept as saved afterwards, so each breakpoint can differ and survives a reload (FR-DB-02). A widget added on one breakpoint is placed on the others, below what is there.
+- **Widgets read through one batched request.** `POST /widgets/data` takes every widget of a dashboard with the dashboard's filters (period and account) and answers from the shared analytics context (ADR 0016). A widget that cannot be drawn reports its own error; the others are unaffected. Each widget decides whether it follows the dashboard's filters or has its own period or scope (FR-DB-05). Decimals travel as strings.
+- **Widgets whose data does not exist yet say so.** Look-through, macro overlay, news and signals are in the library from the start, with a data answer that names the phase that brings them, so the Signals & news template works on an empty portfolio and a later phase only fills in the data.
+- **Templates are code, not rows.** Overview, Risk, Income and Signals & news are lists of widgets with positions; creating one copies them. A template can therefore change between releases without touching stored dashboards, and the first visit to Home creates the Overview.
+- **Export and import are JSON** with a format name and version. Layouts refer to widgets by their position in the list, so a file is independent of database ids. Import validates everything before it creates anything.
+- **Live updates are polled from the database.** The worker writes an `app_event` row when new closes or quotes are stored and when a job finishes. `GET /events` is a server-sent-event stream that polls that table every two seconds and sends new rows with their ids, a heartbeat comment every fifteen seconds, and resumes from `Last-Event-ID`. This keeps the worker and the web process independent (no message broker, no shared memory) at the price of up to two seconds of delay, which is irrelevant for end-of-day data and quotes that are 15 minutes old. Events older than a day are pruned.
+
+## Consequences
+The browser needs only one open connection per tab. If a proxy in front of the app buffers responses, the stream still works but updates arrive late; the response carries `X-Accel-Buffering: no` for nginx.

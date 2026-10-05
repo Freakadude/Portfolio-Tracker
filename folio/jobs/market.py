@@ -9,7 +9,7 @@ from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from folio.db.models_ledger import Instrument, LedgerTransaction, Listing
-from folio.events import prune_events
+from folio.events import PRICE_UPDATE, prune_events, publish_event
 from folio.jobs.context import JobContext
 from folio.jobs.runner import JobLog, JobResult, run_job
 from folio.marketdata import exchanges
@@ -61,9 +61,11 @@ def eod_job(
             log.info(f"{mic} is closed on {local_day.isoformat()}; no prices requested.")
             return
         prices = PriceService(db, ctx.chain_for(db))
+        stored = 0
         for listing, instrument in tracked_listings(db, mic):
             try:
                 summary = prices.update_latest(listing_ref(listing, instrument.isin), local_day)
+                stored += summary.stored
                 db.commit()
                 log.info(
                     f"{listing.ticker}: {summary.stored} new or changed closes ({summary.source})"
@@ -71,6 +73,8 @@ def eod_job(
             except ProviderError as exc:
                 db.rollback()
                 log.error(f"{listing.ticker}: {exc}")
+        if stored:
+            publish_event(db, PRICE_UPDATE, {"mic": mic})
 
     return run_job(ctx, "eod", body, {"mic": mic, "day": local_day.isoformat()})
 
@@ -130,9 +134,11 @@ def refresh_job(ctx: JobContext) -> JobResult:
         tracked = tracked_listings(db)
         if not tracked:
             log.info("Nothing is tracked yet.")
+        stored = 0
         for listing, instrument in tracked:
             try:
                 summary = prices.update_latest(listing_ref(listing, instrument.isin), today)
+                stored += summary.stored
                 db.commit()
                 log.info(
                     f"{listing.ticker}: {summary.stored} new or changed closes ({summary.source})"
@@ -140,6 +146,8 @@ def refresh_job(ctx: JobContext) -> JobResult:
             except ProviderError as exc:
                 db.rollback()
                 log.error(f"{listing.ticker}: {exc}")
+        if stored:
+            publish_event(db, PRICE_UPDATE, {"source": "refresh"})
         currencies = needed_currencies(db)
         if currencies:
             floor = first_transaction_date(db) or today - timedelta(days=365 * FX_FLOOR_YEARS)
@@ -178,6 +186,8 @@ def quotes_job(ctx: JobContext, only_if_open: bool = False) -> JobResult:
             log.info(f"No quotes fetched ({why or 'no provider is enabled'}).")
             return
         log.info(f"{summary.stored} new quote(s) for {len(listings)} listing(s) ({summary.source})")
+        if summary.stored:
+            publish_event(db, PRICE_UPDATE, {"source": "quotes"})
         for provider, reason in summary.skipped.items():
             log.info(f"{provider} not used: {reason}")
 
@@ -236,6 +246,8 @@ def backfill_job(ctx: JobContext, listing_id: int) -> JobResult:
         log.info(
             f"{listing.ticker}: {summary.stored} closes from {start.isoformat()} ({summary.source})"
         )
+        if summary.stored:
+            publish_event(db, PRICE_UPDATE, {"listing_id": listing_id})
 
     return run_job(ctx, "backfill", body, {"listing_id": listing_id})
 
