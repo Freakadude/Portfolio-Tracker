@@ -35,3 +35,9 @@ documentation and must be checked against a real response once a key exists:
   unknown series
 
 When a real response differs, replace the fixture with the recording and fix the adapter.
+
+News fixtures live in `tests/fixtures/news/`: `ecb_press.xml` and `fed_press_all.xml` are
+**recorded** from the ECB's and the Federal Reserve's live feeds on 2026-10-05 (the Fed's cut to
+its first 8 items); `atom_example.xml` and `robots_example.txt` are invented. The EODHD news
+response (`providers/eodhd_news.json`) is derived from its documentation and must be checked
+against a real response once a key exists.

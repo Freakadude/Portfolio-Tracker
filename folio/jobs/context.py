@@ -17,6 +17,7 @@ from folio.marketdata.fallback import ProviderChain
 from folio.marketdata.fred import FredSeries
 from folio.marketdata.http import HttpClient
 from folio.marketdata.runtime import make_provider_factory, make_usage_tracker
+from folio.news.fetch import Fetcher
 from folio.notify.channels import Channel
 from folio.notify.service import build_channels
 from folio.security.secrets import SecretStore
@@ -37,6 +38,8 @@ class JobContext:
     channels_for: Callable[[Session], dict[str, Channel]] = field(default=lambda db: {})
     eodhd_for: Callable[[Session], EodhdProvider | None] = field(default=lambda db: None)
     issuer_for: Callable[[Session], HttpClient | None] = field(default=lambda db: None)
+    # one fetcher for the whole worker, so its robots.txt cache and pacing persist
+    fetcher_for: Callable[[], Fetcher | None] = field(default=lambda: None)
 
     def today(self) -> date:
         return self.now().date()
@@ -52,6 +55,13 @@ def build_context(settings: Settings) -> JobContext:
     def providers(db: Session):  # type: ignore[no-untyped-def]
         return make_provider_factory(db, settings, usage, breakers)
 
+    def news_client(domain: str) -> HttpClient:
+        return HttpClient(
+            "news", usage=usage, breaker=breakers.setdefault(f"news:{domain}", CircuitBreaker())
+        )
+
+    fetcher = Fetcher(news_client, clock=_utc_now)
+
     return JobContext(
         session_factory=factory,
         chain_for=lambda db: providers(db).chain(),
@@ -60,6 +70,7 @@ def build_context(settings: Settings) -> JobContext:
         fred_for=lambda db: providers(db).fred(),
         eodhd_for=lambda db: providers(db).eodhd(),
         issuer_for=lambda db: providers(db).issuer(),
+        fetcher_for=lambda: fetcher,
         channels_for=lambda db: build_channels(
             db, SecretStore(db, settings.require_secret_key()).get
         ),

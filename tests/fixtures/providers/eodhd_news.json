@@ -1,0 +1,28 @@
+[
+  {
+    "date": "2026-10-05T07:30:00+00:00",
+    "title": "Chip equipment maker lifts its outlook",
+    "content": "<p>The company raised its full-year outlook on strong orders. This is a long article body that goes on and on. It must never be stored in full: only the first five hundred characters are kept as a summary. Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum. Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium doloremque laudantium, totam rem aperiam, eaque ipsa quae ab illo inventore veritatis et quasi architecto beatae vitae dicta sunt explicabo.</p>",
+    "link": "https://news.example/chip-outlook?utm_campaign=x",
+    "symbols": ["ASML.AS", "SXR8.XETRA"],
+    "tags": ["outlook"],
+    "sentiment": {"polarity": 0.8, "neg": 0.0, "neu": 0.4, "pos": 0.6}
+  },
+  {
+    "date": "2026-10-04T18:00:00Z",
+    "title": "Central bank holds rates",
+    "content": "Short body.",
+    "link": "https://news.example/rates-hold",
+    "symbols": [],
+    "tags": [],
+    "sentiment": {"polarity": 0, "neg": 0, "neu": 1, "pos": 0}
+  },
+  {
+    "date": "2026-10-04T12:00:00Z",
+    "title": "No link here",
+    "content": "x",
+    "link": "",
+    "symbols": [],
+    "tags": []
+  }
+]

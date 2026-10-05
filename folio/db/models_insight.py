@@ -107,6 +107,7 @@ class NewsItem(Base):
     published_at: Mapped[datetime] = mapped_column(UTCDateTime, index=True)
     language: Mapped[str] = mapped_column(String(5), default="en")
     content_hash: Mapped[str] = mapped_column(String(64), index=True)
+    symbols: Mapped[Any] = mapped_column(JSON, nullable=True, default=None)  # tickers tagged
     cluster_id: Mapped[int | None] = mapped_column(
         ForeignKey("news_cluster.id"), default=None, index=True
     )

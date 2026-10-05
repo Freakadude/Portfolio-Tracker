@@ -27,6 +27,7 @@ from folio.marketdata.http import HttpClient, check_status
 
 BASE = "https://eodhd.com/api"
 FUNDAMENTALS_WEIGHT = 10  # EODHD counts one fundamentals request as ten API calls
+NEWS_WEIGHT = 5  # and one news request as five
 
 
 def _dec(value: Any) -> Decimal | None:
@@ -123,6 +124,12 @@ class EodhdProvider:
         constituents. Needs EODHD's Fundamentals plan, and costs ten calls of the budget."""
         symbol = listing.symbol_for(self.name)
         return self._call(f"fundamentals/{symbol}", symbol, {}, FUNDAMENTALS_WEIGHT)
+
+    def get_news(self, listing: ListingRef, limit: int = 20) -> Any:
+        """The latest news tagged with a listing's ticker: rows of date, title, content, link and
+        symbols. Costs five calls of the budget."""
+        symbol = listing.symbol_for(self.name)
+        return self._call("news", symbol, {"s": symbol, "limit": limit, "offset": 0}, NEWS_WEIGHT)
 
     def probe(self, symbol: str) -> SymbolMeta | None:
         return None  # EODHD states the currency in its search results instead

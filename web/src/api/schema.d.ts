@@ -779,6 +779,82 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/news/sources": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Sources */
+        get: operations["list_sources_api_v1_news_sources_get"];
+        put?: never;
+        /** Add Source */
+        post: operations["add_source_api_v1_news_sources_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/news/sources/preview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Preview
+         * @description The latest items of a feed address, before it is saved (FR-NW-01). Nothing is stored.
+         */
+        post: operations["preview_api_v1_news_sources_preview_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/news/sources/{source_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Change Source */
+        put: operations["change_source_api_v1_news_sources__source_id__put"];
+        post?: never;
+        /** Remove Source */
+        delete: operations["remove_source_api_v1_news_sources__source_id__delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/news/sources/{source_id}/fetch": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Fetch Now
+         * @description Ask the worker to fetch this source now.
+         */
+        post: operations["fetch_now_api_v1_news_sources__source_id__fetch_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/notifications": {
         parameters: {
             query?: never;
@@ -2787,6 +2863,8 @@ export interface components {
             disk: components["schemas"]["DiskOut"];
             /** Failed Jobs 24H */
             failed_jobs_24h: number;
+            /** Failing News Sources */
+            failing_news_sources: string[];
             /** Version */
             version: string;
         };
@@ -3435,24 +3513,24 @@ export interface components {
             /** Name */
             name: string;
         };
-        /** PreviewOut */
-        PreviewOut: {
-            batch: components["schemas"]["BatchOut"];
-            /** Delimiter */
-            delimiter: string;
-            /** Detected Preset */
-            detected_preset: string | null;
-            /** Encoding */
-            encoding: string;
-            /** From Preset */
-            from_preset: boolean;
-            /** Headers */
-            headers: components["schemas"]["HeaderOut"][];
-            mapping: components["schemas"]["ImportMapping"];
-            /** Row Count */
-            row_count: number;
-            /** Sample Rows */
-            sample_rows: string[][];
+        /** PreviewIn */
+        PreviewIn: {
+            /** Url */
+            url: string;
+        };
+        /** PreviewItemOut */
+        PreviewItemOut: {
+            /**
+             * Published
+             * Format: date-time
+             */
+            published: string;
+            /** Summary */
+            summary: string;
+            /** Title */
+            title: string;
+            /** Url */
+            url: string;
         };
         /** ProblemOut */
         ProblemOut: {
@@ -3934,6 +4012,74 @@ export interface components {
             source: string;
             /** Stale */
             stale: boolean;
+        };
+        /** SourceIn */
+        SourceIn: {
+            /**
+             * Enabled
+             * @default true
+             */
+            enabled: boolean;
+            /**
+             * Kind
+             * @default rss
+             */
+            kind: string;
+            /**
+             * Language
+             * @default en
+             */
+            language: string;
+            /** Macro Series */
+            macro_series?: string[];
+            /** Name */
+            name: string;
+            /**
+             * Poll Minutes
+             * @default 60
+             */
+            poll_minutes: number;
+            /**
+             * Trust Weight
+             * @default 0.7
+             */
+            trust_weight: number | string;
+            /**
+             * Url
+             * @default
+             */
+            url: string;
+        };
+        /** SourceOut */
+        SourceOut: {
+            /** Enabled */
+            enabled: boolean;
+            /** Failures */
+            failures: number;
+            /** Id */
+            id: number;
+            /** Items */
+            items: number;
+            /** Kind */
+            kind: string;
+            /** Language */
+            language: string;
+            /** Last Error */
+            last_error: string | null;
+            /** Last Fetch At */
+            last_fetch_at: string | null;
+            /** Macro Series */
+            macro_series: string[];
+            /** Name */
+            name: string;
+            /** Next Fetch At */
+            next_fetch_at: string | null;
+            /** Poll Minutes */
+            poll_minutes: number;
+            /** Trust Weight */
+            trust_weight: string;
+            /** Url */
+            url: string;
         };
         /** StarterOut */
         StarterOut: {
@@ -4439,6 +4585,25 @@ export interface components {
             /** Points */
             points: components["schemas"]["SeriesPoint"][];
         };
+        /** PreviewOut */
+        folio__api__routers__imports__PreviewOut: {
+            batch: components["schemas"]["BatchOut"];
+            /** Delimiter */
+            delimiter: string;
+            /** Detected Preset */
+            detected_preset: string | null;
+            /** Encoding */
+            encoding: string;
+            /** From Preset */
+            from_preset: boolean;
+            /** Headers */
+            headers: components["schemas"]["HeaderOut"][];
+            mapping: components["schemas"]["ImportMapping"];
+            /** Row Count */
+            row_count: number;
+            /** Sample Rows */
+            sample_rows: string[][];
+        };
         /** PriceOut */
         folio__api__routers__instruments__PriceOut: {
             /** Close */
@@ -4479,6 +4644,13 @@ export interface components {
             source: string;
             /** Unit */
             unit: string;
+        };
+        /** PreviewOut */
+        folio__api__routers__news__PreviewOut: {
+            /** Items */
+            items: components["schemas"]["PreviewItemOut"][];
+            /** Total */
+            total: number;
         };
         /** MatchOut */
         folio__api__routers__positions__MatchOut: {
@@ -5550,7 +5722,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["PreviewOut"];
+                    "application/json": components["schemas"]["folio__api__routers__imports__PreviewOut"];
                 };
             };
             /** @description Validation Error */
@@ -5581,7 +5753,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["PreviewOut"];
+                    "application/json": components["schemas"]["folio__api__routers__imports__PreviewOut"];
                 };
             };
             /** @description Validation Error */
@@ -6256,6 +6428,189 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["folio__api__routers__macro__SeriesOut"][];
+                };
+            };
+        };
+    };
+    list_sources_api_v1_news_sources_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SourceOut"][];
+                };
+            };
+        };
+    };
+    add_source_api_v1_news_sources_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SourceIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SourceOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    preview_api_v1_news_sources_preview_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PreviewIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["folio__api__routers__news__PreviewOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    change_source_api_v1_news_sources__source_id__put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                source_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SourceIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SourceOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    remove_source_api_v1_news_sources__source_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                source_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    fetch_now_api_v1_news_sources__source_id__fetch_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                source_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: string;
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
                 };
             };
         };

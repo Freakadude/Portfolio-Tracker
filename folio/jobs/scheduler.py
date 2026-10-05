@@ -18,6 +18,8 @@ from apscheduler.jobstores.base import BaseJobStore
 from apscheduler.jobstores.memory import MemoryJobStore
 from apscheduler.jobstores.sqlalchemy import SQLAlchemyJobStore
 from apscheduler.schedulers.background import BackgroundScheduler
+from apscheduler.triggers.base import BaseTrigger
+from apscheduler.triggers.combining import OrTrigger
 from apscheduler.triggers.cron import CronTrigger
 from sqlalchemy import select
 
@@ -38,6 +40,7 @@ from folio.jobs.market import (
     refresh_job,
     retention_job,
 )
+from folio.jobs.news import news_job
 from folio.jobs.notify import notify_job
 from folio.jobs.portfolio import snapshots_job
 from folio.jobs.runner import JobLog, JobResult, run_job
@@ -97,6 +100,7 @@ JOB_PARAMS: dict[str, tuple[str, ...]] = {
     "rules": (),
     "macro": (),
     "lookthrough": ("instrument_id",),
+    "news": ("source_id",),
 }
 
 
@@ -124,6 +128,9 @@ def handlers(
         "retention": lambda p: retention_job(ctx),
         "rules": lambda p: rules_job(ctx),
         "macro": lambda p: macro_job(ctx),
+        "news": lambda p: news_job(
+            ctx, None if p.get("source_id") is None else int(str(p["source_id"]))
+        ),
         "lookthrough": lambda p: lookthrough_job(
             ctx, None if p.get("instrument_id") is None else int(str(p["instrument_id"]))
         ),
@@ -174,7 +181,7 @@ def process_job_requests(ctx: JobContext, settings: Settings) -> int:
 @dataclass(frozen=True)
 class Schedule:
     job_id: str
-    trigger: CronTrigger
+    trigger: BaseTrigger
 
 
 def eod_trigger(mic: str) -> CronTrigger:
@@ -204,6 +211,17 @@ def build_schedules() -> list[Schedule]:
         Schedule("macro", CronTrigger(hour=7, minute=0, **local)),
         # issuers publish holdings daily; a monthly refresh is what FR-MD-09 asks for
         Schedule("lookthrough", CronTrigger(day=1, hour=6, minute=0, **local)),
+        # every 15 minutes from 07:00 to 23:00 local time and hourly overnight (FR-NW-02);
+        # each source also keeps to its own interval
+        Schedule(
+            "news",
+            OrTrigger(
+                [
+                    CronTrigger(minute="*/15", hour="7-22", **local),
+                    CronTrigger(minute=0, hour="23,0-6", **local),
+                ]
+            ),
+        ),
         Schedule("quotes", CronTrigger(minute="*/15", timezone="UTC")),  # FR-MD-05
         Schedule("actions", CronTrigger(day_of_week="sun", hour=9, minute=0, **local)),
     ]
@@ -272,6 +290,10 @@ def run_macro() -> None:
 
 def run_lookthrough() -> None:
     lookthrough_job(_rt()[0])
+
+
+def run_news() -> None:
+    news_job(_rt()[0])
 
 
 def run_requests() -> None:

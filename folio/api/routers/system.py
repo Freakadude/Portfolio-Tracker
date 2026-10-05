@@ -16,6 +16,7 @@ from folio.api.errors import ApiError
 from folio.config import Settings
 from folio.db.base import utcnow
 from folio.db.models import AuditLog
+from folio.db.models_insight import NewsSource
 from folio.db.models_ledger import JobRequest, JobRun, ProviderCall
 from folio.jobs.requests import enqueue
 from folio.jobs.scheduler import JOB_PARAMS
@@ -192,6 +193,7 @@ class InfoOut(BaseModel):
     disk: DiskOut
     agent: AgentUsageOut
     failed_jobs_24h: int
+    failing_news_sources: list[str]  # sources that failed their last fetch (FR-NW-02)
 
 
 def _sqlite_path(url: str) -> Path | None:
@@ -243,6 +245,12 @@ def info(request: Request, _user: UserDep, db: DbDep) -> InfoOut:
             note="The AI agent arrives in Phase 4; nothing is spent until then.",
         ),
         failed_jobs_24h=failed,
+        failing_news_sources=[
+            s.name
+            for s in db.scalars(
+                select(NewsSource).where(NewsSource.deleted_at.is_(None), NewsSource.failures > 0)
+            )
+        ],
     )
 
 

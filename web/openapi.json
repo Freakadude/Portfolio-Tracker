@@ -2609,6 +2609,13 @@
             "title": "Failed Jobs 24H",
             "type": "integer"
           },
+          "failing_news_sources": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Failing News Sources",
+            "type": "array"
+          },
           "version": {
             "title": "Version",
             "type": "string"
@@ -2619,7 +2626,8 @@
           "build",
           "disk",
           "agent",
-          "failed_jobs_24h"
+          "failed_jobs_24h",
+          "failing_news_sources"
         ],
         "title": "InfoOut",
         "type": "object"
@@ -5087,71 +5095,46 @@
         "title": "PresetOut",
         "type": "object"
       },
-      "PreviewOut": {
+      "PreviewIn": {
         "properties": {
-          "batch": {
-            "$ref": "#/components/schemas/BatchOut"
-          },
-          "delimiter": {
-            "title": "Delimiter",
+          "url": {
+            "title": "Url",
             "type": "string"
-          },
-          "detected_preset": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Detected Preset"
-          },
-          "encoding": {
-            "title": "Encoding",
-            "type": "string"
-          },
-          "from_preset": {
-            "title": "From Preset",
-            "type": "boolean"
-          },
-          "headers": {
-            "items": {
-              "$ref": "#/components/schemas/HeaderOut"
-            },
-            "title": "Headers",
-            "type": "array"
-          },
-          "mapping": {
-            "$ref": "#/components/schemas/ImportMapping"
-          },
-          "row_count": {
-            "title": "Row Count",
-            "type": "integer"
-          },
-          "sample_rows": {
-            "items": {
-              "items": {
-                "type": "string"
-              },
-              "type": "array"
-            },
-            "title": "Sample Rows",
-            "type": "array"
           }
         },
         "required": [
-          "batch",
-          "encoding",
-          "delimiter",
-          "headers",
-          "sample_rows",
-          "row_count",
-          "mapping",
-          "from_preset",
-          "detected_preset"
+          "url"
         ],
-        "title": "PreviewOut",
+        "title": "PreviewIn",
+        "type": "object"
+      },
+      "PreviewItemOut": {
+        "properties": {
+          "published": {
+            "format": "date-time",
+            "title": "Published",
+            "type": "string"
+          },
+          "summary": {
+            "title": "Summary",
+            "type": "string"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          },
+          "url": {
+            "title": "Url",
+            "type": "string"
+          }
+        },
+        "required": [
+          "title",
+          "summary",
+          "url",
+          "published"
+        ],
+        "title": "PreviewItemOut",
         "type": "object"
       },
       "ProblemOut": {
@@ -6731,6 +6714,169 @@
           "stale"
         ],
         "title": "SnapshotOut",
+        "type": "object"
+      },
+      "SourceIn": {
+        "properties": {
+          "enabled": {
+            "default": true,
+            "title": "Enabled",
+            "type": "boolean"
+          },
+          "kind": {
+            "default": "rss",
+            "title": "Kind",
+            "type": "string"
+          },
+          "language": {
+            "default": "en",
+            "title": "Language",
+            "type": "string"
+          },
+          "macro_series": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Macro Series",
+            "type": "array"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "poll_minutes": {
+            "default": 60,
+            "title": "Poll Minutes",
+            "type": "integer"
+          },
+          "trust_weight": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+                "type": "string"
+              }
+            ],
+            "default": "0.7",
+            "title": "Trust Weight"
+          },
+          "url": {
+            "default": "",
+            "title": "Url",
+            "type": "string"
+          }
+        },
+        "required": [
+          "name"
+        ],
+        "title": "SourceIn",
+        "type": "object"
+      },
+      "SourceOut": {
+        "properties": {
+          "enabled": {
+            "title": "Enabled",
+            "type": "boolean"
+          },
+          "failures": {
+            "title": "Failures",
+            "type": "integer"
+          },
+          "id": {
+            "title": "Id",
+            "type": "integer"
+          },
+          "items": {
+            "title": "Items",
+            "type": "integer"
+          },
+          "kind": {
+            "title": "Kind",
+            "type": "string"
+          },
+          "language": {
+            "title": "Language",
+            "type": "string"
+          },
+          "last_error": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Error"
+          },
+          "last_fetch_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Fetch At"
+          },
+          "macro_series": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Macro Series",
+            "type": "array"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "next_fetch_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Next Fetch At"
+          },
+          "poll_minutes": {
+            "title": "Poll Minutes",
+            "type": "integer"
+          },
+          "trust_weight": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Trust Weight",
+            "type": "string"
+          },
+          "url": {
+            "title": "Url",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "kind",
+          "url",
+          "language",
+          "trust_weight",
+          "poll_minutes",
+          "enabled",
+          "macro_series",
+          "items",
+          "last_fetch_at",
+          "next_fetch_at",
+          "failures",
+          "last_error"
+        ],
+        "title": "SourceOut",
         "type": "object"
       },
       "StarterOut": {
@@ -8471,6 +8617,73 @@
         "title": "SeriesOut",
         "type": "object"
       },
+      "folio__api__routers__imports__PreviewOut": {
+        "properties": {
+          "batch": {
+            "$ref": "#/components/schemas/BatchOut"
+          },
+          "delimiter": {
+            "title": "Delimiter",
+            "type": "string"
+          },
+          "detected_preset": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Detected Preset"
+          },
+          "encoding": {
+            "title": "Encoding",
+            "type": "string"
+          },
+          "from_preset": {
+            "title": "From Preset",
+            "type": "boolean"
+          },
+          "headers": {
+            "items": {
+              "$ref": "#/components/schemas/HeaderOut"
+            },
+            "title": "Headers",
+            "type": "array"
+          },
+          "mapping": {
+            "$ref": "#/components/schemas/ImportMapping"
+          },
+          "row_count": {
+            "title": "Row Count",
+            "type": "integer"
+          },
+          "sample_rows": {
+            "items": {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            "title": "Sample Rows",
+            "type": "array"
+          }
+        },
+        "required": [
+          "batch",
+          "encoding",
+          "delimiter",
+          "headers",
+          "sample_rows",
+          "row_count",
+          "mapping",
+          "from_preset",
+          "detected_preset"
+        ],
+        "title": "PreviewOut",
+        "type": "object"
+      },
       "folio__api__routers__instruments__PriceOut": {
         "properties": {
           "close": {
@@ -8615,6 +8828,27 @@
           "configured"
         ],
         "title": "SeriesOut",
+        "type": "object"
+      },
+      "folio__api__routers__news__PreviewOut": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/PreviewItemOut"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "total": {
+            "title": "Total",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "items",
+          "total"
+        ],
+        "title": "PreviewOut",
         "type": "object"
       },
       "folio__api__routers__positions__MatchOut": {
@@ -10301,7 +10535,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/PreviewOut"
+                  "$ref": "#/components/schemas/folio__api__routers__imports__PreviewOut"
                 }
               }
             },
@@ -10377,7 +10611,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/PreviewOut"
+                  "$ref": "#/components/schemas/folio__api__routers__imports__PreviewOut"
                 }
               }
             },
@@ -11324,6 +11558,244 @@
         "summary": "List Series",
         "tags": [
           "macro"
+        ]
+      }
+    },
+    "/api/v1/news/sources": {
+      "get": {
+        "operationId": "list_sources_api_v1_news_sources_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/SourceOut"
+                  },
+                  "title": "Response List Sources Api V1 News Sources Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "List Sources",
+        "tags": [
+          "news"
+        ]
+      },
+      "post": {
+        "operationId": "add_source_api_v1_news_sources_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SourceIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SourceOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Add Source",
+        "tags": [
+          "news"
+        ]
+      }
+    },
+    "/api/v1/news/sources/preview": {
+      "post": {
+        "description": "The latest items of a feed address, before it is saved (FR-NW-01). Nothing is stored.",
+        "operationId": "preview_api_v1_news_sources_preview_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PreviewIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/folio__api__routers__news__PreviewOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Preview",
+        "tags": [
+          "news"
+        ]
+      }
+    },
+    "/api/v1/news/sources/{source_id}": {
+      "delete": {
+        "operationId": "remove_source_api_v1_news_sources__source_id__delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "source_id",
+            "required": true,
+            "schema": {
+              "title": "Source Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Remove Source",
+        "tags": [
+          "news"
+        ]
+      },
+      "put": {
+        "operationId": "change_source_api_v1_news_sources__source_id__put",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "source_id",
+            "required": true,
+            "schema": {
+              "title": "Source Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SourceIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SourceOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Change Source",
+        "tags": [
+          "news"
+        ]
+      }
+    },
+    "/api/v1/news/sources/{source_id}/fetch": {
+      "post": {
+        "description": "Ask the worker to fetch this source now.",
+        "operationId": "fetch_now_api_v1_news_sources__source_id__fetch_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "source_id",
+            "required": true,
+            "schema": {
+              "title": "Source Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "202": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": {
+                    "type": "string"
+                  },
+                  "title": "Response Fetch Now Api V1 News Sources  Source Id  Fetch Post",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Fetch Now",
+        "tags": [
+          "news"
         ]
       }
     },

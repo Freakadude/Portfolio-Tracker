@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+  <title>Example Issuer Fund Notices</title>
+  <id>urn:example:issuer-notices</id>
+  <updated>2026-10-02T09:00:00Z</updated>
+  <entry>
+    <title>Index change for the Example Semiconductor UCITS ETF</title>
+    <link href="https://issuer.example/notices/2026/semis-index-change?utm_source=feed&amp;utm_medium=rss#top"/>
+    <id>urn:example:notice-2</id>
+    <updated>2026-10-02T09:00:00Z</updated>
+    <summary type="html">&lt;p&gt;The fund will track a new index from &lt;b&gt;1 November&lt;/b&gt;.&lt;/p&gt;&lt;script&gt;alert(1)&lt;/script&gt;</summary>
+  </entry>
+  <entry>
+    <title>Distribution announced</title>
+    <link href="http://www.issuer.example/notices/2026/distribution/"/>
+    <id>urn:example:notice-1</id>
+    <published>2026-09-30T08:30:00+02:00</published>
+  </entry>
+  <entry>
+    <title>An entry without a usable link</title>
+    <link href="javascript:void(0)"/>
+    <id>urn:example:notice-0</id>
+    <updated>2026-09-29T08:30:00Z</updated>
+  </entry>
+</feed>

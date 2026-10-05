@@ -18,6 +18,7 @@ from folio.api.routers import (
     imports,
     instruments,
     macro,
+    news,
     notifications,
     portfolio,
     positions,
@@ -90,6 +91,7 @@ def create_app(
     app.include_router(watchlists.router, prefix=API_PREFIX)
     app.include_router(strategies.router, prefix=API_PREFIX)
     app.include_router(macro.router, prefix=API_PREFIX)
+    app.include_router(news.router, prefix=API_PREFIX)
     app.include_router(notifications.router, prefix=API_PREFIX)
     app.include_router(alerts.router, prefix=API_PREFIX)
     app.include_router(health.router)
