@@ -8,6 +8,8 @@ from datetime import UTC, date, datetime
 
 from sqlalchemy.orm import Session, sessionmaker
 
+from folio.agent.llm import LlmClient
+from folio.agent.runtime import make_llm
 from folio.config import Settings
 from folio.db.engine import make_engine, make_session_factory
 from folio.marketdata.budget import CircuitBreaker, UsageTracker
@@ -40,6 +42,8 @@ class JobContext:
     issuer_for: Callable[[Session], HttpClient | None] = field(default=lambda db: None)
     # one fetcher for the whole worker, so its robots.txt cache and pacing persist
     fetcher_for: Callable[[], Fetcher | None] = field(default=lambda: None)
+    # the LLM client, or None when the agent is off or has no key (FR-AG-09)
+    llm_for: Callable[[Session], LlmClient | None] = field(default=lambda db: None)
 
     def today(self) -> date:
         return self.now().date()
@@ -71,6 +75,7 @@ def build_context(settings: Settings) -> JobContext:
         eodhd_for=lambda db: providers(db).eodhd(),
         issuer_for=lambda db: providers(db).issuer(),
         fetcher_for=lambda: fetcher,
+        llm_for=lambda db: make_llm(db, settings),
         channels_for=lambda db: build_channels(
             db, SecretStore(db, settings.require_secret_key()).get
         ),

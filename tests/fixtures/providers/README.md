@@ -41,3 +41,9 @@ News fixtures live in `tests/fixtures/news/`: `ecb_press.xml` and `fed_press_all
 its first 8 items); `atom_example.xml` and `robots_example.txt` are invented. The EODHD news
 response (`providers/eodhd_news.json`) is derived from its documentation and must be checked
 against a real response once a key exists.
+
+Anthropic responses in agent tests are built in `tests/agent_helpers.py` from the Messages API
+documentation (text, tool_use, server_tool_use and web_search_tool_result blocks, and the
+usage fields); none was recorded from the live API. The official SDK builds and parses the
+requests and responses for real; only the network is replaced (an `httpx2` mock transport).
+

@@ -5,6 +5,7 @@ description = "Folio: self-hosted personal portfolio manager"
 requires-python = ">=3.12,<3.13"
 dependencies = [
     "alembic>=1.20.0",
+    "anthropic>=1.11.0",
     "apscheduler>=3.10,<4",
     "argon2-cffi>=25.1.0",
     "cryptography>=50.0.2",
@@ -70,6 +71,7 @@ module = [
     "folio.strategies.*",
     "folio.lookthrough.*",
     "folio.news.*",
+    "folio.agent.*",
 ]
 strict = true
 

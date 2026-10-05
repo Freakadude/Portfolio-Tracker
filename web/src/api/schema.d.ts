@@ -40,6 +40,46 @@ export interface paths {
         patch: operations["update_account_api_v1_accounts__account_id__patch"];
         trace?: never;
     };
+    "/api/v1/agent/test": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Test Key
+         * @description A tiny call that proves the saved key works and shows what it costs.
+         */
+        post: operations["test_key_api_v1_agent_test_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/agent/usage": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Usage
+         * @description What the agent has cost this month against the budget (spec section 11, cost control).
+         */
+        get: operations["usage_api_v1_agent_usage_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/audit": {
         parameters: {
             query?: never;
@@ -2108,6 +2148,44 @@ export interface components {
             name: string;
             /** Status */
             status: string;
+        };
+        /** AgentBudgetOut */
+        AgentBudgetOut: {
+            /** Budget Eur */
+            budget_eur: string;
+            /** Daily Run Cap */
+            daily_run_cap: number;
+            /** Enabled */
+            enabled: boolean;
+            /** Key Set */
+            key_set: boolean;
+            /** Month */
+            month: string;
+            /** News Share Eur */
+            news_share_eur: string;
+            /** News Spent Eur */
+            news_spent_eur: string;
+            /** Paused */
+            paused: boolean;
+            /** Remaining Eur */
+            remaining_eur: string;
+            /** Runs This Month */
+            runs_this_month: number;
+            /** Runs Today */
+            runs_today: number;
+            /** Spent Eur */
+            spent_eur: string;
+        };
+        /** AgentKeyTestOut */
+        AgentKeyTestOut: {
+            /** Cost Eur */
+            cost_eur: string;
+            /** Model */
+            model: string;
+            /** Ok */
+            ok: boolean;
+            /** Reply */
+            reply: string;
         };
         /** AgentUsageOut */
         AgentUsageOut: {
@@ -4856,6 +4934,46 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    test_key_api_v1_agent_test_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AgentKeyTestOut"];
+                };
+            };
+        };
+    };
+    usage_api_v1_agent_usage_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AgentBudgetOut"];
                 };
             };
         };

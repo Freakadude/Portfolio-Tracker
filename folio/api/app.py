@@ -1,12 +1,14 @@
 from pathlib import Path
 
 import httpx
+import httpx2
 from fastapi import FastAPI
 
 from folio.api.errors import install_error_handlers
 from folio.api.middleware import CsrfMiddleware, RequestLogMiddleware, SecurityHeadersMiddleware
 from folio.api.routers import (
     accounts,
+    agent,
     alerts,
     analytics,
     auth,
@@ -44,6 +46,7 @@ def create_app(
     static_dir: Path | None = None,
     provider_transport: httpx.BaseTransport | None = None,
     provider_http_options: dict[str, object] | None = None,
+    llm_transport: httpx2.BaseTransport | None = None,
 ) -> FastAPI:
     cfg = settings or get_settings()
     cfg.require_secret_key()
@@ -64,6 +67,7 @@ def create_app(
     app.state.breakers = {}
     app.state.provider_transport = provider_transport
     app.state.provider_http_options = provider_http_options or {}
+    app.state.llm_transport = llm_transport  # tests replay recorded Anthropic responses
 
     install_error_handlers(app)
     # Added last runs first: security headers wrap everything, including CSRF rejections.
@@ -94,6 +98,7 @@ def create_app(
     app.include_router(news.router, prefix=API_PREFIX)
     app.include_router(notifications.router, prefix=API_PREFIX)
     app.include_router(alerts.router, prefix=API_PREFIX)
+    app.include_router(agent.router, prefix=API_PREFIX)
     app.include_router(health.router)
     mount_spa(app, static_dir or STATIC_DIR)  # last: its catch-all route must not shadow the API
     return app

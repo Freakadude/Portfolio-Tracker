@@ -64,15 +64,44 @@ class ProvidersSettings(Section):
     fred_api_key: str | None = None
 
 
+class ModelPrice(BaseModel):
+    """What one model costs, in US dollars per million tokens (check Anthropic's pricing page)."""
+
+    model_config = ConfigDict(extra="forbid")
+    input_usd: Decimal = Field(ge=0)
+    output_usd: Decimal = Field(ge=0)
+    cache_write_usd: Decimal = Field(ge=0)  # writing a prompt to the cache (5-minute entry)
+    cache_read_usd: Decimal = Field(ge=0)
+
+
+def _default_prices() -> dict[str, ModelPrice]:
+    def price(inp: str, out: str) -> ModelPrice:
+        i = Decimal(inp)
+        return ModelPrice(
+            input_usd=i, output_usd=Decimal(out), cache_write_usd=i * Decimal("1.25"),
+            cache_read_usd=i / 10,
+        )  # fmt: skip
+
+    return {
+        "claude-sonnet-5-5": price("3", "15"),
+        "claude-opus-5-5": price("5", "25"),
+        "claude-haiku-4-5-20251001": price("1", "5"),
+    }
+
+
 class AgentSettings(Section):
     SECRETS: ClassVar[tuple[str, ...]] = ("anthropic_api_key",)
     enabled: bool = True
     monthly_budget_eur: Decimal = Field(default=Decimal("5"), ge=0)  # owner decision Q6
+    # News triage (linking and impact) draws on the same budget but may use at most this much
+    # of it, so it can never leave the agent nothing
+    news_share_eur: Decimal = Field(default=Decimal("1.50"), ge=0)
     daily_run_cap: int = Field(default=10, ge=0)
     per_run_token_cap: int = Field(default=60000, ge=1000)
     web_search_max_uses: int = Field(default=5, ge=0)
     web_search_domains: list[str] = Field(default_factory=list)
     privacy_mode: bool = True
+    daily_review_time: str = "19:30"  # local time, weekdays
     models: dict[str, str] = Field(
         default_factory=lambda: {
             "daily_review": "claude-sonnet-5-5",
@@ -81,9 +110,25 @@ class AgentSettings(Section):
             "contribution_plan": "claude-sonnet-5-5",
             "on_demand": "claude-sonnet-5-5",
             "news_triage": "claude-haiku-4-5-20251001",
+            "news_escalation": "claude-sonnet-5-5",
         }
     )
+    prices: dict[str, ModelPrice] = Field(default_factory=_default_prices)
+    web_search_usd_per_1000: Decimal = Field(default=Decimal("10"), ge=0)
+    usd_per_eur_fallback: Decimal = Field(
+        default=Decimal("1.10"), gt=0
+    )  # when no ECB rate is stored
     anthropic_api_key: str | None = None
+
+    @field_validator("daily_review_time")
+    @classmethod
+    def _time(cls, v: str) -> str:
+        parts = v.split(":")
+        if len(parts) != 2 or not all(p.isdigit() for p in parts):
+            raise ValueError("Use a time like 19:30.")
+        if not (0 <= int(parts[0]) < 24 and 0 <= int(parts[1]) < 60):
+            raise ValueError("Use a time like 19:30.")
+        return f"{int(parts[0]):02d}:{int(parts[1]):02d}"
 
 
 class SchedulesSettings(Section):

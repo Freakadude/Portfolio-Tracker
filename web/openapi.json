@@ -246,6 +246,108 @@
         "title": "AddedOut",
         "type": "object"
       },
+      "AgentBudgetOut": {
+        "properties": {
+          "budget_eur": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Budget Eur",
+            "type": "string"
+          },
+          "daily_run_cap": {
+            "title": "Daily Run Cap",
+            "type": "integer"
+          },
+          "enabled": {
+            "title": "Enabled",
+            "type": "boolean"
+          },
+          "key_set": {
+            "title": "Key Set",
+            "type": "boolean"
+          },
+          "month": {
+            "title": "Month",
+            "type": "string"
+          },
+          "news_share_eur": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "News Share Eur",
+            "type": "string"
+          },
+          "news_spent_eur": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "News Spent Eur",
+            "type": "string"
+          },
+          "paused": {
+            "title": "Paused",
+            "type": "boolean"
+          },
+          "remaining_eur": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Remaining Eur",
+            "type": "string"
+          },
+          "runs_this_month": {
+            "title": "Runs This Month",
+            "type": "integer"
+          },
+          "runs_today": {
+            "title": "Runs Today",
+            "type": "integer"
+          },
+          "spent_eur": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Spent Eur",
+            "type": "string"
+          }
+        },
+        "required": [
+          "month",
+          "enabled",
+          "key_set",
+          "spent_eur",
+          "budget_eur",
+          "remaining_eur",
+          "news_spent_eur",
+          "news_share_eur",
+          "runs_this_month",
+          "runs_today",
+          "daily_run_cap",
+          "paused"
+        ],
+        "title": "AgentBudgetOut",
+        "type": "object"
+      },
+      "AgentKeyTestOut": {
+        "properties": {
+          "cost_eur": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Cost Eur",
+            "type": "string"
+          },
+          "model": {
+            "title": "Model",
+            "type": "string"
+          },
+          "ok": {
+            "title": "Ok",
+            "type": "boolean"
+          },
+          "reply": {
+            "title": "Reply",
+            "type": "string"
+          }
+        },
+        "required": [
+          "ok",
+          "model",
+          "reply",
+          "cost_eur"
+        ],
+        "title": "AgentKeyTestOut",
+        "type": "object"
+      },
       "AgentUsageOut": {
         "properties": {
           "budget_eur": {
@@ -9272,6 +9374,50 @@
         "summary": "Update Account",
         "tags": [
           "accounts"
+        ]
+      }
+    },
+    "/api/v1/agent/test": {
+      "post": {
+        "description": "A tiny call that proves the saved key works and shows what it costs.",
+        "operationId": "test_key_api_v1_agent_test_post",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AgentKeyTestOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Test Key",
+        "tags": [
+          "agent"
+        ]
+      }
+    },
+    "/api/v1/agent/usage": {
+      "get": {
+        "description": "What the agent has cost this month against the budget (spec section 11, cost control).",
+        "operationId": "usage_api_v1_agent_usage_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AgentBudgetOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Usage",
+        "tags": [
+          "agent"
         ]
       }
     },

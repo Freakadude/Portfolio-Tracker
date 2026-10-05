@@ -26,7 +26,7 @@ def test_info_shows_version_disk_and_the_agent_row(api: TestClient) -> None:
     )
     assert (info["disk"]["backups"], info["disk"]["backups_bytes"]) == (0, 0)
     assert info["agent"]["runs_this_month"] == 0 and info["agent"]["budget_eur"] == "5"  # Q6
-    assert "Phase 4" in info["agent"]["note"]
+    assert "Add your Anthropic API key" in info["agent"]["note"]  # nothing is spent without one
 
 
 def test_a_failing_job_is_visible_after_one_run(api: TestClient, settings: Settings) -> None:

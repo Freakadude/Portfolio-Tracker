@@ -190,7 +190,7 @@ class AgentRun(Base):
     context: Mapped[Any] = mapped_column(JSON, default=dict)
     tool_calls: Mapped[Any] = mapped_column(JSON, default=list)
     findings: Mapped[str] = mapped_column(Text, default="")
-    output: Mapped[Any] = mapped_column(JSON, default=None)
+    output: Mapped[Any] = mapped_column(JSON, default=dict)  # {} until composed
     digest: Mapped[str] = mapped_column(Text, default="")
 
 
@@ -223,4 +223,4 @@ class Recommendation(Base):
     price_at_creation: Mapped[Any] = mapped_column(
         JSON, default=dict
     )  # subject -> close, for FR-AG-06
-    outcome: Mapped[Any] = mapped_column(JSON, default=None)
+    outcome: Mapped[Any] = mapped_column(JSON, default=dict)  # {} until measured (FR-AG-06)

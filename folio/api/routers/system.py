@@ -11,6 +11,7 @@ from fastapi import APIRouter, Query, Request
 from pydantic import BaseModel, Field
 from sqlalchemy import func, select
 
+from folio.agent import budget
 from folio.api.deps import DbDep, StoreDep, UserDep
 from folio.api.errors import ApiError
 from folio.config import Settings
@@ -20,6 +21,7 @@ from folio.db.models_insight import NewsSource
 from folio.db.models_ledger import JobRequest, JobRun, ProviderCall
 from folio.jobs.requests import enqueue
 from folio.jobs.scheduler import JOB_PARAMS
+from folio.security.secrets import SecretStore
 from folio.settings_store import load_section
 
 router = APIRouter(tags=["system"])
@@ -210,6 +212,16 @@ def _folder_size(folder: Path) -> tuple[int, int]:
     return sum(f.stat().st_size for f in files), len(files)
 
 
+def _agent_note(enabled: bool, key_set: bool, standing: budget.Standing) -> str | None:
+    if not enabled:
+        return "The AI agent is switched off; rules, alerts and notifications keep working."
+    if not key_set:
+        return "Add your Anthropic API key under Settings, Agent to switch the agent on."
+    if standing.spent_eur >= standing.budget_eur:
+        return "This month's AI budget is used up; the agent is paused until next month."
+    return None
+
+
 @router.get("/system/info", response_model=InfoOut)
 def info(request: Request, _user: UserDep, db: DbDep) -> InfoOut:
     """Version, disk use, agent cost this month and recent job failures (FR-SY-10)."""
@@ -222,7 +234,9 @@ def info(request: Request, _user: UserDep, db: DbDep) -> InfoOut:
     if probe.exists():
         usage = shutil.disk_usage(probe)
         free, total = usage.free, usage.total
-    agent = load_section(db, "agent")
+    agent = budget.agent_settings(db)
+    standing = budget.standing(db, agent, utcnow(), budget.timezone_of(db))
+    key_set = SecretStore(db, settings.require_secret_key()).has("agent.anthropic_api_key")
     since = utcnow() - timedelta(hours=24)
     failed = (
         db.scalar(select(func.count()).where(JobRun.status == "failed", JobRun.started_at >= since))
@@ -239,10 +253,10 @@ def info(request: Request, _user: UserDep, db: DbDep) -> InfoOut:
             total_bytes=total,
         ),
         agent=AgentUsageOut(
-            runs_this_month=0,
-            cost_this_month_eur="0.00",
-            budget_eur=str(agent.monthly_budget_eur),  # type: ignore[attr-defined]
-            note="The AI agent arrives in Phase 4; nothing is spent until then.",
+            runs_this_month=standing.runs_this_month,
+            cost_this_month_eur=f"{standing.spent_eur:.2f}",
+            budget_eur=str(standing.budget_eur),
+            note=_agent_note(agent.enabled, key_set, standing),
         ),
         failed_jobs_24h=failed,
         failing_news_sources=[
