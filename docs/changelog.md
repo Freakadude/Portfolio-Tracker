@@ -1,6 +1,16 @@
 # Changelog
 
-## Phase 3 — Strategies and alerts (in progress)
+## Phase 3 — Strategies and alerts (code complete, awaiting owner gate)
+
+Every Phase 3 requirement is implemented and covered by automated tests: 686 Python tests, 162 web unit tests and 28 Playwright tests. Requirements closed: FR-ST-01 to 05, FR-ST-07 (the agent that reads the principles is Phase 4), FR-MD-08, FR-NT-01 to 08, FR-SY-10, and the price alerts left over from FR-INS-05. Deferred on purpose: Web Push (Phase 5; not among your channels) and the concentration rule, which needs ETF holdings (Phase 4).
+
+Not yet verified, and needed before Phase 4 (owner gate):
+- **A push on your phone:** under Settings, Notifications, enter your Home Assistant address, the notify service of your phone (for example `mobile_app_your_phone`) and a long-lived access token, press "Send a test to Home Assistant" and check the phone. Optionally the same for ntfy. Set "Folio address for links" so a tap opens Folio.
+- **Your strategy:** Strategies, New strategy builds one from your sleeves with every target empty. Fill in the targets and bands you want (or leave them empty: nothing then fires), save, and make it active. The Sleeves settings then follow it.
+- **Macro data:** add the free FRED API key under Settings, Providers (fred.stlouisfed.org, "Request API key"), then Settings, Macro, Fetch now, and add a Macro overlay widget to a dashboard: the US real yield and the dollar should appear. The FRED responses in the tests were written from the documentation, so this is also the check that the real format matches.
+- **Deployment:** the worker now also sends pushes every minute and runs the morning macro job; redeploy both containers through Portainer.
+- Still open from earlier gates: your real Degiro import and the TWR/XIRR check (Phase 2), and the first Portainer deployment.
+
 
 - Strategies: a strategy is a YAML document (spec appendix B) with sleeves, targets and bands, risk limits, typed rules, principles, theses and a contribution plan, every number optional (Q3). Every problem is reported with its line number; numbers are exact decimals. Each save adds an immutable version, two versions can be compared side by side, and the form view and the YAML view are interchangeable. One strategy is active; activating another turns the first into a shadow. The active strategy sets the sleeve targets and soft bands (the Sleeves settings then refuse target edits and say where to change them). A starter strategy is built from your sleeves with every target empty; the demo seed adds an active demo strategy [FR-ST-01, FR-ST-02]. See ADR 0020.
 - Rules engine: deterministic checks for drift bands (soft: direct new money; hard: trade), trim thresholds, drawdowns (a review, never a sell signal), daily moves by percent or standard deviations, price levels, macro thresholds, hedge correlation, contribution due, cash buffer, thesis reviews and stale prices. Each rule says when it is waiting (no target yet, no plan, no data, or ETF holdings in Phase 4). Signals carry a dedup key: a condition that stays true fires once per cooldown, or again when it worsens by a set step, and fires at once after it has cleared. Rules run after the nightly closes, after a refresh, nightly, on demand, and within seconds of a transaction change; shadow strategies are evaluated in the same pass and only logged [FR-ST-02, FR-ST-03, FR-ST-04]. See ADR 0021.
