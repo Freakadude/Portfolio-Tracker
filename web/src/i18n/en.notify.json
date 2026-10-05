@@ -41,7 +41,8 @@
       "merged": "Sent to {{channel}} together with others",
       "failed": "{{channel}} failed: {{error}}",
       "skipped": "{{channel}} not set up"
-    }
+    },
+    "markChosenNone": "Mark chosen as read"
   },
   "notifySettings": {
     "channels": {

@@ -54,7 +54,9 @@ export function Inbox() {
               mark.mutate({ ids: [...chosen] }, { onSuccess: () => setChosen(new Set()) })
             }
           >
-            {t('inbox.markChosen', { count: chosen.size })}
+            {chosen.size === 0
+              ? t('inbox.markChosenNone')
+              : t('inbox.markChosen', { count: chosen.size })}
           </Button>
           <Button
             variant="ghost"

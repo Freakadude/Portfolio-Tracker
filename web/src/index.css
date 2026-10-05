@@ -100,3 +100,9 @@ body {
   outline: 2px solid var(--primary);
   outline-offset: 2px;
 }
+
+/* A scroll box keeps everything inside it, screen-reader captions included: an absolutely
+   positioned descendant otherwise escapes the clipping and widens the page on a phone. */
+.overflow-x-auto {
+  position: relative;
+}

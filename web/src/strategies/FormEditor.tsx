@@ -77,7 +77,7 @@ export function FormEditor({
         <h3 className="font-medium">{t('strategies.form.sleeves')}</h3>
         <p className="text-sm text-muted">{t('strategies.form.sleevesHint')}</p>
         <div className="overflow-x-auto">
-          <table className="w-full text-sm">
+          <table className="w-full min-w-[44rem] text-sm">
             <caption className="sr-only">{t('strategies.form.sleeves')}</caption>
             <thead>
               <tr className="border-b border-border text-left">
@@ -163,10 +163,10 @@ export function FormEditor({
             aria-label={t('strategies.form.rule', { id: text(r.id) || i + 1 })}
             className="space-y-2 rounded-md border border-border p-3"
           >
+            <span className="inline-block rounded bg-border/40 px-2 py-1 text-xs font-medium">
+              {t(`strategies.ruleTypes.${text(r.type)}`, { defaultValue: text(r.type) })}
+            </span>
             <div className="flex flex-wrap items-end gap-2">
-              <span className="rounded bg-border/40 px-2 py-1 font-mono text-xs">
-                {text(r.type)}
-              </span>
               <Field label={t('strategies.form.ruleId')}>
                 {(p) => (
                   <Input

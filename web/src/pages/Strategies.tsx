@@ -134,7 +134,7 @@ function StrategyView({ id }: { id: number }) {
               onClick={() => mode.mutate(m)}
               disabled={mode.isPending}
             >
-              {t(`strategies.setMode.${m}`)}
+              {s.mode === m ? t(`strategies.modes.${m}`) : t(`strategies.setMode.${m}`)}
             </Button>
           ))}
           <Button variant="ghost" onClick={() => run.mutate()} disabled={run.isPending}>

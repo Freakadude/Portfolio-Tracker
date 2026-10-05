@@ -75,3 +75,14 @@ test('the active strategy owns the sleeve targets, and its orders become drafts 
   await expect(page.getByRole('heading', { level: 1, name: 'Holdings' })).toBeVisible()
   await expect(page.getByRole('row', { name: /E2E Stock/ })).toContainText('8') // 5 + 3
 })
+
+test('on a phone the strategy editor scrolls its sleeve table, not the page', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 })
+  await login(page)
+  await page.goto('/strategies')
+  await expect(page.getByLabel('Name of sleeve 1')).toBeVisible()
+  const overflow = await page.evaluate(
+    () => document.documentElement.scrollWidth - document.documentElement.clientWidth,
+  )
+  expect(overflow).toBeLessThanOrEqual(0)
+})
