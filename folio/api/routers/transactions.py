@@ -4,7 +4,7 @@ from decimal import Decimal
 from typing import Annotated, Any
 
 from fastapi import APIRouter, Query
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict, Field, model_validator
 from sqlalchemy import and_, or_, select
 from sqlalchemy.orm import Session
 
@@ -17,12 +17,14 @@ from folio.ledger_service import (
     TransactionError,
     TransactionIn,
     confirm_draft,
+    create_batch,
     create_transaction,
     delete_transaction,
     preview_sell_transaction,
     update_transaction,
 )
 from folio.marketdata.fx import FxService, FxUnavailable, to_eur_multiplier
+from folio.reports import reconcile
 
 router = APIRouter(prefix="/transactions", tags=["transactions"])
 
@@ -194,6 +196,97 @@ def create(body: TransactionIn, _user: UserDep, db: DbDep) -> TransactionOut:
     except TransactionError as exc:
         raise _fail(exc) from exc
     return transaction_out(db, row)
+
+
+class BatchIn(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    transactions: list[TransactionIn] = Field(min_length=1, max_length=100)
+
+
+class BatchOut(BaseModel):
+    created: list[TransactionOut]
+
+
+@router.post("/batch", response_model=BatchOut, status_code=201)
+def create_many(body: BatchIn, _user: UserDep, db: DbDep) -> BatchOut:
+    """Several transactions in one request, saved together or not at all (FR-TX-11): a bad row
+    saves nothing and every problem is reported with its row number."""
+    try:
+        rows = create_batch(db, body.transactions)
+    except TransactionError as exc:
+        raise _fail(exc) from exc
+    return BatchOut(created=[transaction_out(db, r) for r in rows])
+
+
+class ReconcileRowIn(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    instrument_id: int | None = None
+    isin: str | None = Field(default=None, max_length=12)
+    quantity: Decimal = Field(ge=0)
+
+    @model_validator(mode="after")
+    def _identified(self) -> "ReconcileRowIn":
+        if self.instrument_id is None and not self.isin:
+            raise ValueError("Give the instrument or its ISIN for every row.")
+        return self
+
+
+class ReconcileIn(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    account_id: int
+    date: date
+    rows: list[ReconcileRowIn] = Field(min_length=1, max_length=500)
+
+
+class ReconcileLineOut(BaseModel):
+    instrument_id: int | None
+    name: str
+    isin: str | None
+    ours: Decimal
+    broker: Decimal
+    difference: Decimal  # broker minus ours
+    status: str  # match | difference | missing_at_broker | unknown
+
+
+class ReconcileOut(BaseModel):
+    account_id: int
+    date: date
+    matches: int
+    differences: int
+    lines: list[ReconcileLineOut]
+
+
+@router.post("/reconcile", response_model=ReconcileOut)
+def reconcile_quantities(body: ReconcileIn, _user: UserDep, db: DbDep) -> ReconcileOut:
+    """Compare the quantities your broker reports on a date with the ledger (FR-TX-10).
+    Nothing is saved; the lines with a difference come first."""
+    account = db.get(Account, body.account_id)
+    if account is None or account.deleted_at is not None:
+        raise ApiError(404, "Not found", "That account does not exist.")
+    lines = reconcile(
+        db, account, body.date, [(r.instrument_id, r.isin, r.quantity) for r in body.rows]
+    )
+    return ReconcileOut(
+        account_id=account.id,
+        date=body.date,
+        matches=sum(1 for line in lines if line.status == "match"),
+        differences=sum(1 for line in lines if line.status != "match"),
+        lines=[
+            ReconcileLineOut(
+                instrument_id=line.instrument_id,
+                name=line.name,
+                isin=line.isin,
+                ours=line.ours,
+                broker=line.broker,
+                difference=line.difference,
+                status=line.status,
+            )
+            for line in lines
+        ],
+    )
 
 
 @router.post("/preview-sell", response_model=SellPreviewOut)

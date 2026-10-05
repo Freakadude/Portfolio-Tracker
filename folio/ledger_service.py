@@ -421,6 +421,42 @@ def create_transaction(db: Session, data: TransactionIn, actor: str = "user") ->
     return row
 
 
+def create_batch(
+    db: Session, items: list[TransactionIn], actor: str = "user"
+) -> list[LedgerTransaction]:
+    """Save several transactions together or none (FR-TX-11). Every row is validated first, and
+    all the problems are reported at once, each naming its row; then the rows are inserted and
+    each account is rebuilt once, which also rejects a sale the batch itself cannot cover."""
+    problems: list[tuple[str, str]] = []
+    rows: list[tuple[TransactionIn, dict[str, Any]]] = []
+    for number, data in enumerate(items, start=1):
+        try:
+            rows.append((data, normalize(db, data)))
+        except TransactionError as exc:
+            for field, message in exc.errors or [("", str(exc))]:
+                problems.append((f"rows.{number}.{field}".rstrip("."), f"Row {number}: {message}"))
+    if problems:
+        bad = len({field.split(".")[1] for field, _ in problems})
+        raise TransactionError(
+            f"Nothing was saved: {bad} of {len(items)} rows need fixing.", problems
+        )
+    accounts: dict[int, tuple[Account, date]] = {}
+    created: list[LedgerTransaction] = []
+    for data, fields in rows:
+        row = insert_transaction(db, fields)
+        created.append(row)
+        account = _account(db, data.account_id)
+        first = accounts.get(account.id, (account, row.trade_date))[1]
+        accounts[account.id] = (account, min(first, row.trade_date))
+        write_audit(db, actor, "transaction", "create", entity_id=row.id, diff=_snapshot(row))
+    for account, earliest in accounts.values():
+        try:
+            rebuild_after_bulk(db, account, earliest, actor)
+        except TransactionError as exc:
+            raise TransactionError(f"Nothing was saved. {exc}", exc.errors) from exc
+    return created
+
+
 def _live(db: Session, transaction_id: int) -> LedgerTransaction:
     row = db.get(LedgerTransaction, transaction_id)
     if row is None or row.deleted_at is not None:

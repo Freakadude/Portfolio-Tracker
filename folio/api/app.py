@@ -15,6 +15,7 @@ from folio.api.routers import (
     instruments,
     portfolio,
     positions,
+    reports,
     sleeves,
     system,
     transactions,
@@ -74,6 +75,7 @@ def create_app(
     app.include_router(system.router, prefix=API_PREFIX)
     app.include_router(imports.router, prefix=API_PREFIX)
     app.include_router(corporate_actions.router, prefix=API_PREFIX)
+    app.include_router(reports.router, prefix=API_PREFIX)
     app.include_router(sleeves.router, prefix=API_PREFIX)
     app.include_router(watchlists.router, prefix=API_PREFIX)
     app.include_router(health.router)

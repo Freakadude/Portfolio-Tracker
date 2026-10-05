@@ -588,6 +588,47 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/reports/realized": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Realized
+         * @description Realized result (from the lot matches) and income for one calendar year, per account
+         *     and instrument. `format=csv` downloads the same figures as a spreadsheet file.
+         */
+        get: operations["realized_api_v1_reports_realized_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/reports/years": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Years
+         * @description The calendar years that have a sale or income to report, newest first.
+         */
+        get: operations["years_api_v1_reports_years_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/settings/{section}": {
         parameters: {
             query?: never;
@@ -806,6 +847,27 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/transactions/batch": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Create Many
+         * @description Several transactions in one request, saved together or not at all (FR-TX-11): a bad row
+         *     saves nothing and every problem is reported with its row number.
+         */
+        post: operations["create_many_api_v1_transactions_batch_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/transactions/fx-prefill": {
         parameters: {
             query?: never;
@@ -840,6 +902,27 @@ export interface paths {
          * @description Shows the lots a sell would consume and the realized result before anything is saved.
          */
         post: operations["preview_sell_api_v1_transactions_preview_sell_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/transactions/reconcile": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Reconcile Quantities
+         * @description Compare the quantities your broker reports on a date with the ledger (FR-TX-10).
+         *     Nothing is saved; the lines with a difference come first.
+         */
+        post: operations["reconcile_quantities_api_v1_transactions_reconcile_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1110,35 +1193,10 @@ export interface components {
             /** Next Cursor */
             next_cursor: number | null;
         };
-        /** BatchOut */
-        BatchOut: {
-            /** Account Id */
-            account_id: number;
-            /** Committed At */
-            committed_at: string | null;
-            /**
-             * Created At
-             * Format: date-time
-             */
-            created_at: string;
-            /** Errors */
-            errors: {
-                [key: string]: unknown;
-            }[];
-            /** File Name */
-            file_name: string;
-            /** Id */
-            id: number;
-            /** Preset Id */
-            preset_id: number | null;
-            /** Rows Imported */
-            rows_imported: number;
-            /** Rows Skipped */
-            rows_skipped: number;
-            /** Rows Total */
-            rows_total: number;
-            /** Status */
-            status: string;
+        /** BatchIn */
+        BatchIn: {
+            /** Transactions */
+            transactions: components["schemas"]["TransactionIn"][];
         };
         /** BenchmarksOut */
         BenchmarksOut: {
@@ -1368,6 +1426,21 @@ export interface components {
              * @enum {string}
              */
             type_mode: "sign" | "column";
+        };
+        /** IncomeOut */
+        IncomeOut: {
+            /** Account */
+            account: string;
+            /** Gross Eur */
+            gross_eur: string;
+            /** Instrument */
+            instrument: string;
+            /** Isin */
+            isin: string | null;
+            /** Net Eur */
+            net_eur: string;
+            /** Withholding Eur */
+            withholding_eur: string;
         };
         /** InstrumentChanges */
         InstrumentChanges: {
@@ -1852,7 +1925,7 @@ export interface components {
         };
         /** PreviewOut */
         PreviewOut: {
-            batch: components["schemas"]["BatchOut"];
+            batch: components["schemas"]["folio__api__routers__imports__BatchOut"];
             /** Delimiter */
             delimiter: string;
             /** Encoding */
@@ -1866,6 +1939,77 @@ export interface components {
             row_count: number;
             /** Sample Rows */
             sample_rows: string[][];
+        };
+        /** RealizedOut */
+        RealizedOut: {
+            /** Account */
+            account: string;
+            /** Cost Eur */
+            cost_eur: string;
+            /** Instrument */
+            instrument: string;
+            /** Isin */
+            isin: string | null;
+            /** Proceeds Eur */
+            proceeds_eur: string;
+            /** Quantity */
+            quantity: string;
+            /** Result Eur */
+            result_eur: string;
+        };
+        /** ReconcileIn */
+        ReconcileIn: {
+            /** Account Id */
+            account_id: number;
+            /**
+             * Date
+             * Format: date
+             */
+            date: string;
+            /** Rows */
+            rows: components["schemas"]["ReconcileRowIn"][];
+        };
+        /** ReconcileLineOut */
+        ReconcileLineOut: {
+            /** Broker */
+            broker: string;
+            /** Difference */
+            difference: string;
+            /** Instrument Id */
+            instrument_id: number | null;
+            /** Isin */
+            isin: string | null;
+            /** Name */
+            name: string;
+            /** Ours */
+            ours: string;
+            /** Status */
+            status: string;
+        };
+        /** ReconcileOut */
+        ReconcileOut: {
+            /** Account Id */
+            account_id: number;
+            /**
+             * Date
+             * Format: date
+             */
+            date: string;
+            /** Differences */
+            differences: number;
+            /** Lines */
+            lines: components["schemas"]["ReconcileLineOut"][];
+            /** Matches */
+            matches: number;
+        };
+        /** ReconcileRowIn */
+        ReconcileRowIn: {
+            /** Instrument Id */
+            instrument_id?: number | null;
+            /** Isin */
+            isin?: string | null;
+            /** Quantity */
+            quantity: number | string;
         };
         /** RequestOut */
         RequestOut: {
@@ -2425,6 +2569,23 @@ export interface components {
             /** Name */
             name: string;
         };
+        /** YearReportOut */
+        YearReportOut: {
+            /** Costs Eur */
+            costs_eur: string;
+            /** Income */
+            income: components["schemas"]["IncomeOut"][];
+            /** Income Gross Eur */
+            income_gross_eur: string;
+            /** Realized */
+            realized: components["schemas"]["RealizedOut"][];
+            /** Realized Total Eur */
+            realized_total_eur: string;
+            /** Withholding Eur */
+            withholding_eur: string;
+            /** Year */
+            year: number;
+        };
         /** AccountIn */
         folio__api__routers__accounts__AccountIn: {
             /** Broker */
@@ -2461,6 +2622,36 @@ export interface components {
             track_cash: boolean;
             /** Transaction Count */
             transaction_count: number;
+        };
+        /** BatchOut */
+        folio__api__routers__imports__BatchOut: {
+            /** Account Id */
+            account_id: number;
+            /** Committed At */
+            committed_at: string | null;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Errors */
+            errors: {
+                [key: string]: unknown;
+            }[];
+            /** File Name */
+            file_name: string;
+            /** Id */
+            id: number;
+            /** Preset Id */
+            preset_id: number | null;
+            /** Rows Imported */
+            rows_imported: number;
+            /** Rows Skipped */
+            rows_skipped: number;
+            /** Rows Total */
+            rows_total: number;
+            /** Status */
+            status: string;
         };
         /** PriceOut */
         folio__api__routers__instruments__PriceOut: {
@@ -2550,6 +2741,11 @@ export interface components {
             id: number;
             /** Name */
             name: string;
+        };
+        /** BatchOut */
+        folio__api__routers__transactions__BatchOut: {
+            /** Created */
+            created: components["schemas"]["TransactionOut"][];
         };
         /** MatchOut */
         folio__api__routers__transactions__MatchOut: {
@@ -2991,7 +3187,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["BatchOut"][];
+                    "application/json": components["schemas"]["folio__api__routers__imports__BatchOut"][];
                 };
             };
         };
@@ -3110,7 +3306,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["BatchOut"];
+                    "application/json": components["schemas"]["folio__api__routers__imports__BatchOut"];
                 };
             };
             /** @description Validation Error */
@@ -3827,6 +4023,59 @@ export interface operations {
             };
         };
     };
+    realized_api_v1_reports_realized_get: {
+        parameters: {
+            query?: {
+                year?: number | null;
+                account?: number | null;
+                format?: "json" | "csv";
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["YearReportOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    years_api_v1_reports_years_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": number[];
+                };
+            };
+        };
+    };
     get_section_api_v1_settings__section__get: {
         parameters: {
             query?: never;
@@ -4310,6 +4559,39 @@ export interface operations {
             };
         };
     };
+    create_many_api_v1_transactions_batch_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["BatchIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["folio__api__routers__transactions__BatchOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     fx_prefill_api_v1_transactions_fx_prefill_get: {
         parameters: {
             query: {
@@ -4362,6 +4644,39 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["SellPreviewOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    reconcile_quantities_api_v1_transactions_reconcile_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ReconcileIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReconcileOut"];
                 };
             };
             /** @description Validation Error */

@@ -365,87 +365,23 @@
         "title": "AuditPage",
         "type": "object"
       },
-      "BatchOut": {
+      "BatchIn": {
+        "additionalProperties": false,
         "properties": {
-          "account_id": {
-            "title": "Account Id",
-            "type": "integer"
-          },
-          "committed_at": {
-            "anyOf": [
-              {
-                "format": "date-time",
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Committed At"
-          },
-          "created_at": {
-            "format": "date-time",
-            "title": "Created At",
-            "type": "string"
-          },
-          "errors": {
+          "transactions": {
             "items": {
-              "additionalProperties": true,
-              "type": "object"
+              "$ref": "#/components/schemas/TransactionIn"
             },
-            "title": "Errors",
+            "maxItems": 100,
+            "minItems": 1,
+            "title": "Transactions",
             "type": "array"
-          },
-          "file_name": {
-            "title": "File Name",
-            "type": "string"
-          },
-          "id": {
-            "title": "Id",
-            "type": "integer"
-          },
-          "preset_id": {
-            "anyOf": [
-              {
-                "type": "integer"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Preset Id"
-          },
-          "rows_imported": {
-            "title": "Rows Imported",
-            "type": "integer"
-          },
-          "rows_skipped": {
-            "title": "Rows Skipped",
-            "type": "integer"
-          },
-          "rows_total": {
-            "title": "Rows Total",
-            "type": "integer"
-          },
-          "status": {
-            "title": "Status",
-            "type": "string"
           }
         },
         "required": [
-          "id",
-          "account_id",
-          "file_name",
-          "status",
-          "rows_total",
-          "rows_imported",
-          "rows_skipped",
-          "preset_id",
-          "created_at",
-          "committed_at",
-          "errors"
+          "transactions"
         ],
-        "title": "BatchOut",
+        "title": "BatchIn",
         "type": "object"
       },
       "BenchmarksOut": {
@@ -1079,6 +1015,54 @@
           }
         },
         "title": "ImportMapping",
+        "type": "object"
+      },
+      "IncomeOut": {
+        "properties": {
+          "account": {
+            "title": "Account",
+            "type": "string"
+          },
+          "gross_eur": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Gross Eur",
+            "type": "string"
+          },
+          "instrument": {
+            "title": "Instrument",
+            "type": "string"
+          },
+          "isin": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Isin"
+          },
+          "net_eur": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Net Eur",
+            "type": "string"
+          },
+          "withholding_eur": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Withholding Eur",
+            "type": "string"
+          }
+        },
+        "required": [
+          "account",
+          "instrument",
+          "isin",
+          "gross_eur",
+          "withholding_eur",
+          "net_eur"
+        ],
+        "title": "IncomeOut",
         "type": "object"
       },
       "InstrumentChanges": {
@@ -3085,7 +3069,7 @@
       "PreviewOut": {
         "properties": {
           "batch": {
-            "$ref": "#/components/schemas/BatchOut"
+            "$ref": "#/components/schemas/folio__api__routers__imports__BatchOut"
           },
           "delimiter": {
             "title": "Delimiter",
@@ -3135,6 +3119,233 @@
           "from_preset"
         ],
         "title": "PreviewOut",
+        "type": "object"
+      },
+      "RealizedOut": {
+        "properties": {
+          "account": {
+            "title": "Account",
+            "type": "string"
+          },
+          "cost_eur": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Cost Eur",
+            "type": "string"
+          },
+          "instrument": {
+            "title": "Instrument",
+            "type": "string"
+          },
+          "isin": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Isin"
+          },
+          "proceeds_eur": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Proceeds Eur",
+            "type": "string"
+          },
+          "quantity": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Quantity",
+            "type": "string"
+          },
+          "result_eur": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Result Eur",
+            "type": "string"
+          }
+        },
+        "required": [
+          "account",
+          "instrument",
+          "isin",
+          "quantity",
+          "proceeds_eur",
+          "cost_eur",
+          "result_eur"
+        ],
+        "title": "RealizedOut",
+        "type": "object"
+      },
+      "ReconcileIn": {
+        "additionalProperties": false,
+        "properties": {
+          "account_id": {
+            "title": "Account Id",
+            "type": "integer"
+          },
+          "date": {
+            "format": "date",
+            "title": "Date",
+            "type": "string"
+          },
+          "rows": {
+            "items": {
+              "$ref": "#/components/schemas/ReconcileRowIn"
+            },
+            "maxItems": 500,
+            "minItems": 1,
+            "title": "Rows",
+            "type": "array"
+          }
+        },
+        "required": [
+          "account_id",
+          "date",
+          "rows"
+        ],
+        "title": "ReconcileIn",
+        "type": "object"
+      },
+      "ReconcileLineOut": {
+        "properties": {
+          "broker": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Broker",
+            "type": "string"
+          },
+          "difference": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Difference",
+            "type": "string"
+          },
+          "instrument_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Instrument Id"
+          },
+          "isin": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Isin"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "ours": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Ours",
+            "type": "string"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          }
+        },
+        "required": [
+          "instrument_id",
+          "name",
+          "isin",
+          "ours",
+          "broker",
+          "difference",
+          "status"
+        ],
+        "title": "ReconcileLineOut",
+        "type": "object"
+      },
+      "ReconcileOut": {
+        "properties": {
+          "account_id": {
+            "title": "Account Id",
+            "type": "integer"
+          },
+          "date": {
+            "format": "date",
+            "title": "Date",
+            "type": "string"
+          },
+          "differences": {
+            "title": "Differences",
+            "type": "integer"
+          },
+          "lines": {
+            "items": {
+              "$ref": "#/components/schemas/ReconcileLineOut"
+            },
+            "title": "Lines",
+            "type": "array"
+          },
+          "matches": {
+            "title": "Matches",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "account_id",
+          "date",
+          "matches",
+          "differences",
+          "lines"
+        ],
+        "title": "ReconcileOut",
+        "type": "object"
+      },
+      "ReconcileRowIn": {
+        "additionalProperties": false,
+        "properties": {
+          "instrument_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Instrument Id"
+          },
+          "isin": {
+            "anyOf": [
+              {
+                "maxLength": 12,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Isin"
+          },
+          "quantity": {
+            "anyOf": [
+              {
+                "minimum": 0.0,
+                "type": "number"
+              },
+              {
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+                "type": "string"
+              }
+            ],
+            "title": "Quantity"
+          }
+        },
+        "required": [
+          "quantity"
+        ],
+        "title": "ReconcileRowIn",
         "type": "object"
       },
       "RequestOut": {
@@ -5217,6 +5428,59 @@
         "title": "WatchlistOut",
         "type": "object"
       },
+      "YearReportOut": {
+        "properties": {
+          "costs_eur": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Costs Eur",
+            "type": "string"
+          },
+          "income": {
+            "items": {
+              "$ref": "#/components/schemas/IncomeOut"
+            },
+            "title": "Income",
+            "type": "array"
+          },
+          "income_gross_eur": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Income Gross Eur",
+            "type": "string"
+          },
+          "realized": {
+            "items": {
+              "$ref": "#/components/schemas/RealizedOut"
+            },
+            "title": "Realized",
+            "type": "array"
+          },
+          "realized_total_eur": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Realized Total Eur",
+            "type": "string"
+          },
+          "withholding_eur": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Withholding Eur",
+            "type": "string"
+          },
+          "year": {
+            "title": "Year",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "year",
+          "realized",
+          "income",
+          "realized_total_eur",
+          "income_gross_eur",
+          "withholding_eur",
+          "costs_eur"
+        ],
+        "title": "YearReportOut",
+        "type": "object"
+      },
       "folio__api__routers__accounts__AccountIn": {
         "additionalProperties": false,
         "properties": {
@@ -5312,6 +5576,89 @@
           "transaction_count"
         ],
         "title": "AccountOut",
+        "type": "object"
+      },
+      "folio__api__routers__imports__BatchOut": {
+        "properties": {
+          "account_id": {
+            "title": "Account Id",
+            "type": "integer"
+          },
+          "committed_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Committed At"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "errors": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "title": "Errors",
+            "type": "array"
+          },
+          "file_name": {
+            "title": "File Name",
+            "type": "string"
+          },
+          "id": {
+            "title": "Id",
+            "type": "integer"
+          },
+          "preset_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Preset Id"
+          },
+          "rows_imported": {
+            "title": "Rows Imported",
+            "type": "integer"
+          },
+          "rows_skipped": {
+            "title": "Rows Skipped",
+            "type": "integer"
+          },
+          "rows_total": {
+            "title": "Rows Total",
+            "type": "integer"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "account_id",
+          "file_name",
+          "status",
+          "rows_total",
+          "rows_imported",
+          "rows_skipped",
+          "preset_id",
+          "created_at",
+          "committed_at",
+          "errors"
+        ],
+        "title": "BatchOut",
         "type": "object"
       },
       "folio__api__routers__instruments__PriceOut": {
@@ -5611,6 +5958,22 @@
           "cost_basis_method"
         ],
         "title": "AccountOut",
+        "type": "object"
+      },
+      "folio__api__routers__transactions__BatchOut": {
+        "properties": {
+          "created": {
+            "items": {
+              "$ref": "#/components/schemas/TransactionOut"
+            },
+            "title": "Created",
+            "type": "array"
+          }
+        },
+        "required": [
+          "created"
+        ],
+        "title": "BatchOut",
         "type": "object"
       },
       "folio__api__routers__transactions__MatchOut": {
@@ -6297,7 +6660,7 @@
               "application/json": {
                 "schema": {
                   "items": {
-                    "$ref": "#/components/schemas/BatchOut"
+                    "$ref": "#/components/schemas/folio__api__routers__imports__BatchOut"
                   },
                   "title": "Response History Api V1 Imports Get",
                   "type": "array"
@@ -6457,7 +6820,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/BatchOut"
+                  "$ref": "#/components/schemas/folio__api__routers__imports__BatchOut"
                 }
               }
             },
@@ -8030,6 +8393,112 @@
         ]
       }
     },
+    "/api/v1/reports/realized": {
+      "get": {
+        "description": "Realized result (from the lot matches) and income for one calendar year, per account\nand instrument. `format=csv` downloads the same figures as a spreadsheet file.",
+        "operationId": "realized_api_v1_reports_realized_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "year",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Year"
+            }
+          },
+          {
+            "in": "query",
+            "name": "account",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Account"
+            }
+          },
+          {
+            "in": "query",
+            "name": "format",
+            "required": false,
+            "schema": {
+              "default": "json",
+              "enum": [
+                "json",
+                "csv"
+              ],
+              "title": "Format",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/YearReportOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Realized",
+        "tags": [
+          "reports"
+        ]
+      }
+    },
+    "/api/v1/reports/years": {
+      "get": {
+        "description": "The calendar years that have a sale or income to report, newest first.",
+        "operationId": "years_api_v1_reports_years_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "type": "integer"
+                  },
+                  "title": "Response Years Api V1 Reports Years Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Years",
+        "tags": [
+          "reports"
+        ]
+      }
+    },
     "/api/v1/settings/{section}": {
       "get": {
         "operationId": "get_section_api_v1_settings__section__get",
@@ -8757,6 +9226,48 @@
         ]
       }
     },
+    "/api/v1/transactions/batch": {
+      "post": {
+        "description": "Several transactions in one request, saved together or not at all (FR-TX-11): a bad row\nsaves nothing and every problem is reported with its row number.",
+        "operationId": "create_many_api_v1_transactions_batch_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BatchIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/folio__api__routers__transactions__BatchOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Create Many",
+        "tags": [
+          "transactions"
+        ]
+      }
+    },
     "/api/v1/transactions/fx-prefill": {
       "get": {
         "description": "The ECB rate the form prefills for a trade date (the owner can overwrite it).",
@@ -8847,6 +9358,48 @@
           }
         },
         "summary": "Preview Sell",
+        "tags": [
+          "transactions"
+        ]
+      }
+    },
+    "/api/v1/transactions/reconcile": {
+      "post": {
+        "description": "Compare the quantities your broker reports on a date with the ledger (FR-TX-10).\nNothing is saved; the lines with a difference come first.",
+        "operationId": "reconcile_quantities_api_v1_transactions_reconcile_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReconcileIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReconcileOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Reconcile Quantities",
         "tags": [
           "transactions"
         ]
