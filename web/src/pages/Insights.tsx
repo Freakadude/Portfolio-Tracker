@@ -11,6 +11,7 @@ import {
 } from '../api/queries'
 import { Alert, Button, Input } from '../components/ui'
 import { trimDecimal } from '../lib/decimal'
+import { OrderDrafts } from '../strategies/OrderDrafts'
 import { useFormat } from '../lib/useFormat'
 
 export function Insights() {
@@ -18,6 +19,7 @@ export function Insights() {
   return (
     <div className="space-y-8">
       <h1 className="text-2xl font-semibold">{t('insights.title')}</h1>
+      <OrderDrafts />
       <Splits />
       <Dividends />
     </div>

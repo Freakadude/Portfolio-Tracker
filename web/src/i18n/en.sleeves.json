@@ -26,6 +26,8 @@
     "empty": {
       "title": "No sleeves yet",
       "body": "Add a sleeve, then choose it when you edit an instrument (Settings, Instruments)."
-    }
+    },
+    "managed": "Targets and bands come from the active strategy {{name}}.",
+    "openStrategy": "Change them there"
   }
 }

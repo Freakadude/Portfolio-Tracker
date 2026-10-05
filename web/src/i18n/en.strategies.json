@@ -1,0 +1,213 @@
+{
+  "strategies": {
+    "new": "New strategy",
+    "list": "Your strategies",
+    "version": "Version {{version}}",
+    "mode": "Mode",
+    "modes": {
+      "active": "Active",
+      "shadow": "Shadow",
+      "off": "Off"
+    },
+    "setMode": {
+      "active": "Make active",
+      "shadow": "Shadow",
+      "off": "Switch off"
+    },
+    "modeHint": {
+      "active": "This strategy sets your sleeve targets, and its signals reach your inbox and your phone.",
+      "shadow": "Evaluated and logged next to the active strategy, never notified. Its signals appear only here.",
+      "off": "Not evaluated."
+    },
+    "runNow": "Run rules now",
+    "runQueued": "The rules run within a few seconds.",
+    "tabs": {
+      "editor": "Editor",
+      "rules": "Rules and signals",
+      "calculators": "Calculators",
+      "history": "History"
+    },
+    "empty": {
+      "title": "No strategy yet",
+      "body": "Start from your sleeves: New strategy writes one with every target empty, so nothing fires until you set the numbers."
+    },
+    "editor": {
+      "views": "Edit as",
+      "formView": "Form",
+      "yamlView": "YAML",
+      "yaml": "Strategy as YAML",
+      "line": "Line {{line}}:",
+      "note": "What changed (optional)",
+      "save": "Save as a new version",
+      "unsaved": "Unsaved changes",
+      "saved": "Saved. Earlier versions stay as they were."
+    },
+    "form": {
+      "name": "Name",
+      "sleeves": "Sleeves",
+      "sleevesHint": "Members are ISINs or instrument tags, separated by commas. Targets are percentages of the portfolio; bands are percentage points around the target. Leave a number empty until you have decided.",
+      "columns": {
+        "id": "Sleeve",
+        "members": "Members",
+        "target": "Target %",
+        "soft": "Soft band pp",
+        "hard": "Hard band pp",
+        "trim": "Trim at %"
+      },
+      "fields": {
+        "target_pct": "Target % of sleeve {{n}}",
+        "soft_band_pp": "Soft band of sleeve {{n}}",
+        "hard_band_pp": "Hard band of sleeve {{n}}",
+        "trim_threshold_pct": "Trim level of sleeve {{n}}"
+      },
+      "sleeveId": "Name of sleeve {{n}}",
+      "sleeveMembers": "Members of sleeve {{n}}",
+      "removeSleeve": "Remove sleeve {{n}}",
+      "addSleeve": "Add a sleeve",
+      "rules": "Rules",
+      "rule": "Rule {{id}}",
+      "ruleId": "Rule name",
+      "ruleType": "Rule type",
+      "severity": "Severity",
+      "cooldown": "Cooldown (days)",
+      "worsen": "Fire again when worse by",
+      "enabled": "On",
+      "addRule": "Add rule",
+      "remove": "Remove",
+      "principles": "Principles",
+      "principlesHint": "One per line. The agent gets them word for word and must say when its advice departs from them.",
+      "theses": "Theses",
+      "thesisSleeve": "Sleeve",
+      "thesisWhy": "Why you hold it",
+      "thesisEvery": "Review every (days)",
+      "addThesis": "Add a thesis",
+      "plan": "Contribution plan",
+      "planAmount": "Amount (EUR)",
+      "planCadence": "How often",
+      "planNext": "Next date",
+      "none": "None",
+      "cadence": {
+        "weekly": "Weekly",
+        "monthly": "Monthly",
+        "quarterly": "Quarterly"
+      }
+    },
+    "severity": {
+      "info": "Info",
+      "low": "Low",
+      "medium": "Medium",
+      "high": "High",
+      "critical": "Critical"
+    },
+    "ruleTypes": {
+      "drift_band": "Drift band",
+      "trim_threshold": "Trim threshold",
+      "concentration_limit": "Concentration limit",
+      "drawdown": "Drawdown",
+      "price_move": "Daily move",
+      "price_level": "Price level",
+      "macro_threshold": "Macro threshold",
+      "correlation_shift": "Hedge correlation",
+      "contribution_due": "Contribution due",
+      "cash_buffer": "Cash buffer",
+      "thesis_review_due": "Thesis review",
+      "stale_data": "Stale prices",
+      "price_alert": "Price alert"
+    },
+    "rules": {
+      "sleeves": "Sleeves now",
+      "title": "Rules",
+      "columns": {
+        "sleeve": "Sleeve",
+        "weight": "Weight",
+        "target": "Target",
+        "soft": "Soft band",
+        "hard": "Hard band",
+        "rule": "Rule",
+        "type": "Type",
+        "state": "State"
+      },
+      "ready": "Watching",
+      "trueNow_one": "{{count}} condition is true right now.",
+      "trueNow_other": "{{count}} conditions are true right now."
+    },
+    "signals": {
+      "title": "Signals",
+      "none": "No signals yet.",
+      "shadow": "Shadow"
+    },
+    "calc": {
+      "kind": "Calculator",
+      "kinds": {
+        "allocator": "New money",
+        "trim": "Trim",
+        "rebalance": "Rebalance"
+      },
+      "hint": {
+        "allocator": "Splits new money over the sleeves: shortfalls against the targets first, the rest by target weight. Whole units; the change is shown.",
+        "trim": "Sells only what is above the target of a sleeve past its trim level or band, never below the target, with the realized result of each sale.",
+        "rebalance": "Brings every sleeve back inside its band with as few trades as possible, using new money before selling."
+      },
+      "amount": "New money (EUR)",
+      "sleeve": "Sleeve",
+      "breached": "Every breached sleeve",
+      "run": "Calculate",
+      "result": "Calculated orders",
+      "orders": "Orders",
+      "columns": {
+        "side": "Side",
+        "sleeve": "Sleeve",
+        "instrument": "Instrument",
+        "units": "Units",
+        "price": "Price",
+        "amount": "Amount",
+        "realized": "Realized result",
+        "before": "Before",
+        "after": "After"
+      },
+      "sides": {
+        "buy": "Buy",
+        "sell": "Sell"
+      },
+      "remainder": "Left unspent: {{amount}}",
+      "freed": "Cash freed: {{amount}}",
+      "weights": "Sleeve weights",
+      "toDrafts": "Copy to draft transactions",
+      "drafted_one": "{{count}} draft transaction made.",
+      "drafted_other": "{{count}} draft transactions made.",
+      "openInsights": "Confirm them on Insights",
+      "draftNote": "{{kind}} calculator, {{name}}"
+    },
+    "history": {
+      "one": "Only one version so far. Every save adds one.",
+      "older": "Compare",
+      "newer": "with",
+      "caption": "Changes from version {{older}} to version {{newer}}",
+      "kinds": {
+        "changed": "changed:",
+        "added": "added:",
+        "removed": "removed:"
+      }
+    },
+    "orders": {
+      "title": "Orders from your strategy",
+      "intro": "Proposed by a calculator. Enter the price and fees you actually paid, then confirm each one; until then nothing changes in your holdings.",
+      "columns": {
+        "date": "Date",
+        "side": "Side",
+        "instrument": "Instrument",
+        "account": "Account",
+        "units": "Units",
+        "price": "Price",
+        "fees": "Fees (EUR)",
+        "actions": "Actions"
+      },
+      "priceFor": "Price paid for {{name}}",
+      "feesFor": "Fees for {{name}}",
+      "confirm": "Confirm",
+      "confirmFor": "Confirm the order for {{name}}",
+      "drop": "Drop",
+      "dropFor": "Drop the order for {{name}}"
+    }
+  }
+}

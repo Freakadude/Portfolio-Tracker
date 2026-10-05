@@ -13,6 +13,7 @@ import { Placeholder } from './pages/Placeholder'
 import { Reports } from './pages/Reports'
 import { Settings } from './pages/Settings'
 import { Setup } from './pages/Setup'
+import { Strategies } from './pages/Strategies'
 import { System } from './pages/System'
 import { Watchlist } from './pages/Watchlist'
 import { WhatIf } from './pages/WhatIf'
@@ -22,7 +23,7 @@ const PositionDetail = lazy(() =>
   import('./pages/PositionDetail').then((m) => ({ default: m.PositionDetail })),
 )
 
-const PAGES = ['news', 'strategies'] as const
+const PAGES = ['news'] as const
 
 export function App() {
   return (
@@ -36,6 +37,7 @@ export function App() {
             <Route key={page} path={page} element={<Placeholder page={page} />} />
           ))}
           <Route path="watchlist" element={<Watchlist />} />
+          <Route path="strategies" element={<Strategies />} />
           <Route path="reports" element={<Reports />} />
           <Route path="what-if" element={<WhatIf />} />
           <Route path="holdings" element={<Holdings />} />

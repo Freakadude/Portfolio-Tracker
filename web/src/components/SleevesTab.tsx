@@ -3,6 +3,7 @@ import { useState, type FormEvent } from 'react'
 import { useTranslation } from 'react-i18next'
 import { api, errorMessage, unwrap } from '../api/client'
 import { useInvalidateLedger } from '../api/queries'
+import { Link } from 'react-router-dom'
 import { useSleeves } from '../dashboards/api'
 import { Dialog, EmptyState } from './display'
 import { Alert, Button, Field, Input } from './ui'
@@ -13,6 +14,7 @@ type Sleeve = {
   target_pct: string | null
   band_pct: string | null
   instrument_count: number
+  managed_by?: string | null
 }
 
 /** Sleeves group instruments for strategies and drift. A target and a band are optional: until
@@ -37,6 +39,7 @@ export function SleevesTab() {
     onSuccess: refresh,
   })
   const rows: Sleeve[] = sleeves.data ?? []
+  const managedBy = rows.find((r) => r.managed_by)?.managed_by ?? null
   const total = rows.reduce((sum, s) => sum + (s.target_pct ? Number(s.target_pct) : 0), 0)
 
   function shift(index: number, step: -1 | 1) {
@@ -56,6 +59,14 @@ export function SleevesTab() {
         <Button onClick={() => setEditing('new')}>{t('sleeves.add')}</Button>
       </div>
       <p className="text-sm text-muted">{t('sleeves.intro')}</p>
+      {managedBy && (
+        <p role="note" className="rounded-md border border-border p-2 text-sm">
+          {t('sleeves.managed', { name: managedBy })}{' '}
+          <Link to="/strategies" className="underline">
+            {t('sleeves.openStrategy')}
+          </Link>
+        </p>
+      )}
       {sleeves.isError && <Alert>{errorMessage(sleeves.error)}</Alert>}
       {remove.isError && <Alert>{errorMessage(remove.error)}</Alert>}
       {move.isError && <Alert>{errorMessage(move.error)}</Alert>}
@@ -146,6 +157,7 @@ export function SleevesTab() {
         >
           <SleeveForm
             sleeve={editing === 'new' ? null : editing}
+            managedBy={managedBy}
             onDone={async () => {
               await refresh()
               setEditing(null)
@@ -157,7 +169,15 @@ export function SleevesTab() {
   )
 }
 
-function SleeveForm({ sleeve, onDone }: { sleeve: Sleeve | null; onDone: () => void }) {
+function SleeveForm({
+  sleeve,
+  onDone,
+  managedBy,
+}: {
+  sleeve: Sleeve | null
+  onDone: () => void
+  managedBy: string | null
+}) {
   const { t } = useTranslation()
   const [name, setName] = useState(sleeve?.name ?? '')
   const [target, setTarget] = useState(sleeve?.target_pct ?? '')
@@ -165,11 +185,14 @@ function SleeveForm({ sleeve, onDone }: { sleeve: Sleeve | null; onDone: () => v
   const [nameError, setNameError] = useState<string>()
   const save = useMutation({
     mutationFn: () => {
-      const body = {
-        name: name.trim(),
-        target_pct: target.trim() === '' ? null : target.trim(),
-        band_pct: band.trim() === '' ? null : band.trim(),
-      }
+      // while a strategy is active it sets targets and bands; only the name is ours to change
+      const body = managedBy
+        ? { name: name.trim() }
+        : {
+            name: name.trim(),
+            target_pct: target.trim() === '' ? null : target.trim(),
+            band_pct: band.trim() === '' ? null : band.trim(),
+          }
       return sleeve
         ? unwrap(
             api.PATCH('/api/v1/sleeves/{sleeve_id}', {
@@ -206,6 +229,7 @@ function SleeveForm({ sleeve, onDone }: { sleeve: Sleeve | null; onDone: () => v
             <Input
               value={target}
               inputMode="decimal"
+              disabled={Boolean(managedBy)}
               onChange={(e) => setTarget(e.target.value)}
               {...p}
             />
@@ -216,6 +240,7 @@ function SleeveForm({ sleeve, onDone }: { sleeve: Sleeve | null; onDone: () => v
             <Input
               value={band}
               inputMode="decimal"
+              disabled={Boolean(managedBy)}
               onChange={(e) => setBand(e.target.value)}
               {...p}
             />
