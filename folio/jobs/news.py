@@ -20,6 +20,7 @@ from folio.marketdata.prices import tracked_listings
 from folio.marketdata.quotes import EOD_MARGIN, listing_refs
 from folio.news.eodhd import parse_eodhd_news
 from folio.news.feed import FeedError, FeedItem, parse_feed
+from folio.news.pipeline import cluster_and_link
 from folio.news.service import (
     due_sources,
     get_source,
@@ -98,5 +99,13 @@ def news_job(ctx: JobContext, source_id: int | None = None) -> JobResult:
             record_success(source, now, etag, modified)
             db.commit()
             log.info(f"{source.name}: {stored.new} new, {stored.seen} already stored")
+
+        grouped = cluster_and_link(db, now)  # no outside calls from here on
+        db.commit()
+        if grouped.items:
+            log.info(
+                f"{grouped.items} new items grouped into {grouped.new_clusters} new stories, "
+                f"{grouped.links} links to your holdings"
+            )
 
     return run_job(ctx, "news", body, {"source_id": source_id})

@@ -125,6 +125,7 @@ def test_a_304_answer_costs_no_parsing(
     assert "ECB press releases: 15 new, 0 already stored" in first.log
     assert "Federal Reserve press releases: 8 new, 0 already stored" in first.log
     assert "EODHD news for your tickers: skipped, it needs an EODHD API key" in first.log
+    assert "23 new items grouped into" in first.log  # then clustered and linked (FR-NW-04)
     source = db.scalar(select(NewsSource).where(NewsSource.name == "ECB press releases"))
     assert source.etag == ETAG and source.failures == 0
 
