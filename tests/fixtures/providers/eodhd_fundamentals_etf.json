@@ -1,0 +1,46 @@
+{
+  "General": {
+    "Code": "SXR8",
+    "Type": "ETF",
+    "Name": "iShares Core Example UCITS ETF",
+    "Exchange": "XETRA",
+    "CurrencyCode": "EUR",
+    "UpdatedAt": "2026-10-02"
+  },
+  "ETF_Data": {
+    "ISIN": "IE00B5BMR087",
+    "Holdings_Count": 3,
+    "Holdings": {
+      "AAA.US": {
+        "Code": "AAA",
+        "Exchange": "US",
+        "Name": "Alpha Tech Inc",
+        "Sector": "Technology",
+        "Industry": "Software",
+        "Country": "USA",
+        "Region": "North America",
+        "Assets_%": 40.25
+      },
+      "BBB.LSE": {
+        "Code": "BBB",
+        "Exchange": "LSE",
+        "Name": "Beta Bank PLC",
+        "Sector": "Financial Services",
+        "Industry": "Banks",
+        "Country": "UK",
+        "Region": "Europe",
+        "Assets_%": 30.5
+      },
+      "CCC.AS": {
+        "Code": "CCC",
+        "Exchange": "AS",
+        "Name": "Chip Maker NV",
+        "Sector": "Technology",
+        "Industry": "Semiconductors",
+        "Country": "Netherlands",
+        "Region": "Europe",
+        "Assets_%": 29.25
+      }
+    }
+  }
+}

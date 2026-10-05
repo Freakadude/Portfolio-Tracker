@@ -191,6 +191,21 @@ class MacroSettings(Section):
     series: list[MacroSeriesConfig] = Field(default_factory=_default_macro)
 
 
+class HoldingsSource(BaseModel):
+    """Where one ETF's holdings are refreshed from, besides an uploaded file."""
+
+    model_config = ConfigDict(extra="forbid")
+    url: str | None = Field(default=None, max_length=500)  # the issuer's CSV download
+    eodhd: bool = False  # EODHD fundamentals (needs its Fundamentals plan)
+
+
+class LookThroughSettings(Section):
+    """ETF look-through (FR-MD-09). `sources` is keyed by instrument id."""
+
+    sources: dict[str, HoldingsSource] = Field(default_factory=dict)
+    stale_days: int = Field(default=45, ge=1)  # after this the snapshot is called out of date
+
+
 class AnalyticsSettings(Section):
     """The risk-free rate for the Sharpe ratio (FR-PF-06): the ECB deposit facility rate, or a
     fixed percentage when the owner prefers one (or the ECB series is not yet loaded)."""
@@ -210,4 +225,5 @@ SECTIONS: dict[str, type[Section]] = {
     "retention": RetentionSettings,
     "analytics": AnalyticsSettings,
     "macro": MacroSettings,
+    "lookthrough": LookThroughSettings,
 }

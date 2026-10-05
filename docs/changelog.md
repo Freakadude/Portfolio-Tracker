@@ -1,5 +1,9 @@
 # Changelog
 
+## Phase 4 — News and AI agent (in progress)
+
+- ETF holdings for look-through: upload an issuer's holdings CSV on an ETF (the header is found below the issuer's fund details, columns are matched by name and can be corrected on a preview, cash and derivative lines are left out and their weight shows as other holdings), or give the ETF a download address or switch on EODHD fundamentals and Folio refreshes it on the first of each month. Each file is kept as a dated snapshot; a snapshot older than 45 days puts a low-severity item in the inbox. EODHD counts one fundamentals request as ten calls, which the daily budget now respects [FR-MD-09]. See ADR 0024.
+
 ## Phase 3 — Strategies and alerts (code complete, awaiting owner gate)
 
 Every Phase 3 requirement is implemented and covered by automated tests: 686 Python tests, 162 web unit tests and 28 Playwright tests. Requirements closed: FR-ST-01 to 05, FR-ST-07 (the agent that reads the principles is Phase 4), FR-MD-08, FR-NT-01 to 08, FR-SY-10, and the price alerts left over from FR-INS-05. Deferred on purpose: Web Push (Phase 5; not among your channels) and the concentration rule, which needs ETF holdings (Phase 4).

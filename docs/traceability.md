@@ -90,3 +90,9 @@ Requirement ID → module → test → status (`todo`, `in progress`, `done`).
 | FR-NT-07 | folio/strategies/rules.py (three texts per finding), folio/notify/dispatch.push_text | tests/unit/strategies/test_rules.py (no euro amounts in any rule push; no names in the private one), tests/integration/test_notifications.py (default push has no euro figure; names mode hides the subject) | done |
 | FR-NT-08 | notification_delivery (attempts, last_error), dispatch retries after 1 and 5 minutes, GET /notifications/deliveries | tests/integration/test_notifications.py (three attempts, then failed with the channel error, shown in the log) | done |
 | FR-SY-10 | GET /system/info (package version, FOLIO_VERSION build from the image, database, backups and free disk, agent runs and cost this month, failed jobs in 24 h), existing /system/jobs and /system/usage, Dockerfile ARG and CI build-arg, System page "This installation" | tests/integration/test_system_info.py (version, disk, agent row; a failing job shows as failed after one run); web/src/notify.test.tsx, web/e2e/10-inbox-and-alerts.spec.ts | done |
+
+## Phase 4 — News and AI agent
+
+| ID | Module | Test | Status |
+| --- | --- | --- | --- |
+| FR-MD-09 | folio/lookthrough/{parse,sources,service}.py (header found below issuer preambles, columns by name, cash and derivatives left out), folio/db/models_insight.py (etf_snapshot, etf_constituent), folio/marketdata/eodhd.get_fundamentals (ten calls of budget), folio/jobs/lookthrough.py (monthly, stale notice), settings section lookthrough, /instruments/{id}/holdings (preview, upload, delete, source, refresh), ADR 0024; the top-20 widget follows with the analytics and the web | tests/unit/lookthrough/test_parse.py, tests/integration/test_holdings.py (iShares-style and semicolon files, a replaced same-day snapshot, issuer address, HTML page refused, EODHD fixture charged ten calls, stale notice once a month) | in progress (analytics and widget next) |

@@ -26,6 +26,7 @@ from folio.config import Settings
 from folio.db.base import utcnow
 from folio.db.models_ledger import JobRequest
 from folio.jobs.context import JobContext
+from folio.jobs.lookthrough import lookthrough_job
 from folio.jobs.macro import macro_job
 from folio.jobs.market import (
     actions_job,
@@ -95,6 +96,7 @@ JOB_PARAMS: dict[str, tuple[str, ...]] = {
     "retention": (),
     "rules": (),
     "macro": (),
+    "lookthrough": ("instrument_id",),
 }
 
 
@@ -122,6 +124,9 @@ def handlers(
         "retention": lambda p: retention_job(ctx),
         "rules": lambda p: rules_job(ctx),
         "macro": lambda p: macro_job(ctx),
+        "lookthrough": lambda p: lookthrough_job(
+            ctx, None if p.get("instrument_id") is None else int(str(p["instrument_id"]))
+        ),
     }
 
 
@@ -197,6 +202,8 @@ def build_schedules() -> list[Schedule]:
         Schedule("rules", CronTrigger(hour=23, minute=15, **local)),  # after the snapshots
         # FRED publishes the US daily series overnight, the ECB in the afternoon
         Schedule("macro", CronTrigger(hour=7, minute=0, **local)),
+        # issuers publish holdings daily; a monthly refresh is what FR-MD-09 asks for
+        Schedule("lookthrough", CronTrigger(day=1, hour=6, minute=0, **local)),
         Schedule("quotes", CronTrigger(minute="*/15", timezone="UTC")),  # FR-MD-05
         Schedule("actions", CronTrigger(day_of_week="sun", hour=9, minute=0, **local)),
     ]
@@ -261,6 +268,10 @@ def run_rules() -> None:
 
 def run_macro() -> None:
     macro_job(_rt()[0])
+
+
+def run_lookthrough() -> None:
+    lookthrough_job(_rt()[0])
 
 
 def run_requests() -> None:

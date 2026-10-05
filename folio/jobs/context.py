@@ -12,8 +12,10 @@ from folio.config import Settings
 from folio.db.engine import make_engine, make_session_factory
 from folio.marketdata.budget import CircuitBreaker, UsageTracker
 from folio.marketdata.ecb import EcbRates
+from folio.marketdata.eodhd import EodhdProvider
 from folio.marketdata.fallback import ProviderChain
 from folio.marketdata.fred import FredSeries
+from folio.marketdata.http import HttpClient
 from folio.marketdata.runtime import make_provider_factory, make_usage_tracker
 from folio.notify.channels import Channel
 from folio.notify.service import build_channels
@@ -33,6 +35,8 @@ class JobContext:
     usage: UsageTracker | None = None  # lets the quote job keep budget for the nightly closes
     fred_for: Callable[[Session], FredSeries | None] = field(default=lambda db: None)
     channels_for: Callable[[Session], dict[str, Channel]] = field(default=lambda db: {})
+    eodhd_for: Callable[[Session], EodhdProvider | None] = field(default=lambda db: None)
+    issuer_for: Callable[[Session], HttpClient | None] = field(default=lambda db: None)
 
     def today(self) -> date:
         return self.now().date()
@@ -54,6 +58,8 @@ def build_context(settings: Settings) -> JobContext:
         ecb_for=lambda db: providers(db).ecb(),
         usage=usage,
         fred_for=lambda db: providers(db).fred(),
+        eodhd_for=lambda db: providers(db).eodhd(),
+        issuer_for=lambda db: providers(db).issuer(),
         channels_for=lambda db: build_channels(
             db, SecretStore(db, settings.require_secret_key()).get
         ),

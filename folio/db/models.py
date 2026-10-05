@@ -80,4 +80,9 @@ class Account(Base, SoftDeleteMixin):
 
 
 # Registers the Phase 1 tables on Base.metadata (Alembic and tests import this module).
-from folio.db import models_analytics, models_ledger, models_strategy  # noqa: E402, F401
+from folio.db import (  # noqa: E402, F401
+    models_analytics,
+    models_insight,
+    models_ledger,
+    models_strategy,
+)

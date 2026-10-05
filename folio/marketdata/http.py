@@ -66,6 +66,7 @@ class HttpClient:
         params: Mapping[str, Any] | None = None,
         json: Any = None,
         headers: Mapping[str, str] | None = None,
+        weight: int = 1,
     ) -> httpx.Response:
         """Send a request. Returns any non-retryable response (the adapter reads 404 and so
         on); raises ProviderError when the provider cannot be reached after all attempts."""
@@ -76,7 +77,7 @@ class HttpClient:
 
         def attempt() -> httpx.Response:
             if self._usage is not None:
-                self._usage.charge(self.provider)  # BudgetExhausted is not retried
+                self._usage.charge(self.provider, weight)  # BudgetExhausted is not retried
             try:
                 response = self._client.request(
                     method, url, params=params, json=json, headers=headers

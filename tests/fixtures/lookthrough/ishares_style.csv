@@ -1,0 +1,17 @@
+iShares Core Example UCITS ETF
+Fund Holdings as of,"Oct 03, 2026"
+Inception Date,"May 19, 2010"
+Shares Outstanding,"1,000,000.00"
+Stock,"-"
+Bond,"-"
+Cash,"-"
+Other,"-"
+
+Ticker,Name,Sector,Asset Class,Market Value,Weight (%),Notional Value,Quantity,Price,Location,Exchange,Currency,FX Rate,Market Currency,Accrual Date
+"AAA","ALPHA TECH INC","Information Technology","Equity","1,000.00","40.00","1,000.00","10.00","100.00","United States","NASDAQ","USD","1.00","USD","-"
+"BBB","BETA BANK PLC","Financials","Equity","1,000.00","30.50","1,000.00","10.00","100.00","United Kingdom","London Stock Exchange","GBP","1.15","GBP","-"
+"CCC","CHIP MAKER NV","Information Technology","Equity","1,000.00","29.00","1,000.00","10.00","100.00","Netherlands","Euronext Amsterdam","EUR","1.00","EUR","-"
+"USD","USD CASH","Cash and/or Derivatives","Cash","10.00","0.40","10.00","10.00","1.00","United States","-","USD","1.00","USD","-"
+"-","FUTURES USD","Cash and/or Derivatives","Futures","10.00","0.10","10.00","1.00","10.00","United States","-","USD","1.00","USD","-"
+
+"The content contained herein is owned or licensed by the issuer and is a fictional example for tests."

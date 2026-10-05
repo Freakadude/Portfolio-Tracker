@@ -85,6 +85,17 @@ class ProviderFactory:
     def ecb(self) -> EcbRates:
         return EcbRates(self._http("ecb"))
 
+    def eodhd(self) -> EodhdProvider | None:
+        """EODHD itself (for fundamentals), when it has a key and is switched on."""
+        key = self._key("eodhd")
+        if not key or not self._cfg("eodhd").enabled:
+            return None
+        return EodhdProvider(self._http("eodhd"), key)
+
+    def issuer(self) -> HttpClient:
+        """Plain downloads from fund issuers' own sites: counted, but with no daily limit."""
+        return self._http("issuer")
+
     def fred(self) -> FredSeries | None:
         """FRED needs a free API key; without one (or switched off) there is no FRED."""
         key = self._key("fred")

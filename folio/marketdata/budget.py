@@ -36,8 +36,9 @@ class UsageTracker:
         self._limit_for = limit_for
         self._today = today
 
-    def charge(self, provider: str) -> int:
-        """Reserve one call; returns today's count including it. Raises BudgetExhausted."""
+    def charge(self, provider: str, weight: int = 1) -> int:
+        """Reserve calls (`weight`, for an endpoint the provider counts as several); returns
+        today's count including them. Raises BudgetExhausted."""
         day, limit = self._today(), self._limit_for(provider)
         with self._factory() as db:
             self._ensure_row(db, provider, day)
@@ -45,8 +46,8 @@ class UsageTracker:
                 ProviderCall.provider == provider, ProviderCall.day == day
             )
             if limit > 0:
-                stmt = stmt.where(ProviderCall.count < limit)
-            result = db.execute(stmt.values(count=ProviderCall.count + 1))
+                stmt = stmt.where(ProviderCall.count <= limit - weight)
+            result = db.execute(stmt.values(count=ProviderCall.count + weight))
             db.commit()
             if result.rowcount == 0:  # type: ignore[attr-defined]
                 raise BudgetExhausted(

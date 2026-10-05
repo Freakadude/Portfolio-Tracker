@@ -67,6 +67,7 @@ module = [
     "folio.security.*",
     "folio.db.*",
     "folio.strategies.*",
+    "folio.lookthrough.*",
 ]
 strict = true
 

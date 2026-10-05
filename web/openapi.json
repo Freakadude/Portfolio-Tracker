@@ -786,6 +786,31 @@
         "title": "BenchmarksOut",
         "type": "object"
       },
+      "Body_preview_api_v1_instruments__instrument_id__holdings_preview_post": {
+        "properties": {
+          "file": {
+            "contentMediaType": "application/octet-stream",
+            "title": "File",
+            "type": "string"
+          },
+          "mapping": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Mapping"
+          }
+        },
+        "required": [
+          "file"
+        ],
+        "title": "Body_preview_api_v1_instruments__instrument_id__holdings_preview_post",
+        "type": "object"
+      },
       "Body_upload_api_v1_imports_post": {
         "properties": {
           "account_id": {
@@ -814,6 +839,43 @@
           "file"
         ],
         "title": "Body_upload_api_v1_imports_post",
+        "type": "object"
+      },
+      "Body_upload_api_v1_instruments__instrument_id__holdings_post": {
+        "properties": {
+          "as_of": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "As Of"
+          },
+          "file": {
+            "contentMediaType": "application/octet-stream",
+            "title": "File",
+            "type": "string"
+          },
+          "mapping": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Mapping"
+          }
+        },
+        "required": [
+          "file"
+        ],
+        "title": "Body_upload_api_v1_instruments__instrument_id__holdings_post",
         "type": "object"
       },
       "CalculateIn": {
@@ -1006,6 +1068,85 @@
           }
         },
         "title": "CommitIn",
+        "type": "object"
+      },
+      "ConstituentOut": {
+        "properties": {
+          "country": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Country"
+          },
+          "currency": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Currency"
+          },
+          "isin": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Isin"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "sector": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sector"
+          },
+          "ticker": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ticker"
+          },
+          "weight_pct": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Weight Pct",
+            "type": "string"
+          }
+        },
+        "required": [
+          "name",
+          "isin",
+          "ticker",
+          "weight_pct",
+          "sector",
+          "country",
+          "currency"
+        ],
+        "title": "ConstituentOut",
         "type": "object"
       },
       "ContributionOut": {
@@ -1815,6 +1956,265 @@
           "is_peildatum"
         ],
         "title": "HistoryPoint",
+        "type": "object"
+      },
+      "HoldingsMapping": {
+        "description": "Which column holds what, by position. `header_row` is the 0-based index of the header\namong the file's non-blank rows.",
+        "properties": {
+          "country": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Country"
+          },
+          "currency": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Currency"
+          },
+          "decimal_separator": {
+            "default": ".",
+            "enum": [
+              ".",
+              ","
+            ],
+            "title": "Decimal Separator",
+            "type": "string"
+          },
+          "header_row": {
+            "default": 0,
+            "title": "Header Row",
+            "type": "integer"
+          },
+          "isin": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Isin"
+          },
+          "kind": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Kind"
+          },
+          "name": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name"
+          },
+          "sector": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sector"
+          },
+          "thousands_separator": {
+            "default": "",
+            "enum": [
+              "",
+              ".",
+              ",",
+              " "
+            ],
+            "title": "Thousands Separator",
+            "type": "string"
+          },
+          "ticker": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ticker"
+          },
+          "weight": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Weight"
+          },
+          "weight_is_fraction": {
+            "default": false,
+            "title": "Weight Is Fraction",
+            "type": "boolean"
+          }
+        },
+        "title": "HoldingsMapping",
+        "type": "object"
+      },
+      "HoldingsOut": {
+        "properties": {
+          "snapshots": {
+            "items": {
+              "$ref": "#/components/schemas/SnapshotOut"
+            },
+            "title": "Snapshots",
+            "type": "array"
+          },
+          "source": {
+            "$ref": "#/components/schemas/HoldingsSource"
+          },
+          "stale_days": {
+            "title": "Stale Days",
+            "type": "integer"
+          },
+          "top": {
+            "items": {
+              "$ref": "#/components/schemas/ConstituentOut"
+            },
+            "title": "Top",
+            "type": "array"
+          }
+        },
+        "required": [
+          "snapshots",
+          "top",
+          "source",
+          "stale_days"
+        ],
+        "title": "HoldingsOut",
+        "type": "object"
+      },
+      "HoldingsPreviewOut": {
+        "properties": {
+          "as_of": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "As Of"
+          },
+          "covered_pct": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Covered Pct",
+            "type": "string"
+          },
+          "dropped": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Dropped",
+            "type": "array"
+          },
+          "errors": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Errors",
+            "type": "array"
+          },
+          "headers": {
+            "items": {
+              "$ref": "#/components/schemas/HeaderOut"
+            },
+            "title": "Headers",
+            "type": "array"
+          },
+          "holdings": {
+            "title": "Holdings",
+            "type": "integer"
+          },
+          "mapping": {
+            "$ref": "#/components/schemas/HoldingsMapping"
+          },
+          "top": {
+            "items": {
+              "$ref": "#/components/schemas/ConstituentOut"
+            },
+            "title": "Top",
+            "type": "array"
+          },
+          "warnings": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Warnings",
+            "type": "array"
+          }
+        },
+        "required": [
+          "headers",
+          "mapping",
+          "as_of",
+          "holdings",
+          "covered_pct",
+          "top",
+          "dropped",
+          "warnings",
+          "errors"
+        ],
+        "title": "HoldingsPreviewOut",
+        "type": "object"
+      },
+      "HoldingsSource": {
+        "additionalProperties": false,
+        "description": "Where one ETF's holdings are refreshed from, besides an uploaded file.",
+        "properties": {
+          "eodhd": {
+            "default": false,
+            "title": "Eodhd",
+            "type": "boolean"
+          },
+          "url": {
+            "anyOf": [
+              {
+                "maxLength": 500,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Url"
+          }
+        },
+        "title": "HoldingsSource",
         "type": "object"
       },
       "ImportIn": {
@@ -6084,6 +6484,58 @@
         "title": "SliceOut",
         "type": "object"
       },
+      "SnapshotOut": {
+        "properties": {
+          "as_of": {
+            "format": "date",
+            "title": "As Of",
+            "type": "string"
+          },
+          "covered_pct": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Covered Pct",
+            "type": "string"
+          },
+          "file_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "File Name"
+          },
+          "holdings": {
+            "title": "Holdings",
+            "type": "integer"
+          },
+          "id": {
+            "title": "Id",
+            "type": "integer"
+          },
+          "source": {
+            "title": "Source",
+            "type": "string"
+          },
+          "stale": {
+            "title": "Stale",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "id",
+          "as_of",
+          "source",
+          "file_name",
+          "covered_pct",
+          "holdings",
+          "stale"
+        ],
+        "title": "SnapshotOut",
+        "type": "object"
+      },
       "StarterOut": {
         "properties": {
           "definition": {
@@ -6130,6 +6582,26 @@
           "conditions_true"
         ],
         "title": "StatusOut",
+        "type": "object"
+      },
+      "StoredOut": {
+        "properties": {
+          "snapshot": {
+            "$ref": "#/components/schemas/SnapshotOut"
+          },
+          "warnings": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Warnings",
+            "type": "array"
+          }
+        },
+        "required": [
+          "snapshot",
+          "warnings"
+        ],
+        "title": "StoredOut",
         "type": "object"
       },
       "StrategyInput": {
@@ -10182,6 +10654,296 @@
         "summary": "Patch",
         "tags": [
           "instruments"
+        ]
+      }
+    },
+    "/api/v1/instruments/{instrument_id}/holdings": {
+      "get": {
+        "operationId": "holdings_api_v1_instruments__instrument_id__holdings_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "instrument_id",
+            "required": true,
+            "schema": {
+              "title": "Instrument Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HoldingsOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Holdings",
+        "tags": [
+          "look-through"
+        ]
+      },
+      "post": {
+        "description": "Store the file as a snapshot, dated by the file itself unless `as_of` says otherwise.",
+        "operationId": "upload_api_v1_instruments__instrument_id__holdings_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "instrument_id",
+            "required": true,
+            "schema": {
+              "title": "Instrument Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/Body_upload_api_v1_instruments__instrument_id__holdings_post"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StoredOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Upload",
+        "tags": [
+          "look-through"
+        ]
+      }
+    },
+    "/api/v1/instruments/{instrument_id}/holdings/preview": {
+      "post": {
+        "description": "How the file would be read, with nothing stored. Send `mapping` to try other columns.",
+        "operationId": "preview_api_v1_instruments__instrument_id__holdings_preview_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "instrument_id",
+            "required": true,
+            "schema": {
+              "title": "Instrument Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/Body_preview_api_v1_instruments__instrument_id__holdings_preview_post"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HoldingsPreviewOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Preview",
+        "tags": [
+          "look-through"
+        ]
+      }
+    },
+    "/api/v1/instruments/{instrument_id}/holdings/refresh": {
+      "post": {
+        "description": "Ask the worker to fetch this ETF's holdings now from its saved source.",
+        "operationId": "refresh_api_v1_instruments__instrument_id__holdings_refresh_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "instrument_id",
+            "required": true,
+            "schema": {
+              "title": "Instrument Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "202": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": {
+                    "type": "string"
+                  },
+                  "title": "Response Refresh Api V1 Instruments  Instrument Id  Holdings Refresh Post",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Refresh",
+        "tags": [
+          "look-through"
+        ]
+      }
+    },
+    "/api/v1/instruments/{instrument_id}/holdings/source": {
+      "put": {
+        "description": "Where this ETF's holdings are refreshed from each month, besides uploaded files.",
+        "operationId": "set_source_api_v1_instruments__instrument_id__holdings_source_put",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "instrument_id",
+            "required": true,
+            "schema": {
+              "title": "Instrument Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/HoldingsSource"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HoldingsSource"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Set Source",
+        "tags": [
+          "look-through"
+        ]
+      }
+    },
+    "/api/v1/instruments/{instrument_id}/holdings/{snapshot_id}": {
+      "delete": {
+        "operationId": "remove_api_v1_instruments__instrument_id__holdings__snapshot_id__delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "instrument_id",
+            "required": true,
+            "schema": {
+              "title": "Instrument Id",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "path",
+            "name": "snapshot_id",
+            "required": true,
+            "schema": {
+              "title": "Snapshot Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Remove",
+        "tags": [
+          "look-through"
         ]
       }
     },

@@ -26,6 +26,7 @@ from folio.marketdata.base import (
 from folio.marketdata.http import HttpClient, check_status
 
 BASE = "https://eodhd.com/api"
+FUNDAMENTALS_WEIGHT = 10  # EODHD counts one fundamentals request as ten API calls
 
 
 def _dec(value: Any) -> Decimal | None:
@@ -40,8 +41,14 @@ class EodhdProvider:
         self._key = api_key
 
     def _get(self, path: str, symbol: str | None = None, **params: Any) -> Any:
+        return self._call(path, symbol, params, 1)
+
+    def _call(self, path: str, symbol: str | None, params: dict[str, Any], weight: int) -> Any:
         response = self._http.request(
-            "GET", f"{BASE}/{path}", params={"api_token": self._key, "fmt": "json", **params}
+            "GET",
+            f"{BASE}/{path}",
+            params={"api_token": self._key, "fmt": "json", **params},
+            weight=weight,
         )
         if response.status_code == 404:
             raise SymbolNotFound(f"EODHD does not know the symbol {symbol or path}.")
@@ -110,6 +117,12 @@ class EodhdProvider:
             new, old = (Decimal(part) for part in str(row["split"]).split("/"))
             events.append(SplitEvent(ex_date=date.fromisoformat(row["date"]), ratio=new / old))
         return sorted(events, key=lambda s: s.ex_date)
+
+    def get_fundamentals(self, listing: ListingRef) -> Any:
+        """The fundamentals document of an ETF listing; its `ETF_Data.Holdings` are the
+        constituents. Needs EODHD's Fundamentals plan, and costs ten calls of the budget."""
+        symbol = listing.symbol_for(self.name)
+        return self._call(f"fundamentals/{symbol}", symbol, {}, FUNDAMENTALS_WEIGHT)
 
     def probe(self, symbol: str) -> SymbolMeta | None:
         return None  # EODHD states the currency in its search results instead

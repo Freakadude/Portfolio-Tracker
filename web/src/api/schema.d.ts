@@ -620,6 +620,104 @@ export interface paths {
         patch: operations["patch_api_v1_instruments__instrument_id__patch"];
         trace?: never;
     };
+    "/api/v1/instruments/{instrument_id}/holdings": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Holdings */
+        get: operations["holdings_api_v1_instruments__instrument_id__holdings_get"];
+        put?: never;
+        /**
+         * Upload
+         * @description Store the file as a snapshot, dated by the file itself unless `as_of` says otherwise.
+         */
+        post: operations["upload_api_v1_instruments__instrument_id__holdings_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/instruments/{instrument_id}/holdings/preview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Preview
+         * @description How the file would be read, with nothing stored. Send `mapping` to try other columns.
+         */
+        post: operations["preview_api_v1_instruments__instrument_id__holdings_preview_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/instruments/{instrument_id}/holdings/refresh": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Refresh
+         * @description Ask the worker to fetch this ETF's holdings now from its saved source.
+         */
+        post: operations["refresh_api_v1_instruments__instrument_id__holdings_refresh_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/instruments/{instrument_id}/holdings/source": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Set Source
+         * @description Where this ETF's holdings are refreshed from each month, besides uploaded files.
+         */
+        put: operations["set_source_api_v1_instruments__instrument_id__holdings_source_put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/instruments/{instrument_id}/holdings/{snapshot_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Remove */
+        delete: operations["remove_api_v1_instruments__instrument_id__holdings__snapshot_id__delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/instruments/{instrument_id}/prices": {
         parameters: {
             query?: never;
@@ -2086,6 +2184,13 @@ export interface components {
              */
             start: string;
         };
+        /** Body_preview_api_v1_instruments__instrument_id__holdings_preview_post */
+        Body_preview_api_v1_instruments__instrument_id__holdings_preview_post: {
+            /** File */
+            file: string;
+            /** Mapping */
+            mapping?: string | null;
+        };
         /** Body_upload_api_v1_imports_post */
         Body_upload_api_v1_imports_post: {
             /** Account Id */
@@ -2094,6 +2199,15 @@ export interface components {
             file: string;
             /** Preset Id */
             preset_id?: number | null;
+        };
+        /** Body_upload_api_v1_instruments__instrument_id__holdings_post */
+        Body_upload_api_v1_instruments__instrument_id__holdings_post: {
+            /** As Of */
+            as_of?: string | null;
+            /** File */
+            file: string;
+            /** Mapping */
+            mapping?: string | null;
         };
         /** CalculateIn */
         CalculateIn: {
@@ -2153,6 +2267,23 @@ export interface components {
              * @default false
              */
             skip_errors: boolean;
+        };
+        /** ConstituentOut */
+        ConstituentOut: {
+            /** Country */
+            country: string | null;
+            /** Currency */
+            currency: string | null;
+            /** Isin */
+            isin: string | null;
+            /** Name */
+            name: string;
+            /** Sector */
+            sector: string | null;
+            /** Ticker */
+            ticker: string | null;
+            /** Weight Pct */
+            weight_pct: string;
         };
         /** ContributionOut */
         ContributionOut: {
@@ -2409,6 +2540,94 @@ export interface components {
             unvalued_positions: number;
             /** Value Eur */
             value_eur: string;
+        };
+        /**
+         * HoldingsMapping
+         * @description Which column holds what, by position. `header_row` is the 0-based index of the header
+         *     among the file's non-blank rows.
+         */
+        HoldingsMapping: {
+            /** Country */
+            country?: number | null;
+            /** Currency */
+            currency?: number | null;
+            /**
+             * Decimal Separator
+             * @default .
+             * @enum {string}
+             */
+            decimal_separator: "." | ",";
+            /**
+             * Header Row
+             * @default 0
+             */
+            header_row: number;
+            /** Isin */
+            isin?: number | null;
+            /** Kind */
+            kind?: number | null;
+            /** Name */
+            name?: number | null;
+            /** Sector */
+            sector?: number | null;
+            /**
+             * Thousands Separator
+             * @default
+             * @enum {string}
+             */
+            thousands_separator: "" | "." | "," | " ";
+            /** Ticker */
+            ticker?: number | null;
+            /** Weight */
+            weight?: number | null;
+            /**
+             * Weight Is Fraction
+             * @default false
+             */
+            weight_is_fraction: boolean;
+        };
+        /** HoldingsOut */
+        HoldingsOut: {
+            /** Snapshots */
+            snapshots: components["schemas"]["SnapshotOut"][];
+            source: components["schemas"]["HoldingsSource"];
+            /** Stale Days */
+            stale_days: number;
+            /** Top */
+            top: components["schemas"]["ConstituentOut"][];
+        };
+        /** HoldingsPreviewOut */
+        HoldingsPreviewOut: {
+            /** As Of */
+            as_of: string | null;
+            /** Covered Pct */
+            covered_pct: string;
+            /** Dropped */
+            dropped: string[];
+            /** Errors */
+            errors: string[];
+            /** Headers */
+            headers: components["schemas"]["HeaderOut"][];
+            /** Holdings */
+            holdings: number;
+            mapping: components["schemas"]["HoldingsMapping"];
+            /** Top */
+            top: components["schemas"]["ConstituentOut"][];
+            /** Warnings */
+            warnings: string[];
+        };
+        /**
+         * HoldingsSource
+         * @description Where one ETF's holdings are refreshed from, besides an uploaded file.
+         */
+        HoldingsSource: {
+            /**
+             * Eodhd
+             * @default false
+             */
+            eodhd: boolean;
+            /** Url */
+            url?: string | null;
         };
         /** ImportIn */
         ImportIn: {
@@ -3593,6 +3812,26 @@ export interface components {
             /** Weight */
             weight: string;
         };
+        /** SnapshotOut */
+        SnapshotOut: {
+            /**
+             * As Of
+             * Format: date
+             */
+            as_of: string;
+            /** Covered Pct */
+            covered_pct: string;
+            /** File Name */
+            file_name: string | null;
+            /** Holdings */
+            holdings: number;
+            /** Id */
+            id: number;
+            /** Source */
+            source: string;
+            /** Stale */
+            stale: boolean;
+        };
         /** StarterOut */
         StarterOut: {
             /** Definition */
@@ -3610,6 +3849,12 @@ export interface components {
             rules: components["schemas"]["RuleStatusOut"][];
             /** Sleeves */
             sleeves: components["schemas"]["SleeveNowOut"][];
+        };
+        /** StoredOut */
+        StoredOut: {
+            snapshot: components["schemas"]["SnapshotOut"];
+            /** Warnings */
+            warnings: string[];
         };
         /**
          * StrategyInput
@@ -5590,6 +5835,205 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["InstrumentOut"];
                 };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    holdings_api_v1_instruments__instrument_id__holdings_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                instrument_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HoldingsOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    upload_api_v1_instruments__instrument_id__holdings_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                instrument_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "multipart/form-data": components["schemas"]["Body_upload_api_v1_instruments__instrument_id__holdings_post"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StoredOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    preview_api_v1_instruments__instrument_id__holdings_preview_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                instrument_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "multipart/form-data": components["schemas"]["Body_preview_api_v1_instruments__instrument_id__holdings_preview_post"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HoldingsPreviewOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    refresh_api_v1_instruments__instrument_id__holdings_refresh_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                instrument_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: string;
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    set_source_api_v1_instruments__instrument_id__holdings_source_put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                instrument_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["HoldingsSource"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HoldingsSource"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    remove_api_v1_instruments__instrument_id__holdings__snapshot_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                instrument_id: number;
+                snapshot_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
             /** @description Validation Error */
             422: {
