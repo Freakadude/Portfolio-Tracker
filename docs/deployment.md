@@ -12,11 +12,12 @@ CI builds the image on every green push to `main` and publishes it to the GitHub
    | --- | --- |
    | `FOLIO_SECRET_KEY` | required, 32 or more characters; make one with `uv run folio init` on your computer and copy it. Keep a copy in your password manager: without it the stored API keys cannot be read |
    | `FOLIO_LAN_IP` | required, the LXC's LAN address; the app is published on that interface only |
-   | `FOLIO_BASE_URL` | optional, for example `http://192.168.1.10:8080`, so a notification opens Folio |
+   | `FOLIO_WEB_PORT` | optional, the port Folio is reachable on; default 8555 |
+   | `FOLIO_BASE_URL` | optional, for example `http://192.168.1.10:8555`, so a notification opens Folio |
    | `FOLIO_TZ`, `FOLIO_LOG_LEVEL`, `FOLIO_EXTRA_BACKUP_DIR` | optional |
    | `FOLIO_IMAGE` | optional, to pin a build, for example `ghcr.io/freakadude/portfolio-tracker:sha-<commit>` |
 
-4. Deploy, open `http://<FOLIO_LAN_IP>:8080/healthz`, then finish the setup wizard.
+4. Deploy, open `http://<FOLIO_LAN_IP>:8555/healthz`, then finish the setup wizard.
 
 Data lives in the `folio-data` volume (database and backups). Do not delete the volume when you remove the stack.
 

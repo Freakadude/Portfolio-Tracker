@@ -29,6 +29,13 @@ def test_ports_bind_to_the_lan_interface_only(compose: dict[str, Any]) -> None:
     assert "ports" not in compose["services"]["worker"]  # the worker listens on nothing
 
 
+def test_folio_is_reachable_on_port_8555(compose: dict[str, Any]) -> None:
+    (port,) = compose["services"]["web"]["ports"]
+    assert port == "${FOLIO_LAN_IP:?set FOLIO_LAN_IP}:${FOLIO_WEB_PORT:-8555}:8080"
+    # the app still listens on 8080 inside the container, which the health check uses
+    assert "http://localhost:8080/healthz" in compose["services"]["web"]["healthcheck"]["test"]
+
+
 def test_worker_waits_for_web_migrations(compose: dict[str, Any]) -> None:
     assert compose["services"]["worker"]["depends_on"]["web"]["condition"] == "service_healthy"
     assert "healthcheck" in compose["services"]["web"]

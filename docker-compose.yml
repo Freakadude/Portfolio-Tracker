@@ -8,7 +8,7 @@
 # panel, or a .env file next to this file). A variable left empty is not passed on.
 x-folio-env: &folio-env
   FOLIO_SECRET_KEY: ${FOLIO_SECRET_KEY:?set FOLIO_SECRET_KEY (uv run folio init makes one)}
-  FOLIO_BASE_URL: # the address links in notifications open, e.g. http://192.168.1.10:8080
+  FOLIO_BASE_URL: # the address links in notifications open, e.g. http://192.168.1.10:8555
   FOLIO_TZ:
   FOLIO_LOG_LEVEL:
   FOLIO_EXTRA_BACKUP_DIR:
@@ -21,7 +21,7 @@ services:
     init: true
     environment: *folio-env
     volumes: ["folio-data:/data"]
-    ports: ["${FOLIO_LAN_IP:?set FOLIO_LAN_IP}:8080:8080"] # LAN interface only
+    ports: ["${FOLIO_LAN_IP:?set FOLIO_LAN_IP}:${FOLIO_WEB_PORT:-8555}:8080"] # LAN interface only; the app listens on 8080 inside the container
     read_only: true
     tmpfs: ["/tmp"]
     security_opt: ["no-new-privileges:true"]
