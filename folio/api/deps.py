@@ -28,7 +28,10 @@ def get_db(request: Request) -> Iterator[Session]:
             raise
 
 
-DbDep = Annotated[Session, Depends(get_db)]
+# scope="function": the commit happens when the endpoint returns, before the response is sent.
+# With the default (request) scope FastAPI commits after the response has gone out, so a client
+# that reads right after a write (sign in, then ask who is signed in) can still miss the write.
+DbDep = Annotated[Session, Depends(get_db, scope="function")]
 
 
 def current_user(request: Request, db: DbDep) -> User:
