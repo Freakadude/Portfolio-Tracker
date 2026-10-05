@@ -9,8 +9,10 @@ from pydantic import BaseModel
 from sqlalchemy import select
 
 from folio.agent import budget
+from folio.agent import outcomes as outcome_rules
 from folio.agent.llm import LlmClient, LlmError, system_blocks
 from folio.agent.runs import finish_run, metered_create, start_run
+from folio.agent.trackrecord import track_record
 from folio.api.deps import DbDep, UserDep
 from folio.api.errors import ApiError
 from folio.db.base import utcnow
@@ -228,3 +230,86 @@ def start_run_now(body: AgentRunIn, _user: UserDep, db: DbDep) -> dict[str, str]
         raise ApiError(409, "Agent is off", "The AI agent is switched off in Settings, Agent.")
     enqueue(db, "agent_run", {"run_type": body.run_type, "question": body.question})
     return {"status": "queued"}
+
+
+class TrackHorizonOut(BaseModel):
+    days: int
+    measured: int  # recommendations compared with the price at this horizon
+    scored: int  # of those, the ones with a hit or a miss
+    hits: int
+    hit_rate: Decimal | None
+    avg_return: Decimal | None  # price change as a fraction, in the trading currency
+
+
+class TrackActionOut(BaseModel):
+    action_type: str
+    scored_type: bool  # only contributions and trims have a direction to judge
+    count: int
+    by_horizon: list[TrackHorizonOut]
+
+
+class TrackDecisionOut(BaseModel):
+    decision: Literal["accepted", "rejected", "undecided"]
+    count: int
+    stats: TrackHorizonOut
+
+
+class TrackRecordOut(BaseModel):
+    total: int
+    actions: list[TrackActionOut]
+    decision_horizon: int
+    decisions: list[TrackDecisionOut]
+    note: str
+
+
+TRACK_NOTE = (
+    "Price only, in each instrument's trading currency: this judges the call, not the euro "
+    "result of what you did. Only contributions (price not lower) and trims (price not higher) "
+    "are scored; the other types are measured but never counted. A personal portfolio produces "
+    "few recommendations, so read small samples with care."
+)
+
+
+def _horizon(h: outcome_rules.HorizonStats) -> TrackHorizonOut:
+    return TrackHorizonOut(
+        days=h.days,
+        measured=h.measured,
+        scored=h.scored,
+        hits=h.hits,
+        hit_rate=h.hit_rate,
+        avg_return=h.avg_return,
+    )
+
+
+@router.get("/track-record", response_model=TrackRecordOut)
+def get_track_record(
+    _user: UserDep,
+    db: DbDep,
+    horizon: Annotated[int, Query(description="7, 30 or 90 days")] = 30,
+) -> TrackRecordOut:
+    """What happened to the agent's recommendations after +7, +30 and +90 days (FR-AG-06)."""
+    if horizon not in outcome_rules.HORIZONS:
+        raise ApiError(422, "Unknown horizon", "Choose 7, 30 or 90 days.")
+    record = track_record(db, horizon)
+    return TrackRecordOut(
+        total=record.total,
+        actions=[
+            TrackActionOut(
+                action_type=a.action_type,
+                scored_type=a.scored_type,
+                count=a.count,
+                by_horizon=[_horizon(h) for h in a.by_horizon],
+            )
+            for a in record.actions
+        ],
+        decision_horizon=record.decision_horizon,
+        decisions=[
+            TrackDecisionOut(
+                decision=d.decision,
+                count=d.count,
+                stats=_horizon(d.stats),
+            )
+            for d in record.decisions
+        ],
+        note=TRACK_NOTE,
+    )

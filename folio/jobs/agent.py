@@ -24,6 +24,7 @@ from folio.agent import budget
 from folio.agent.lifecycle import expire_due
 from folio.agent.run import run_agent
 from folio.agent.tools import untrusted
+from folio.agent.trackrecord import measure_due
 from folio.db.models_insight import AgentRun, NewsCluster
 from folio.db.models_strategy import Signal
 from folio.jobs.context import JobContext
@@ -125,6 +126,16 @@ def agent_run_job(
             log.info(f"Paused: {outcome.error}")
 
     return run_job(ctx, "agent", body, {"run_type": run_type, "trigger": trigger})
+
+
+def outcomes_job(ctx: JobContext) -> JobResult:
+    """Compare past recommendations with the closes since (FR-AG-06). Needs no model."""
+
+    def body(db: Session, log: JobLog) -> None:
+        written = measure_due(db, ctx.now().date())
+        log.info(f"{written} outcome(s) measured.")
+
+    return run_job(ctx, "outcomes", body)
 
 
 def agent_tick(ctx: JobContext) -> int:

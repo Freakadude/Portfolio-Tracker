@@ -27,7 +27,7 @@ from folio.backup import BackupError, create_backup
 from folio.config import Settings
 from folio.db.base import utcnow
 from folio.db.models_ledger import JobRequest
-from folio.jobs.agent import agent_run_job, agent_tick
+from folio.jobs.agent import agent_run_job, agent_tick, outcomes_job
 from folio.jobs.context import JobContext
 from folio.jobs.lookthrough import lookthrough_job
 from folio.jobs.macro import macro_job
@@ -104,6 +104,7 @@ JOB_PARAMS: dict[str, tuple[str, ...]] = {
     "lookthrough": ("instrument_id",),
     "news": ("source_id",),
     "agent_run": ("run_type",),
+    "outcomes": (),
 }
 
 
@@ -131,6 +132,7 @@ def handlers(
         "retention": lambda p: retention_job(ctx),
         "rules": lambda p: rules_job(ctx),
         "macro": lambda p: macro_job(ctx),
+        "outcomes": lambda p: outcomes_job(ctx),
         "agent_run": lambda p: agent_run_job(
             ctx,
             "daily_review" if p.get("run_type") == "daily_review" else "on_demand",
@@ -218,6 +220,8 @@ def build_schedules() -> list[Schedule]:
         Schedule("rules", CronTrigger(hour=23, minute=15, **local)),  # after the snapshots
         # FRED publishes the US daily series overnight, the ECB in the afternoon
         Schedule("macro", CronTrigger(hour=7, minute=0, **local)),
+        # after the closes, so a horizon that just passed finds its price (FR-AG-06)
+        Schedule("outcomes", CronTrigger(hour=23, minute=30, **local)),
         # issuers publish holdings daily; a monthly refresh is what FR-MD-09 asks for
         Schedule("lookthrough", CronTrigger(day=1, hour=6, minute=0, **local)),
         # every 15 minutes from 07:00 to 23:00 local time and hourly overnight (FR-NW-02);
@@ -295,6 +299,10 @@ def run_rules() -> None:
 
 def run_macro() -> None:
     macro_job(_rt()[0])
+
+
+def run_outcomes() -> None:
+    outcomes_job(_rt()[0])
 
 
 def run_lookthrough() -> None:

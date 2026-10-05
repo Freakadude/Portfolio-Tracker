@@ -105,6 +105,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/agent/track-record": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Track Record
+         * @description What happened to the agent's recommendations after +7, +30 and +90 days (FR-AG-06).
+         */
+        get: operations["get_track_record_api_v1_agent_track_record_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/agent/usage": {
         parameters: {
             query?: never;
@@ -4904,6 +4924,56 @@ export interface components {
             /** Unvalued Positions */
             unvalued_positions: number;
         };
+        /** TrackActionOut */
+        TrackActionOut: {
+            /** Action Type */
+            action_type: string;
+            /** By Horizon */
+            by_horizon: components["schemas"]["TrackHorizonOut"][];
+            /** Count */
+            count: number;
+            /** Scored Type */
+            scored_type: boolean;
+        };
+        /** TrackDecisionOut */
+        TrackDecisionOut: {
+            /** Count */
+            count: number;
+            /**
+             * Decision
+             * @enum {string}
+             */
+            decision: "accepted" | "rejected" | "undecided";
+            stats: components["schemas"]["TrackHorizonOut"];
+        };
+        /** TrackHorizonOut */
+        TrackHorizonOut: {
+            /** Avg Return */
+            avg_return: string | null;
+            /** Days */
+            days: number;
+            /** Hit Rate */
+            hit_rate: string | null;
+            /** Hits */
+            hits: number;
+            /** Measured */
+            measured: number;
+            /** Scored */
+            scored: number;
+        };
+        /** TrackRecordOut */
+        TrackRecordOut: {
+            /** Actions */
+            actions: components["schemas"]["TrackActionOut"][];
+            /** Decision Horizon */
+            decision_horizon: number;
+            /** Decisions */
+            decisions: components["schemas"]["TrackDecisionOut"][];
+            /** Note */
+            note: string;
+            /** Total */
+            total: number;
+        };
         /** TransactionBatchIn */
         TransactionBatchIn: {
             /** Transactions */
@@ -5639,6 +5709,38 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["AgentKeyTestOut"];
+                };
+            };
+        };
+    };
+    get_track_record_api_v1_agent_track_record_get: {
+        parameters: {
+            query?: {
+                /** @description 7, 30 or 90 days */
+                horizon?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TrackRecordOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
                 };
             };
         };

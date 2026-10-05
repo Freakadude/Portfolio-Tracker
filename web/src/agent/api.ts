@@ -8,6 +8,7 @@ export type RecommendationDetail = S['RecommendationDetailOut']
 export type AgentBudget = S['AgentBudgetOut']
 export type AgentRun = S['AgentRunOut']
 export type AgentRunDetail = S['AgentRunDetailOut']
+export type TrackRecord = S['TrackRecordOut']
 
 export const REC_KEY = ['recommendations'] as const
 export const AGENT_KEY = ['agent'] as const
@@ -108,5 +109,13 @@ export function useTestKey() {
   return useMutation({
     mutationFn: () => unwrap(api.POST('/api/v1/agent/test')),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: AGENT_KEY }),
+  })
+}
+
+export function useTrackRecord(horizon: 7 | 30 | 90) {
+  return useQuery({
+    queryKey: [...AGENT_KEY, 'track-record', horizon],
+    queryFn: () =>
+      unwrap(api.GET('/api/v1/agent/track-record', { params: { query: { horizon } } })),
   })
 }

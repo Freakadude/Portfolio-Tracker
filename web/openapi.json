@@ -8674,6 +8674,157 @@
         "title": "TotalsOut",
         "type": "object"
       },
+      "TrackActionOut": {
+        "properties": {
+          "action_type": {
+            "title": "Action Type",
+            "type": "string"
+          },
+          "by_horizon": {
+            "items": {
+              "$ref": "#/components/schemas/TrackHorizonOut"
+            },
+            "title": "By Horizon",
+            "type": "array"
+          },
+          "count": {
+            "title": "Count",
+            "type": "integer"
+          },
+          "scored_type": {
+            "title": "Scored Type",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "action_type",
+          "scored_type",
+          "count",
+          "by_horizon"
+        ],
+        "title": "TrackActionOut",
+        "type": "object"
+      },
+      "TrackDecisionOut": {
+        "properties": {
+          "count": {
+            "title": "Count",
+            "type": "integer"
+          },
+          "decision": {
+            "enum": [
+              "accepted",
+              "rejected",
+              "undecided"
+            ],
+            "title": "Decision",
+            "type": "string"
+          },
+          "stats": {
+            "$ref": "#/components/schemas/TrackHorizonOut"
+          }
+        },
+        "required": [
+          "decision",
+          "count",
+          "stats"
+        ],
+        "title": "TrackDecisionOut",
+        "type": "object"
+      },
+      "TrackHorizonOut": {
+        "properties": {
+          "avg_return": {
+            "anyOf": [
+              {
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Avg Return"
+          },
+          "days": {
+            "title": "Days",
+            "type": "integer"
+          },
+          "hit_rate": {
+            "anyOf": [
+              {
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Hit Rate"
+          },
+          "hits": {
+            "title": "Hits",
+            "type": "integer"
+          },
+          "measured": {
+            "title": "Measured",
+            "type": "integer"
+          },
+          "scored": {
+            "title": "Scored",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "days",
+          "measured",
+          "scored",
+          "hits",
+          "hit_rate",
+          "avg_return"
+        ],
+        "title": "TrackHorizonOut",
+        "type": "object"
+      },
+      "TrackRecordOut": {
+        "properties": {
+          "actions": {
+            "items": {
+              "$ref": "#/components/schemas/TrackActionOut"
+            },
+            "title": "Actions",
+            "type": "array"
+          },
+          "decision_horizon": {
+            "title": "Decision Horizon",
+            "type": "integer"
+          },
+          "decisions": {
+            "items": {
+              "$ref": "#/components/schemas/TrackDecisionOut"
+            },
+            "title": "Decisions",
+            "type": "array"
+          },
+          "note": {
+            "title": "Note",
+            "type": "string"
+          },
+          "total": {
+            "title": "Total",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "total",
+          "actions",
+          "decision_horizon",
+          "decisions",
+          "note"
+        ],
+        "title": "TrackRecordOut",
+        "type": "object"
+      },
       "TransactionBatchIn": {
         "additionalProperties": false,
         "properties": {
@@ -10755,6 +10906,52 @@
           }
         },
         "summary": "Test Key",
+        "tags": [
+          "agent"
+        ]
+      }
+    },
+    "/api/v1/agent/track-record": {
+      "get": {
+        "description": "What happened to the agent's recommendations after +7, +30 and +90 days (FR-AG-06).",
+        "operationId": "get_track_record_api_v1_agent_track_record_get",
+        "parameters": [
+          {
+            "description": "7, 30 or 90 days",
+            "in": "query",
+            "name": "horizon",
+            "required": false,
+            "schema": {
+              "default": 30,
+              "description": "7, 30 or 90 days",
+              "title": "Horizon",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TrackRecordOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Track Record",
         "tags": [
           "agent"
         ]

@@ -1,5 +1,9 @@
 # Changelog
 
+## Phase 5 — Hardening and extras (in progress)
+
+- Track record of the agent's advice: every day after the closes Folio compares each recommendation with the price of its subject 7, 30 and 90 days after it was made (the price it stored at the time) and Insights shows, by action type, how many were measured, the hit rate and the average price change, and the same by what you decided (accepted, rejected, no decision). Only two kinds of advice have a direction to judge: direct new money counts as a hit when the price is not lower, a trim when it is not higher; hold, watch, review, rebalance and information are measured but never counted. The comparison is price only, in the instrument's own currency, and with so few recommendations the numbers are small samples, which the page says. A horizon with no price yet waits, and after two weeks without one is closed as "no price" [FR-AG-06]. See ADR 0035.
+
 ## Phase 4 — News and AI agent (code complete, awaiting owner gate)
 
 Every Phase 4 requirement is implemented and covered by automated tests: 951 Python tests (including ten agent evaluation scenarios), 195 web unit tests and 33 Playwright tests. Requirements closed: FR-MD-09, FR-PF-05, FR-NW-01 to 08, FR-NW-10, FR-AG-01 to 05, FR-AG-09 and FR-AG-10. Deferred to Phase 5 on purpose: FR-AG-06 to 08 (track record, weekly deep review, "Ask the portfolio") and FR-NW-09 (event calendar). Each recommendation already stores the price of its subject when it is made, which gives the Phase 5 track record its starting point.

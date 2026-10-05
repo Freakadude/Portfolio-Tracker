@@ -138,6 +138,37 @@
     "context": "What it was told",
     "answer": "Its answer"
   },
+  "track": {
+    "title": "Track record of the agent's advice",
+    "empty": "Nothing to measure yet. A recommendation is compared with the price 7, 30 and 90 days later.",
+    "action": "Action",
+    "count": "Made",
+    "types": {
+      "direct_contribution": "Direct new money",
+      "trim": "Trim",
+      "rebalance": "Rebalance",
+      "hold": "Hold",
+      "review_thesis": "Review a thesis",
+      "watch": "Watch",
+      "hedge_check": "Hedge check",
+      "info": "Information"
+    },
+    "horizon": "After {{days}} days",
+    "measured": "Measured",
+    "hits": "Hit rate",
+    "hitsOf": "{{hits}} of {{scored}}",
+    "avg": "Average price change",
+    "notScored": "not scored",
+    "byDecision": "By what you decided, after {{days}} days",
+    "decision": {
+      "accepted": "Accepted",
+      "rejected": "Rejected",
+      "undecided": "No decision"
+    },
+    "caption": "Hit rate and price change of the agent's recommendations by action type",
+    "decisionCaption": "Hit rate by your decision",
+    "horizons": "Horizon"
+  },
   "signalsWidget": {
     "signal": "Signal"
   }

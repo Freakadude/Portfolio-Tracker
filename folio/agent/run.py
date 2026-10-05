@@ -39,11 +39,10 @@ from folio.agent.prompt_files import labels, load_prompt
 from folio.agent.runs import finish_run, metered_create, start_run
 from folio.agent.schema import RECOMMENDATION_SCHEMA
 from folio.agent.tools import TOOL_DEFS, ToolBox
+from folio.agent.trackrecord import instrument_for, latest_close
 from folio.agent.validate import Checked, Past, Rec, Verdict, check_output
 from folio.db.models_insight import AgentRun, Recommendation
-from folio.db.models_ledger import Instrument, PriceBar
 from folio.events import RECOMMENDATION, publish_event
-from folio.instruments import primary_listing
 from folio.news.normalize import canonical_url
 from folio.notify.service import notify
 
@@ -80,23 +79,10 @@ def _subject_prices(db: Session, subjects: tuple[str, ...]) -> dict[str, str]:
     record can compare later (FR-AG-06)."""
     prices: dict[str, str] = {}
     for subject in subjects:
-        instrument = db.scalar(
-            select(Instrument).where(
-                (Instrument.name == subject)
-                | (Instrument.isin == subject)
-                | (Instrument.id == int(subject) if subject.isdigit() else False)  # noqa: SIM300
-            )
-        )
-        if instrument is None:
-            continue
-        listing = primary_listing(db, instrument.id)
-        if listing is None:
-            continue
-        bar = db.scalars(
-            select(PriceBar).where(PriceBar.listing_id == listing.id).order_by(PriceBar.date.desc())
-        ).first()
-        if bar is not None:
-            prices[subject] = str(bar.close)
+        instrument = instrument_for(db, subject)
+        close = None if instrument is None else latest_close(db, instrument)
+        if close is not None:
+            prices[subject] = str(close)
     return prices
 
 
