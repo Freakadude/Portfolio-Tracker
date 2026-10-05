@@ -145,6 +145,11 @@ class LedgerState:
     other_income_eur: Decimal = ZERO  # interest not tied to an instrument
     standalone_fees_eur: Decimal = ZERO
     taxes_eur: Decimal = ZERO
+    # Cash (FR-TX-09). Always computed; an account that does not track cash simply ignores it.
+    cash_eur: Decimal = ZERO
+    # Money that crossed the account's border: deposits less withdrawals, plus holdings
+    # transferred in less holdings transferred out. Net contributions when cash is tracked.
+    external_flows_eur: Decimal = ZERO
 
     def position(self, instrument_id: int) -> PositionState:
         pos = self.positions.get(instrument_id)
@@ -252,6 +257,7 @@ def _apply_buy(state: LedgerState, tx: TxIn) -> None:
     _add_lot(pos, lot, state.method)
     pos.net_invested_eur += cost
     state.net_contributions_eur += cost
+    state.cash_eur -= cost
 
 
 def _apply_sell(state: LedgerState, tx: TxIn) -> None:
@@ -284,6 +290,7 @@ def _apply_sell(state: LedgerState, tx: TxIn) -> None:
     pos.proceeds_eur += net
     pos.net_invested_eur -= net
     state.net_contributions_eur -= net
+    state.cash_eur += net
 
 
 def _apply_transfer_in(state: LedgerState, tx: TxIn) -> None:
@@ -295,6 +302,7 @@ def _apply_transfer_in(state: LedgerState, tx: TxIn) -> None:
     _add_lot(pos, lot, state.method)
     pos.net_invested_eur += cost
     state.net_contributions_eur += cost
+    state.external_flows_eur += cost  # holdings arrive without cash
 
 
 def _apply_transfer_out(state: LedgerState, tx: TxIn) -> None:
@@ -318,6 +326,7 @@ def _apply_transfer_out(state: LedgerState, tx: TxIn) -> None:
         )
     pos.net_invested_eur -= moved
     state.net_contributions_eur -= moved
+    state.external_flows_eur -= moved
 
 
 def _apply_split(state: LedgerState, tx: TxIn) -> None:
@@ -337,18 +346,25 @@ def _apply_income(state: LedgerState, tx: TxIn) -> None:
         state.other_income_eur += amount
     state.taxes_eur += tx.taxes_eur  # withholding tax
     state.standalone_fees_eur += tx.fees_eur
+    state.cash_eur += amount - tx.taxes_eur - tx.fees_eur
 
 
 def _apply_cash_flow(state: LedgerState, tx: TxIn) -> None:
     amount = _need_positive(tx, "amount", tx.amount_eur)
     if tx.type is TxType.FEE:
         state.standalone_fees_eur += amount
+        state.cash_eur -= amount
     elif tx.type is TxType.TAX:
         state.taxes_eur += amount
+        state.cash_eur -= amount
     elif tx.type is TxType.DEPOSIT:
         state.net_contributions_eur += amount
+        state.external_flows_eur += amount
+        state.cash_eur += amount
     else:
         state.net_contributions_eur -= amount
+        state.external_flows_eur -= amount
+        state.cash_eur -= amount
 
 
 _HANDLERS = {

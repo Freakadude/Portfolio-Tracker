@@ -739,6 +739,8 @@ export interface components {
             cost_basis_method?: ("FIFO" | "AVG") | null;
             /** Name */
             name?: string | null;
+            /** Track Cash */
+            track_cash?: boolean | null;
         };
         /** ActionOut */
         ActionOut: {
@@ -1778,6 +1780,11 @@ export interface components {
             cost_basis_method: "FIFO" | "AVG";
             /** Name */
             name: string;
+            /**
+             * Track Cash
+             * @default false
+             */
+            track_cash: boolean;
         };
         /** AccountOut */
         folio__api__routers__accounts__AccountOut: {
@@ -1793,6 +1800,8 @@ export interface components {
             id: number;
             /** Name */
             name: string;
+            /** Track Cash */
+            track_cash: boolean;
             /** Transaction Count */
             transaction_count: number;
         };

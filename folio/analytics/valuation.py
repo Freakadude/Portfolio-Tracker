@@ -1,13 +1,16 @@
 """Portfolio valuation maths: holding values, a portfolio's state on one day, and the figures
 for a period. Pure functions on prepared data; no I/O.
 
-Cash tracking is off, so "net contributions" is the money invested from outside (see ADR 0005)
+Without cash tracking, "net contributions" is the money invested from outside (see ADR 0005)
 and a portfolio's total P&L is
 
     market value - net contributions + income - standalone fees and taxes.
 
-Period P&L is the same quantity measured between two days. Time-weighted return and XIRR are
-separate (Phase 2).
+An account that tracks cash (ADR 0015) counts only deposits and withdrawals as contributions,
+values its cash with its holdings, and so must not add its income or take its costs again.
+
+Period P&L is the same quantity measured between two days. Time-weighted return and XIRR
+are in `returns.py`.
 """
 
 from __future__ import annotations
@@ -51,10 +54,28 @@ class DayPoint:
     costs_eur: Decimal  # standalone fees and taxes
     unvalued: int  # holdings that had no price, so are missing from value_eur
     holdings: tuple[HoldingValue, ...] = ()
+    # Accounts that track cash (FR-TX-09) hold their income and costs in cash, which is already
+    # part of value_eur, so they must not be added to or taken from the result a second time.
+    cash_eur: Decimal = ZERO  # included in value_eur
+    income_in_cash_eur: Decimal = ZERO  # part of income_eur already inside value_eur
+    costs_in_cash_eur: Decimal = ZERO  # part of costs_eur already inside value_eur
+
+    @property
+    def outside_income_eur(self) -> Decimal:
+        return self.income_eur - self.income_in_cash_eur
+
+    @property
+    def outside_costs_eur(self) -> Decimal:
+        return self.costs_eur - self.costs_in_cash_eur
 
     @property
     def total_pnl_eur(self) -> Decimal:
-        return self.value_eur - self.net_contributions_eur + self.income_eur - self.costs_eur
+        return (
+            self.value_eur
+            - self.net_contributions_eur
+            + self.outside_income_eur
+            - self.outside_costs_eur
+        )
 
 
 def value_holding(
@@ -74,16 +95,22 @@ def make_day_point(
     net_contributions_eur: Decimal,
     income_eur: Decimal,
     costs_eur: Decimal,
+    cash_eur: Decimal = ZERO,
+    income_in_cash_eur: Decimal = ZERO,
+    costs_in_cash_eur: Decimal = ZERO,
 ) -> DayPoint:
     valued = [h.value_eur for h in holdings if h.value_eur is not None]
     return DayPoint(
         day=day,
-        value_eur=sum(valued, ZERO),
+        value_eur=sum(valued, ZERO) + cash_eur,
         net_contributions_eur=net_contributions_eur,
         income_eur=income_eur,
         costs_eur=costs_eur,
         unvalued=sum(1 for h in holdings if h.value_eur is None),
         holdings=tuple(holdings),
+        cash_eur=cash_eur,
+        income_in_cash_eur=income_in_cash_eur,
+        costs_in_cash_eur=costs_in_cash_eur,
     )
 
 
@@ -154,7 +181,9 @@ def period_figures(start: DayPoint, end: DayPoint) -> PeriodFigures:
     flows = end.net_contributions_eur - start.net_contributions_eur
     income = end.income_eur - start.income_eur
     costs = end.costs_eur - start.costs_eur
-    pnl = (end.value_eur - start.value_eur) - flows + income - costs
+    outside_income = end.outside_income_eur - start.outside_income_eur
+    outside_costs = end.outside_costs_eur - start.outside_costs_eur
+    pnl = (end.value_eur - start.value_eur) - flows + outside_income - outside_costs
     capital = start.value_eur + flows
     return PeriodFigures(
         start=start.day,

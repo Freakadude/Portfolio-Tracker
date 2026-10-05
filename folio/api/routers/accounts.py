@@ -12,7 +12,11 @@ from folio.db.base import utcnow
 from folio.db.models import Account
 from folio.db.models_ledger import LedgerTransaction
 from folio.domain import CostBasisMethod
-from folio.ledger_service import TransactionError, change_cost_basis_method
+from folio.ledger_service import (
+    TransactionError,
+    change_cost_basis_method,
+    request_snapshot_rebuild,
+)
 
 router = APIRouter(prefix="/accounts", tags=["accounts"])
 
@@ -24,6 +28,7 @@ class AccountOut(BaseModel):
     cost_basis_method: str
     base_currency: str
     active: bool
+    track_cash: bool
     transaction_count: int
 
 
@@ -33,6 +38,7 @@ class AccountIn(BaseModel):
     name: str = Field(min_length=1, max_length=100)
     broker: str | None = Field(default=None, max_length=100)
     cost_basis_method: Literal["FIFO", "AVG"] = "FIFO"
+    track_cash: bool = False
 
 
 class AccountChanges(BaseModel):
@@ -42,6 +48,7 @@ class AccountChanges(BaseModel):
     broker: str | None = Field(default=None, max_length=100)
     cost_basis_method: Literal["FIFO", "AVG"] | None = None
     active: bool | None = None
+    track_cash: bool | None = None
 
 
 def _count(db: Session, account_id: int) -> int:
@@ -65,6 +72,7 @@ def _out(db: Session, account: Account) -> AccountOut:
         cost_basis_method=account.cost_basis_method,
         base_currency=account.base_currency,
         active=account.active,
+        track_cash=account.track_cash,
         transaction_count=_count(db, account.id),
     )
 
@@ -87,7 +95,10 @@ def list_accounts(_user: UserDep, db: DbDep) -> list[AccountOut]:
 @router.post("", response_model=AccountOut, status_code=201)
 def create_account(body: AccountIn, _user: UserDep, db: DbDep) -> AccountOut:
     account = Account(
-        name=body.name.strip(), broker=body.broker, cost_basis_method=body.cost_basis_method
+        name=body.name.strip(),
+        broker=body.broker,
+        cost_basis_method=body.cost_basis_method,
+        track_cash=body.track_cash,
     )
     db.add(account)
     db.flush()
@@ -111,6 +122,15 @@ def update_account(account_id: int, body: AccountChanges, _user: UserDep, db: Db
             setattr(account, key, value)
     if diff:
         write_audit(db, "user", "account", "update", entity_id=account.id, diff=diff)
+    if "track_cash" in diff:  # contributions and value change meaning from the first day
+        first = db.scalar(
+            select(func.min(LedgerTransaction.trade_date)).where(
+                LedgerTransaction.account_id == account.id,
+                LedgerTransaction.deleted_at.is_(None),
+            )
+        )
+        if first is not None:
+            request_snapshot_rebuild(db, first)
     if method is not None:
         try:  # recomputes every derived number, so it can be refused (an oversell cannot occur
             change_cost_basis_method(db, account, CostBasisMethod(method))  # under either method)

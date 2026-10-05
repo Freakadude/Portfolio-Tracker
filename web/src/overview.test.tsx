@@ -16,6 +16,7 @@ const ACCOUNT = {
   cost_basis_method: 'FIFO',
   base_currency: 'EUR',
   active: true,
+  track_cash: false,
   transaction_count: 3,
 }
 
@@ -285,5 +286,20 @@ describe('Accounts', () => {
     await userEvent.click(screen.getByRole('button', { name: 'Save account' }))
     await waitFor(() => expect(calls.some((c) => c.method === 'PATCH')).toBe(true))
     expect(calls.find((c) => c.method === 'PATCH')?.body).toEqual({ cost_basis_method: 'AVG' })
+  })
+
+  it('warns before cash tracking is switched on and sends only that change', async () => {
+    const confirm = vi.spyOn(window, 'confirm').mockReturnValue(true)
+    const { calls } = mockApi({
+      '/api/v1/accounts': [ACCOUNT],
+      'PATCH /api/v1/accounts/1': { ...ACCOUNT, track_cash: true },
+    })
+    renderAt(<AccountsTab />)
+    await userEvent.click(await screen.findByRole('button', { name: 'Edit' }))
+    await userEvent.click(screen.getByLabelText('Track cash in this account'))
+    await userEvent.click(screen.getByRole('button', { name: 'Save account' }))
+    await waitFor(() => expect(calls.some((c) => c.method === 'PATCH')).toBe(true))
+    expect(confirm).toHaveBeenCalledWith(expect.stringContaining('opening deposit'))
+    expect(calls.find((c) => c.method === 'PATCH')?.body).toEqual({ track_cash: true })
   })
 })

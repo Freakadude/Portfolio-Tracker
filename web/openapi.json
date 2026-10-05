@@ -54,6 +54,17 @@
               }
             ],
             "title": "Name"
+          },
+          "track_cash": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Track Cash"
           }
         },
         "title": "AccountChanges",
@@ -3865,6 +3876,11 @@
             "minLength": 1,
             "title": "Name",
             "type": "string"
+          },
+          "track_cash": {
+            "default": false,
+            "title": "Track Cash",
+            "type": "boolean"
           }
         },
         "required": [
@@ -3906,6 +3922,10 @@
             "title": "Name",
             "type": "string"
           },
+          "track_cash": {
+            "title": "Track Cash",
+            "type": "boolean"
+          },
           "transaction_count": {
             "title": "Transaction Count",
             "type": "integer"
@@ -3918,6 +3938,7 @@
           "cost_basis_method",
           "base_currency",
           "active",
+          "track_cash",
           "transaction_count"
         ],
         "title": "AccountOut",

@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next'
 import { api, errorMessage, unwrap } from '../api/client'
 import { useAccounts, useInvalidateLedger, type Account } from '../api/queries'
 import { Badge, Dialog } from './display'
-import { Alert, Button, Field, Input, Select } from './ui'
+import { Alert, Button, Checkbox, Field, Input, Select } from './ui'
 
 type Method = 'FIFO' | 'AVG'
 
@@ -112,6 +112,7 @@ function AccountForm({ account, onDone }: { account: Account | null; onDone: () 
   const [name, setName] = useState(account?.name ?? '')
   const [broker, setBroker] = useState(account?.broker ?? '')
   const [method, setMethod] = useState<Method>((account?.cost_basis_method as Method) ?? 'FIFO')
+  const [trackCash, setTrackCash] = useState(account?.track_cash ?? false)
   const [nameError, setNameError] = useState<string>()
 
   const save = useMutation({
@@ -119,14 +120,25 @@ function AccountForm({ account, onDone }: { account: Account | null; onDone: () 
       if (!account) {
         return unwrap(
           api.POST('/api/v1/accounts', {
-            body: { name: name.trim(), broker: broker.trim() || null, cost_basis_method: method },
+            body: {
+              name: name.trim(),
+              broker: broker.trim() || null,
+              cost_basis_method: method,
+              track_cash: trackCash,
+            },
           }),
         )
       }
-      const body: { name?: string; broker?: string | null; cost_basis_method?: Method } = {}
+      const body: {
+        name?: string
+        broker?: string | null
+        cost_basis_method?: Method
+        track_cash?: boolean
+      } = {}
       if (name.trim() !== account.name) body.name = name.trim()
       if ((broker.trim() || null) !== account.broker) body.broker = broker.trim() || null
       if (method !== account.cost_basis_method) body.cost_basis_method = method
+      if (trackCash !== account.track_cash) body.track_cash = trackCash
       return unwrap(
         api.PATCH('/api/v1/accounts/{account_id}', {
           params: { path: { account_id: account.id } },
@@ -147,6 +159,9 @@ function AccountForm({ account, onDone }: { account: Account | null; onDone: () 
     if (account && method !== account.cost_basis_method && account.transaction_count > 0) {
       if (!window.confirm(t('accounts.switchWarning', { method: t(`accounts.methods.${method}`) })))
         return
+    }
+    if (account && trackCash !== account.track_cash && account.transaction_count > 0) {
+      if (!window.confirm(t('accounts.cashWarning'))) return
     }
     save.mutate()
   }
@@ -176,6 +191,14 @@ function AccountForm({ account, onDone }: { account: Account | null; onDone: () 
           </Select>
         )}
       </Field>
+      <div className="space-y-1">
+        <Checkbox
+          label={t('accounts.trackCash')}
+          checked={trackCash}
+          onChange={(e) => setTrackCash(e.target.checked)}
+        />
+        <p className="text-sm text-muted">{t('accounts.trackCashHint')}</p>
+      </div>
       {save.isError && <Alert>{errorMessage(save.error)}</Alert>}
       <Button type="submit" disabled={save.isPending}>
         {t('accounts.save')}

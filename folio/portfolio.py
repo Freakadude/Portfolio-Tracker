@@ -49,8 +49,10 @@ class Valuation:
         bars: dict[int, _Series],
         rates: dict[str, _Series],
         instrument_listing: dict[int, int],
+        track_cash: frozenset[int] = frozenset(),
     ) -> None:
         self._accounts = accounts
+        self._track_cash = track_cash
         self._currency = listing_currency
         self._bars = bars
         self._rates = rates
@@ -65,8 +67,11 @@ class Valuation:
         if account_id is not None:
             query = query.where(Account.id == account_id)
         accounts: dict[int, tuple[CostBasisMethod, list[TxIn]]] = {}
+        track_cash: set[int] = set()
         instrument_ids: set[int] = set()
         for account in db.scalars(query):
+            if account.track_cash:
+                track_cash.add(account.id)
             txs = account_transactions(db, account.id)
             accounts[account.id] = (
                 CostBasisMethod(account.cost_basis_method),
@@ -106,9 +111,15 @@ class Valuation:
             rates[currency] = _Series(
                 [r.date for r in found_rates], [r.rate_per_eur for r in found_rates]
             )
-        return cls(accounts, listing_currency, bars, rates, instrument_listing)
+        return cls(
+            accounts, listing_currency, bars, rates, instrument_listing, frozenset(track_cash)
+        )
 
     # --- queries ----------------------------------------------------------------------------
+
+    @property
+    def tracks_cash(self) -> bool:
+        return bool(self._track_cash)
 
     def first_date(self) -> date | None:
         firsts = [dates[0] for dates in self._dates.values() if dates]
@@ -150,13 +161,22 @@ class Valuation:
         """The portfolio as it stood at the end of `day`, valued at the latest closes."""
         holdings: list[HoldingValue] = []
         contributions, income, costs = ZERO, ZERO, ZERO
+        cash, income_in_cash, costs_in_cash = ZERO, ZERO, ZERO
         for account_id in sorted(self._accounts):
             state = self._state(account_id, day)
             if state is None:
                 continue
-            contributions += state.net_contributions_eur
-            income += state.total_income_eur
-            costs += state.standalone_fees_eur + state.taxes_eur
+            account_income = state.total_income_eur
+            account_costs = state.standalone_fees_eur + state.taxes_eur
+            income += account_income
+            costs += account_costs
+            if account_id in self._track_cash:  # cash holds the income and costs (FR-TX-09)
+                contributions += state.external_flows_eur
+                cash += state.cash_eur
+                income_in_cash += account_income
+                costs_in_cash += account_costs
+            else:
+                contributions += state.net_contributions_eur
             for instrument_id, position in sorted(state.positions.items()):
                 if position.quantity == 0:
                     continue
@@ -169,7 +189,9 @@ class Valuation:
                         self._price(instrument_id, day),
                     )
                 )
-        return make_day_point(day, holdings, contributions, income, costs)
+        return make_day_point(
+            day, holdings, contributions, income, costs, cash, income_in_cash, costs_in_cash
+        )
 
 
 # --- snapshots ----------------------------------------------------------------------------------
@@ -225,7 +247,7 @@ def save_snapshots(
         fields = {
             "total_value_eur": point.value_eur,
             "net_contributions_eur": point.net_contributions_eur,
-            "cash_eur": ZERO,
+            "cash_eur": point.cash_eur,
             "income_eur": point.income_eur,
             "costs_eur": point.costs_eur,
             "unvalued_positions": point.unvalued,

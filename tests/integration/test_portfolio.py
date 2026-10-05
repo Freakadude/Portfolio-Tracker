@@ -522,3 +522,54 @@ def test_history_endpoint_serves_the_stored_snapshots(
         ("2024-01-11", D(1177), D(1098)),
     ]
     assert rows[0]["is_peildatum"] is False and rows[0]["unvalued_positions"] == 0
+
+
+# --- cash tracking (FR-TX-09) -------------------------------------------------------------------
+
+
+def test_an_account_that_tracks_cash_values_its_cash_and_counts_only_deposits(  # type: ignore[no-untyped-def]
+    api: TestClient, db
+) -> None:
+    fund, listing = make_listing(db, ticker="F")
+    for bar in bars_for("XETR", date(2024, 1, 1), date(2024, 1, 12)):
+        db.add(PriceBar(listing_id=listing.id, date=bar.date, close=bar.close, source="x"))
+    db.commit()
+    account = api.post("/api/v1/accounts", json={"name": "Cash", "track_cash": True}).json()
+    assert account["track_cash"] is True
+    a = account["id"]
+    tx(api, account_id=a, type="deposit", trade_date="2024-01-02", net_amount_eur="5000")
+    tx(
+        api,
+        account_id=a,
+        instrument_id=fund.id,
+        type="buy",
+        trade_date="2024-01-02",
+        quantity="10",
+        price="100",
+        fees="1",
+    )
+    summary = api.get("/api/v1/portfolio/summary", params={"period": "MAX", "as_of": AS_OF}).json()
+    # 10 units x 108 plus 5000 - 1001 in cash; only the deposit counts as money put in
+    assert D(summary["value_eur"]) == D("5079")
+    assert D(summary["cash_eur"]) == D("3999")
+    assert D(summary["net_contributions_eur"]) == D("5000")
+    assert D(summary["total_pnl_eur"]) == D("79")  # 80 of price gain less the 1 fee
+
+
+def test_the_summary_hides_cash_while_no_account_tracks_it(
+    api: TestClient, book: dict[str, Any]
+) -> None:
+    summary = api.get("/api/v1/portfolio/summary", params={"as_of": AS_OF}).json()
+    assert summary["cash_eur"] is None
+
+
+def test_switching_cash_tracking_is_audited_and_rebuilds_the_snapshots(  # type: ignore[no-untyped-def]
+    api: TestClient, book: dict[str, Any], db
+) -> None:
+    r = api.patch(f"/api/v1/accounts/{book['account']}", json={"track_cash": True})
+    assert r.status_code == 200 and r.json()["track_cash"] is True
+    request = db.scalars(select(JobRequest).order_by(JobRequest.id.desc())).first()
+    assert request is not None and request.job == "snapshots"
+    assert request.params == {"from": "2024-01-02"}  # the first transaction of the account
+    audit = api.get("/api/v1/audit", params={"entity": "account"}).json()["items"]
+    assert any(e["diff"] == {"track_cash": {"old": False, "new": True}} for e in audit)

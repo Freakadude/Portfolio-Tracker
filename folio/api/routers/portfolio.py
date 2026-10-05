@@ -53,7 +53,7 @@ class SummaryOut(BaseModel):
     total_pnl_eur: Decimal
     total_pnl_ratio: Decimal | None
     unvalued_positions: int
-    cash_eur: Decimal | None  # null while cash tracking is off
+    cash_eur: Decimal | None  # null while no account tracks cash
     day_change: ChangeOut
     period: PeriodOut
 
@@ -117,7 +117,7 @@ def summary(
         total_pnl_eur=now.total_pnl_eur,
         total_pnl_ratio=pnl_ratio_since_start(now),
         unvalued_positions=now.unvalued,
-        cash_eur=None,
+        cash_eur=now.cash_eur if valuation.tracks_cash else None,
         day_change=ChangeOut(pnl_eur=day.pnl_eur, pnl_ratio=day.pnl_ratio),
         period=_period_out(period.upper(), over_period),
     )
