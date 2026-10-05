@@ -76,19 +76,19 @@ class SourceOut(BaseModel):
     last_error: str | None
 
 
-class PreviewIn(BaseModel):
+class FeedPreviewIn(BaseModel):
     url: str
 
 
-class PreviewItemOut(BaseModel):
+class FeedPreviewItemOut(BaseModel):
     title: str
     summary: str
     url: str
     published: datetime
 
 
-class PreviewOut(BaseModel):
-    items: list[PreviewItemOut]
+class FeedPreviewOut(BaseModel):
+    items: list[FeedPreviewItemOut]
     total: int  # items in the feed
 
 
@@ -156,8 +156,8 @@ def remove_source(source_id: int, _user: UserDep, db: DbDep) -> None:
         raise ApiError(404, "Not found", str(exc)) from exc
 
 
-@router.post("/sources/preview", response_model=PreviewOut)
-def preview(body: PreviewIn, _user: UserDep, fetcher: FetcherDep) -> PreviewOut:
+@router.post("/sources/preview", response_model=FeedPreviewOut)
+def preview(body: FeedPreviewIn, _user: UserDep, fetcher: FetcherDep) -> FeedPreviewOut:
     """The latest items of a feed address, before it is saved (FR-NW-01). Nothing is stored."""
     try:
         service.check(SourceInput("preview", url=body.url))
@@ -169,9 +169,9 @@ def preview(body: PreviewIn, _user: UserDep, fetcher: FetcherDep) -> PreviewOut:
     except (ProviderError, FeedError) as exc:
         raise ApiError(422, "Cannot read feed", str(exc)) from exc
     newest = sorted(items, key=lambda i: i.published, reverse=True)[:PREVIEW_ITEMS]
-    return PreviewOut(
+    return FeedPreviewOut(
         items=[
-            PreviewItemOut(title=i.title, summary=i.summary, url=i.url, published=i.published)
+            FeedPreviewItemOut(title=i.title, summary=i.summary, url=i.url, published=i.published)
             for i in newest
         ],
         total=len(items),

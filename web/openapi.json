@@ -1844,6 +1844,69 @@
         "title": "EffectOut",
         "type": "object"
       },
+      "FeedPreviewIn": {
+        "properties": {
+          "url": {
+            "title": "Url",
+            "type": "string"
+          }
+        },
+        "required": [
+          "url"
+        ],
+        "title": "FeedPreviewIn",
+        "type": "object"
+      },
+      "FeedPreviewItemOut": {
+        "properties": {
+          "published": {
+            "format": "date-time",
+            "title": "Published",
+            "type": "string"
+          },
+          "summary": {
+            "title": "Summary",
+            "type": "string"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          },
+          "url": {
+            "title": "Url",
+            "type": "string"
+          }
+        },
+        "required": [
+          "title",
+          "summary",
+          "url",
+          "published"
+        ],
+        "title": "FeedPreviewItemOut",
+        "type": "object"
+      },
+      "FeedPreviewOut": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/FeedPreviewItemOut"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "total": {
+            "title": "Total",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "items",
+          "total"
+        ],
+        "title": "FeedPreviewOut",
+        "type": "object"
+      },
       "FiltersIn": {
         "additionalProperties": false,
         "properties": {
@@ -5095,46 +5158,71 @@
         "title": "PresetOut",
         "type": "object"
       },
-      "PreviewIn": {
+      "PreviewOut": {
         "properties": {
-          "url": {
-            "title": "Url",
+          "batch": {
+            "$ref": "#/components/schemas/BatchOut"
+          },
+          "delimiter": {
+            "title": "Delimiter",
             "type": "string"
+          },
+          "detected_preset": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Detected Preset"
+          },
+          "encoding": {
+            "title": "Encoding",
+            "type": "string"
+          },
+          "from_preset": {
+            "title": "From Preset",
+            "type": "boolean"
+          },
+          "headers": {
+            "items": {
+              "$ref": "#/components/schemas/HeaderOut"
+            },
+            "title": "Headers",
+            "type": "array"
+          },
+          "mapping": {
+            "$ref": "#/components/schemas/ImportMapping"
+          },
+          "row_count": {
+            "title": "Row Count",
+            "type": "integer"
+          },
+          "sample_rows": {
+            "items": {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            "title": "Sample Rows",
+            "type": "array"
           }
         },
         "required": [
-          "url"
+          "batch",
+          "encoding",
+          "delimiter",
+          "headers",
+          "sample_rows",
+          "row_count",
+          "mapping",
+          "from_preset",
+          "detected_preset"
         ],
-        "title": "PreviewIn",
-        "type": "object"
-      },
-      "PreviewItemOut": {
-        "properties": {
-          "published": {
-            "format": "date-time",
-            "title": "Published",
-            "type": "string"
-          },
-          "summary": {
-            "title": "Summary",
-            "type": "string"
-          },
-          "title": {
-            "title": "Title",
-            "type": "string"
-          },
-          "url": {
-            "title": "Url",
-            "type": "string"
-          }
-        },
-        "required": [
-          "title",
-          "summary",
-          "url",
-          "published"
-        ],
-        "title": "PreviewItemOut",
+        "title": "PreviewOut",
         "type": "object"
       },
       "ProblemOut": {
@@ -8617,73 +8705,6 @@
         "title": "SeriesOut",
         "type": "object"
       },
-      "folio__api__routers__imports__PreviewOut": {
-        "properties": {
-          "batch": {
-            "$ref": "#/components/schemas/BatchOut"
-          },
-          "delimiter": {
-            "title": "Delimiter",
-            "type": "string"
-          },
-          "detected_preset": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Detected Preset"
-          },
-          "encoding": {
-            "title": "Encoding",
-            "type": "string"
-          },
-          "from_preset": {
-            "title": "From Preset",
-            "type": "boolean"
-          },
-          "headers": {
-            "items": {
-              "$ref": "#/components/schemas/HeaderOut"
-            },
-            "title": "Headers",
-            "type": "array"
-          },
-          "mapping": {
-            "$ref": "#/components/schemas/ImportMapping"
-          },
-          "row_count": {
-            "title": "Row Count",
-            "type": "integer"
-          },
-          "sample_rows": {
-            "items": {
-              "items": {
-                "type": "string"
-              },
-              "type": "array"
-            },
-            "title": "Sample Rows",
-            "type": "array"
-          }
-        },
-        "required": [
-          "batch",
-          "encoding",
-          "delimiter",
-          "headers",
-          "sample_rows",
-          "row_count",
-          "mapping",
-          "from_preset",
-          "detected_preset"
-        ],
-        "title": "PreviewOut",
-        "type": "object"
-      },
       "folio__api__routers__instruments__PriceOut": {
         "properties": {
           "close": {
@@ -8828,27 +8849,6 @@
           "configured"
         ],
         "title": "SeriesOut",
-        "type": "object"
-      },
-      "folio__api__routers__news__PreviewOut": {
-        "properties": {
-          "items": {
-            "items": {
-              "$ref": "#/components/schemas/PreviewItemOut"
-            },
-            "title": "Items",
-            "type": "array"
-          },
-          "total": {
-            "title": "Total",
-            "type": "integer"
-          }
-        },
-        "required": [
-          "items",
-          "total"
-        ],
-        "title": "PreviewOut",
         "type": "object"
       },
       "folio__api__routers__positions__MatchOut": {
@@ -10535,7 +10535,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/folio__api__routers__imports__PreviewOut"
+                  "$ref": "#/components/schemas/PreviewOut"
                 }
               }
             },
@@ -10611,7 +10611,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/folio__api__routers__imports__PreviewOut"
+                  "$ref": "#/components/schemas/PreviewOut"
                 }
               }
             },
@@ -11633,7 +11633,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/PreviewIn"
+                "$ref": "#/components/schemas/FeedPreviewIn"
               }
             }
           },
@@ -11644,7 +11644,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/folio__api__routers__news__PreviewOut"
+                  "$ref": "#/components/schemas/FeedPreviewOut"
                 }
               }
             },

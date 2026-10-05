@@ -2603,6 +2603,32 @@ export interface components {
             /** Quantity Before */
             quantity_before: string;
         };
+        /** FeedPreviewIn */
+        FeedPreviewIn: {
+            /** Url */
+            url: string;
+        };
+        /** FeedPreviewItemOut */
+        FeedPreviewItemOut: {
+            /**
+             * Published
+             * Format: date-time
+             */
+            published: string;
+            /** Summary */
+            summary: string;
+            /** Title */
+            title: string;
+            /** Url */
+            url: string;
+        };
+        /** FeedPreviewOut */
+        FeedPreviewOut: {
+            /** Items */
+            items: components["schemas"]["FeedPreviewItemOut"][];
+            /** Total */
+            total: number;
+        };
         /** FiltersIn */
         FiltersIn: {
             /** Account */
@@ -3513,24 +3539,24 @@ export interface components {
             /** Name */
             name: string;
         };
-        /** PreviewIn */
-        PreviewIn: {
-            /** Url */
-            url: string;
-        };
-        /** PreviewItemOut */
-        PreviewItemOut: {
-            /**
-             * Published
-             * Format: date-time
-             */
-            published: string;
-            /** Summary */
-            summary: string;
-            /** Title */
-            title: string;
-            /** Url */
-            url: string;
+        /** PreviewOut */
+        PreviewOut: {
+            batch: components["schemas"]["BatchOut"];
+            /** Delimiter */
+            delimiter: string;
+            /** Detected Preset */
+            detected_preset: string | null;
+            /** Encoding */
+            encoding: string;
+            /** From Preset */
+            from_preset: boolean;
+            /** Headers */
+            headers: components["schemas"]["HeaderOut"][];
+            mapping: components["schemas"]["ImportMapping"];
+            /** Row Count */
+            row_count: number;
+            /** Sample Rows */
+            sample_rows: string[][];
         };
         /** ProblemOut */
         ProblemOut: {
@@ -4585,25 +4611,6 @@ export interface components {
             /** Points */
             points: components["schemas"]["SeriesPoint"][];
         };
-        /** PreviewOut */
-        folio__api__routers__imports__PreviewOut: {
-            batch: components["schemas"]["BatchOut"];
-            /** Delimiter */
-            delimiter: string;
-            /** Detected Preset */
-            detected_preset: string | null;
-            /** Encoding */
-            encoding: string;
-            /** From Preset */
-            from_preset: boolean;
-            /** Headers */
-            headers: components["schemas"]["HeaderOut"][];
-            mapping: components["schemas"]["ImportMapping"];
-            /** Row Count */
-            row_count: number;
-            /** Sample Rows */
-            sample_rows: string[][];
-        };
         /** PriceOut */
         folio__api__routers__instruments__PriceOut: {
             /** Close */
@@ -4644,13 +4651,6 @@ export interface components {
             source: string;
             /** Unit */
             unit: string;
-        };
-        /** PreviewOut */
-        folio__api__routers__news__PreviewOut: {
-            /** Items */
-            items: components["schemas"]["PreviewItemOut"][];
-            /** Total */
-            total: number;
         };
         /** MatchOut */
         folio__api__routers__positions__MatchOut: {
@@ -5722,7 +5722,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["folio__api__routers__imports__PreviewOut"];
+                    "application/json": components["schemas"]["PreviewOut"];
                 };
             };
             /** @description Validation Error */
@@ -5753,7 +5753,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["folio__api__routers__imports__PreviewOut"];
+                    "application/json": components["schemas"]["PreviewOut"];
                 };
             };
             /** @description Validation Error */
@@ -6494,7 +6494,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["PreviewIn"];
+                "application/json": components["schemas"]["FeedPreviewIn"];
             };
         };
         responses: {
@@ -6504,7 +6504,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["folio__api__routers__news__PreviewOut"];
+                    "application/json": components["schemas"]["FeedPreviewOut"];
                 };
             };
             /** @description Validation Error */
