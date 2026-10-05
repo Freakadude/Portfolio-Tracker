@@ -82,7 +82,14 @@ def metered_create(
         cfg.web_search_usd_per_1000,
     )
     budget.check_call(
-        db, cfg, now, tz, run_type=run.run_type, worst_case_usd_amount=worst, new_run=new_run
+        db,
+        cfg,
+        now,
+        tz,
+        run_type=run.run_type,
+        worst_case_usd_amount=worst,
+        new_run=new_run,
+        run_id=run.id,
     )
     db.commit()  # no write lock is held while the model thinks
     reply = llm.create(

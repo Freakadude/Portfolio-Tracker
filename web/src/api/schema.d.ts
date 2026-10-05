@@ -40,6 +40,51 @@ export interface paths {
         patch: operations["update_account_api_v1_accounts__account_id__patch"];
         trace?: never;
     };
+    "/api/v1/agent/runs": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Runs
+         * @description The agent's runs, newest first, with what each cost (shown on the System page).
+         */
+        get: operations["list_runs_api_v1_agent_runs_get"];
+        put?: never;
+        /**
+         * Start Run Now
+         * @description Ask the worker for a run now: "Run a review now", or a question about the portfolio.
+         */
+        post: operations["start_run_now_api_v1_agent_runs_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/agent/runs/{run_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * One Run
+         * @description The full trace of a run: context pack, tool calls, findings, the model's answer and the
+         *     verdict on each recommendation, refused ones with their reasons.
+         */
+        get: operations["one_run_api_v1_agent_runs__run_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/agent/test": {
         parameters: {
             query?: never;
@@ -2245,6 +2290,134 @@ export interface components {
             ok: boolean;
             /** Reply */
             reply: string;
+        };
+        /** AgentRecOut */
+        AgentRecOut: {
+            /** Action Type */
+            action_type: string;
+            /** Id */
+            id: number;
+            /** Refused Reason */
+            refused_reason: string | null;
+            /** Severity */
+            severity: string;
+            /** Status */
+            status: string;
+            /** Subjects */
+            subjects: string[];
+            /** Title */
+            title: string;
+        };
+        /** AgentRunDetailOut */
+        AgentRunDetailOut: {
+            /** Cache Read Tokens */
+            cache_read_tokens: number;
+            /** Cache Write Tokens */
+            cache_write_tokens: number;
+            /** Context */
+            context: {
+                [key: string]: unknown;
+            };
+            /** Cost Eur */
+            cost_eur: string;
+            /** Digest */
+            digest: string;
+            /** Error */
+            error: string | null;
+            /** Findings */
+            findings: string;
+            /** Finished At */
+            finished_at: string | null;
+            /** Id */
+            id: number;
+            /** Input Tokens */
+            input_tokens: number;
+            /** Items */
+            items: components["schemas"]["AgentRecOut"][];
+            /** Model */
+            model: string;
+            /** Output */
+            output: {
+                [key: string]: unknown;
+            };
+            /** Output Tokens */
+            output_tokens: number;
+            /** Prompt Version */
+            prompt_version: string;
+            /** Recommendations */
+            recommendations: number;
+            /** Refused */
+            refused: number;
+            /** Run Type */
+            run_type: string;
+            /**
+             * Started At
+             * Format: date-time
+             */
+            started_at: string;
+            /** Status */
+            status: string;
+            /** Tool Calls */
+            tool_calls: {
+                [key: string]: unknown;
+            }[];
+            /** Trigger */
+            trigger: string;
+            /** Web Searches */
+            web_searches: number;
+        };
+        /** AgentRunIn */
+        AgentRunIn: {
+            /** Question */
+            question?: string | null;
+            /**
+             * Run Type
+             * @default on_demand
+             * @enum {string}
+             */
+            run_type: "daily_review" | "on_demand";
+        };
+        /** AgentRunOut */
+        AgentRunOut: {
+            /** Cache Read Tokens */
+            cache_read_tokens: number;
+            /** Cache Write Tokens */
+            cache_write_tokens: number;
+            /** Cost Eur */
+            cost_eur: string;
+            /** Digest */
+            digest: string;
+            /** Error */
+            error: string | null;
+            /** Finished At */
+            finished_at: string | null;
+            /** Id */
+            id: number;
+            /** Input Tokens */
+            input_tokens: number;
+            /** Model */
+            model: string;
+            /** Output Tokens */
+            output_tokens: number;
+            /** Prompt Version */
+            prompt_version: string;
+            /** Recommendations */
+            recommendations: number;
+            /** Refused */
+            refused: number;
+            /** Run Type */
+            run_type: string;
+            /**
+             * Started At
+             * Format: date-time
+             */
+            started_at: string;
+            /** Status */
+            status: string;
+            /** Trigger */
+            trigger: string;
+            /** Web Searches */
+            web_searches: number;
         };
         /** AgentUsageOut */
         AgentUsageOut: {
@@ -5092,6 +5265,103 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["folio__api__routers__accounts__AccountOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_runs_api_v1_agent_runs_get: {
+        parameters: {
+            query?: {
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AgentRunOut"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    start_run_now_api_v1_agent_runs_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AgentRunIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: string;
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    one_run_api_v1_agent_runs__run_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                run_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AgentRunDetailOut"];
                 };
             };
             /** @description Validation Error */

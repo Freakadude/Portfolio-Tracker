@@ -1,9 +1,12 @@
 """The AI agent's budget, usage and key test (FR-AG-04, FR-AG-09)."""
 
+from datetime import datetime
 from decimal import Decimal
+from typing import Annotated, Any, Literal
 
-from fastapi import APIRouter, Request
+from fastapi import APIRouter, Query, Request
 from pydantic import BaseModel
+from sqlalchemy import select
 
 from folio.agent import budget
 from folio.agent.llm import LlmClient, LlmError, system_blocks
@@ -11,6 +14,8 @@ from folio.agent.runs import finish_run, metered_create, start_run
 from folio.api.deps import DbDep, UserDep
 from folio.api.errors import ApiError
 from folio.db.base import utcnow
+from folio.db.models_insight import AgentRun, Recommendation
+from folio.jobs.requests import enqueue
 from folio.security.secrets import SecretStore
 
 router = APIRouter(prefix="/agent", tags=["agent"])
@@ -102,3 +107,124 @@ def test_key(request: Request, _user: UserDep, db: DbDep) -> AgentKeyTestOut:
     return AgentKeyTestOut(
         ok=True, model=reply.model, reply=reply.text.strip()[:60], cost_eur=run.cost_eur
     )
+
+
+# --- runs and their traces (FR-AG-01, spec section 11) ---------------------------------
+
+
+class AgentRunIn(BaseModel):
+    run_type: Literal["daily_review", "on_demand"] = "on_demand"
+    question: str | None = None  # for an on-demand run: what the owner wants looked at
+
+
+class AgentRunOut(BaseModel):
+    id: int
+    trigger: str
+    run_type: str
+    model: str
+    prompt_version: str
+    status: str
+    error: str | None
+    started_at: datetime
+    finished_at: datetime | None
+    input_tokens: int
+    output_tokens: int
+    cache_read_tokens: int
+    cache_write_tokens: int
+    web_searches: int
+    cost_eur: Decimal
+    digest: str
+    recommendations: int  # made and shown
+    refused: int  # refused by the code gate, never shown as advice
+
+
+class AgentRecOut(BaseModel):
+    id: int
+    action_type: str
+    severity: str
+    subjects: list[str]
+    title: str
+    status: str
+    refused_reason: str | None
+
+
+class AgentRunDetailOut(AgentRunOut):
+    context: dict[str, Any]
+    tool_calls: list[dict[str, Any]]
+    findings: str
+    output: dict[str, Any]
+    items: list[AgentRecOut]
+
+
+def _run_out(db: DbDep, run: AgentRun) -> AgentRunOut:
+    rows = list(db.scalars(select(Recommendation).where(Recommendation.run_id == run.id)))
+    return AgentRunOut(
+        id=run.id,
+        trigger=run.trigger,
+        run_type=run.run_type,
+        model=run.model,
+        prompt_version=run.prompt_version,
+        status=run.status,
+        error=run.error,
+        started_at=run.started_at,
+        finished_at=run.finished_at,
+        input_tokens=run.input_tokens,
+        output_tokens=run.output_tokens,
+        cache_read_tokens=run.cache_read_tokens,
+        cache_write_tokens=run.cache_write_tokens,
+        web_searches=run.web_searches,
+        cost_eur=run.cost_eur,
+        digest=run.digest,
+        recommendations=sum(1 for r in rows if r.status != "refused"),
+        refused=sum(1 for r in rows if r.status == "refused"),
+    )
+
+
+@router.get("/runs", response_model=list[AgentRunOut])
+def list_runs(
+    _user: UserDep, db: DbDep, limit: Annotated[int, Query(ge=1, le=200)] = 30
+) -> list[AgentRunOut]:
+    """The agent's runs, newest first, with what each cost (shown on the System page)."""
+    runs = db.scalars(select(AgentRun).order_by(AgentRun.id.desc()).limit(limit))
+    return [_run_out(db, r) for r in runs]
+
+
+@router.get("/runs/{run_id}", response_model=AgentRunDetailOut)
+def one_run(run_id: int, _user: UserDep, db: DbDep) -> AgentRunDetailOut:
+    """The full trace of a run: context pack, tool calls, findings, the model's answer and the
+    verdict on each recommendation, refused ones with their reasons."""
+    run = db.get(AgentRun, run_id)
+    if run is None:
+        raise ApiError(404, "Not found", "That run does not exist.")
+    items = db.scalars(
+        select(Recommendation).where(Recommendation.run_id == run_id).order_by(Recommendation.id)
+    )
+    base = _run_out(db, run).model_dump()
+    return AgentRunDetailOut(
+        **base,
+        context=dict(run.context or {}),
+        tool_calls=list(run.tool_calls or []),
+        findings=run.findings,
+        output=dict(run.output or {}),
+        items=[
+            AgentRecOut(
+                id=r.id,
+                action_type=r.action_type,
+                severity=r.severity,
+                subjects=list(r.subjects or []),
+                title=r.title,
+                status=r.status,
+                refused_reason=r.refused_reason,
+            )
+            for r in items
+        ],
+    )
+
+
+@router.post("/runs", status_code=202)
+def start_run_now(body: AgentRunIn, _user: UserDep, db: DbDep) -> dict[str, str]:
+    """Ask the worker for a run now: "Run a review now", or a question about the portfolio."""
+    if not budget.agent_settings(db).enabled:
+        raise ApiError(409, "Agent is off", "The AI agent is switched off in Settings, Agent.")
+    enqueue(db, "agent_run", {"run_type": body.run_type, "question": body.question})
+    return {"status": "queued"}

@@ -78,7 +78,15 @@ def day_start(now: dt.datetime, tz: ZoneInfo) -> dt.datetime:
     return dt.datetime(local.year, local.month, local.day, tzinfo=tz).astimezone(dt.UTC)
 
 
-def standing(db: Session, cfg: AgentSettings, now: dt.datetime, tz: ZoneInfo) -> Standing:
+def standing(
+    db: Session,
+    cfg: AgentSettings,
+    now: dt.datetime,
+    tz: ZoneInfo,
+    exclude_run: int | None = None,
+) -> Standing:
+    """What the month has cost and how many runs were made. `exclude_run` leaves one run out of
+    the run counts (the one that is asking), though not out of the cost."""
     since, today = month_start(now, tz), day_start(now, tz)
     spent = news = ZERO
     runs = runs_today = 0
@@ -86,7 +94,7 @@ def standing(db: Session, cfg: AgentSettings, now: dt.datetime, tz: ZoneInfo) ->
         spent += run.cost_eur
         if run.run_type in NEWS_RUN_TYPES:
             news += run.cost_eur
-        elif run.run_type in AGENT_RUN_TYPES:
+        elif run.run_type in AGENT_RUN_TYPES and run.id != exclude_run:
             runs += 1
             runs_today += run.started_at >= today
     return Standing(
@@ -128,10 +136,11 @@ def check_call(
     run_type: str,
     worst_case_usd_amount: Decimal,
     new_run: bool = False,
+    run_id: int | None = None,
 ) -> None:
     """Raise BudgetExceeded unless the call fits. `new_run` counts the call against the daily
-    cap of agent runs (the first call of a run)."""
-    state = standing(db, cfg, now, tz)
+    cap of agent runs (the first call of a run, which is not itself among the runs made)."""
+    state = standing(db, cfg, now, tz, exclude_run=run_id if new_run else None)
     worst = to_eur(worst_case_usd_amount, usd_per_eur(db, cfg, now.date()))
     news = run_type in NEWS_RUN_TYPES
     if new_run and not news and state.runs_today >= state.daily_run_cap:

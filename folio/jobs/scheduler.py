@@ -27,6 +27,7 @@ from folio.backup import BackupError, create_backup
 from folio.config import Settings
 from folio.db.base import utcnow
 from folio.db.models_ledger import JobRequest
+from folio.jobs.agent import agent_run_job, agent_tick
 from folio.jobs.context import JobContext
 from folio.jobs.lookthrough import lookthrough_job
 from folio.jobs.macro import macro_job
@@ -53,6 +54,7 @@ log = get_logger("folio.scheduler")
 LOCAL_TZ = "Europe/Amsterdam"
 MISFIRE_GRACE_SECONDS = 6 * 3600
 POLL_SECONDS = 5
+AGENT_SECONDS = 300  # what is due for the AI agent (FR-AG-01)
 NOTIFY_SECONDS = 60  # pushes, digests and new signals (FR-NT-04 to FR-NT-06)
 
 
@@ -101,6 +103,7 @@ JOB_PARAMS: dict[str, tuple[str, ...]] = {
     "macro": (),
     "lookthrough": ("instrument_id",),
     "news": ("source_id",),
+    "agent_run": ("run_type",),
 }
 
 
@@ -128,6 +131,12 @@ def handlers(
         "retention": lambda p: retention_job(ctx),
         "rules": lambda p: rules_job(ctx),
         "macro": lambda p: macro_job(ctx),
+        "agent_run": lambda p: agent_run_job(
+            ctx,
+            "daily_review" if p.get("run_type") == "daily_review" else "on_demand",
+            "on_demand",
+            None if not p.get("question") else str(p["question"])[:500],
+        ),
         "news": lambda p: news_job(
             ctx, None if p.get("source_id") is None else int(str(p["source_id"]))
         ),
@@ -296,6 +305,10 @@ def run_news() -> None:
     news_job(_rt()[0])
 
 
+def run_agent_tick() -> None:
+    agent_tick(_rt()[0])
+
+
 def run_requests() -> None:
     ctx, settings = _rt()
     process_job_requests(ctx, settings)
@@ -351,6 +364,14 @@ def make_scheduler(
         id="notify",
         replace_existing=True,
         misfire_grace_time=NOTIFY_SECONDS,
+    )
+    scheduler.add_job(
+        f"{_MODULE}:run_agent_tick",
+        "interval",
+        seconds=AGENT_SECONDS,
+        id="agent",
+        replace_existing=True,
+        misfire_grace_time=AGENT_SECONDS,
     )
     scheduler.add_job(
         f"{_MODULE}:run_requests",

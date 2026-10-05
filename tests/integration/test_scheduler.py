@@ -101,11 +101,14 @@ def test_jobs_are_registered_by_importable_name_with_catch_up_settings(settings:
         jobs = {job.id: job for job in scheduler.get_jobs()}
     finally:
         scheduler.shutdown()
-    assert set(jobs) == {s.job_id for s in build_schedules()} | {"job-requests", "notify"}
+    assert set(jobs) == {s.job_id for s in build_schedules()} | {"job-requests", "notify", "agent"}
     eod = jobs["eod-XETR"]
     assert eod.func_ref == "folio.jobs.scheduler:run_eod" and eod.args == ("XETR",)
     assert jobs["snapshots"].func_ref == "folio.jobs.scheduler:run_snapshots"
     assert jobs["job-requests"].trigger.interval.total_seconds() == 5  # type: ignore[attr-defined]
+    assert (
+        jobs["agent"].trigger.interval.total_seconds() == 300
+    )  # what is due for the agent  # type: ignore[attr-defined]
     for job_id in ("eod-XETR", "fx", "backup"):
         job = jobs[job_id]
         assert job.coalesce is True and job.max_instances == 1  # a missed run happens once
@@ -126,7 +129,7 @@ def test_the_schedule_survives_a_restart_without_duplicates(settings: Settings) 
         jobs = reader.get_jobs()
         ids = [job.id for job in jobs]
         assert sorted(ids) == sorted(
-            {s.job_id for s in build_schedules()} | {"job-requests", "notify"}
+            {s.job_id for s in build_schedules()} | {"job-requests", "notify", "agent"}
         )
         assert len(ids) == len(set(ids))  # persisted once, however often the worker started
         assert all(job.next_run_time is not None for job in jobs)

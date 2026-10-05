@@ -25,6 +25,7 @@ from pathlib import Path
 from typing import Any
 
 from folio.agent.validate import Calc, Facts, Past
+from folio.news.normalize import canonical_url
 
 SCENARIOS = Path(__file__).resolve().parent / "scenarios"
 
@@ -56,7 +57,7 @@ def load(path: Path) -> Scenario:
         clusters={k: _time(v) for k, v in f.get("clusters", {}).items()},
         tools=frozenset(f.get("tools", [])),
         macro=frozenset(f.get("macro", [])),
-        urls=frozenset(f.get("urls", [])),
+        urls=frozenset(canonical_url(u) for u in f.get("urls", [])),
         numbers=_decimals(f.get("numbers", [])),
         calculations={
             cid: Calc(c["kind"], frozenset(c["subjects"]), _decimals(c["numbers"]))

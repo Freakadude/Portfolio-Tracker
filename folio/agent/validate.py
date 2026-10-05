@@ -29,6 +29,7 @@ from typing import Any
 from urllib.parse import urlsplit
 
 from folio.agent.schema import ACTION_TYPES
+from folio.news.normalize import canonical_url
 
 SEVERITIES = ("info", "low", "medium", "high", "critical")
 CONFIDENCES = ("low", "medium", "high")
@@ -98,7 +99,7 @@ class Facts:
     clusters: Mapping[str, datetime] = field(default_factory=dict)  # news cluster id -> last seen
     tools: frozenset[str] = frozenset()  # names of the tools called
     macro: frozenset[str] = frozenset()  # macro series codes seen
-    urls: frozenset[str] = frozenset()  # pages the web search returned
+    urls: frozenset[str] = frozenset()  # pages the web search returned, in canonical form
     numbers: frozenset[Decimal] = frozenset()  # every number in the tool results
     calculations: Mapping[str, Calc] = field(default_factory=dict)
 
@@ -282,7 +283,7 @@ def _resolve(e: Evidence, facts: Facts) -> datetime | bool:
         return e.ref in facts.tools or e.ref.split(":", 1)[0] in facts.tools
     if e.kind == "macro_series":
         return e.ref in facts.macro
-    return e.ref in facts.urls
+    return canonical_url(e.ref) in facts.urls
 
 
 def _is_https(url: str) -> bool:
