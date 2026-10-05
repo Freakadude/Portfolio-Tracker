@@ -251,6 +251,24 @@ class LookThroughSettings(Section):
     stale_days: int = Field(default=45, ge=1)  # after this the snapshot is called out of date
 
 
+class NewsSettings(Section):
+    """How news is triaged and routed (FR-NW-06). The models and the budget live under agent."""
+
+    triage: bool = True  # assess stories with the LLM (needs the agent switched on)
+    min_relevance: Decimal = Field(default=Decimal("0.05"), ge=0, le=1)  # below: not assessed
+    unlinked_per_day: int = Field(default=10, ge=0)  # stories linked to nothing that are still read
+    batch_size: int = Field(default=8, ge=1, le=20)  # stories per Haiku call
+    max_per_run: int = Field(default=24, ge=1)
+    max_age_days: int = Field(default=3, ge=1)  # older stories are not assessed
+    escalate_impact: int = Field(default=60, ge=0, le=100)  # re-assess with the stronger model
+    escalate_weight_pct: Decimal = Field(
+        default=Decimal("10"), ge=0, le=100
+    )  # ...or a big position
+    event_impact: int = Field(default=70, ge=0, le=100)  # starts an agent event run
+    push_impact: int = Field(default=80, ge=0, le=100)  # a high notification for a holding
+    display_impact: int = Field(default=0, ge=0, le=100)  # the News page's default minimum
+
+
 class AnalyticsSettings(Section):
     """The risk-free rate for the Sharpe ratio (FR-PF-06): the ECB deposit facility rate, or a
     fixed percentage when the owner prefers one (or the ECB series is not yet loaded)."""
@@ -271,4 +289,5 @@ SECTIONS: dict[str, type[Section]] = {
     "analytics": AnalyticsSettings,
     "macro": MacroSettings,
     "lookthrough": LookThroughSettings,
+    "news": NewsSettings,
 }

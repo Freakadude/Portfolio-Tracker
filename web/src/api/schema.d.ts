@@ -819,6 +819,65 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/news": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List News
+         * @description Stories, newest first: filter by holding (stories linked to it directly or through an ETF
+         *     that holds the company), impact, direction, source and date.
+         */
+        get: operations["list_news_api_v1_news_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/news/clusters/{cluster_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** One Story */
+        get: operations["one_story_api_v1_news_clusters__cluster_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/news/clusters/{cluster_id}/feedback": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Feedback
+         * @description Useful or not relevant: five net "not relevant" marks lower a source's trust, and a
+         *     wrongly linked story lowers the alias that found it (FR-NW-08).
+         */
+        post: operations["feedback_api_v1_news_clusters__cluster_id__feedback_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/news/sources": {
         parameters: {
             query?: never;
@@ -3347,6 +3406,114 @@ export interface components {
             tags?: string[];
             /** Ter Pct */
             ter_pct?: number | string | null;
+        };
+        /** NewsAssessmentOut */
+        NewsAssessmentOut: {
+            /** Affected */
+            affected: string[];
+            /** Confidence */
+            confidence: string;
+            /** Direction */
+            direction: string;
+            /** Horizon */
+            horizon: string;
+            /** Impact Score */
+            impact_score: number;
+            /** Model */
+            model: string;
+            /** Rationale */
+            rationale: string;
+        };
+        /** NewsClusterOut */
+        NewsClusterOut: {
+            assessment: components["schemas"]["NewsAssessmentOut"] | null;
+            /**
+             * First Seen
+             * Format: date-time
+             */
+            first_seen: string;
+            /** Id */
+            id: number;
+            /** Items */
+            items: components["schemas"]["NewsItemOut"][];
+            /**
+             * Last Seen
+             * Format: date-time
+             */
+            last_seen: string;
+            /** Links */
+            links: components["schemas"]["NewsLinkOut"][];
+            /** Relevance */
+            relevance: string;
+            /** Title */
+            title: string;
+        };
+        /** NewsFeedbackChangeOut */
+        NewsFeedbackChangeOut: {
+            /** Kind */
+            kind: string;
+            /** Name */
+            name: string;
+            /** New */
+            new: string;
+            /** Old */
+            old: string;
+        };
+        /** NewsFeedbackIn */
+        NewsFeedbackIn: {
+            /** Link Id */
+            link_id?: number | null;
+            /** Verdict */
+            verdict: string;
+        };
+        /** NewsFeedbackOut */
+        NewsFeedbackOut: {
+            /** Changes */
+            changes: components["schemas"]["NewsFeedbackChangeOut"][];
+        };
+        /** NewsItemOut */
+        NewsItemOut: {
+            /** Id */
+            id: number;
+            /**
+             * Published
+             * Format: date-time
+             */
+            published: string;
+            /** Source */
+            source: string;
+            /** Summary */
+            summary: string;
+            /** Title */
+            title: string;
+            /** Url */
+            url: string;
+        };
+        /** NewsLinkOut */
+        NewsLinkOut: {
+            /** Id */
+            id: number;
+            /** Instrument Id */
+            instrument_id: number | null;
+            /** Label */
+            label: string;
+            /** Link Type */
+            link_type: string;
+            /** Matched By */
+            matched_by: string;
+            /** Relevance */
+            relevance: string;
+            /** Sleeve */
+            sleeve: string | null;
+            /** Weight Pct */
+            weight_pct: string | null;
+        };
+        /** NewsPageOut */
+        NewsPageOut: {
+            /** Clusters */
+            clusters: components["schemas"]["NewsClusterOut"][];
+            /** Total */
+            total: number;
         };
         /** NotificationOut */
         NotificationOut: {
@@ -6546,6 +6713,112 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["folio__api__routers__macro__SeriesOut"][];
+                };
+            };
+        };
+    };
+    list_news_api_v1_news_get: {
+        parameters: {
+            query?: {
+                instrument?: number | null;
+                min_impact?: number | null;
+                direction?: string | null;
+                source?: number | null;
+                from?: string | null;
+                to?: string | null;
+                include_unlinked?: boolean;
+                sort?: string;
+                limit?: number;
+                offset?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["NewsPageOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    one_story_api_v1_news_clusters__cluster_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                cluster_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["NewsClusterOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    feedback_api_v1_news_clusters__cluster_id__feedback_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                cluster_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["NewsFeedbackIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["NewsFeedbackOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
                 };
             };
         };

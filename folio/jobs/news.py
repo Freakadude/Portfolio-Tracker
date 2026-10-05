@@ -18,6 +18,7 @@ from folio.marketdata.base import ProviderError
 from folio.marketdata.eodhd import NEWS_WEIGHT
 from folio.marketdata.prices import tracked_listings
 from folio.marketdata.quotes import EOD_MARGIN, listing_refs
+from folio.news.assess import assess_news
 from folio.news.eodhd import parse_eodhd_news
 from folio.news.feed import FeedError, FeedItem, parse_feed
 from folio.news.pipeline import cluster_and_link
@@ -107,5 +108,22 @@ def news_job(ctx: JobContext, source_id: int | None = None) -> JobResult:
                 f"{grouped.items} new items grouped into {grouped.new_clusters} new stories, "
                 f"{grouped.links} links to your holdings"
             )
+
+        # then the LLM reads what matters (skipped when the agent is off or has no key)
+        llm = ctx.llm_for(db)
+        if llm is not None:
+            triaged = assess_news(db, llm, now)
+            if triaged.assessed or triaged.escalated:
+                log.info(
+                    f"News triage: {triaged.assessed} stories assessed, {triaged.escalated} "
+                    f"re-assessed by the stronger model, {triaged.links_added} links added, "
+                    f"{triaged.notified} notified ({triaged.cost_eur:.4f} EUR)"
+                )
+            for problem in triaged.problems:
+                (log.error if triaged.stopped in ("auth", "billing") else log.info)(
+                    f"News triage: {problem}"
+                )
+            if triaged.stopped and triaged.stopped not in ("auth", "billing"):
+                log.info(f"News triage paused ({triaged.stopped}); the rest waits for next time.")
 
     return run_job(ctx, "news", body, {"source_id": source_id})
