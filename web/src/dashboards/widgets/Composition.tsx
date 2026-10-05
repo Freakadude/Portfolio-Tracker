@@ -10,6 +10,7 @@ import { Donut, type DonutSlice } from '../charts/Donut'
 import { OTHER, colorOf, foldTail } from '../charts/palette'
 import { Treemap, type TreemapItem } from '../charts/Treemap'
 import type { AllocationData, DriftData, HoldingsData, WidgetProps } from '../types'
+import { Where } from './Where'
 
 /** The holdings list a slice opens (FR-DB-06). */
 export const holdingsFilter = (groupBy: string, value: string) =>
@@ -49,7 +50,9 @@ export function AllocationWidget({ data }: WidgetProps<AllocationData>) {
     }))
   }, [slices, data.chart])
   const keys = useMemo(() => items.map((i) => i.key), [items])
-  const drill = (key: string) => key !== OTHER && navigate(holdingsFilter(groupBy, key))
+  const lookThrough = data.look_through === true
+  const drill = (key: string) =>
+    !lookThrough && key !== OTHER && navigate(holdingsFilter(groupBy, key))
   if (data.unavailable || data.empty) {
     return (
       <div className="space-y-1">
@@ -64,7 +67,7 @@ export function AllocationWidget({ data }: WidgetProps<AllocationData>) {
   const colored = items.map((i) => ({
     ...i,
     color: colorOf(keys, i.key),
-    drillable: i.key !== OTHER,
+    drillable: i.key !== OTHER && !lookThrough,
   }))
   return (
     <div className="flex h-full flex-col gap-3">
@@ -92,20 +95,33 @@ export function AllocationWidget({ data }: WidgetProps<AllocationData>) {
         table={
           <DataTable
             caption={t('widgets.allocation')}
-            head={[
-              t(`widgets.groups.${groupBy}`),
-              t('widgets.value'),
-              t('widgets.weight'),
-              t('widgets.target'),
-              t('widgets.drift'),
-            ]}
-            rows={slices.map((s) => [
-              s.key,
-              eur(s.value_eur, 0),
-              pct(s.weight, 1),
-              s.target === null ? '–' : pct(s.target, 1),
-              <Points key="d" value={s.drift_pp} />,
-            ])}
+            head={
+              lookThrough
+                ? [
+                    t(`widgets.groups.${groupBy}`),
+                    t('widgets.value'),
+                    t('widgets.weight'),
+                    t('lookThrough.where'),
+                  ]
+                : [
+                    t(`widgets.groups.${groupBy}`),
+                    t('widgets.value'),
+                    t('widgets.weight'),
+                    t('widgets.target'),
+                    t('widgets.drift'),
+                  ]
+            }
+            rows={slices.map((s) =>
+              lookThrough
+                ? [s.key, eur(s.value_eur, 0), pct(s.weight, 1), <Where key="w" parts={s.parts} />]
+                : [
+                    s.key,
+                    eur(s.value_eur, 0),
+                    pct(s.weight, 1),
+                    s.target === null ? '–' : pct(s.target, 1),
+                    <Points key="d" value={s.drift_pp} />,
+                  ],
+            )}
           />
         }
       />
@@ -125,6 +141,11 @@ export function AllocationWidget({ data }: WidgetProps<AllocationData>) {
               </li>
             ))}
         </ul>
+      )}
+      {lookThrough && (data.unopened ?? []).length > 0 && (
+        <p className="text-xs text-muted">
+          {t('lookThrough.unopened', { names: (data.unopened ?? []).join(', ') })}
+        </p>
       )}
       {(data.unvalued ?? 0) > 0 && (
         <p className="text-xs text-muted">{t('overview.unvalued', { count: data.unvalued })}</p>

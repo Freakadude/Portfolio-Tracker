@@ -137,7 +137,8 @@
       "retention": "Retention",
       "sleeves": "Sleeves",
       "analytics": "Analytics",
-      "macro": "Macro"
+      "macro": "Macro",
+      "news": "News"
     },
     "secretSet": "A value is saved. Type a new one to replace it.",
     "secretUnset": "Not set",
@@ -186,7 +187,23 @@
     "digest_daily_time": "Daily digest time",
     "digest_weekly": "Weekly digest on Sundays",
     "app_url": "Folio address for links in pushes (e.g. https://folio.your-tailnet.ts.net)",
-    "series": "Series fetched every morning (JSON)"
+    "series": "Series fetched every morning (JSON)",
+    "triage": "Assess stories with the AI",
+    "min_relevance": "Smallest relevance worth assessing (0 to 1)",
+    "unlinked_per_day": "Stories linked to nothing to read per day",
+    "batch_size": "Stories per AI call",
+    "max_per_run": "Most stories per run",
+    "max_age_days": "Ignore stories older than (days)",
+    "escalate_impact": "Re-assess with the stronger model from impact",
+    "escalate_weight_pct": "...or when a position is above this share (%)",
+    "event_impact": "Start an agent run from impact",
+    "push_impact": "Notify from impact",
+    "display_impact": "News page minimum impact",
+    "news_share_eur": "Share of the budget news may use (EUR)",
+    "daily_review_time": "Daily review time (weekdays)",
+    "prices": "Model prices, US dollars per million tokens (JSON)",
+    "web_search_usd_per_1000": "Web search price per 1000 (USD)",
+    "usd_per_eur_fallback": "Dollars per euro when no ECB rate is stored"
   },
   "options": {
     "number_format": {

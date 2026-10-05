@@ -7,7 +7,7 @@ import { Alert, Button, Field, Input, Select } from '../components/ui'
 import { useInbox, useMarkRead, type Delivery, type InboxFilters, type Notification } from './api'
 
 const SEVERITIES = ['critical', 'high', 'medium', 'low', 'info'] as const
-const SOURCES = ['signal', 'alert', 'digest', 'system'] as const
+const SOURCES = ['signal', 'alert', 'news', 'agent', 'digest', 'system'] as const
 const TONE = {
   critical: 'bad',
   high: 'bad',

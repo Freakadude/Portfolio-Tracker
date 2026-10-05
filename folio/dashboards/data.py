@@ -309,6 +309,7 @@ def _exposure(e: Exposure) -> dict[str, Any]:
         "parts": [
             {
                 "source": p.source,
+                "instrument_id": p.instrument_id,
                 "kind": p.kind,
                 "value_eur": str(p.value_eur),
                 "weight_pct": s(p.weight_pct),

@@ -1,0 +1,87 @@
+{
+  "lookThrough": {
+    "where": "Where it sits",
+    "dimension": {
+      "company": "Company",
+      "sector": "Sector",
+      "country": "Country",
+      "currency": "Currency"
+    },
+    "part": {
+      "direct": "{{source}}: held directly, {{value}}",
+      "look_through": "{{source}}: {{weight}} % of the fund, {{value}}",
+      "fund": "{{source}}: a fund whose holdings are not loaded, {{value}}",
+      "other": "{{source}}: the part of the file that names no company, {{value}}"
+    },
+    "rest": "Everything below these makes up {{weight}} of the portfolio.",
+    "opened": "Opened up: {{names}}.",
+    "openedNone": "No ETF has its holdings yet.",
+    "unopened": "Shown as themselves, holdings not loaded: {{names}}.",
+    "openPosition": "{{name}}, {{weight}}. Open the position."
+  },
+  "etfHoldings": {
+    "title": "What this fund holds",
+    "intro": "Upload the issuer's holdings file (a CSV from the fund's page) so Folio can look through this fund: what you own underneath, across all your holdings.",
+    "empty": "No holdings yet. Upload a file below.",
+    "snapshots": "Saved holdings",
+    "columns": {
+      "date": "Date",
+      "source": "Source",
+      "holdings": "Holdings",
+      "covered": "Covered",
+      "actions": ""
+    },
+    "sources": {
+      "csv": "Uploaded file",
+      "url": "Issuer address",
+      "eodhd": "EODHD"
+    },
+    "stale": "Out of date",
+    "coveredPct": "{{pct}} % of the fund",
+    "delete": "Delete",
+    "deleteConfirm": "Delete the holdings of {{date}}?",
+    "top": "Largest holdings",
+    "topColumns": {
+      "name": "Name",
+      "weight": "Weight (%)",
+      "sector": "Sector",
+      "country": "Country"
+    },
+    "upload": {
+      "title": "Add a holdings file",
+      "file": "Holdings file (CSV)",
+      "choose": "Choose a CSV file first.",
+      "preview": "Preview",
+      "date": "Holdings date",
+      "dateHint": "Taken from the file when it states one.",
+      "store": "Save these holdings",
+      "stored": "Saved {{count}} holdings from {{date}}.",
+      "readAs": "Read as: {{count}} holdings, {{pct}} % of the fund, dated {{date}}.",
+      "noDate": "no date in the file",
+      "dropped": "Left out (cash and derivatives): {{lines}}",
+      "mapping": "Columns",
+      "mappingHint": "Folio matched the columns by their names. Change a choice if it is wrong.",
+      "none": "(none)",
+      "columns": {
+        "name": "Name",
+        "weight": "Weight",
+        "isin": "ISIN",
+        "ticker": "Ticker",
+        "sector": "Sector",
+        "country": "Country",
+        "currency": "Currency"
+      },
+      "reread": "Read again"
+    },
+    "source": {
+      "title": "Refresh automatically",
+      "intro": "Folio can fetch the holdings again every month from the issuer's download address, or from EODHD (needs its Fundamentals plan).",
+      "url": "Issuer's download address (CSV)",
+      "eodhd": "Use EODHD fundamentals",
+      "save": "Save",
+      "saved": "Saved.",
+      "refresh": "Refresh now",
+      "queued": "Asked the worker to refresh. It appears here when done."
+    }
+  }
+}

@@ -19,7 +19,9 @@
       "signal": "Strategy",
       "alert": "Price alert",
       "digest": "Digest",
-      "system": "System"
+      "system": "System",
+      "news": "News",
+      "agent": "AI agent"
     },
     "status": {
       "all": "All",
@@ -138,6 +140,7 @@
     "free": "Free disk",
     "agent": "AI agent this month",
     "agentValue": "{{runs}} runs, {{cost}} of {{budget}} EUR",
-    "failed": "Failed jobs (24 h)"
+    "failed": "Failed jobs (24 h)",
+    "failingNews": "News sources failing"
   }
 }

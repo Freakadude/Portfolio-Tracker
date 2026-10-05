@@ -57,7 +57,35 @@ export interface AllocationData extends Empty {
     target: string | null
     drift_pp: string | null
     outside_band: boolean | null
+    parts?: ExposurePart[]
   }[]
+  look_through?: boolean
+  unopened?: string[]
+}
+
+/** Where part of a look-through exposure sits: held directly, or inside an ETF. */
+export interface ExposurePart {
+  source: string
+  instrument_id: number
+  kind: 'direct' | 'look_through' | 'fund' | 'other'
+  value_eur: string
+  weight_pct: string | null
+}
+
+export interface LookThroughData extends Empty {
+  dimension?: 'company' | 'sector' | 'country' | 'currency'
+  total_eur?: string
+  slices?: {
+    key: string
+    value_eur: string
+    weight: string
+    other: boolean
+    parts: ExposurePart[]
+  }[]
+  rest_weight?: string
+  opened?: { name: string; holdings_as_of: string }[]
+  unopened?: string[]
+  unvalued?: number
 }
 
 export interface DriftData extends Empty {

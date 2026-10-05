@@ -1,0 +1,103 @@
+{
+  "news": {
+    "title": "News",
+    "filters": "Filter the news",
+    "filter": {
+      "holding": "Holding",
+      "all": "All",
+      "impact": "Impact",
+      "anyImpact": "Any",
+      "atLeast": "{{n}} or more",
+      "direction": "Direction",
+      "source": "Source",
+      "from": "From",
+      "to": "To",
+      "sort": "Order",
+      "unlinked": "Show stories linked to nothing"
+    },
+    "sort": {
+      "time": "Newest first",
+      "relevance": "Most relevant first",
+      "impact": "Highest impact first"
+    },
+    "empty": {
+      "title": "No news yet",
+      "body": "Stories about what you hold appear here once Folio has fetched your sources (Settings, News) and found links to your holdings."
+    },
+    "showing": "Showing {{shown}} of {{total}} stories.",
+    "impact": "Impact {{score}}",
+    "direction": {
+      "positive": "Positive",
+      "negative": "Negative",
+      "mixed": "Mixed",
+      "unclear": "Unclear"
+    },
+    "horizon": {
+      "intraday": "Within the day",
+      "days": "Over days",
+      "weeks": "Over weeks",
+      "structural": "Structural"
+    },
+    "level": { "low": "low", "medium": "medium", "high": "high" },
+    "confidence": "Confidence: {{level}}",
+    "affects": "Affects: {{names}}.",
+    "links": "What it is linked to",
+    "linkType": {
+      "direct": "directly",
+      "look_through": "inside the fund",
+      "macro": "macro",
+      "theme": "theme"
+    },
+    "weightInFund": "{{pct}} % of the fund",
+    "wrongLink": "Wrong link",
+    "wrongLinkFor": "This link to {{name}} is wrong",
+    "reportedBy": "Reported by",
+    "sources": "Reported by {{count}} sources.",
+    "useful": "Useful",
+    "notRelevant": "Not relevant",
+    "thanks": "Noted.",
+    "change": {
+      "source_trust": "Trust in {{name}} went from {{old}} to {{new}}.",
+      "alias_weight": "The name \"{{name}}\" now counts for {{new}} when matching stories."
+    }
+  },
+  "newsSettings": {
+    "intro": "Where news comes from. The ECB, the Federal Reserve and EODHD are ready; add the news feeds of the issuers of your ETFs and the companies you hold. Only the headline, a short summary and the link are kept.",
+    "caption": "News sources",
+    "columns": {
+      "name": "Source",
+      "kind": "Type",
+      "last": "Last fetched",
+      "status": "Status",
+      "actions": ""
+    },
+    "kinds": { "rss": "Feed", "eodhd": "EODHD news" },
+    "off": "off",
+    "trust": "Trust {{trust}}",
+    "items": "{{count}} stories stored",
+    "ok": "Working",
+    "failing": "Failing ({{count}})",
+    "fetch": "Fetch now",
+    "queued": "Asked the worker to fetch. New stories appear on the News page.",
+    "edit": "Edit",
+    "delete": "Delete",
+    "deleteConfirm": "Delete the source {{name}}?",
+    "add": "Add a source",
+    "triage": "How stories are assessed",
+    "form": {
+      "name": "Name",
+      "url": "Feed address",
+      "preview": "Preview",
+      "previewIntro": "The latest {{shown}} of {{total}} items in this feed:",
+      "language": "Language",
+      "trust": "Trust (0.1 to 1)",
+      "trustHint": "How much stories from this source count. Your feedback moves it.",
+      "poll": "Check",
+      "every": "every {{minutes}} minutes",
+      "macro": "Macro series it speaks to",
+      "macroHint": "Series codes such as DFII10, comma separated. A rate decision links to the sleeves that watch them.",
+      "enabled": "Enabled",
+      "cancel": "Cancel"
+    }
+  }
+}

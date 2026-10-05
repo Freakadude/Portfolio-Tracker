@@ -137,7 +137,9 @@
       "sleeve": "Sleeve",
       "region": "Region",
       "sector": "Sector",
-      "currency": "Currency"
+      "currency": "Currency",
+      "company": "Company (look-through)",
+      "country": "Country (look-through)"
     },
     "tableGroups": {
       "none": "No grouping",
@@ -191,7 +193,7 @@
     "holdings_table": "Your positions with value, weight and result.",
     "returns_heatmap": "Which positions gained and which lost in the period.",
     "monthly_returns": "Return of each month, year by year.",
-    "look_through": "What your ETFs hold underneath. Needs ETF data (later).",
+    "look_through": "What you own underneath: companies, sectors, countries and currencies across direct holdings and the ETFs you have holdings files for.",
     "correlation_matrix": "How your holdings move together.",
     "drawdown": "How far below its peak your portfolio has been.",
     "return_bridge": "From start value to end value: what you added and what each position gained.",
@@ -232,6 +234,8 @@
     "group_by": "Group by",
     "show_target": "Compare with targets",
     "look_through": "Look through ETFs",
+    "dimension": "Group by",
+    "top_n": "How many to show",
     "columns": "Columns",
     "window": "Window",
     "text": "Text",

@@ -9,7 +9,7 @@ import { Insights } from './pages/Insights'
 import { ImportWizard } from './pages/ImportWizard'
 import { Transactions } from './pages/Transactions'
 import { Login } from './pages/Login'
-import { Placeholder } from './pages/Placeholder'
+import { News } from './pages/News'
 import { Reports } from './pages/Reports'
 import { Settings } from './pages/Settings'
 import { Setup } from './pages/Setup'
@@ -23,8 +23,6 @@ const PositionDetail = lazy(() =>
   import('./pages/PositionDetail').then((m) => ({ default: m.PositionDetail })),
 )
 
-const PAGES = ['news'] as const
-
 export function App() {
   return (
     <Routes>
@@ -33,9 +31,7 @@ export function App() {
       <Route element={<Gate />}>
         <Route element={<Layout />}>
           <Route index element={<Home />} />
-          {PAGES.map((page) => (
-            <Route key={page} path={page} element={<Placeholder page={page} />} />
-          ))}
+          <Route path="news" element={<News />} />
           <Route path="watchlist" element={<Watchlist />} />
           <Route path="strategies" element={<Strategies />} />
           <Route path="reports" element={<Reports />} />

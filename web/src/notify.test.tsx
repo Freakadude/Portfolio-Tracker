@@ -331,9 +331,10 @@ describe('system information (FR-SY-10)', () => {
           runs_this_month: 0,
           cost_this_month_eur: '0.00',
           budget_eur: '5',
-          note: 'The AI agent arrives in Phase 4; nothing is spent until then.',
+          note: 'Add your Anthropic API key under Settings, Agent to switch the agent on.',
         },
         failed_jobs_24h: 1,
+        failing_news_sources: ['ECB press releases'],
       },
     })
     renderAt(<SystemInfo />)
@@ -343,5 +344,7 @@ describe('system information (FR-SY-10)', () => {
     expect(screen.getByText('3 files, 20.0 MB')).toBeInTheDocument()
     expect(screen.getByText('0 runs, 0.00 of 5 EUR')).toBeInTheDocument()
     expect(screen.getByText('1')).toHaveClass('text-danger')
+    expect(screen.getByText(/Add your Anthropic API key/)).toBeInTheDocument()
+    expect(screen.getByText('ECB press releases')).toHaveClass('text-danger') // a failing source
   })
 })

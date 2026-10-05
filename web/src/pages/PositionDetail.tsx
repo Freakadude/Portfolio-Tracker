@@ -4,6 +4,7 @@ import { Link, useParams } from 'react-router-dom'
 import { ApiProblem, errorMessage } from '../api/client'
 import { usePositionDetail, usePrices } from '../api/queries'
 import { AsOf, Badge, EmptyState, Gain } from '../components/display'
+import { HoldingsPanel } from '../lookthrough/HoldingsPanel'
 import { PriceAlerts } from '../notify/PriceAlerts'
 import { PriceChart } from '../components/PriceChart'
 import { Alert, Card } from '../components/ui'
@@ -156,6 +157,10 @@ export function PositionDetail() {
       </section>
 
       <PriceAlerts instrumentId={d.instrument.id} name={d.instrument.name} />
+
+      {['ETF', 'ETC', 'FUND'].includes(d.instrument.asset_class) && (
+        <HoldingsPanel instrumentId={d.instrument.id} />
+      )}
 
       {d.lots.length > 0 && (
         <section aria-labelledby="lots-h" className="space-y-2">

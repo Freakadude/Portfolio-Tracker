@@ -8,6 +8,7 @@ import {
   ValueHistoryWidget,
 } from './widgets/History'
 import { KpiWidget } from './widgets/Kpi'
+import { LookThroughWidget } from './widgets/LookThrough'
 import { MacroWidget } from './widgets/Macro'
 import {
   AttributionWidget,
@@ -53,7 +54,16 @@ function def<D>(
 
 const PORTFOLIO_ACCOUNT = ['portfolio', 'account'] as const
 const ALL_SCOPES = ['portfolio', 'account', 'sleeve', 'instrument'] as const
-const GROUPS = ['instrument', 'asset_class', 'sleeve', 'region', 'sector', 'currency'] as const
+const GROUPS = [
+  'instrument',
+  'asset_class',
+  'sleeve',
+  'region',
+  'sector',
+  'currency',
+  'company',
+  'country',
+] as const
 export const KPI_METRICS = [
   'value',
   'day_change',
@@ -185,7 +195,21 @@ const DEFS: Record<string, Omit<WidgetDef, 'type'>> = {
     period: false,
     fields: [],
   }),
-  look_through: later,
+  look_through: def(LookThroughWidget, {
+    chart: true,
+    drillsTo: 'the position page of the position that holds it',
+    scopes: PORTFOLIO_ACCOUNT,
+    period: false,
+    fields: [
+      {
+        key: 'dimension',
+        kind: 'select',
+        options: ['company', 'sector', 'country', 'currency'],
+        labels: 'lookThrough.dimension',
+      },
+      { key: 'top_n', kind: 'number', min: 1, max: 100 },
+    ],
+  }),
   correlation_matrix: def(CorrelationWidget, {
     chart: true,
     drillsTo: 'the position page',

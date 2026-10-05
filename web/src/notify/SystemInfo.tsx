@@ -53,6 +53,11 @@ export function SystemInfo() {
             })}
             {d.agent.note && <span className="block text-xs text-muted">{d.agent.note}</span>}
           </Item>
+          {d.failing_news_sources.length > 0 && (
+            <Item label={t('systemInfo.failingNews')}>
+              <span className="font-semibold text-danger">{d.failing_news_sources.join(', ')}</span>
+            </Item>
+          )}
           <Item label={t('systemInfo.failed')}>
             <span className={d.failed_jobs_24h > 0 ? 'font-semibold text-danger' : ''}>
               {d.failed_jobs_24h}
