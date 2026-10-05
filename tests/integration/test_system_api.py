@@ -207,7 +207,7 @@ def test_the_audit_log_can_be_filtered(api: TestClient) -> None:
     ]
     assert {i["action"] for i in get(action="create")} == {"create"}
     assert {i["actor"] for i in get(actor="user")} == {"user"} and get(actor="worker") == []
-    today = date.today().isoformat()
+    today = datetime.now(UTC).date().isoformat()  # the log stamps UTC; local midnight differs
     assert len(get(**{"from": today, "to": today})) == len(get())  # everything happened today
     assert get(**{"from": "2999-01-01"}) == [] and get(to="2000-01-01") == []
     assert get(entity="nothing") == []
