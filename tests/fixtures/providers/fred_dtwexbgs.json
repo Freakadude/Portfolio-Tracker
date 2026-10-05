@@ -1,0 +1,214 @@
+{
+  "realtime_start": "2024-06-14",
+  "realtime_end": "2024-06-14",
+  "observation_start": "2024-05-01",
+  "observation_end": "2024-06-14",
+  "units": "lin",
+  "output_type": 1,
+  "file_type": "json",
+  "order_by": "observation_date",
+  "sort_order": "asc",
+  "count": 33,
+  "offset": 0,
+  "limit": 100000,
+  "observations": [
+    {
+      "realtime_start": "2024-06-14",
+      "realtime_end": "2024-06-14",
+      "date": "2024-05-01",
+      "value": "121.40"
+    },
+    {
+      "realtime_start": "2024-06-14",
+      "realtime_end": "2024-06-14",
+      "date": "2024-05-02",
+      "value": "121.45"
+    },
+    {
+      "realtime_start": "2024-06-14",
+      "realtime_end": "2024-06-14",
+      "date": "2024-05-03",
+      "value": "121.50"
+    },
+    {
+      "realtime_start": "2024-06-14",
+      "realtime_end": "2024-06-14",
+      "date": "2024-05-06",
+      "value": "121.55"
+    },
+    {
+      "realtime_start": "2024-06-14",
+      "realtime_end": "2024-06-14",
+      "date": "2024-05-07",
+      "value": "121.60"
+    },
+    {
+      "realtime_start": "2024-06-14",
+      "realtime_end": "2024-06-14",
+      "date": "2024-05-08",
+      "value": "121.65"
+    },
+    {
+      "realtime_start": "2024-06-14",
+      "realtime_end": "2024-06-14",
+      "date": "2024-05-09",
+      "value": "121.70"
+    },
+    {
+      "realtime_start": "2024-06-14",
+      "realtime_end": "2024-06-14",
+      "date": "2024-05-10",
+      "value": "121.75"
+    },
+    {
+      "realtime_start": "2024-06-14",
+      "realtime_end": "2024-06-14",
+      "date": "2024-05-13",
+      "value": "121.80"
+    },
+    {
+      "realtime_start": "2024-06-14",
+      "realtime_end": "2024-06-14",
+      "date": "2024-05-14",
+      "value": "121.85"
+    },
+    {
+      "realtime_start": "2024-06-14",
+      "realtime_end": "2024-06-14",
+      "date": "2024-05-15",
+      "value": "121.90"
+    },
+    {
+      "realtime_start": "2024-06-14",
+      "realtime_end": "2024-06-14",
+      "date": "2024-05-16",
+      "value": "121.95"
+    },
+    {
+      "realtime_start": "2024-06-14",
+      "realtime_end": "2024-06-14",
+      "date": "2024-05-17",
+      "value": "122.00"
+    },
+    {
+      "realtime_start": "2024-06-14",
+      "realtime_end": "2024-06-14",
+      "date": "2024-05-20",
+      "value": "122.05"
+    },
+    {
+      "realtime_start": "2024-06-14",
+      "realtime_end": "2024-06-14",
+      "date": "2024-05-21",
+      "value": "122.10"
+    },
+    {
+      "realtime_start": "2024-06-14",
+      "realtime_end": "2024-06-14",
+      "date": "2024-05-22",
+      "value": "122.15"
+    },
+    {
+      "realtime_start": "2024-06-14",
+      "realtime_end": "2024-06-14",
+      "date": "2024-05-23",
+      "value": "122.20"
+    },
+    {
+      "realtime_start": "2024-06-14",
+      "realtime_end": "2024-06-14",
+      "date": "2024-05-24",
+      "value": "122.25"
+    },
+    {
+      "realtime_start": "2024-06-14",
+      "realtime_end": "2024-06-14",
+      "date": "2024-05-27",
+      "value": "122.30"
+    },
+    {
+      "realtime_start": "2024-06-14",
+      "realtime_end": "2024-06-14",
+      "date": "2024-05-28",
+      "value": "122.35"
+    },
+    {
+      "realtime_start": "2024-06-14",
+      "realtime_end": "2024-06-14",
+      "date": "2024-05-29",
+      "value": "122.40"
+    },
+    {
+      "realtime_start": "2024-06-14",
+      "realtime_end": "2024-06-14",
+      "date": "2024-05-30",
+      "value": "122.45"
+    },
+    {
+      "realtime_start": "2024-06-14",
+      "realtime_end": "2024-06-14",
+      "date": "2024-05-31",
+      "value": "122.50"
+    },
+    {
+      "realtime_start": "2024-06-14",
+      "realtime_end": "2024-06-14",
+      "date": "2024-06-03",
+      "value": "122.55"
+    },
+    {
+      "realtime_start": "2024-06-14",
+      "realtime_end": "2024-06-14",
+      "date": "2024-06-04",
+      "value": "122.60"
+    },
+    {
+      "realtime_start": "2024-06-14",
+      "realtime_end": "2024-06-14",
+      "date": "2024-06-05",
+      "value": "122.65"
+    },
+    {
+      "realtime_start": "2024-06-14",
+      "realtime_end": "2024-06-14",
+      "date": "2024-06-06",
+      "value": "122.70"
+    },
+    {
+      "realtime_start": "2024-06-14",
+      "realtime_end": "2024-06-14",
+      "date": "2024-06-07",
+      "value": "122.75"
+    },
+    {
+      "realtime_start": "2024-06-14",
+      "realtime_end": "2024-06-14",
+      "date": "2024-06-10",
+      "value": "122.80"
+    },
+    {
+      "realtime_start": "2024-06-14",
+      "realtime_end": "2024-06-14",
+      "date": "2024-06-11",
+      "value": "122.85"
+    },
+    {
+      "realtime_start": "2024-06-14",
+      "realtime_end": "2024-06-14",
+      "date": "2024-06-12",
+      "value": "122.90"
+    },
+    {
+      "realtime_start": "2024-06-14",
+      "realtime_end": "2024-06-14",
+      "date": "2024-06-13",
+      "value": "122.95"
+    },
+    {
+      "realtime_start": "2024-06-14",
+      "realtime_end": "2024-06-14",
+      "date": "2024-06-14",
+      "value": "123.00"
+    }
+  ]
+}

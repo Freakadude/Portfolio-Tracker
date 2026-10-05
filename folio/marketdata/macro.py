@@ -12,6 +12,7 @@ from sqlalchemy.orm import Session
 
 from folio.db.models_analytics import MacroPoint, MacroSeries
 from folio.marketdata.ecb import EcbRates
+from folio.marketdata.fred import FredSeries
 
 DEPOSIT_RATE = "ECB_DFR"
 _OVERLAP = timedelta(days=7)  # re-fetched so a late revision is picked up
@@ -74,6 +75,27 @@ class MacroService:
             .limit(1)
         )
 
+    def last_points(self, code: str, source: str, since: date) -> list[tuple[date, Decimal]]:
+        found = self._db.scalar(
+            select(MacroSeries).where(MacroSeries.code == code, MacroSeries.source == source)
+        )
+        if found is None:
+            return []
+        return [
+            (p.date, p.value)
+            for p in self._db.scalars(
+                select(MacroPoint)
+                .where(MacroPoint.series_id == found.id, MacroPoint.date >= since)
+                .order_by(MacroPoint.date)
+            )
+        ]
+
+    def start_for(self, code: str, floor: date) -> date:
+        """Where a fetch starts: the floor for a new series, else a week before the last
+        stored day, so revisions are picked up."""
+        last = self.latest_date(code)
+        return floor if last is None else max(floor, last - _OVERLAP)
+
     def update_deposit_rate(self, ecb: EcbRates, today: date, floor: date) -> int:
         """Fetch what is missing of the ECB deposit facility rate (percent). The fetch comes
         first and the writes after it: a call counted against the budget uses another database
@@ -83,3 +105,19 @@ class MacroService:
         points = ecb.deposit_rate(start, today)
         series = self.series(DEPOSIT_RATE, "ECB deposit facility rate", "ecb", unit="percent")
         return self.store(series, points)
+
+
+def fetch_series(
+    source: str,
+    code: str,
+    start: date,
+    today: date,
+    ecb: EcbRates,
+    fred: FredSeries | None,
+) -> list[tuple[date, Decimal]] | None:
+    """Fetch one configured series. None means it cannot be fetched now (FRED has no key)."""
+    if source == "fred":
+        return None if fred is None else fred.observations(code, start, today)
+    if code == DEPOSIT_RATE:
+        return ecb.deposit_rate(start, today)
+    return ecb.series(code, start, today)

@@ -139,7 +139,11 @@ class IncomeConfig(BaseConfig):
 
 
 class MacroConfig(BaseConfig):
-    series_code: str | None = Field(default=None, max_length=40)
+    """Up to two indicator series, each in its own pane, and optionally one position's price
+    rebased to 100 below them: one shared time axis, never two y-scales."""
+
+    series_code: str | None = Field(default=None, max_length=80)  # default: the first stored
+    second_code: str | None = Field(default=None, max_length=80)
     instrument_id: int | None = None
 
 

@@ -12,6 +12,7 @@ from folio.marketdata.budget import CircuitBreaker, UsageTracker
 from folio.marketdata.ecb import EcbRates
 from folio.marketdata.eodhd import EodhdProvider
 from folio.marketdata.fallback import ProviderChain
+from folio.marketdata.fred import FredSeries
 from folio.marketdata.http import HttpClient
 from folio.marketdata.openfigi import FigiMapper
 from folio.marketdata.twelvedata import TwelveDataProvider
@@ -83,3 +84,10 @@ class ProviderFactory:
 
     def ecb(self) -> EcbRates:
         return EcbRates(self._http("ecb"))
+
+    def fred(self) -> FredSeries | None:
+        """FRED needs a free API key; without one (or switched off) there is no FRED."""
+        key = self._key("fred")
+        if not key or not self._cfg("fred").enabled:
+            return None
+        return FredSeries(self._http("fred"), key)

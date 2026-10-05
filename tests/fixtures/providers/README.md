@@ -27,5 +27,9 @@ documentation and must be checked against a real response once a key exists:
 - `twelvedata_*.json` - Twelve Data time series, quote and error responses
 - `openfigi_warning.json` - OpenFIGI's "No identifier found." shape
 - `yahoo_not_found.json` - the shape of Yahoo's error body (written from memory of the format)
+- `fred_dfii10.json`, `fred_dtwexbgs.json` - FRED `series/observations` responses in the documented
+  JSON shape, with invented values (one holiday marked ".", as FRED does); `fred_error_400.json`
+  and `fred_error_series.json` - FRED's documented error bodies for an unregistered key and an
+  unknown series
 
 When a real response differs, replace the fixture with the recording and fix the adapter.

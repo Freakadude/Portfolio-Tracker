@@ -26,6 +26,7 @@ from folio.config import Settings
 from folio.db.base import utcnow
 from folio.db.models_ledger import JobRequest
 from folio.jobs.context import JobContext
+from folio.jobs.macro import macro_job
 from folio.jobs.market import (
     actions_job,
     backfill_job,
@@ -91,6 +92,7 @@ JOB_PARAMS: dict[str, tuple[str, ...]] = {
     "quotes": (),
     "retention": (),
     "rules": (),
+    "macro": (),
 }
 
 
@@ -117,6 +119,7 @@ def handlers(
         "quotes": lambda p: quotes_job(ctx),
         "retention": lambda p: retention_job(ctx),
         "rules": lambda p: rules_job(ctx),
+        "macro": lambda p: macro_job(ctx),
     }
 
 
@@ -190,6 +193,8 @@ def build_schedules() -> list[Schedule]:
         Schedule("backup", CronTrigger(hour=3, minute=0, **local)),
         Schedule("retention", CronTrigger(hour=3, minute=30, **local)),
         Schedule("rules", CronTrigger(hour=23, minute=15, **local)),  # after the snapshots
+        # FRED publishes the US daily series overnight, the ECB in the afternoon
+        Schedule("macro", CronTrigger(hour=7, minute=0, **local)),
         Schedule("quotes", CronTrigger(minute="*/15", timezone="UTC")),  # FR-MD-05
         Schedule("actions", CronTrigger(day_of_week="sun", hour=9, minute=0, **local)),
     ]
@@ -250,6 +255,10 @@ def run_retention() -> None:
 
 def run_rules() -> None:
     rules_job(_rt()[0])
+
+
+def run_macro() -> None:
+    macro_job(_rt()[0])
 
 
 def run_requests() -> None:

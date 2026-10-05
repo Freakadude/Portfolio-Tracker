@@ -472,7 +472,7 @@ def test_performance_comparison_lists_the_portfolio_and_flagged_benchmarks(api, 
 
 
 def test_widgets_that_wait_for_later_phases_say_so(api, book) -> None:
-    for kind in ("look_through", "macro_overlay", "news_feed", "signals"):
+    for kind in ("look_through", "news_feed", "signals"):  # macro_overlay arrived in Phase 3
         out = one(api, kind)
         assert out["unavailable"] is True and out["reason"]
     assert one(api, "note", {"text": "# Plan"}) == {"text": "# Plan"}

@@ -80,7 +80,7 @@ Requirement ID → module → test → status (`todo`, `in progress`, `done`).
 | FR-ST-04 | folio/strategies/signals.py (dedup key, cooldown, worsen_step) | tests/unit/strategies/test_rules.py (property: one fire per cooldown), tests/integration/test_rules_job.py (cooldown, worsening, a cleared condition fires again) | done |
 | FR-ST-05 | folio/strategies/calculators.py (allocator, trim, rebalance), planning.py (holdings, targets, realized result via the sell preview, drafts), POST /strategies/{id}/calculate, POST /strategies/orders/to-drafts | tests/unit/strategies/test_calculators.py (property: allocator orders plus remainder equal the new cash exactly; trim never below target; rebalance ends inside the bands), tests/integration/test_calculators_api.py (shortfalls first, realized result per sale, drafts change nothing until confirmed) | done (Strategies page panel in commit 8) |
 | FR-ST-07 | folio/strategies/agent_context.py, folio/agent/schema.py | tests/unit/strategies/test_parse.py (principles and theses word for word; strict schema with departs_from_principles) | done (the agent that reads them is Phase 4) |
-| FR-MD-08 | folio/marketdata/macro.py (groundwork) | | todo |
+| FR-MD-08 | folio/marketdata/fred.py, ecb.py (any series), macro.py, folio/jobs/macro.py (daily, then the rules), settings section macro, GET /macro/series, POST /macro/refresh, dashboards macro_overlay data, ADR 0022 | tests/integration/test_macro.py (FRED and ECB fixtures stored idempotently; no key skips; a strategy series fires its macro_threshold rule; the widget shows the real yield and the dollar in separate panes) | in progress (backend done; the chart on the web in commit 9) |
 | FR-NT-01 | | | todo |
 | FR-NT-02 | | | todo |
 | FR-NT-03 | | | todo |

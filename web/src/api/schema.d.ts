@@ -620,6 +620,46 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/macro/refresh": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Refresh
+         * @description Fetch every series now; the worker picks the request up within seconds.
+         */
+        post: operations["refresh_api_v1_macro_refresh_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/macro/series": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Series
+         * @description Every series on the list or already stored, with its latest value.
+         */
+        get: operations["list_series_api_v1_macro_series_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/portfolio/allocation": {
         parameters: {
             query?: never;
@@ -1777,7 +1817,7 @@ export interface components {
              */
             end: string;
             /** Series */
-            series: components["schemas"]["SeriesOut"][];
+            series: components["schemas"]["folio__api__routers__analytics__SeriesOut"][];
             /**
              * Start
              * Format: date
@@ -2993,15 +3033,6 @@ export interface components {
             /** Remaining Quantity */
             remaining_quantity: string;
         };
-        /** SeriesOut */
-        SeriesOut: {
-            /** Key */
-            key: string;
-            /** Label */
-            label: string;
-            /** Points */
-            points: components["schemas"]["SeriesPoint"][];
-        };
         /** SeriesPoint */
         SeriesPoint: {
             /**
@@ -3667,6 +3698,15 @@ export interface components {
             /** Transaction Count */
             transaction_count: number;
         };
+        /** SeriesOut */
+        folio__api__routers__analytics__SeriesOut: {
+            /** Key */
+            key: string;
+            /** Label */
+            label: string;
+            /** Points */
+            points: components["schemas"]["SeriesPoint"][];
+        };
         /** PriceOut */
         folio__api__routers__instruments__PriceOut: {
             /** Close */
@@ -3688,6 +3728,25 @@ export interface components {
             source: string;
             /** Volume */
             volume: string | null;
+        };
+        /** SeriesOut */
+        folio__api__routers__macro__SeriesOut: {
+            /** Code */
+            code: string;
+            /** Configured */
+            configured: boolean;
+            /** Last Date */
+            last_date: string | null;
+            /** Last Value */
+            last_value: string | null;
+            /** Name */
+            name: string;
+            /** Points */
+            points: number;
+            /** Source */
+            source: string;
+            /** Unit */
+            unit: string;
         };
         /** MatchOut */
         folio__api__routers__positions__MatchOut: {
@@ -5189,6 +5248,48 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    refresh_api_v1_macro_refresh_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: string;
+                    };
+                };
+            };
+        };
+    };
+    list_series_api_v1_macro_series_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["folio__api__routers__macro__SeriesOut"][];
                 };
             };
         };

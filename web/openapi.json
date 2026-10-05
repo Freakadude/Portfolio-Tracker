@@ -457,7 +457,7 @@
           },
           "series": {
             "items": {
-              "$ref": "#/components/schemas/SeriesOut"
+              "$ref": "#/components/schemas/folio__api__routers__analytics__SeriesOut"
             },
             "title": "Series",
             "type": "array"
@@ -4745,32 +4745,6 @@
         "title": "SellPreviewOut",
         "type": "object"
       },
-      "SeriesOut": {
-        "properties": {
-          "key": {
-            "title": "Key",
-            "type": "string"
-          },
-          "label": {
-            "title": "Label",
-            "type": "string"
-          },
-          "points": {
-            "items": {
-              "$ref": "#/components/schemas/SeriesPoint"
-            },
-            "title": "Points",
-            "type": "array"
-          }
-        },
-        "required": [
-          "key",
-          "label",
-          "points"
-        ],
-        "title": "SeriesOut",
-        "type": "object"
-      },
       "SeriesPoint": {
         "properties": {
           "date": {
@@ -7096,6 +7070,32 @@
         "title": "AccountOut",
         "type": "object"
       },
+      "folio__api__routers__analytics__SeriesOut": {
+        "properties": {
+          "key": {
+            "title": "Key",
+            "type": "string"
+          },
+          "label": {
+            "title": "Label",
+            "type": "string"
+          },
+          "points": {
+            "items": {
+              "$ref": "#/components/schemas/SeriesPoint"
+            },
+            "title": "Points",
+            "type": "array"
+          }
+        },
+        "required": [
+          "key",
+          "label",
+          "points"
+        ],
+        "title": "SeriesOut",
+        "type": "object"
+      },
       "folio__api__routers__instruments__PriceOut": {
         "properties": {
           "close": {
@@ -7176,6 +7176,70 @@
           "overridden"
         ],
         "title": "PriceOut",
+        "type": "object"
+      },
+      "folio__api__routers__macro__SeriesOut": {
+        "properties": {
+          "code": {
+            "title": "Code",
+            "type": "string"
+          },
+          "configured": {
+            "title": "Configured",
+            "type": "boolean"
+          },
+          "last_date": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Date"
+          },
+          "last_value": {
+            "anyOf": [
+              {
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Value"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "points": {
+            "title": "Points",
+            "type": "integer"
+          },
+          "source": {
+            "title": "Source",
+            "type": "string"
+          },
+          "unit": {
+            "title": "Unit",
+            "type": "string"
+          }
+        },
+        "required": [
+          "code",
+          "name",
+          "source",
+          "unit",
+          "points",
+          "last_date",
+          "last_value",
+          "configured"
+        ],
+        "title": "SeriesOut",
         "type": "object"
       },
       "folio__api__routers__positions__MatchOut": {
@@ -9490,6 +9554,58 @@
         "summary": "Set Price",
         "tags": [
           "instruments"
+        ]
+      }
+    },
+    "/api/v1/macro/refresh": {
+      "post": {
+        "description": "Fetch every series now; the worker picks the request up within seconds.",
+        "operationId": "refresh_api_v1_macro_refresh_post",
+        "responses": {
+          "202": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": {
+                    "type": "string"
+                  },
+                  "title": "Response Refresh Api V1 Macro Refresh Post",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Refresh",
+        "tags": [
+          "macro"
+        ]
+      }
+    },
+    "/api/v1/macro/series": {
+      "get": {
+        "description": "Every series on the list or already stored, with its latest value.",
+        "operationId": "list_series_api_v1_macro_series_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/folio__api__routers__macro__SeriesOut"
+                  },
+                  "title": "Response List Series Api V1 Macro Series Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "List Series",
+        "tags": [
+          "macro"
         ]
       }
     },

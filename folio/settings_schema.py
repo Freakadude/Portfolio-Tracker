@@ -135,6 +135,34 @@ class RetentionSettings(Section):
     news_days: int = Field(default=365, ge=1)
 
 
+class MacroSeriesConfig(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    source: Literal["fred", "ecb"]
+    # FRED series id (DFII10), or an ECB dataflow/key (FM/D.U2.EUR.4F.KR.DFR.LEV); ECB_DFR is
+    # the ECB deposit facility rate
+    code: str = Field(min_length=1, max_length=80)
+    name: str = Field(min_length=1, max_length=120)
+    unit: Literal["percent", "index", "level"] = "percent"
+
+
+def _default_macro() -> list[MacroSeriesConfig]:
+    return [
+        MacroSeriesConfig(source="fred", code="DFII10", name="US 10-year real yield"),
+        MacroSeriesConfig(
+            source="fred", code="DTWEXBGS", name="Trade-weighted US dollar (broad)", unit="index"
+        ),
+        MacroSeriesConfig(source="fred", code="DFF", name="Fed funds rate"),
+        MacroSeriesConfig(source="ecb", code="ECB_DFR", name="ECB deposit facility rate"),
+    ]
+
+
+class MacroSettings(Section):
+    """The indicator series fetched every day (FR-MD-08). The active strategy's own
+    `macro_series` are fetched as well."""
+
+    series: list[MacroSeriesConfig] = Field(default_factory=_default_macro)
+
+
 class AnalyticsSettings(Section):
     """The risk-free rate for the Sharpe ratio (FR-PF-06): the ECB deposit facility rate, or a
     fixed percentage when the owner prefers one (or the ECB series is not yet loaded)."""
@@ -153,4 +181,5 @@ SECTIONS: dict[str, type[Section]] = {
     "language": LanguageSettings,
     "retention": RetentionSettings,
     "analytics": AnalyticsSettings,
+    "macro": MacroSettings,
 }

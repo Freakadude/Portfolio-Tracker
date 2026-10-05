@@ -20,6 +20,7 @@ from folio.analytics.returns import DailyPoint, twr_index
 from folio.analytics.risk import drawdown
 from folio.analytics.series import bridge, monthly_returns, rebase
 from folio.dashboards.widgets import WIDGET_TYPES, BaseConfig
+from folio.db.models_analytics import MacroPoint, MacroSeries
 from folio.db.models_ledger import Instrument, LedgerTransaction, Listing, PriceBar
 from folio.positions import load_positions
 
@@ -715,6 +716,79 @@ def _sleeves(db: Session) -> list[Any]:
     return list(db.scalars(select(Sleeve).where(Sleeve.deleted_at.is_(None))))
 
 
+# --- macro ---------------------------------------------------------------------------------------
+
+_PERIOD_DAYS = {"1D": 30, "1W": 30, "1M": 31, "3M": 92, "1Y": 366, "3Y": 3 * 366, "5Y": 5 * 366}
+
+
+def _macro_window(env: Env, cfg: Any) -> tuple[date, date]:
+    period = period_of(cfg, env, "1Y")
+    if period == "CUSTOM" and env.filters.start and env.filters.end:
+        return env.filters.start, env.filters.end
+    if period == "YTD":
+        return date(env.today.year, 1, 1), env.today
+    if period == "MAX":
+        return env.today - timedelta(days=5 * 366), env.today
+    return env.today - timedelta(days=_PERIOD_DAYS.get(period, 366)), env.today
+
+
+def macro_overlay(env: Env, cfg: Any) -> dict[str, Any]:
+    stored = list(env.db.scalars(select(MacroSeries).order_by(MacroSeries.id)))
+    if not stored:
+        return _empty(
+            "No indicator data yet. The macro job fetches it every morning; FRED series need a "
+            "free API key (Settings, Providers)."
+        )
+    by_code = {m.code: m for m in stored}
+    wanted = [c for c in (cfg.series_code, cfg.second_code) if c]
+    if not wanted:  # the first two that have data, in the order they were added
+        wanted = [m.code for m in stored if m.code != "ECB_DFR"][:2] or [stored[0].code]
+    start, end = _macro_window(env, cfg)
+    panes = []
+    for code in wanted:
+        series = by_code.get(code)
+        if series is None:
+            raise WidgetDataError(f"There is no stored series {code!r}.")
+        points = [
+            {"date": p.date.isoformat(), "value": str(p.value)}
+            for p in env.db.scalars(
+                select(MacroPoint)
+                .where(MacroPoint.series_id == series.id, MacroPoint.date >= start,
+                       MacroPoint.date <= end)
+                .order_by(MacroPoint.date)
+            )
+        ]  # fmt: skip
+        panes.append(
+            {
+                "code": code,
+                "name": series.name,
+                "unit": series.unit,
+                "points": thin(points, CHART_POINTS),
+            }  # fmt: skip
+        )
+    out: dict[str, Any] = {"start": start.isoformat(), "end": end.isoformat(), "panes": panes}
+    if cfg.instrument_id is not None:
+        ctx = context(env, None, [cfg.instrument_id])
+        instrument = env.db.get(Instrument, cfg.instrument_id)
+        if instrument is None or ctx.empty or cfg.instrument_id not in ctx.prices:
+            raise WidgetDataError("That instrument has no prices to show.")
+        first, last = ctx.index(start), ctx.index(end)
+        prices = [
+            (ctx.days[n], p)
+            for n, p in enumerate(ctx.prices[cfg.instrument_id][first : last + 1], start=first)
+            if p is not None
+        ]
+        rebased = rebase(prices, ctx.days[first]) if prices else []
+        out["instrument"] = {
+            "id": instrument.id,
+            "name": instrument.name,
+            "points": thin(
+                [{"date": d.isoformat(), "value": str(v)} for d, v in rebased], CHART_POINTS
+            ),
+        }
+    return out
+
+
 # --- widgets whose data arrives in later phases --------------------------------------------------
 
 
@@ -745,7 +819,7 @@ COMPUTE: dict[str, Callable[[Env, Any], dict[str, Any]]] = {
     "return_bridge": return_bridge,
     "attribution": attribution,
     "income": income,
-    "macro_overlay": _later("Macro indicators arrive with the strategies in Phase 3."),
+    "macro_overlay": macro_overlay,
     "news_feed": _later("News arrives in Phase 4."),
     "signals": _later("Recommendations and alerts arrive in Phase 3."),
     "note": note,
