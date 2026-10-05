@@ -388,8 +388,10 @@ def test_allocation_drift_and_holdings(api, book) -> None:
     alloc = one(api, "allocation", {"group_by": "sleeve"})
     assert alloc["slices"][0]["key"] == "core" and D(alloc["slices"][0]["drift_pp"]) == D("0.4")
     assert alloc["slices"][0]["outside_band"] is True
-    blocked = one(api, "allocation", {"look_through": True})
-    assert blocked["unavailable"] is True and "Phase 4" in blocked["reason"]
+    through = one(api, "allocation", {"look_through": True, "group_by": "company"})
+    assert through["look_through"] is True and through["unopened"] == ["F fund"]  # no holdings yet
+    refused = data(api, {"w": ("allocation", {"look_through": True})})["w"]  # asset_class: no
+    assert "company, sector, country or currency" in refused["error"]
     bars = one(api, "drift_bars")["bars"]
     assert (bars[0]["key"], D(bars[0]["band"])) == ("core", D("0.05"))
     table = one(api, "holdings_table")
@@ -472,7 +474,7 @@ def test_performance_comparison_lists_the_portfolio_and_flagged_benchmarks(api, 
 
 
 def test_widgets_that_wait_for_later_phases_say_so(api, book) -> None:
-    for kind in ("look_through", "news_feed", "signals"):  # macro_overlay arrived in Phase 3
+    for kind in ("news_feed", "signals"):  # look-through arrived in Phase 4
         out = one(api, kind)
         assert out["unavailable"] is True and out["reason"]
     assert one(api, "note", {"text": "# Plan"}) == {"text": "# Plan"}

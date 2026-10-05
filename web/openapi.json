@@ -508,6 +508,11 @@
             "title": "Group By",
             "type": "string"
           },
+          "look_through": {
+            "default": false,
+            "title": "Look Through",
+            "type": "boolean"
+          },
           "slices": {
             "items": {
               "$ref": "#/components/schemas/SliceOut"
@@ -519,6 +524,13 @@
             "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
             "title": "Total Eur",
             "type": "string"
+          },
+          "unopened": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Unopened",
+            "type": "array"
           },
           "unvalued_positions": {
             "title": "Unvalued Positions",
@@ -1068,6 +1080,49 @@
           }
         },
         "title": "CommitIn",
+        "type": "object"
+      },
+      "CompanyChangeOut": {
+        "description": "One underlying company's exposure before and after the trades (FR-PF-09).",
+        "properties": {
+          "after_eur": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "After Eur",
+            "type": "string"
+          },
+          "after_weight": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "After Weight",
+            "type": "string"
+          },
+          "before_eur": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Before Eur",
+            "type": "string"
+          },
+          "before_weight": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Before Weight",
+            "type": "string"
+          },
+          "key": {
+            "title": "Key",
+            "type": "string"
+          },
+          "label": {
+            "title": "Label",
+            "type": "string"
+          }
+        },
+        "required": [
+          "key",
+          "label",
+          "before_eur",
+          "after_eur",
+          "before_weight",
+          "after_weight"
+        ],
+        "title": "CompanyChangeOut",
         "type": "object"
       },
       "ConstituentOut": {
@@ -3481,6 +3536,66 @@
         "title": "LoginIn",
         "type": "object"
       },
+      "LookThroughOut": {
+        "properties": {
+          "as_of": {
+            "format": "date",
+            "title": "As Of",
+            "type": "string"
+          },
+          "dimension": {
+            "title": "Dimension",
+            "type": "string"
+          },
+          "exposures": {
+            "items": {
+              "$ref": "#/components/schemas/SliceOut"
+            },
+            "title": "Exposures",
+            "type": "array"
+          },
+          "opened": {
+            "items": {
+              "$ref": "#/components/schemas/OpenedOut"
+            },
+            "title": "Opened",
+            "type": "array"
+          },
+          "rest_weight": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Rest Weight",
+            "type": "string"
+          },
+          "total_eur": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Total Eur",
+            "type": "string"
+          },
+          "unopened": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Unopened",
+            "type": "array"
+          },
+          "unvalued_positions": {
+            "title": "Unvalued Positions",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "as_of",
+          "dimension",
+          "total_eur",
+          "exposures",
+          "rest_weight",
+          "opened",
+          "unopened",
+          "unvalued_positions"
+        ],
+        "title": "LookThroughOut",
+        "type": "object"
+      },
       "LotOut": {
         "properties": {
           "account_id": {
@@ -4034,6 +4149,25 @@
         "title": "NotificationOut",
         "type": "object"
       },
+      "OpenedOut": {
+        "properties": {
+          "holdings_as_of": {
+            "format": "date",
+            "title": "Holdings As Of",
+            "type": "string"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          }
+        },
+        "required": [
+          "name",
+          "holdings_as_of"
+        ],
+        "title": "OpenedOut",
+        "type": "object"
+      },
       "OrderIn": {
         "properties": {
           "ids": {
@@ -4159,6 +4293,55 @@
           "password"
         ],
         "title": "OwnerIn",
+        "type": "object"
+      },
+      "PartOut": {
+        "description": "Where part of a look-through exposure sits: a direct holding or inside an ETF.",
+        "properties": {
+          "instrument_id": {
+            "title": "Instrument Id",
+            "type": "integer"
+          },
+          "kind": {
+            "enum": [
+              "direct",
+              "look_through",
+              "fund",
+              "other"
+            ],
+            "title": "Kind",
+            "type": "string"
+          },
+          "source": {
+            "title": "Source",
+            "type": "string"
+          },
+          "value_eur": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Value Eur",
+            "type": "string"
+          },
+          "weight_pct": {
+            "anyOf": [
+              {
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Weight Pct"
+          }
+        },
+        "required": [
+          "source",
+          "instrument_id",
+          "kind",
+          "value_eur",
+          "weight_pct"
+        ],
+        "title": "PartOut",
         "type": "object"
       },
       "PeriodOut": {
@@ -6162,6 +6345,13 @@
             "title": "Cash Needed Eur",
             "type": "string"
           },
+          "look_through": {
+            "items": {
+              "$ref": "#/components/schemas/CompanyChangeOut"
+            },
+            "title": "Look Through",
+            "type": "array"
+          },
           "positions": {
             "items": {
               "$ref": "#/components/schemas/SimPositionOut"
@@ -6448,6 +6638,13 @@
               }
             ],
             "title": "Outside Band"
+          },
+          "parts": {
+            "items": {
+              "$ref": "#/components/schemas/PartOut"
+            },
+            "title": "Parts",
+            "type": "array"
           },
           "target": {
             "anyOf": [
@@ -11424,7 +11621,7 @@
     },
     "/api/v1/portfolio/allocation": {
       "get": {
-        "description": "What the portfolio holds, by instrument, asset class, sleeve, region, sector or currency,\nwith drift from the sleeve targets where there are any (FR-PF-04).",
+        "description": "What the portfolio holds, by instrument, asset class, sleeve, region, sector or currency,\nwith drift from the sleeve targets where there are any (FR-PF-04). With `look_through`,\nETFs are opened up into what they hold and the grouping is company, sector, country or\ncurrency (FR-PF-05).",
         "operationId": "allocation_api_v1_portfolio_allocation_get",
         "parameters": [
           {
@@ -11439,10 +11636,22 @@
                 "sleeve",
                 "region",
                 "sector",
-                "currency"
+                "currency",
+                "company",
+                "country"
               ],
               "title": "Group By",
               "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "look_through",
+            "required": false,
+            "schema": {
+              "default": false,
+              "title": "Look Through",
+              "type": "boolean"
             }
           },
           {
@@ -11850,6 +12059,101 @@
         "summary": "History",
         "tags": [
           "portfolio"
+        ]
+      }
+    },
+    "/api/v1/portfolio/look-through": {
+      "get": {
+        "description": "The largest underlying exposures across direct holdings and ETFs, each with the\npositions it sits in (FR-PF-05).",
+        "operationId": "look_through_api_v1_portfolio_look_through_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "dimension",
+            "required": false,
+            "schema": {
+              "default": "company",
+              "enum": [
+                "company",
+                "sector",
+                "country",
+                "currency"
+              ],
+              "title": "Dimension",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "top",
+            "required": false,
+            "schema": {
+              "default": 20,
+              "maximum": 100,
+              "minimum": 1,
+              "title": "Top",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "account",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Account"
+            }
+          },
+          {
+            "in": "query",
+            "name": "as_of",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "date",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "As Of"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LookThroughOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Look Through",
+        "tags": [
+          "analytics"
         ]
       }
     },

@@ -3,7 +3,6 @@ fundamentals document (FR-MD-09)."""
 
 from __future__ import annotations
 
-import re
 from decimal import Decimal, InvalidOperation
 from typing import Any
 from urllib.parse import urlparse
@@ -75,16 +74,3 @@ def parse_eodhd_holdings(document: Any) -> HoldingsRead:
     elif result.covered_pct < Decimal("98"):
         result.warnings.append(f"EODHD lists {result.covered_pct:.1f} % of the fund.")
     return result
-
-
-_NOT_ALNUM = re.compile(r"[^a-z0-9]+")
-
-
-def company_key(name: str, isin: str | None) -> str:
-    """How constituents are told apart across wrappers: by ISIN when the file has one, else by
-    the name with legal suffixes and punctuation removed."""
-    if isin:
-        return isin.upper()
-    text = _NOT_ALNUM.sub(" ", name.lower()).split()
-    drop = {"inc", "corp", "corporation", "co", "ltd", "plc", "nv", "sa", "se", "ag", "ab", "the"}
-    return " ".join(w for w in text if w not in drop) or name.lower()

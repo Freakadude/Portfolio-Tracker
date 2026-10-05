@@ -18,6 +18,8 @@ from folio.db.models_strategy import Signal
 from folio.jobs.scheduler import process_job_requests
 from folio.jobs.strategies import rules_job
 from folio.ledger_service import TransactionIn, create_transaction
+from folio.lookthrough.parse import Constituent, HoldingsRead
+from folio.lookthrough.service import store_snapshot
 from folio.strategies import service
 from tests.conftest import PASSWORD, USERNAME
 from tests.marketdata_helpers import make_ctx, make_listing
@@ -180,3 +182,42 @@ def test_run_now_queues_one_check(db, client: TestClient, owner: None) -> None: 
 def test_without_a_strategy_the_job_says_so(settings: Settings) -> None:
     result = rules_job(make_ctx(settings, [], now=NOW))
     assert result.status == "ok" and "No active or shadow strategy" in result.log
+
+
+CONCENTRATION_YAML = """strategy:
+  name: Spread
+  risk_limits: {{ max_single_company_lookthrough_pct: 20 }}
+  sleeves:
+    - {{ id: equity, members: [IE00B5BMR087] }}
+    - {{ id: gold, members: [IE00B4ND3602] }}
+  rules:
+    - {{ id: concentrate, type: concentration_limit, dimension: company, severity: high }}
+"""
+
+
+def test_a_company_above_the_limit_inside_an_etf_gives_a_signal(
+    settings: Settings, db, book
+) -> None:  # type: ignore[no-untyped-def]
+    """Alpha is 50 % of the 1 000 equity ETF: 25 % of the 2 000 portfolio, over the 20 % limit
+    (FR-PF-05). Until the ETF has holdings the rule says what it waits for."""
+    created = service.create(db, service.read_input(CONCENTRATION_YAML.format(), None))
+    service.set_mode(db, created, "active")
+    db.commit()
+    assert rules_job(make_ctx(settings, [], now=NOW)).status == "ok"
+    assert signals(db) == []  # no holdings yet: nothing to measure
+
+    holdings = [Constituent("ALPHA INC", D(50), "US0000000001"), Constituent("SMALL CO", D(10))]
+    store_snapshot(db, book["equity"], HoldingsRead(holdings, D(60)), date(2024, 3, 1), "csv")
+    db.commit()
+    rules_job(make_ctx(settings, [], now=NOW))
+    (signal,) = signals(db)
+    assert (signal.subject, signal.severity, signal.rule_type) == (
+        "company:ALPHA INC",
+        "high",
+        "concentration_limit",
+    )
+    assert round(signal.value, 1) == D("25.0") and "50 %" not in signal.message
+    assert "25.0% of the portfolio against a limit of 20%" in signal.message
+    assert "in EQ fund" in signal.message
+    assert "€" not in signal.payload["push"] and "ALPHA" in signal.payload["push"]
+    assert "ALPHA" not in signal.payload["push_anonymous"]

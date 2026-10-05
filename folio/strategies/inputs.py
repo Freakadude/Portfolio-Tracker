@@ -15,6 +15,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from folio import analytics_service as svc
+from folio.analytics.lookthrough import Exposure
 from folio.analytics.returns import twr_index
 from folio.analytics.risk import daily_returns
 from folio.db.models_analytics import MacroPoint, MacroSeries, Sleeve
@@ -131,6 +132,14 @@ def build(db: Session, strategy: StrategyDef, today: date, since: date) -> RuleI
     if not ctx.empty and ctx.tracks_cash:
         tracked_cash = ctx.points[ctx.index(today)].cash_eur
 
+    exposures: dict[str, list[Exposure]] = {}
+    opened_etfs = False
+    if not ctx.empty:
+        for dimension in ("company", "country"):
+            opened = svc.look_through_at(db, ctx, today, dimension)
+            exposures[dimension] = opened.exposures
+            opened_etfs = opened_etfs or bool(opened.opened)
+
     return RuleInputs(
         today=today,
         total_eur=total,
@@ -142,4 +151,6 @@ def build(db: Session, strategy: StrategyDef, today: date, since: date) -> RuleI
         stale=stale,
         tracked_cash_eur=tracked_cash,
         strategy_since=since,
+        exposures=exposures,
+        opened_etfs=opened_etfs,
     )

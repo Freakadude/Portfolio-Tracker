@@ -886,7 +886,9 @@ export interface paths {
         /**
          * Allocation
          * @description What the portfolio holds, by instrument, asset class, sleeve, region, sector or currency,
-         *     with drift from the sleeve targets where there are any (FR-PF-04).
+         *     with drift from the sleeve targets where there are any (FR-PF-04). With `look_through`,
+         *     ETFs are opened up into what they hold and the grouping is company, sector, country or
+         *     currency (FR-PF-05).
          */
         get: operations["allocation_api_v1_portfolio_allocation_get"];
         put?: never;
@@ -952,6 +954,27 @@ export interface paths {
          *     something happened or a close was stored; between them the value is unchanged.
          */
         get: operations["history_api_v1_portfolio_history_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/portfolio/look-through": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Look Through
+         * @description The largest underlying exposures across direct holdings and ETFs, each with the
+         *     positions it sits in (FR-PF-05).
+         */
+        get: operations["look_through_api_v1_portfolio_look_through_get"];
         put?: never;
         post?: never;
         delete?: never;
@@ -2082,10 +2105,17 @@ export interface components {
             as_of: string;
             /** Group By */
             group_by: string;
+            /**
+             * Look Through
+             * @default false
+             */
+            look_through: boolean;
             /** Slices */
             slices: components["schemas"]["SliceOut"][];
             /** Total Eur */
             total_eur: string;
+            /** Unopened */
+            unopened?: string[];
             /** Unvalued Positions */
             unvalued_positions: number;
         };
@@ -2267,6 +2297,24 @@ export interface components {
              * @default false
              */
             skip_errors: boolean;
+        };
+        /**
+         * CompanyChangeOut
+         * @description One underlying company's exposure before and after the trades (FR-PF-09).
+         */
+        CompanyChangeOut: {
+            /** After Eur */
+            after_eur: string;
+            /** After Weight */
+            after_weight: string;
+            /** Before Eur */
+            before_eur: string;
+            /** Before Weight */
+            before_weight: string;
+            /** Key */
+            key: string;
+            /** Label */
+            label: string;
         };
         /** ConstituentOut */
         ConstituentOut: {
@@ -2975,6 +3023,28 @@ export interface components {
             /** Username */
             username: string;
         };
+        /** LookThroughOut */
+        LookThroughOut: {
+            /**
+             * As Of
+             * Format: date
+             */
+            as_of: string;
+            /** Dimension */
+            dimension: string;
+            /** Exposures */
+            exposures: components["schemas"]["SliceOut"][];
+            /** Opened */
+            opened: components["schemas"]["OpenedOut"][];
+            /** Rest Weight */
+            rest_weight: string;
+            /** Total Eur */
+            total_eur: string;
+            /** Unopened */
+            unopened: string[];
+            /** Unvalued Positions */
+            unvalued_positions: number;
+        };
         /** LotOut */
         LotOut: {
             /** Account Id */
@@ -3122,6 +3192,16 @@ export interface components {
             /** Title */
             title: string;
         };
+        /** OpenedOut */
+        OpenedOut: {
+            /**
+             * Holdings As Of
+             * Format: date
+             */
+            holdings_as_of: string;
+            /** Name */
+            name: string;
+        };
         /** OrderIn */
         OrderIn: {
             /** Ids */
@@ -3158,6 +3238,25 @@ export interface components {
             password: string;
             /** Username */
             username: string;
+        };
+        /**
+         * PartOut
+         * @description Where part of a look-through exposure sits: a direct holding or inside an ETF.
+         */
+        PartOut: {
+            /** Instrument Id */
+            instrument_id: number;
+            /**
+             * Kind
+             * @enum {string}
+             */
+            kind: "direct" | "look_through" | "fund" | "other";
+            /** Source */
+            source: string;
+            /** Value Eur */
+            value_eur: string;
+            /** Weight Pct */
+            weight_pct: string | null;
         };
         /** PeriodOut */
         PeriodOut: {
@@ -3744,6 +3843,8 @@ export interface components {
             before: components["schemas"]["AllocationOut"];
             /** Cash Needed Eur */
             cash_needed_eur: string;
+            /** Look Through */
+            look_through?: components["schemas"]["CompanyChangeOut"][];
             /** Positions */
             positions: components["schemas"]["SimPositionOut"][];
         };
@@ -3805,6 +3906,8 @@ export interface components {
             key: string;
             /** Outside Band */
             outside_band: boolean | null;
+            /** Parts */
+            parts?: components["schemas"]["PartOut"][];
             /** Target */
             target: string | null;
             /** Value Eur */
@@ -6312,7 +6415,8 @@ export interface operations {
     allocation_api_v1_portfolio_allocation_get: {
         parameters: {
             query?: {
-                group_by?: "instrument" | "asset_class" | "sleeve" | "region" | "sector" | "currency";
+                group_by?: "instrument" | "asset_class" | "sleeve" | "region" | "sector" | "currency" | "company" | "country";
+                look_through?: boolean;
                 account?: number | null;
                 as_of?: string | null;
             };
@@ -6434,6 +6538,40 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["HistoryPoint"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    look_through_api_v1_portfolio_look_through_get: {
+        parameters: {
+            query?: {
+                dimension?: "company" | "sector" | "country" | "currency";
+                top?: number;
+                account?: number | null;
+                as_of?: string | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LookThroughOut"];
                 };
             };
             /** @description Validation Error */

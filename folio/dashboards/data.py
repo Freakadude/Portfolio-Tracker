@@ -16,6 +16,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from folio import analytics_service as svc
+from folio.analytics.lookthrough import DIMENSIONS, Exposure
 from folio.analytics.returns import DailyPoint, twr_index
 from folio.analytics.risk import drawdown
 from folio.analytics.series import bridge, monthly_returns, rebase
@@ -299,12 +300,49 @@ def monthly(env: Env, cfg: Any) -> dict[str, Any]:
 # --- composition --------------------------------------------------------------------------------
 
 
+def _exposure(e: Exposure) -> dict[str, Any]:
+    return {
+        "key": e.label,
+        "value_eur": str(e.value_eur),
+        "weight": str(e.weight),
+        "other": e.other,
+        "parts": [
+            {
+                "source": p.source,
+                "kind": p.kind,
+                "value_eur": str(p.value_eur),
+                "weight_pct": s(p.weight_pct),
+            }
+            for p in e.parts
+        ],
+    }
+
+
 def allocation(env: Env, cfg: Any) -> dict[str, Any]:
     if cfg.look_through:
+        if cfg.group_by not in DIMENSIONS:
+            raise WidgetDataError(
+                "Look-through groups by company, sector, country or currency. Change the grouping."
+            )
+        ctx = context(env, account_of(cfg, env))
+        opened = svc.look_through_at(env.db, ctx, env.today, cfg.group_by)
+        if not opened.exposures:
+            return _empty("Add a holding to see how your portfolio is divided.")
         return {
-            "unavailable": True,
-            "reason": "Look-through needs ETF holdings data, planned for Phase 4.",
+            "group_by": cfg.group_by,
+            "chart": cfg.chart,
+            "show_target": False,
+            "look_through": True,
+            "total_eur": str(opened.total_eur),
+            "unvalued": opened.unvalued,
+            "unopened": opened.unopened,
+            "slices": [
+                {**_exposure(e), "target": None, "drift_pp": None, "outside_band": None}
+                for e in opened.exposures
+            ],
         }
+    if cfg.group_by in ("company", "country"):
+        raise WidgetDataError(f"Grouping by {cfg.group_by} needs look-through switched on.")
     ctx = context(env, account_of(cfg, env))
     result, unvalued = svc.allocation_at(env.db, ctx, env.today, cfg.group_by)
     if result.total_eur == 0 and not result.slices:
@@ -332,6 +370,29 @@ def allocation(env: Env, cfg: Any) -> dict[str, Any]:
             }
             for x in result.slices
         ],
+    }
+
+
+def look_through(env: Env, cfg: Any) -> dict[str, Any]:
+    """The largest underlying exposures across direct holdings and ETFs (FR-PF-05)."""
+    ctx = context(env, account_of(cfg, env))
+    opened = svc.look_through_at(env.db, ctx, env.today, cfg.dimension)
+    if not opened.exposures:
+        return _empty("Add a holding to see what you hold underneath.")
+    if not opened.opened and opened.unopened:
+        return _empty(
+            "None of your ETFs has its holdings yet. Open an ETF under Holdings and upload its "
+            "holdings file."
+        )
+    shown = opened.exposures[: cfg.top_n]
+    return {
+        "dimension": cfg.dimension,
+        "total_eur": str(opened.total_eur),
+        "slices": [_exposure(e) for e in shown],
+        "rest_weight": str(sum((e.weight for e in opened.exposures[cfg.top_n :]), ZERO)),
+        "opened": [{"name": n, "holdings_as_of": d.isoformat()} for n, d in opened.opened],
+        "unopened": opened.unopened,
+        "unvalued": opened.unvalued,
     }
 
 
@@ -813,7 +874,7 @@ COMPUTE: dict[str, Callable[[Env, Any], dict[str, Any]]] = {
     "holdings_table": holdings_table,
     "returns_heatmap": heatmap,
     "monthly_returns": monthly,
-    "look_through": _later("Look-through needs the holdings of your ETFs (Phase 4)."),
+    "look_through": look_through,
     "correlation_matrix": correlation,
     "drawdown": drawdown_chart,
     "return_bridge": return_bridge,

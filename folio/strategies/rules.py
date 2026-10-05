@@ -15,6 +15,7 @@ from datetime import date, timedelta
 from decimal import Decimal, localcontext
 
 from folio.analytics.allocation import drift
+from folio.analytics.lookthrough import Exposure, concentration
 from folio.analytics.risk import correlation, daily_returns
 from folio.strategies.schema import (
     SEVERITIES,
@@ -70,6 +71,10 @@ class RuleInputs:
     stale: list[str]  # names of held instruments whose price is out of date
     tracked_cash_eur: Decimal | None  # None when no account tracks cash (Q7)
     strategy_since: date  # when this version was saved, the anchor for review cycles
+    # look-through exposures by dimension ('company', 'country'), and whether any ETF
+    # could be opened up (FR-PF-05); without holdings there is nothing to limit
+    exposures: Mapping[str, Sequence[Exposure]] = field(default_factory=dict)
+    opened_etfs: bool = False
 
 
 @dataclass(frozen=True)
@@ -527,8 +532,50 @@ def _stale_data(rule: StaleDataRule, _s: StrategyDef, x: RuleInputs) -> list[Fin
     ]
 
 
-def _concentration(_rule: ConcentrationLimitRule, _s: StrategyDef, _x: RuleInputs) -> list[Finding]:
-    return []  # needs the holdings inside each ETF (FR-MD-09, Phase 4)
+def _concentration_limit(rule: ConcentrationLimitRule, s: StrategyDef) -> Decimal | None:
+    """The rule's own limit, else the strategy's risk limit for a single company."""
+    if rule.limit_pct is not None:
+        return rule.limit_pct
+    if rule.dimension == "company":
+        return s.risk_limits.max_single_company_lookthrough_pct
+    return None
+
+
+def _concentration(rule: ConcentrationLimitRule, s: StrategyDef, x: RuleInputs) -> list[Finding]:
+    """A company (or country) whose share of the portfolio, counting what ETFs hold and what is
+    held directly, is above the limit (FR-PF-05)."""
+    limit = _concentration_limit(rule, s)
+    if limit is None:
+        return []
+    out = []
+    what = rule.dimension
+    for e in concentration(x.exposures.get(what, ())):
+        share = e.weight * HUNDRED
+        if share <= limit:
+            continue
+        where = ", ".join(
+            f"{_num(p.value_eur / x.total_eur * HUNDRED, 1)}% "
+            + ("held directly" if p.kind == "direct" else f"in {p.source}")
+            for p in e.parts
+            if x.total_eur > 0
+        )
+        title = f"{e.label} is {_num(share, 1)}% of your portfolio (limit {limit}%)"
+        out.append(
+            Finding(
+                rule.id,
+                rule.type,
+                f"{what}:{e.label}",
+                rule.severity,
+                title,
+                f"Counting the holdings inside your ETFs, {e.label} adds up to "
+                f"{_num(share, 1)}% of the portfolio against a limit of {limit}%: {where}.",
+                f"{title}. Open Look-through.",
+                f"One {what} is above its concentration limit.",
+                value=share,
+                payload={"exposure_pct": str(share), "limit_pct": str(limit)},
+            )
+        )
+    return out
 
 
 _EVALUATORS: dict[str, Callable[..., list[Finding]]] = {
@@ -553,7 +600,14 @@ def status(rule: Rule, s: StrategyDef, x: RuleInputs) -> RuleStatus:
     if not rule.enabled:
         reason = "Switched off."
     elif isinstance(rule, ConcentrationLimitRule):
-        reason = "Needs the holdings inside your ETFs, which arrive in Phase 4."
+        if _concentration_limit(rule, s) is None:
+            reason = (
+                "No limit set: give the rule a limit_pct"
+                if rule.dimension == "country"
+                else "No limit set: fill in max_single_company_lookthrough_pct or the rule's limit."
+            )
+        elif not x.opened_etfs:
+            reason = "Needs the holdings of at least one of your ETFs: upload them on its page."
     elif isinstance(rule, DriftBandRule):
         if not any(
             sp.target_pct is not None and (sp.soft_band_pp or sp.hard_band_pp) is not None

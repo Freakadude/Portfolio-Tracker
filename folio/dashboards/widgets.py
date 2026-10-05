@@ -10,7 +10,9 @@ from typing import Any, Literal
 from pydantic import BaseModel, ConfigDict, Field
 
 Period = Literal["1D", "1W", "1M", "3M", "YTD", "1Y", "3Y", "5Y", "MAX"]
-Grouping = Literal["instrument", "asset_class", "sleeve", "region", "sector", "currency"]
+Grouping = Literal[
+    "instrument", "asset_class", "sleeve", "region", "sector", "currency", "company", "country"
+]
 KPI_METRICS = (
     "value",
     "day_change",
@@ -91,7 +93,7 @@ class AllocationConfig(BaseConfig):
     group_by: Grouping = "asset_class"
     chart: Literal["donut", "treemap"] = "donut"
     show_target: bool = True
-    look_through: bool = False  # needs ETF holdings (FR-MD-09, Phase 4)
+    look_through: bool = False  # open ETFs up into what they hold (FR-PF-05)
 
 
 class DriftBarsConfig(BaseConfig):

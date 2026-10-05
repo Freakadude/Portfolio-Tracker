@@ -24,6 +24,7 @@ from sqlalchemy.orm import Session
 
 from folio.analytics.allocation import UNCLASSIFIED, Allocation, allocate
 from folio.analytics.attribution import Attribution, PositionPeriod, attribute
+from folio.analytics.lookthrough import Exposure, Holdings, Wrapper, aggregate, expand
 from folio.analytics.returns import DailyPoint, ReturnFigures, return_figures, twr_index
 from folio.analytics.risk import (
     Drawdown,
@@ -44,6 +45,7 @@ from folio.db.models_ledger import (
     Listing,
     PriceBar,
 )
+from folio.lookthrough.service import latest_snapshots
 from folio.marketdata.macro import DEPOSIT_RATE, MacroService
 from folio.portfolio import InstrumentAt, Valuation
 from folio.settings_schema import AnalyticsSettings
@@ -350,6 +352,8 @@ class InstrumentMeta:
     sector: str | None
     currency: str | None
     sleeve: str | None
+    isin: str | None = None
+    domicile: str | None = None
 
 
 def load_meta(db: Session, ids: Iterable[int] | None = None) -> dict[int, InstrumentMeta]:
@@ -373,6 +377,8 @@ def load_meta(db: Session, ids: Iterable[int] | None = None) -> dict[int, Instru
             sector=instrument.sector,
             currency=None if listing is None else listing.currency,
             sleeve=None if instrument.sleeve_id is None else sleeves.get(instrument.sleeve_id),
+            isin=instrument.isin,
+            domicile=instrument.domicile,
         )
     return meta
 
@@ -418,6 +424,81 @@ def allocation_at(
     ]
     targets = sleeve_targets(db) if group_by == "sleeve" else None
     return allocate(holdings, targets), point.unvalued
+
+
+# --- look-through (FR-PF-05) --------------------------------------------------------------------
+
+FUNDS = ("ETF", "ETC", "FUND")
+
+
+@dataclass(frozen=True)
+class LookThrough:
+    as_of: date
+    dimension: str
+    total_eur: Decimal  # the valued positions that were looked at
+    exposures: list[Exposure]
+    opened: list[tuple[str, date]]  # positions opened up, with the date of their holdings
+    unopened: list[str]  # funds held without holdings data: shown as themselves
+    unvalued: int
+
+
+def wrappers_for(
+    values: Iterable[tuple[int, Decimal]], meta: dict[int, InstrumentMeta]
+) -> list[Wrapper]:
+    """The positions to look through, from (instrument, euro value) pairs."""
+    out: list[Wrapper] = []
+    for instrument_id, value in values:
+        m = meta.get(instrument_id)
+        out.append(
+            Wrapper(
+                instrument_id=instrument_id,
+                name=m.name if m else f"Instrument {instrument_id}",
+                isin=None if m is None else m.isin,
+                value_eur=value,
+                sector=None if m is None else m.sector,
+                # an ISIN's country is the issuer's for a share; for a fund it is the fund's
+                country=m.domicile if m is not None and m.asset_class == "EQUITY" else None,
+                currency=None if m is None else m.currency,
+                is_fund=m is not None and m.asset_class in FUNDS,
+            )
+        )
+    return out
+
+
+def holdings_for(db: Session, wrappers: Sequence[Wrapper], day: date) -> dict[int, Holdings]:
+    """The newest holdings snapshot, on or before `day`, of each position that has one."""
+    snapshots = latest_snapshots(db, [w.instrument_id for w in wrappers], on=day)
+    return {i: Holdings(s.covered_pct, s.constituents) for i, s in snapshots.items()}
+
+
+def look_through_at(db: Session, ctx: AnalyticsContext, day: date, dimension: str) -> LookThrough:
+    """The portfolio on `day` opened up into what it holds: ETFs with a holdings snapshot become
+    their constituents, everything else stays itself."""
+    if ctx.empty:
+        return LookThrough(day, dimension, ZERO, [], [], [], 0)
+    point = ctx.points[ctx.index(day)]
+    meta = load_meta(db, {h.instrument_id for h in point.holdings})
+    wrappers = wrappers_for(
+        ((h.instrument_id, h.value_eur) for h in point.holdings if h.value_eur is not None), meta
+    )
+    snapshots = latest_snapshots(db, [w.instrument_id for w in wrappers], on=day)
+    holdings = {i: Holdings(s.covered_pct, s.constituents) for i, s in snapshots.items()}
+    names = {w.instrument_id: w.name for w in wrappers}
+    return LookThrough(
+        as_of=day,
+        dimension=dimension,
+        total_eur=sum((w.value_eur for w in wrappers), ZERO),
+        exposures=aggregate(expand(wrappers, holdings), dimension),
+        opened=[(names[i], snapshots[i].as_of) for i in holdings],
+        unopened=[
+            w.name
+            for w in wrappers
+            if w.instrument_id not in holdings
+            and (m := meta.get(w.instrument_id)) is not None
+            and m.asset_class in FUNDS
+        ],
+        unvalued=point.unvalued,
+    )
 
 
 # --- risk ---------------------------------------------------------------------------------------

@@ -9,6 +9,7 @@ from typing import Any
 from hypothesis import given
 from hypothesis import strategies as st
 
+from folio.analytics.lookthrough import Exposure, Part
 from folio.strategies.rules import (
     PositionState,
     RuleInputs,
@@ -260,11 +261,34 @@ def test_a_thesis_review_is_due_on_its_cycle() -> None:
     assert run(rule, later, theses=theses).findings == []
 
 
-def test_stale_prices_and_the_concentration_rule_that_waits_for_phase_4() -> None:
+def exposure(label: str, weight: str, parts: list[Part], other: bool = False) -> Exposure:
+    value = D(weight) * 1000
+    return Exposure(label.lower(), label, value, D(weight), tuple(parts), other)
+
+
+def holding(source: str, kind: str, value: int) -> Part:
+    return Part(source, 1, kind, D(value), None)  # type: ignore[arg-type]
+
+
+COMPANIES = [
+    exposure(
+        "Secret Corp",
+        "0.12",
+        [holding("Secret Corp", "direct", 50), holding("World ETF", "look_through", 70)],
+    ),
+    exposure("Small Co", "0.04", [holding("World ETF", "look_through", 40)]),
+    exposure("Other holdings of World ETF", "0.30", [holding("World ETF", "other", 300)], True),
+]
+
+
+def test_stale_prices_and_the_concentration_rule_waits_for_what_it_needs() -> None:
     (f,) = run([{"id": "s", "type": "stale_data"}], inputs(stale=["B", "A"])).findings
     assert "A, B" in f.message and f.value == 2
-    result = run([{"id": "cc", "type": "concentration_limit"}])
-    assert result.findings == [] and "Phase 4" in (result.statuses[0].reason or "")
+    rule = [{"id": "cc", "type": "concentration_limit"}]
+    no_limit = run(rule, inputs(opened_etfs=True))
+    assert no_limit.findings == [] and "No limit set" in (no_limit.statuses[0].reason or "")
+    no_etf = run(rule, inputs(), risk_limits={"max_single_company_lookthrough_pct": 10})
+    assert no_etf.findings == [] and "holdings of at least one" in (no_etf.statuses[0].reason or "")
     off = run([{"id": "s", "type": "stale_data", "enabled": False}], inputs(stale=["A"]))
     assert off.findings == [] and off.statuses[0].reason == "Switched off."
 
@@ -281,6 +305,7 @@ def test_push_texts_never_show_euro_amounts_and_the_anonymous_ones_no_names() ->
         {"id": "c", "type": "contribution_due"},
         {"id": "cash", "type": "cash_buffer"},
         {"id": "s", "type": "stale_data"},
+        {"id": "cc", "type": "concentration_limit", "limit_pct": 10},
     ]
     x = inputs(
         sleeves={"equity": SleeveState(D("0.8"), D(800)), "gold": SleeveState(D("0.2"), D(200))},
@@ -288,6 +313,8 @@ def test_push_texts_never_show_euro_amounts_and_the_anonymous_ones_no_names() ->
         macro={"RY": closes(["2"])},
         tracked_cash_eur=D(10),
         stale=["Secret Corp"],
+        exposures={"company": COMPANIES},
+        opened_etfs=True,
     )
     found = run(
         rules,
@@ -301,6 +328,34 @@ def test_push_texts_never_show_euro_amounts_and_the_anonymous_ones_no_names() ->
         assert not money.search(f.push), f.push
         assert not money.search(f.push_anonymous), f.push_anonymous
         assert "Secret Corp" not in f.push_anonymous and "equity" not in f.push_anonymous
+
+
+def test_a_company_above_the_limit_fires_with_where_it_comes_from() -> None:
+    x = inputs(exposures={"company": COMPANIES, "country": []}, opened_etfs=True)
+    rule = [{"id": "cc", "type": "concentration_limit", "severity": "high"}]
+    (f,) = run(rule, x, risk_limits={"max_single_company_lookthrough_pct": 10}).findings
+    assert f.subject == "company:Secret Corp" and f.severity == "high" and f.value == D(12)
+    assert "12.0% of your portfolio (limit 10%)" in f.title
+    assert "5.0% held directly, 7.0% in World ETF" in f.message
+    # the unopened rest of an ETF is no company, however large; a smaller one stays quiet
+    assert run(rule, x, risk_limits={"max_single_company_lookthrough_pct": 2}).findings[
+        0
+    ].value == D(12)
+    assert len(run(rule, x, risk_limits={"max_single_company_lookthrough_pct": 2}).findings) == 2
+    assert run(rule, x, risk_limits={"max_single_company_lookthrough_pct": 15}).findings == []
+    own = [{"id": "cc", "type": "concentration_limit", "limit_pct": 20}]
+    assert run(own, x, risk_limits={"max_single_company_lookthrough_pct": 10}).findings == []
+
+
+def test_a_country_needs_a_limit_on_the_rule_itself() -> None:
+    countries = [exposure("United States", "0.55", [holding("World ETF", "look_through", 550)])]
+    x = inputs(exposures={"company": [], "country": countries}, opened_etfs=True)
+    risk = {"max_single_company_lookthrough_pct": 10}  # a company limit, not a country one
+    rule = [{"id": "cc", "type": "concentration_limit", "dimension": "country"}]
+    assert "give the rule a limit_pct" in (run(rule, x, risk_limits=risk).statuses[0].reason or "")
+    limited = [{**rule[0], "limit_pct": 50}]
+    (f,) = run(limited, x, risk_limits=risk).findings
+    assert f.subject == "country:United States" and "One country is above" in f.push_anonymous
 
 
 # --- dedup and cooldown --------------------------------------------------------------------------

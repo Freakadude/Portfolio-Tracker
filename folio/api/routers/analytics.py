@@ -2,9 +2,10 @@
 the what-if simulator (FR-PF-03, 04, 06, 07, 08, 09; FR-MD-12)."""
 
 import datetime as dt
+from collections.abc import Sequence
 from datetime import date
 from decimal import Decimal
-from typing import Annotated, Literal
+from typing import Annotated, Any, Literal
 
 from fastapi import APIRouter, Query
 from pydantic import BaseModel, Field
@@ -13,6 +14,7 @@ from sqlalchemy.orm import Session
 
 from folio import analytics_service as svc
 from folio.analytics.allocation import GROUPINGS, Allocation, allocate
+from folio.analytics.lookthrough import DIMENSIONS, Exposure, Part, aggregate, expand
 from folio.analytics.returns import DailyPoint
 from folio.analytics.simulate import SimulationError, Trade, simulate
 from folio.api.deps import DbDep, UserDep
@@ -28,6 +30,16 @@ FromParam = Annotated[date | None, Query(alias="from")]
 # --- shared -------------------------------------------------------------------------------------
 
 
+class PartOut(BaseModel):
+    """Where part of a look-through exposure sits: a direct holding or inside an ETF."""
+
+    source: str
+    instrument_id: int
+    kind: Literal["direct", "look_through", "fund", "other"]
+    value_eur: Decimal
+    weight_pct: Decimal | None  # the constituent's weight inside the ETF
+
+
 class SliceOut(BaseModel):
     key: str
     value_eur: Decimal
@@ -36,6 +48,7 @@ class SliceOut(BaseModel):
     drift_pp: Decimal | None  # actual minus target, as a fraction of the portfolio
     drift_relative: Decimal | None
     outside_band: bool | None
+    parts: list[PartOut] = Field(default_factory=list)  # look-through only
 
 
 class AllocationOut(BaseModel):
@@ -44,6 +57,8 @@ class AllocationOut(BaseModel):
     total_eur: Decimal
     unvalued_positions: int
     slices: list[SliceOut]
+    look_through: bool = False
+    unopened: list[str] = Field(default_factory=list)  # funds held without holdings data
 
 
 def _allocation_out(
@@ -226,23 +241,112 @@ def instrument_returns(
 # --- allocation ---------------------------------------------------------------------------------
 
 
+def _part_out(part: Part) -> PartOut:
+    return PartOut(
+        source=part.source,
+        instrument_id=part.instrument_id,
+        kind=part.kind,
+        value_eur=part.value_eur,
+        weight_pct=part.weight_pct,
+    )
+
+
+def _exposure_slice(e: Exposure) -> SliceOut:
+    return SliceOut(
+        key=e.label,
+        value_eur=e.value_eur,
+        weight=e.weight,
+        target=None,
+        drift_pp=None,
+        drift_relative=None,
+        outside_band=None,
+        parts=[_part_out(p) for p in e.parts],
+    )
+
+
 @router.get("/allocation", response_model=AllocationOut)
 def allocation(
     _user: UserDep,
     db: DbDep,
-    group_by: Literal["instrument", "asset_class", "sleeve", "region", "sector", "currency"] = (
-        "asset_class"
-    ),
+    group_by: Literal[
+        "instrument", "asset_class", "sleeve", "region", "sector", "currency", "company", "country"
+    ] = "asset_class",
+    look_through: bool = False,
     account: int | None = None,
     as_of: date | None = None,
 ) -> AllocationOut:
     """What the portfolio holds, by instrument, asset class, sleeve, region, sector or currency,
-    with drift from the sleeve targets where there are any (FR-PF-04)."""
-    assert group_by in GROUPINGS  # noqa: S101 - the Literal above is the validation
+    with drift from the sleeve targets where there are any (FR-PF-04). With `look_through`,
+    ETFs are opened up into what they hold and the grouping is company, sector, country or
+    currency (FR-PF-05)."""
     today = as_of or date.today()
     ctx = _context(db, today, account)
+    if look_through:
+        if group_by not in DIMENSIONS:
+            raise ApiError(
+                422,
+                "Cannot look through",
+                "Look-through groups by company, sector, country or currency.",
+            )
+        opened = svc.look_through_at(db, ctx, today, group_by)
+        return AllocationOut(
+            group_by=group_by,
+            as_of=today,
+            total_eur=opened.total_eur,
+            unvalued_positions=opened.unvalued,
+            slices=[_exposure_slice(e) for e in opened.exposures],
+            look_through=True,
+            unopened=opened.unopened,
+        )
+    if group_by in ("company", "country"):
+        raise ApiError(
+            422, "Needs look-through", f"Grouping by {group_by} needs look_through=true."
+        )
+    assert group_by in GROUPINGS  # noqa: S101 - the Literal above is the validation
     result, unvalued = svc.allocation_at(db, ctx, today, group_by)
     return _allocation_out(result, group_by, today, unvalued)
+
+
+class OpenedOut(BaseModel):
+    name: str
+    holdings_as_of: dt.date
+
+
+class LookThroughOut(BaseModel):
+    as_of: dt.date
+    dimension: str
+    total_eur: Decimal
+    exposures: list[SliceOut]  # the largest `top`, each with where it comes from
+    rest_weight: Decimal  # everything below the top, as a fraction of the portfolio
+    opened: list[OpenedOut]  # the positions that were opened up
+    unopened: list[str]  # funds held without holdings data, shown as themselves
+    unvalued_positions: int
+
+
+@router.get("/look-through", response_model=LookThroughOut)
+def look_through(
+    _user: UserDep,
+    db: DbDep,
+    dimension: Literal["company", "sector", "country", "currency"] = "company",
+    top: Annotated[int, Query(ge=1, le=100)] = 20,
+    account: int | None = None,
+    as_of: date | None = None,
+) -> LookThroughOut:
+    """The largest underlying exposures across direct holdings and ETFs, each with the
+    positions it sits in (FR-PF-05)."""
+    today = as_of or date.today()
+    opened = svc.look_through_at(db, _context(db, today, account), today, dimension)
+    shown = opened.exposures[:top]
+    return LookThroughOut(
+        as_of=today,
+        dimension=dimension,
+        total_eur=opened.total_eur,
+        exposures=[_exposure_slice(e) for e in shown],
+        rest_weight=sum((e.weight for e in opened.exposures[top:]), Decimal(0)),
+        opened=[OpenedOut(name=n, holdings_as_of=d) for n, d in opened.opened],
+        unopened=opened.unopened,
+        unvalued_positions=opened.unvalued,
+    )
 
 
 # --- risk ---------------------------------------------------------------------------------------
@@ -477,12 +581,59 @@ class SimPositionOut(BaseModel):
     value_after_eur: Decimal
 
 
+class CompanyChangeOut(BaseModel):
+    """One underlying company's exposure before and after the trades (FR-PF-09)."""
+
+    key: str
+    label: str
+    before_eur: Decimal
+    after_eur: Decimal
+    before_weight: Decimal
+    after_weight: Decimal
+
+
 class SimulationOut(BaseModel):
     as_of: dt.date
     cash_needed_eur: Decimal  # positive: money to find; negative: money freed
     before: AllocationOut
     after: AllocationOut
     positions: list[SimPositionOut]
+    look_through: list[CompanyChangeOut] = Field(default_factory=list)  # empty: no ETF holdings
+
+
+SHIFT_ROWS = 15
+
+
+def _look_through_shift(
+    db: Session, meta: dict[int, svc.InstrumentMeta], positions: Sequence[Any], day: date
+) -> list[CompanyChangeOut]:
+    """Company exposure before and after a simulation, when any of the funds involved has
+    holdings data; otherwise nothing, since an ETF would just stay itself."""
+    before = svc.wrappers_for(
+        [(p.instrument_id, p.value_before_eur) for p in positions if p.value_before_eur > 0], meta
+    )
+    after = svc.wrappers_for(
+        [(p.instrument_id, p.value_after_eur) for p in positions if p.value_after_eur > 0], meta
+    )
+    holdings = svc.holdings_for(db, [*before, *after], day)
+    if not holdings:
+        return []
+    then = {e.key: e for e in aggregate(expand(before, holdings), "company")}
+    now = {e.key: e for e in aggregate(expand(after, holdings), "company")}
+    rows = [
+        CompanyChangeOut(
+            key=key,
+            label=(now.get(key) or then[key]).label,
+            before_eur=then[key].value_eur if key in then else Decimal(0),
+            after_eur=now[key].value_eur if key in now else Decimal(0),
+            before_weight=then[key].weight if key in then else Decimal(0),
+            after_weight=now[key].weight if key in now else Decimal(0),
+        )
+        for key in {*then, *now}
+        if not (then.get(key) or now[key]).other
+    ]
+    rows.sort(key=lambda r: (-max(r.before_eur, r.after_eur), r.key))
+    return rows[:SHIFT_ROWS]
 
 
 @router.post("/simulate", response_model=SimulationOut)
@@ -537,11 +688,13 @@ def simulate_trades(body: SimulateIn, _user: UserDep, db: DbDep) -> SimulationOu
 
     before = allocate_values([(p.instrument_id, p.value_before_eur) for p in result.positions])
     after = allocate_values([(p.instrument_id, p.value_after_eur) for p in result.positions])
+    shifts = _look_through_shift(db, meta, result.positions, today)
     return SimulationOut(
         as_of=today,
         cash_needed_eur=result.cash_needed_eur,
         before=_allocation_out(before, body.group_by, today, 0),
         after=_allocation_out(after, body.group_by, today, 0),
+        look_through=shifts,
         positions=[
             SimPositionOut(
                 instrument_id=p.instrument_id,
