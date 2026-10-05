@@ -1,0 +1,57 @@
+{
+  "description": "A contribution to us_equity was recommended five days ago and accepted. A trim of the same sleeve now is refused (anti-churn) unless it is critical and rests on evidence newer than that recommendation.",
+  "now": "2026-10-14T17:30:00+00:00",
+  "facts": {
+    "signals": {
+      "12": "2026-10-14T08:00:00+00:00",
+      "13": "2026-10-14T09:00:00+00:00"
+    },
+    "tools": ["get_signals", "run_calculator"],
+    "numbers": ["2"],
+    "calculations": {"calc-2": {"kind": "trim", "subjects": ["us_equity"], "numbers": ["2"]}}
+  },
+  "past": [
+    {
+      "subjects": ["us_equity"],
+      "action": "direct_contribution",
+      "created_at": "2026-10-09T18:00:00+00:00",
+      "status": "accepted"
+    }
+  ],
+  "output": {
+    "digest": "us_equity moved against yesterday's advice.",
+    "recommendations": [
+      {
+        "action_type": "trim",
+        "severity": "medium",
+        "subjects": ["us_equity"],
+        "title": "Trim us_equity",
+        "summary": "Trim 2 units of us_equity.",
+        "rationale": "The weight is above target again (signal 12).",
+        "calculation_id": "calc-2",
+        "evidence": [{"kind": "signal", "ref": "12", "note": "Weight above target"}],
+        "sources": [],
+        "confidence": "medium",
+        "departs_from_principles": null,
+        "what_would_change_this": "A fall in us_equity.",
+        "expires_in_days": 7
+      },
+      {
+        "action_type": "trim",
+        "severity": "critical",
+        "subjects": ["us_equity"],
+        "title": "Trim us_equity now",
+        "summary": "Trim 2 units of us_equity.",
+        "rationale": "A hard-band breach (signal 13) arrived after the contribution advice.",
+        "calculation_id": "calc-2",
+        "evidence": [{"kind": "signal", "ref": "13", "note": "Hard band breached"}],
+        "sources": [],
+        "confidence": "high",
+        "departs_from_principles": null,
+        "what_would_change_this": "A fall in us_equity.",
+        "expires_in_days": 3
+      }
+    ]
+  },
+  "expect": {"accepted": [1], "rejected": {"0": "reverses a direct_contribution recommendation"}}
+}

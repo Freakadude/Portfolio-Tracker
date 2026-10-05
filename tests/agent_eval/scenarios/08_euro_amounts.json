@@ -1,0 +1,46 @@
+{
+  "description": "Privacy mode: the tools return weights and units, never euro amounts, so a euro figure in the text cannot have come from a tool and is refused. A percentage written as 5% for a weight of 0.05 is fine.",
+  "now": "2026-10-14T17:30:00+00:00",
+  "facts": {
+    "signals": {"12": "2026-10-14T08:00:00+00:00"},
+    "tools": ["get_signals", "run_calculator"],
+    "numbers": ["3", "0.05"],
+    "calculations": {"calc-1": {"kind": "allocator", "subjects": ["us_equity"], "numbers": ["3"]}}
+  },
+  "output": {
+    "digest": "Two versions of the same advice.",
+    "recommendations": [
+      {
+        "action_type": "direct_contribution",
+        "severity": "medium",
+        "subjects": ["us_equity"],
+        "title": "Direct new money to us_equity",
+        "summary": "Invest €480 in us_equity: 3 units.",
+        "rationale": "The sleeve is 5% under target (signal 12).",
+        "calculation_id": "calc-1",
+        "evidence": [{"kind": "signal", "ref": "12", "note": "Drift"}],
+        "sources": [],
+        "confidence": "medium",
+        "departs_from_principles": null,
+        "what_would_change_this": "A rally.",
+        "expires_in_days": 14
+      },
+      {
+        "action_type": "direct_contribution",
+        "severity": "medium",
+        "subjects": ["us_equity"],
+        "title": "Direct new money to us_equity",
+        "summary": "Order 3 units of us_equity as the calculator shows.",
+        "rationale": "The sleeve is 5% under target (signal 12), and it is 14 days since the last review.",
+        "calculation_id": "calc-1",
+        "evidence": [{"kind": "signal", "ref": "12", "note": "Drift"}],
+        "sources": [],
+        "confidence": "medium",
+        "departs_from_principles": null,
+        "what_would_change_this": "A rally.",
+        "expires_in_days": 14
+      }
+    ]
+  },
+  "expect": {"accepted": [1], "rejected": {"0": "'€480' is not in any tool result"}}
+}

@@ -1,0 +1,10 @@
+{
+  "description": "Nothing needs attention: the digest says so and no item is made (FR-AG-01).",
+  "now": "2026-10-14T17:30:00+00:00",
+  "facts": {"tools": ["get_signals", "get_portfolio_summary", "get_news"]},
+  "output": {
+    "digest": "Nothing needs attention today: every sleeve is inside its band and no news touches your holdings.",
+    "recommendations": []
+  },
+  "expect": {"accepted": [], "rejected": {}, "digest_contains": "Nothing needs attention"}
+}

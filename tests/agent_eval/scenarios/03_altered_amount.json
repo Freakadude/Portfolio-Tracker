@@ -1,0 +1,31 @@
+{
+  "description": "The model changes the calculator's 3 units to 4: the recommendation is refused, whatever else is right about it (FR-AG-03 acceptance).",
+  "now": "2026-10-14T17:30:00+00:00",
+  "facts": {
+    "signals": {"12": "2026-10-14T08:00:00+00:00"},
+    "tools": ["get_signals", "run_calculator"],
+    "numbers": ["3", "0.05", "0.20"],
+    "calculations": {"calc-1": {"kind": "allocator", "subjects": ["us_equity"], "numbers": ["3"]}}
+  },
+  "output": {
+    "digest": "One sleeve is under its target.",
+    "recommendations": [
+      {
+        "action_type": "direct_contribution",
+        "severity": "medium",
+        "subjects": ["us_equity"],
+        "title": "Direct new money to us_equity",
+        "summary": "us_equity is 5.0 pp under its 20% target; buying 4 units brings it back inside its band.",
+        "rationale": "The drift rule fired (signal 12).",
+        "calculation_id": "calc-1",
+        "evidence": [{"kind": "signal", "ref": "12", "note": "Drift signal"}],
+        "sources": [],
+        "confidence": "medium",
+        "departs_from_principles": null,
+        "what_would_change_this": "A rally before the order is placed.",
+        "expires_in_days": 14
+      }
+    ]
+  },
+  "expect": {"accepted": [], "rejected": {"0": "'4 units' is not in any tool result"}}
+}

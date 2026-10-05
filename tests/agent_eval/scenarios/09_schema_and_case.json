@@ -1,0 +1,69 @@
+{
+  "description": "Enum values are compared without regard to case; an unknown action, an extra field and a missing field are refused as schema errors.",
+  "now": "2026-10-14T17:30:00+00:00",
+  "facts": {
+    "signals": {"12": "2026-10-14T08:00:00+00:00"},
+    "tools": ["get_signals"]
+  },
+  "output": {
+    "digest": "Mixed answers.",
+    "recommendations": [
+      {
+        "action_type": "Hold",
+        "severity": "HIGH",
+        "subjects": ["gold_hedge"],
+        "title": "Hold gold_hedge",
+        "summary": "A short drawdown alone is not a reason to sell.",
+        "rationale": "The principles say so (signal 12).",
+        "calculation_id": null,
+        "evidence": [{"kind": "SIGNAL", "ref": "12", "note": "Drawdown signal"}],
+        "sources": [],
+        "confidence": "Medium",
+        "departs_from_principles": "   ",
+        "what_would_change_this": "A thesis review.",
+        "expires_in_days": 400
+      },
+      {
+        "action_type": "SELL_EVERYTHING",
+        "severity": "high",
+        "subjects": [],
+        "title": "x",
+        "summary": "x",
+        "rationale": "x",
+        "calculation_id": null,
+        "evidence": [],
+        "sources": [],
+        "confidence": "high",
+        "departs_from_principles": null,
+        "what_would_change_this": "x",
+        "expires_in_days": 1
+      },
+      {
+        "action_type": "info",
+        "severity": "info",
+        "subjects": [],
+        "title": "Extra field",
+        "summary": "x",
+        "rationale": "x",
+        "calculation_id": null,
+        "evidence": [],
+        "sources": [],
+        "confidence": "low",
+        "departs_from_principles": null,
+        "what_would_change_this": "x",
+        "expires_in_days": 1,
+        "price_target": "999"
+      },
+      {"action_type": "info", "title": "Missing most fields"}
+    ]
+  },
+  "expect": {
+    "accepted": [0],
+    "rejected": {
+      "1": "schema: action_type is not one of the allowed values",
+      "2": "schema: unexpected fields: price_target",
+      "3": "schema: missing fields"
+    },
+    "expires": {"0": 90}
+  }
+}

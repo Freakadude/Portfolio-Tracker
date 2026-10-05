@@ -1,0 +1,34 @@
+{
+  "description": "A sleeve is under its target; the allocator gave 3 units; the model cites the signal and the calculation and repeats only numbers the tools returned.",
+  "now": "2026-10-14T17:30:00+00:00",
+  "facts": {
+    "signals": {"12": "2026-10-14T08:00:00+00:00"},
+    "tools": ["get_signals", "run_calculator", "get_portfolio_summary"],
+    "numbers": ["3", "0.05", "0.20", "0.15"],
+    "calculations": {"calc-1": {"kind": "allocator", "subjects": ["us_equity"], "numbers": ["3"]}}
+  },
+  "output": {
+    "digest": "One sleeve is under its target; new money should go there.",
+    "recommendations": [
+      {
+        "action_type": "direct_contribution",
+        "severity": "medium",
+        "subjects": ["us_equity"],
+        "title": "Direct new money to us_equity",
+        "summary": "us_equity is 5.0 pp under its 20% target; buying 3 units brings it back inside its band.",
+        "rationale": "The drift rule fired (signal 12) and the allocator, run for this sleeve, orders 3 units.",
+        "calculation_id": "calc-1",
+        "evidence": [
+          {"kind": "signal", "ref": "12", "note": "Drift signal: us_equity below its soft band"},
+          {"kind": "metric", "ref": "run_calculator", "note": "Allocator result calc-1"}
+        ],
+        "sources": [],
+        "confidence": "medium",
+        "departs_from_principles": null,
+        "what_would_change_this": "A rally in us_equity before the order is placed would reduce the gap.",
+        "expires_in_days": 14
+      }
+    ]
+  },
+  "expect": {"accepted": [0], "rejected": {}, "digest_contains": "under its target"}
+}

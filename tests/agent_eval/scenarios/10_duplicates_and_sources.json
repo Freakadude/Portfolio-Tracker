@@ -1,0 +1,57 @@
+{
+  "description": "The same advice twice in one run is shown once; sources must be https addresses; a macro series the run read is valid evidence.",
+  "now": "2026-10-14T17:30:00+00:00",
+  "facts": {
+    "macro": ["DFII10"],
+    "tools": ["get_macro_series"],
+    "urls": ["https://www.federalreserve.gov/newsevents/pressreleases/monetary20261014a.htm"]
+  },
+  "output": {
+    "digest": "Real yields.",
+    "recommendations": [
+      {
+        "action_type": "hedge_check",
+        "severity": "low",
+        "subjects": ["gold_hedge"],
+        "title": "Check the gold hedge",
+        "summary": "The real yield rose; check whether the hedge still behaves as intended.",
+        "rationale": "Real yields and gold usually move opposite ways.",
+        "calculation_id": null,
+        "evidence": [
+          {"kind": "macro_series", "ref": "DFII10", "note": "10-year real yield"},
+          {"kind": "web_source", "ref": "https://www.federalreserve.gov/newsevents/pressreleases/monetary20261014a.htm", "note": "FOMC statement"}
+        ],
+        "sources": [
+          "https://www.federalreserve.gov/newsevents/pressreleases/monetary20261014a.htm",
+          "http://insecure.example/page",
+          "not a link"
+        ],
+        "confidence": "medium",
+        "departs_from_principles": null,
+        "what_would_change_this": "A fall in real yields.",
+        "expires_in_days": 14
+      },
+      {
+        "action_type": "hedge_check",
+        "severity": "low",
+        "subjects": ["gold_hedge"],
+        "title": "Check the gold hedge again",
+        "summary": "Same advice, worded differently.",
+        "rationale": "Same reasons.",
+        "calculation_id": null,
+        "evidence": [{"kind": "macro_series", "ref": "DFII10", "note": "10-year real yield"}],
+        "sources": [],
+        "confidence": "medium",
+        "departs_from_principles": null,
+        "what_would_change_this": "A fall in real yields.",
+        "expires_in_days": 14
+      }
+    ]
+  },
+  "expect": {
+    "accepted": [0],
+    "rejected": {"1": "it repeats another recommendation of this run"},
+    "notes": {"0": "2 source(s) without an https address were dropped"},
+    "sources": {"0": ["https://www.federalreserve.gov/newsevents/pressreleases/monetary20261014a.htm"]}
+  }
+}

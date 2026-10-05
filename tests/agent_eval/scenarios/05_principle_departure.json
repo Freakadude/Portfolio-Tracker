@@ -1,0 +1,31 @@
+{
+  "description": "Advice that departs from a principle must say so; it is accepted and carries the departs badge (FR-ST-07).",
+  "now": "2026-10-14T17:30:00+00:00",
+  "facts": {
+    "signals": {"21": "2026-10-14T08:00:00+00:00"},
+    "tools": ["get_signals", "run_calculator", "get_strategy"],
+    "numbers": ["5", "0.25", "0.20"],
+    "calculations": {"calc-3": {"kind": "trim", "subjects": ["thematic_semis"], "numbers": ["5"]}}
+  },
+  "output": {
+    "digest": "A thematic position passed its trim threshold.",
+    "recommendations": [
+      {
+        "action_type": "trim",
+        "severity": "high",
+        "subjects": ["thematic_semis"],
+        "title": "Trim thematic_semis to its target",
+        "summary": "thematic_semis weighs 25% against a trim level of 20%; the trim calculator sells 5 units.",
+        "rationale": "The pre-committed trim threshold was passed (signal 21).",
+        "calculation_id": "calc-3",
+        "evidence": [{"kind": "signal", "ref": "21", "note": "Trim threshold crossed"}],
+        "sources": [],
+        "confidence": "high",
+        "departs_from_principles": "The principles say to rebalance with new money before selling; this sells because the position passed a trim threshold the owner set in advance.",
+        "what_would_change_this": "New money large enough to restore the weight without a sale.",
+        "expires_in_days": 7
+      }
+    ]
+  },
+  "expect": {"accepted": [0], "rejected": {}, "departs": [0]}
+}

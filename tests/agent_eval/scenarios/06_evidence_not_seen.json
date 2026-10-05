@@ -1,0 +1,58 @@
+{
+  "description": "Evidence the run never saw (a signal, a news cluster and a tool that were never used) is refused; a recommendation keeps only the evidence that resolves.",
+  "now": "2026-10-14T17:30:00+00:00",
+  "facts": {
+    "signals": {"12": "2026-10-14T08:00:00+00:00"},
+    "clusters": {"5": "2026-10-14T07:00:00+00:00"},
+    "tools": ["get_signals", "get_news"],
+    "macro": ["DFII10"]
+  },
+  "output": {
+    "digest": "Two items.",
+    "recommendations": [
+      {
+        "action_type": "watch",
+        "severity": "low",
+        "subjects": ["gold_hedge"],
+        "title": "Watch gold_hedge",
+        "summary": "Real yields are moving.",
+        "rationale": "Based on invented references.",
+        "calculation_id": null,
+        "evidence": [
+          {"kind": "signal", "ref": "99", "note": "A signal that does not exist"},
+          {"kind": "news_cluster", "ref": "77", "note": "A story that was never read"},
+          {"kind": "metric", "ref": "get_price_history", "note": "A tool that was not called"}
+        ],
+        "sources": [],
+        "confidence": "low",
+        "departs_from_principles": null,
+        "what_would_change_this": "Nothing.",
+        "expires_in_days": 7
+      },
+      {
+        "action_type": "watch",
+        "severity": "low",
+        "subjects": ["gold_hedge"],
+        "title": "Watch gold_hedge as real yields rise",
+        "summary": "Real yields are moving and a central bank story touches the sleeve.",
+        "rationale": "The macro series and the story were both read this run.",
+        "calculation_id": null,
+        "evidence": [
+          {"kind": "macro_series", "ref": "DFII10", "note": "Real yield"},
+          {"kind": "news_cluster", "ref": "5", "note": "Fed statement"},
+          {"kind": "signal", "ref": "99", "note": "Invented, so dropped"}
+        ],
+        "sources": [],
+        "confidence": "medium",
+        "departs_from_principles": null,
+        "what_would_change_this": "A reversal in yields.",
+        "expires_in_days": 7
+      }
+    ]
+  },
+  "expect": {
+    "accepted": [1],
+    "rejected": {"0": "no evidence that this run actually saw"},
+    "notes": {"1": "signal '99' was not seen in this run"}
+  }
+}
