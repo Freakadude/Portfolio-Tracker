@@ -1,15 +1,20 @@
 """System page data: provider usage today, job runs and requests, the audit log."""
 
 import datetime as dt
-from datetime import UTC, date, datetime
+import shutil
+from datetime import UTC, date, datetime, timedelta
+from importlib.metadata import version as package_version
+from pathlib import Path
 from typing import Annotated, Any
 
-from fastapi import APIRouter, Query
+from fastapi import APIRouter, Query, Request
 from pydantic import BaseModel, Field
 from sqlalchemy import func, select
 
 from folio.api.deps import DbDep, StoreDep, UserDep
 from folio.api.errors import ApiError
+from folio.config import Settings
+from folio.db.base import utcnow
 from folio.db.models import AuditLog
 from folio.db.models_ledger import JobRequest, JobRun, ProviderCall
 from folio.jobs.requests import enqueue
@@ -163,6 +168,81 @@ def run_job(job: str, body: RunRequestIn, _user: UserDep, db: DbDep) -> RequestO
         created_at=request.created_at,
         finished_at=None,
         error=None,
+    )
+
+
+class DiskOut(BaseModel):
+    database_bytes: int | None  # None for a database that is not a local file
+    backups_bytes: int
+    backups: int
+    free_bytes: int | None  # on the volume holding the database
+    total_bytes: int | None
+
+
+class AgentUsageOut(BaseModel):
+    runs_this_month: int
+    cost_this_month_eur: str
+    budget_eur: str
+    note: str | None
+
+
+class InfoOut(BaseModel):
+    version: str
+    build: str | None
+    disk: DiskOut
+    agent: AgentUsageOut
+    failed_jobs_24h: int
+
+
+def _sqlite_path(url: str) -> Path | None:
+    prefix = "sqlite:///"
+    if not url.startswith(prefix) or ":memory:" in url:
+        return None
+    return Path(url[len(prefix) :])
+
+
+def _folder_size(folder: Path) -> tuple[int, int]:
+    if not folder.is_dir():
+        return 0, 0
+    files = [f for f in folder.iterdir() if f.is_file() and f.suffix == ".db"]
+    return sum(f.stat().st_size for f in files), len(files)
+
+
+@router.get("/system/info", response_model=InfoOut)
+def info(request: Request, _user: UserDep, db: DbDep) -> InfoOut:
+    """Version, disk use, agent cost this month and recent job failures (FR-SY-10)."""
+    settings: Settings = request.app.state.settings
+    path = _sqlite_path(settings.db_url)
+    database = path.stat().st_size if path is not None and path.exists() else None
+    backups, count = _folder_size(Path(settings.backup_dir))
+    free = total = None
+    probe = path.parent if path is not None else Path(settings.backup_dir)
+    if probe.exists():
+        usage = shutil.disk_usage(probe)
+        free, total = usage.free, usage.total
+    agent = load_section(db, "agent")
+    since = utcnow() - timedelta(hours=24)
+    failed = (
+        db.scalar(select(func.count()).where(JobRun.status == "failed", JobRun.started_at >= since))
+        or 0
+    )
+    return InfoOut(
+        version=package_version("folio"),
+        build=settings.version,
+        disk=DiskOut(
+            database_bytes=database,
+            backups_bytes=backups,
+            backups=count,
+            free_bytes=free,
+            total_bytes=total,
+        ),
+        agent=AgentUsageOut(
+            runs_this_month=0,
+            cost_this_month_eur="0.00",
+            budget_eur=str(agent.monthly_budget_eur),  # type: ignore[attr-defined]
+            note="The AI agent arrives in Phase 4; nothing is spent until then.",
+        ),
+        failed_jobs_24h=failed,
     )
 
 

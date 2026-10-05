@@ -16,6 +16,7 @@ class Settings(BaseSettings):
     log_level: str = "INFO"
     backup_dir: str = "/data/backups"
     extra_backup_dir: str | None = None
+    version: str | None = None  # the build, e.g. the git commit; set by the image (FR-SY-10)
 
     def require_secret_key(self) -> str:
         if len(self.secret_key) < 32:

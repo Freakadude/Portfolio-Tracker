@@ -31,6 +31,10 @@ COPY folio ./folio
 COPY migrations ./migrations
 COPY --from=web /folio/static ./folio/static
 
+# The build the System page shows (FR-SY-10); CI passes the git commit.
+ARG FOLIO_VERSION=dev
+ENV FOLIO_VERSION=${FOLIO_VERSION}
+
 # /data holds the database and backups; the container root filesystem stays read-only.
 RUN mkdir -p /data && chown 10001:10001 /data
 VOLUME /data

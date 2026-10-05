@@ -187,6 +187,41 @@
         "title": "ActionOut",
         "type": "object"
       },
+      "AgentUsageOut": {
+        "properties": {
+          "budget_eur": {
+            "title": "Budget Eur",
+            "type": "string"
+          },
+          "cost_this_month_eur": {
+            "title": "Cost This Month Eur",
+            "type": "string"
+          },
+          "note": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Note"
+          },
+          "runs_this_month": {
+            "title": "Runs This Month",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "runs_this_month",
+          "cost_this_month_eur",
+          "budget_eur",
+          "note"
+        ],
+        "title": "AgentUsageOut",
+        "type": "object"
+      },
       "AlertChanges": {
         "additionalProperties": false,
         "properties": {
@@ -1280,6 +1315,60 @@
         "title": "DiffRowOut",
         "type": "object"
       },
+      "DiskOut": {
+        "properties": {
+          "backups": {
+            "title": "Backups",
+            "type": "integer"
+          },
+          "backups_bytes": {
+            "title": "Backups Bytes",
+            "type": "integer"
+          },
+          "database_bytes": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Database Bytes"
+          },
+          "free_bytes": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Free Bytes"
+          },
+          "total_bytes": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Total Bytes"
+          }
+        },
+        "required": [
+          "database_bytes",
+          "backups_bytes",
+          "backups",
+          "free_bytes",
+          "total_bytes"
+        ],
+        "title": "DiskOut",
+        "type": "object"
+      },
       "DraftOrderIn": {
         "additionalProperties": false,
         "properties": {
@@ -1973,6 +2062,44 @@
           "net_eur"
         ],
         "title": "IncomeOut",
+        "type": "object"
+      },
+      "InfoOut": {
+        "properties": {
+          "agent": {
+            "$ref": "#/components/schemas/AgentUsageOut"
+          },
+          "build": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Build"
+          },
+          "disk": {
+            "$ref": "#/components/schemas/DiskOut"
+          },
+          "failed_jobs_24h": {
+            "title": "Failed Jobs 24H",
+            "type": "integer"
+          },
+          "version": {
+            "title": "Version",
+            "type": "string"
+          }
+        },
+        "required": [
+          "version",
+          "build",
+          "disk",
+          "agent",
+          "failed_jobs_24h"
+        ],
+        "title": "InfoOut",
         "type": "object"
       },
       "InstrumentChanges": {
@@ -12820,6 +12947,28 @@
         "summary": "Get Version",
         "tags": [
           "strategies"
+        ]
+      }
+    },
+    "/api/v1/system/info": {
+      "get": {
+        "description": "Version, disk use, agent cost this month and recent job failures (FR-SY-10).",
+        "operationId": "info_api_v1_system_info_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InfoOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Info",
+        "tags": [
+          "system"
         ]
       }
     },

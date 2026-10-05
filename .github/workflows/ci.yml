@@ -71,6 +71,7 @@ jobs:
           context: .
           file: docker/Dockerfile
           platforms: linux/amd64,linux/arm64
+          build-args: FOLIO_VERSION=${{ github.sha }}
           push: false
           cache-from: type=gha
           cache-to: type=gha,mode=max

@@ -1469,6 +1469,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/system/info": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Info
+         * @description Version, disk use, agent cost this month and recent job failures (FR-SY-10).
+         */
+        get: operations["info_api_v1_system_info_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/system/jobs": {
         parameters: {
             query?: never;
@@ -1846,6 +1866,17 @@ export interface components {
             /** Type */
             type: string;
         };
+        /** AgentUsageOut */
+        AgentUsageOut: {
+            /** Budget Eur */
+            budget_eur: string;
+            /** Cost This Month Eur */
+            cost_this_month_eur: string;
+            /** Note */
+            note: string | null;
+            /** Runs This Month */
+            runs_this_month: number;
+        };
         /** AlertChanges */
         AlertChanges: {
             /** Active */
@@ -2188,6 +2219,19 @@ export interface components {
             /** Old Text */
             old_text: string | null;
         };
+        /** DiskOut */
+        DiskOut: {
+            /** Backups */
+            backups: number;
+            /** Backups Bytes */
+            backups_bytes: number;
+            /** Database Bytes */
+            database_bytes: number | null;
+            /** Free Bytes */
+            free_bytes: number | null;
+            /** Total Bytes */
+            total_bytes: number | null;
+        };
         /** DraftOrderIn */
         DraftOrderIn: {
             /** Account Id */
@@ -2419,6 +2463,17 @@ export interface components {
             net_eur: string;
             /** Withholding Eur */
             withholding_eur: string;
+        };
+        /** InfoOut */
+        InfoOut: {
+            agent: components["schemas"]["AgentUsageOut"];
+            /** Build */
+            build: string | null;
+            disk: components["schemas"]["DiskOut"];
+            /** Failed Jobs 24H */
+            failed_jobs_24h: number;
+            /** Version */
+            version: string;
         };
         /** InstrumentChanges */
         InstrumentChanges: {
@@ -7073,6 +7128,26 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    info_api_v1_system_info_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InfoOut"];
                 };
             };
         };
