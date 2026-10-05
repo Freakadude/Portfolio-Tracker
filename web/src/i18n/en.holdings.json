@@ -117,6 +117,14 @@
     "title": "Edit {{name}}",
     "tags": "Tags (comma separated)",
     "ter": "Annual cost (TER, %)",
+    "region": "Region",
+    "regionHint": "For example Europe, US or Emerging markets. Allocation charts group by it.",
+    "sector": "Sector",
+    "sleeve": "Sleeve",
+    "sleeveHint": "The bucket strategies and drift refer to. Create sleeves under Settings, Sleeves.",
+    "noSleeve": "No sleeve",
+    "benchmark": "Use as a benchmark",
+    "benchmarkHint": "Benchmarks appear in comparison charts, and beta is measured against the first one.",
     "save": "Save"
   },
   "priceEntry": {

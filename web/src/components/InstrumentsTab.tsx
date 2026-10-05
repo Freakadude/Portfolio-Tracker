@@ -7,7 +7,8 @@ import { useInstruments, useInvalidateLedger, type Instrument } from '../api/que
 import { useFormat } from '../lib/useFormat'
 import { ASSET_CLASSES } from './AddInstrumentDialog'
 import { AsOf, Badge, Dialog, EmptyState } from './display'
-import { Alert, Button, Field, Input, Select } from './ui'
+import { useSleeves } from '../dashboards/api'
+import { Alert, Button, Checkbox, Field, Input, Select } from './ui'
 
 type Filter = 'active' | 'archived' | 'all'
 type Blocked = { name: string; total: number; rows: Record<string, string>[] }
@@ -217,6 +218,11 @@ function EditDialog({ instrument, onClose }: { instrument: Instrument; onClose: 
   const [ter, setTer] = useState(instrument.ter_pct ?? '')
   const [distribution, setDistribution] = useState(instrument.distribution ?? '')
   const [tags, setTags] = useState(instrument.tags.join(', '))
+  const [region, setRegion] = useState(instrument.region ?? '')
+  const [sector, setSector] = useState(instrument.sector ?? '')
+  const [sleeveId, setSleeveId] = useState<number | null>(instrument.sleeve_id ?? null)
+  const [benchmark, setBenchmark] = useState(Boolean(instrument.is_benchmark))
+  const sleeves = useSleeves()
   const save = useMutation({
     mutationFn: () =>
       unwrap(
@@ -232,6 +238,10 @@ function EditDialog({ instrument, onClose }: { instrument: Instrument; onClose: 
               .split(',')
               .map((s) => s.trim())
               .filter(Boolean),
+            region: region.trim() || null,
+            sector: sector.trim() || null,
+            sleeve_id: sleeveId,
+            is_benchmark: benchmark,
           },
         }),
       ),
@@ -286,6 +296,52 @@ function EditDialog({ instrument, onClose }: { instrument: Instrument; onClose: 
         <Field label={t('editInstrument.tags')}>
           {(p) => <Input value={tags} onChange={(e) => setTags(e.target.value)} {...p} />}
         </Field>
+        <div className="grid gap-4 sm:grid-cols-2">
+          <Field label={t('editInstrument.region')} hint={t('editInstrument.regionHint')}>
+            {(p) => (
+              <Input
+                value={region}
+                maxLength={40}
+                onChange={(e) => setRegion(e.target.value)}
+                {...p}
+              />
+            )}
+          </Field>
+          <Field label={t('editInstrument.sector')}>
+            {(p) => (
+              <Input
+                value={sector}
+                maxLength={60}
+                onChange={(e) => setSector(e.target.value)}
+                {...p}
+              />
+            )}
+          </Field>
+        </div>
+        <Field label={t('editInstrument.sleeve')} hint={t('editInstrument.sleeveHint')}>
+          {(p) => (
+            <Select
+              value={sleeveId ?? ''}
+              onChange={(e) => setSleeveId(e.target.value ? Number(e.target.value) : null)}
+              {...p}
+            >
+              <option value="">{t('editInstrument.noSleeve')}</option>
+              {sleeves.data?.map((s) => (
+                <option key={s.id} value={s.id}>
+                  {s.name}
+                </option>
+              ))}
+            </Select>
+          )}
+        </Field>
+        <div className="space-y-1">
+          <Checkbox
+            label={t('editInstrument.benchmark')}
+            checked={benchmark}
+            onChange={(e) => setBenchmark(e.target.checked)}
+          />
+          <p className="text-sm text-muted">{t('editInstrument.benchmarkHint')}</p>
+        </div>
         {save.isError && <Alert>{errorMessage(save.error)}</Alert>}
         <Button type="submit" disabled={save.isPending}>
           {t('editInstrument.save')}

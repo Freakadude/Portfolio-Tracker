@@ -2,13 +2,25 @@ import i18n from 'i18next'
 import { initReactI18next } from 'react-i18next'
 import en from './en.json'
 import dashboards from './en.dashboards.json'
+import sleeves from './en.sleeves.json'
+import watchlist from './en.watchlist.json'
+import whatIf from './en.whatif.json'
 import holdings from './en.holdings.json'
 import overview from './en.overview.json'
 import transactions from './en.transactions.json'
 
 // English only for now; add another set of bundles here and a language switch to ship Dutch.
 // Strings live in one file per area; each file's top-level keys are merged into one namespace.
-export const resources = { ...en, ...holdings, ...transactions, ...overview, ...dashboards }
+export const resources = {
+  ...en,
+  ...holdings,
+  ...transactions,
+  ...overview,
+  ...dashboards,
+  ...sleeves,
+  ...watchlist,
+  ...whatIf,
+}
 
 void i18n.use(initReactI18next).init({
   resources: { en: { translation: resources } },

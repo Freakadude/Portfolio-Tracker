@@ -18,6 +18,7 @@ const ENUMS: Record<string, string[]> = {
   theme: ['system', 'light', 'dark'],
   channel: ['home_assistant', 'ntfy', 'web_push', 'none'],
   language: ['en'],
+  risk_free_source: ['ecb_deposit', 'fixed'],
 }
 
 export const sectionKey = (section: string) => ['settings', section] as const

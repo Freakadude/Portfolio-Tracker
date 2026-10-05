@@ -1,8 +1,9 @@
 """A fictional demo portfolio for working on the UI (`folio seed --demo`).
 
-Everything here is invented: six hand-priced instruments with a deterministic random-walk price
-history, a USD holding with made-up exchange rates, two years of small monthly purchases, a
-sale and some dividends. It never contacts a provider and uses no real prices, ISINs or amounts.
+Everything here is invented: six hand-priced instruments (plus one that is only watched) with a
+deterministic random-walk price history, a USD holding with made-up exchange rates, two years of
+small monthly purchases, a sale and some dividends, three sleeves with targets, a benchmark and a
+watchlist. It never contacts a provider and uses no real prices, ISINs or amounts.
 """
 
 from __future__ import annotations
@@ -16,6 +17,7 @@ from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from folio.db.models import Account
+from folio.db.models_analytics import Sleeve, Watchlist, WatchlistItem
 from folio.db.models_ledger import FxRate, Instrument, LedgerTransaction, Listing, PriceBar
 from folio.ledger_service import TransactionIn, insert_transaction, normalize, rebuild_account
 from folio.portfolio import Valuation, save_snapshots
@@ -36,16 +38,79 @@ class DemoInstrument:
     start_price: str
     drift: float  # average daily return
     volatility: float
+    region: str
+    sector: str
+    sleeve: str | None  # None: watched but not held
 
 
 INSTRUMENTS = (
-    DemoInstrument("Demo World Equity ETF", "ETF", "EUR", "80", 0.00035, 0.010),
-    DemoInstrument("Demo Europe Equity ETF", "ETF", "EUR", "45", 0.00025, 0.011),
-    DemoInstrument("Demo Emerging Markets ETF", "ETF", "EUR", "30", 0.00020, 0.013),
-    DemoInstrument("Demo Gold ETC", "ETC", "EUR", "55", 0.00030, 0.009),
-    DemoInstrument("Demo US Tech Stock", "EQUITY", "USD", "120", 0.00050, 0.018),
-    DemoInstrument("Demo Corporate Bond Fund", "FUND", "EUR", "100", 0.00008, 0.003),
+    DemoInstrument(
+        "Demo World Equity ETF",
+        "ETF",
+        "EUR",
+        "80",
+        0.00035,
+        0.010,
+        "Global",
+        "Broad market",
+        "Core",
+    ),  # fmt: skip
+    DemoInstrument(
+        "Demo Europe Equity ETF",
+        "ETF",
+        "EUR",
+        "45",
+        0.00025,
+        0.011,
+        "Europe",
+        "Broad market",
+        "Core",
+    ),  # fmt: skip
+    DemoInstrument(
+        "Demo Emerging Markets ETF",
+        "ETF",
+        "EUR",
+        "30",
+        0.00020,
+        0.013,
+        "Emerging markets",
+        "Broad market",
+        "Growth",
+    ),  # fmt: skip
+    DemoInstrument(
+        "Demo Gold ETC", "ETC", "EUR", "55", 0.00030, 0.009, "Global", "Commodities", "Defensive"
+    ),  # fmt: skip
+    DemoInstrument(
+        "Demo US Tech Stock",
+        "EQUITY",
+        "USD",
+        "120",
+        0.00050,
+        0.018,
+        "North America",
+        "Technology",
+        "Growth",
+    ),  # fmt: skip
+    DemoInstrument(
+        "Demo Corporate Bond Fund",
+        "FUND",
+        "EUR",
+        "100",
+        0.00008,
+        0.003,
+        "Europe",
+        "Bonds",
+        "Defensive",
+    ),  # fmt: skip
+    # followed on the watchlist, never bought
+    DemoInstrument(
+        "Demo Dividend ETF", "ETF", "EUR", "25", 0.00022, 0.009, "Global", "Broad market", None
+    ),  # fmt: skip
 )
+
+BENCHMARK = "Demo World Equity ETF"
+# fictional targets, so the drift widgets have something to show
+SLEEVES = (("Core", "60", "5"), ("Growth", "25", "5"), ("Defensive", "15", "5"))
 
 
 def _is_empty(db: Session) -> bool:
@@ -86,6 +151,15 @@ def seed_demo(db: Session, today: date) -> dict[str, int]:
     days = _weekdays(start, today)
     rng = random.Random(SEED)  # noqa: S311 - fictional data, not cryptography
 
+    sleeves: dict[str, Sleeve] = {}
+    for order, (name, target, band) in enumerate(SLEEVES, start=1):
+        sleeve = Sleeve(
+            name=name, target_pct=Decimal(target), band_pct=Decimal(band), sort_order=order
+        )
+        db.add(sleeve)
+        db.flush()
+        sleeves[name] = sleeve
+
     listings: dict[str, Listing] = {}
     for spec in INSTRUMENTS:
         instrument = Instrument(
@@ -95,6 +169,10 @@ def seed_demo(db: Session, today: date) -> dict[str, int]:
             manual=True,
             tags=["demo"],
             distribution="DIST" if spec.asset_class == "FUND" else "ACC",
+            region=spec.region,
+            sector=spec.sector,
+            sleeve_id=sleeves[spec.sleeve].id if spec.sleeve else None,
+            is_benchmark=spec.name == BENCHMARK,
         )
         db.add(instrument)
         db.flush()
@@ -172,6 +250,18 @@ def seed_demo(db: Session, today: date) -> dict[str, int]:
         paid = days[int(len(days) * fraction)]
         add(type="dividend", trade_date=paid, instrument_id=bond.instrument_id,
             net_amount_eur="12.40")  # fmt: skip
+
+    watched = next(spec for spec in INSTRUMENTS if spec.sleeve is None)
+    watchlist = Watchlist(name="Watchlist")
+    db.add(watchlist)
+    db.flush()
+    db.add(
+        WatchlistItem(
+            watchlist_id=watchlist.id,
+            instrument_id=listings[watched.name].instrument_id,
+            note="Higher yield than the world ETF; wait for a pullback.",
+        )
+    )
 
     db.flush()
     rebuild_account(db, account)

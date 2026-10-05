@@ -1,0 +1,31 @@
+{
+  "sleeves": {
+    "title": "Sleeves",
+    "caption": "Your sleeves",
+    "add": "Add sleeve",
+    "addTitle": "Add sleeve",
+    "editTitle": "Edit {{name}}",
+    "intro": "A sleeve is a bucket you group instruments into, such as US equity or gold. Give it a target share of your portfolio and a band to see how far you have drifted; leave both empty until you have decided.",
+    "name": "Name",
+    "target": "Target",
+    "band": "Band",
+    "instruments": "Instruments",
+    "actions": "Actions",
+    "edit": "Edit",
+    "delete": "Delete",
+    "deleteConfirm": "Delete the sleeve {{name}}?",
+    "moveUp": "Move {{name}} up",
+    "moveDown": "Move {{name}} down",
+    "targetLabel": "Target share (%)",
+    "targetHint": "Optional. For example 40 for 40% of the portfolio.",
+    "bandLabel": "Band (percentage points)",
+    "bandHint": "Optional. Drift inside the band counts as on target.",
+    "save": "Save sleeve",
+    "required": "This is required.",
+    "over": "The targets add up to {{total}}%, which is more than 100%.",
+    "empty": {
+      "title": "No sleeves yet",
+      "body": "Add a sleeve, then choose it when you edit an instrument (Settings, Instruments)."
+    }
+  }
+}

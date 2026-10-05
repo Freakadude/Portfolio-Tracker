@@ -1,0 +1,28 @@
+{
+  "watchlist": {
+    "caption": "Instruments you are watching",
+    "pick": "Instrument to watch",
+    "pickPlaceholder": "Choose an instrument",
+    "add": "Add to watchlist",
+    "newInstrument": "New instrument",
+    "columns": {
+      "name": "Instrument",
+      "price": "Last close",
+      "day": "Day",
+      "note": "Note",
+      "actions": "Actions"
+    },
+    "noPrice": "No price yet",
+    "stale": "out of date",
+    "chart": "Chart",
+    "remove": "Remove",
+    "removeLabel": "Remove {{name}} from the watchlist",
+    "noteLabel": "Note for {{name}}",
+    "notePlaceholder": "Why you are watching it",
+    "alertsLater": "Price alerts for watched instruments arrive with notifications in a later phase.",
+    "empty": {
+      "title": "Watchlist is empty",
+      "body": "Pick an instrument above, or add a new one by ISIN. Folio fetches its prices every evening like it does for your holdings."
+    }
+  }
+}

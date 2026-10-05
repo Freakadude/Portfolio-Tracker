@@ -15,6 +15,7 @@ from folio.config import Settings, get_settings
 from folio.db import migrate
 from folio.db.engine import make_engine, make_session_factory
 from folio.db.models import Account
+from folio.db.models_analytics import Sleeve, WatchlistItem
 from folio.db.models_ledger import (
     Instrument,
     JobRequest,
@@ -44,10 +45,10 @@ def db(settings: Settings):  # type: ignore[no-untyped-def]
 def test_the_demo_portfolio_is_complete_and_fictional(db) -> None:  # type: ignore[no-untyped-def]
     counts = seed_demo(db, TODAY)
     db.commit()
-    assert counts["instruments"] == 6 and counts["transactions"] >= 60
+    assert counts["instruments"] == 7 and counts["transactions"] >= 60
     assert counts["snapshots"] == (TODAY - date(2022, 6, 1)).days + 1  # one per calendar day
     instruments = db.scalars(select(Instrument)).all()
-    assert len(instruments) == 6 and all(
+    assert len(instruments) == 7 and all(
         i.manual and i.isin is None for i in instruments
     )  # no real ISINs
     assert all(i.name.startswith("Demo ") for i in instruments)
@@ -64,6 +65,24 @@ def test_the_demo_portfolio_is_complete_and_fictional(db) -> None:  # type: igno
         == point.value_eur
     )
     assert {t.source for t in db.scalars(select(LedgerTransaction))} == {"demo"}
+
+
+def test_the_demo_shows_classification_sleeves_a_benchmark_and_a_watchlist(db) -> None:  # type: ignore[no-untyped-def]
+    seed_demo(db, TODAY)
+    db.commit()
+    sleeves = {s.name: s for s in db.scalars(select(Sleeve))}
+    assert sum(s.target_pct for s in sleeves.values() if s.target_pct) == D(100)
+    classified = db.scalars(select(Instrument).where(Instrument.sleeve_id.is_not(None))).all()
+    assert len(classified) == 6 and all(i.region and i.sector for i in classified)
+    (benchmark,) = db.scalars(select(Instrument).where(Instrument.is_benchmark.is_(True)))
+    assert benchmark.name == "Demo World Equity ETF"
+    (item,) = db.scalars(select(WatchlistItem))
+    watched = db.get(Instrument, item.instrument_id)
+    assert watched is not None and watched.name == "Demo Dividend ETF"
+    # watched, not held: it has prices but no transactions
+    assert not db.scalars(
+        select(LedgerTransaction).where(LedgerTransaction.instrument_id == watched.id)
+    ).all()
 
 
 def test_the_demo_is_deterministic(settings: Settings, db, tmp_path: Path) -> None:  # type: ignore[no-untyped-def]
@@ -116,7 +135,7 @@ def test_seed_demo_command(cli_env: Settings) -> None:
     assert refused.exit_code == 1 and "only `folio seed --demo`" in refused.output
     ok = runner.invoke(app, ["seed", "--demo"])
     assert ok.exit_code == 0, ok.output
-    assert "6 instruments" in ok.output and "all fictional" in ok.output
+    assert "7 instruments" in ok.output and "all fictional" in ok.output
     again = runner.invoke(app, ["seed", "--demo"])
     assert again.exit_code == 1 and "without instruments or transactions" in again.output
 

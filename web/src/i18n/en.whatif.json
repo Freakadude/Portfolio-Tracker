@@ -1,0 +1,50 @@
+{
+  "whatIf": {
+    "title": "What if",
+    "back": "Back to holdings",
+    "intro": "Try buying or selling before you do it. Folio shows the allocation, the drift from your targets and the cash you would need. Nothing is saved.",
+    "groupBy": "Group by",
+    "account": "Account",
+    "trades": "Hypothetical trades",
+    "row": "Trade {{n}}",
+    "instrument": "Instrument",
+    "choose": "Choose an instrument",
+    "side": "Side",
+    "buy": "Buy",
+    "sell": "Sell",
+    "quantity": "Units",
+    "price": "Price (EUR)",
+    "latest": "Latest close",
+    "fees": "Fees (EUR)",
+    "addRow": "Add another trade",
+    "removeRow": "Remove trade {{n}}",
+    "run": "Show the result",
+    "result": "Result of the trades",
+    "cashNeeded": "You would need {{amount}} to make these trades.",
+    "cashFreed": "These trades would free {{amount}}.",
+    "positions": "Positions before and after",
+    "unitsBefore": "Units before",
+    "unitsAfter": "Units after",
+    "valueBefore": "Value before",
+    "valueAfter": "Value after",
+    "allocation": "Allocation by {{group}}",
+    "group": "Group",
+    "before": "Before",
+    "after": "After",
+    "target": "Target",
+    "driftBefore": "Drift before",
+    "driftAfter": "Drift after",
+    "outsideBand": "outside the band",
+    "errors": {
+      "instrument": "Trade {{n}}: choose an instrument.",
+      "quantity": "Trade {{n}}: enter the number of units, more than zero.",
+      "price": "Trade {{n}}: the price must be a number above zero, or empty for the latest close.",
+      "fees": "Trade {{n}}: the fees must be a number."
+    },
+    "empty": {
+      "title": "Nothing to try yet",
+      "body": "Add an instrument first, then come back to see what a trade would do."
+    },
+    "link": "What if…"
+  }
+}

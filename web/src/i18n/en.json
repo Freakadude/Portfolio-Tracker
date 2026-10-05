@@ -131,7 +131,9 @@
       "notifications": "Notifications",
       "appearance": "Appearance",
       "language": "Language",
-      "retention": "Retention"
+      "retention": "Retention",
+      "sleeves": "Sleeves",
+      "analytics": "Analytics"
     },
     "secretSet": "A value is saved. Type a new one to replace it.",
     "secretUnset": "Not set",
@@ -171,11 +173,17 @@
     "language": "Language",
     "quotes_days": "Keep quotes (days)",
     "agent_runs_days": "Keep agent runs (days)",
-    "news_days": "Keep news (days)"
+    "news_days": "Keep news (days)",
+    "risk_free_source": "Risk-free rate for the Sharpe ratio",
+    "risk_free_fixed_pct": "Fixed risk-free rate (% a year)"
   },
   "options": {
     "number_format": { "eu": "€ 1.234,56", "us": "€1,234.56" },
     "theme": { "system": "Follow system", "light": "Light", "dark": "Dark" },
+    "risk_free_source": {
+      "ecb_deposit": "ECB deposit facility rate",
+      "fixed": "A fixed percentage"
+    },
     "channel": {
       "home_assistant": "Home Assistant app",
       "ntfy": "ntfy",

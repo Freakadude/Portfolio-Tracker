@@ -1,12 +1,14 @@
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { AccountsTab } from '../components/AccountsTab'
+import { SleevesTab } from '../components/SleevesTab'
 import { SectionForm } from '../components/SectionForm'
 import { cn } from '../lib/cn'
 
 const SECTIONS = [
   'general',
   'accounts',
+  'sleeves',
   'providers',
   'agent',
   'schedules',
@@ -14,6 +16,7 @@ const SECTIONS = [
   'appearance',
   'language',
   'retention',
+  'analytics',
 ] as const
 
 export function Settings() {
@@ -44,9 +47,15 @@ export function Settings() {
         role="tabpanel"
         id="settings-panel"
         aria-labelledby={`tab-${section}`}
-        className={section === 'accounts' ? 'max-w-4xl' : 'max-w-xl'}
+        className={section === 'accounts' || section === 'sleeves' ? 'max-w-4xl' : 'max-w-xl'}
       >
-        {section === 'accounts' ? <AccountsTab /> : <SectionForm key={section} section={section} />}
+        {section === 'accounts' ? (
+          <AccountsTab />
+        ) : section === 'sleeves' ? (
+          <SleevesTab />
+        ) : (
+          <SectionForm key={section} section={section} />
+        )}
       </div>
     </div>
   )

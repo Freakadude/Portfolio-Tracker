@@ -13,13 +13,15 @@ import { Placeholder } from './pages/Placeholder'
 import { Settings } from './pages/Settings'
 import { Setup } from './pages/Setup'
 import { System } from './pages/System'
+import { Watchlist } from './pages/Watchlist'
+import { WhatIf } from './pages/WhatIf'
 
 // The chart library is large, so the position page is only loaded when it is opened.
 const PositionDetail = lazy(() =>
   import('./pages/PositionDetail').then((m) => ({ default: m.PositionDetail })),
 )
 
-const PAGES = ['news', 'strategies', 'watchlist', 'reports'] as const
+const PAGES = ['news', 'strategies', 'reports'] as const
 
 export function App() {
   return (
@@ -32,6 +34,8 @@ export function App() {
           {PAGES.map((page) => (
             <Route key={page} path={page} element={<Placeholder page={page} />} />
           ))}
+          <Route path="watchlist" element={<Watchlist />} />
+          <Route path="what-if" element={<WhatIf />} />
           <Route path="holdings" element={<Holdings />} />
           <Route path="transactions" element={<Transactions />} />
           <Route path="transactions/import" element={<ImportWizard />} />

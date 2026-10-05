@@ -86,7 +86,15 @@ export function Holdings() {
     <div className="space-y-4">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <h1 className="text-2xl font-semibold">{t('holdings.title')}</h1>
-        <Button onClick={() => setAdding(true)}>{t('holdings.add')}</Button>
+        <div className="flex items-center gap-2">
+          <Link
+            to="/what-if"
+            className="inline-flex min-h-10 items-center rounded-md px-3 text-sm hover:bg-border/40"
+          >
+            {t('whatIf.link')}
+          </Link>
+          <Button onClick={() => setAdding(true)}>{t('holdings.add')}</Button>
+        </div>
       </div>
       <div role="tablist" className="flex gap-1" aria-label={t('holdings.title')}>
         {(['positions', 'instruments'] as const).map((id) => (
