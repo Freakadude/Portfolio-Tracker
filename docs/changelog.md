@@ -1,6 +1,16 @@
 # Changelog
 
-## Phase 2 — Analytics and dashboards (in progress)
+## Phase 2 — Analytics and dashboards (code complete, awaiting owner gate)
+
+Every Phase 2 requirement is implemented and covered by automated tests: about 600 Python tests, 143 web unit tests and 23 Playwright tests. Requirements closed: FR-INS-04, FR-INS-05 (prices, notes and chart; alerts on watched items follow with notifications in Phase 3), FR-MD-05, FR-MD-12, FR-TX-08 to 12, FR-PF-02 to 04, FR-PF-06 to 09, FR-DB-01 to 08, NFR-03.
+
+Not yet verified, and needed before Phase 3 (owner gate):
+- **Your real Degiro export:** import it through the Degiro preset with no mapping changes (Transactions, Import CSV; the wizard should say it recognised Degiro) and check that positions and cost basis match the statement, including the AutoFX fees. Never commit the export.
+- **Returns against your own spreadsheet:** pick one year and compare the time-weighted return and XIRR (Home, Key figure, or Returns) with a spreadsheet XIRR on the same cash flows; they should agree within 0.01 percentage point. `tests/fixtures/analytics/returns_reference.csv` has the same layout for a quick check.
+- **Phone:** build or rearrange a dashboard on your phone; widgets stack in one column.
+- **Deployment:** the compose stack has still not been run (no Docker on the dev machine); deploy through Portainer and open `/healthz`.
+- **Try it with fictional data first:** `uv run folio seed --demo` on an empty database gives sleeves with targets, a benchmark, a watchlist and two years of history.
+
 
 - Analytics maths: time-weighted return and XIRR, volatility, drawdown, Sharpe, beta, correlation matrix, attribution that adds up exactly, allocation with the single shared drift function, rebased series, monthly returns and the return bridge; per-position net invested in the ledger [FR-PF-03, FR-PF-04, FR-PF-06, FR-PF-07]. See ADR 0014.
 - Schema (migration 0004): sleeves with optional targets and bands, region, sector, sleeve and benchmark flag on instruments, watchlists, delayed quotes, dashboards and widgets, the event table the worker uses to tell the browser about new data, and an opt-in cash-tracking flag per account [FR-INS-04, FR-INS-05, FR-MD-05, FR-DB-01, FR-DB-02, FR-TX-09].
