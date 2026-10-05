@@ -10,6 +10,7 @@ from sqlalchemy.orm import Session
 from folio.api.deps import DbDep, UserDep
 from folio.api.errors import ApiError
 from folio.db.models_ledger import Instrument, Listing, PriceBar
+from folio.events import PRICE_UPDATE, publish_event
 from folio.instruments import (
     InstrumentChanges,
     InstrumentError,
@@ -304,4 +305,6 @@ def set_price(instrument_id: int, body: ManualPriceIn, _user: UserDep, db: DbDep
     listing = primary_listing(db, instrument.id)
     if listing is None:
         raise ApiError(409, "No listing", "This instrument has no listing to price.")
-    return PriceService(db).set_manual_price(listing.id, body.date, body.close)
+    bar = PriceService(db).set_manual_price(listing.id, body.date, body.close)
+    publish_event(db, PRICE_UPDATE, {"listing_id": listing.id, "source": "manual"})  # FR-DB-04
+    return bar

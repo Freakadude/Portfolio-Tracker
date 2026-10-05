@@ -22,6 +22,17 @@
   --primary-foreground: #ffffff;
   --danger: #b42318;
   --gain: #146c2e;
+  /* Chart colours (validated with the dataviz palette checker, light and dark) */
+  --series-1: #2a78d6;
+  --series-2: #eb6834;
+  --series-3: #1baf7a;
+  --series-4: #eda100;
+  --series-5: #e87ba4;
+  --series-6: #008300;
+  --diverge-pos: #2a78d6;
+  --diverge-neg: #e34948;
+  --diverge-mid: #f0efec;
+  --chart-grid: #e6e8ec;
   color-scheme: light;
 }
 
@@ -36,6 +47,16 @@
     --primary-foreground: #0c1117;
     --danger: #ff8a80;
     --gain: #5fd18a;
+    --series-1: #3987e5;
+    --series-2: #d95926;
+    --series-3: #199e70;
+    --series-4: #c98500;
+    --series-5: #d55181;
+    --series-6: #008300;
+    --diverge-pos: #3987e5;
+    --diverge-neg: #e66767;
+    --diverge-mid: #383835;
+    --chart-grid: #26303b;
     color-scheme: dark;
   }
 }
@@ -50,6 +71,16 @@
   --primary-foreground: #0c1117;
   --danger: #ff8a80;
   --gain: #5fd18a;
+  --series-1: #3987e5;
+  --series-2: #d95926;
+  --series-3: #199e70;
+  --series-4: #c98500;
+  --series-5: #d55181;
+  --series-6: #008300;
+  --diverge-pos: #3987e5;
+  --diverge-neg: #e66767;
+  --diverge-mid: #383835;
+  --chart-grid: #26303b;
   color-scheme: dark;
 }
 

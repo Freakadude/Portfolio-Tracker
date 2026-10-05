@@ -340,7 +340,9 @@ def import_document(db: Session, document: dict[str, Any], actor: str = "user") 
         raise DashboardError(f"The layout in this file cannot be used: {exc}") from exc
     filters = document.get("filters")
     if isinstance(filters, dict):
-        dashboard.filters = {k: v for k, v in filters.items() if k in ("period", "account")}
+        dashboard.filters = {
+            k: v for k, v in filters.items() if k in ("period", "account", "start", "end")
+        }
     _store_layouts(db, dashboard, created)
     return dashboard
 

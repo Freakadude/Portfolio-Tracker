@@ -163,11 +163,11 @@ class WidgetType:
 WIDGET_TYPES: dict[str, WidgetType] = {
     t.key: t
     for t in (
-        WidgetType("kpi", KpiConfig, 3, 2, "widgets.kpi"),
-        WidgetType("value_history", ValueHistoryConfig, 8, 5, "widgets.value_history"),
+        WidgetType("kpi", KpiConfig, 3, 3, "widgets.kpi"),
+        WidgetType("value_history", ValueHistoryConfig, 8, 6, "widgets.value_history"),
         WidgetType("price_chart", PriceChartConfig, 8, 5, "widgets.price_chart"),
         WidgetType("performance_comparison", PerformanceConfig, 8, 5, "widgets.performance"),
-        WidgetType("allocation", AllocationConfig, 4, 5, "widgets.allocation"),
+        WidgetType("allocation", AllocationConfig, 4, 7, "widgets.allocation"),
         WidgetType("drift_bars", DriftBarsConfig, 6, 4, "widgets.drift_bars"),
         WidgetType("holdings_table", HoldingsTableConfig, 12, 6, "widgets.holdings_table"),
         WidgetType("returns_heatmap", HeatmapConfig, 6, 4, "widgets.returns_heatmap"),

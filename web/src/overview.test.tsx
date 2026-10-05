@@ -20,33 +20,6 @@ const ACCOUNT = {
   transaction_count: 3,
 }
 
-const SUMMARY = {
-  account_id: null,
-  as_of: '2025-03-03',
-  price_date: '2025-03-03',
-  value_eur: '12500.00',
-  net_contributions_eur: '10000.00',
-  income_eur: '50.00',
-  costs_eur: '5.00',
-  cash_eur: null,
-  total_pnl_eur: '2545.00',
-  total_pnl_ratio: '0.2545',
-  day_change: { pnl_eur: '-30.00', pnl_ratio: '-0.0024' },
-  unvalued_positions: 0,
-  period: {
-    key: 'YTD',
-    start: '2025-01-01',
-    end: '2025-03-03',
-    value_start_eur: '11000.00',
-    value_end_eur: '12500.00',
-    net_flows_eur: '500.00',
-    income_eur: '50.00',
-    costs_eur: '5.00',
-    pnl_eur: '1000.00',
-    pnl_ratio: '0.0909',
-  },
-}
-
 describe('Home', () => {
   it('tells a new owner what to do first', async () => {
     mockApi({
@@ -58,56 +31,6 @@ describe('Home', () => {
       await screen.findByText('Add your first instrument to start tracking your portfolio.'),
     ).toBeInTheDocument()
     expect(screen.getByRole('link', { name: 'Import a CSV' })).toBeInTheDocument()
-  })
-
-  it('shows value, result and the period figures, and reloads when the period changes', async () => {
-    const { calls } = mockApi({
-      '/api/v1/settings/general': GENERAL_US,
-      '/api/v1/accounts': [ACCOUNT],
-      '/api/v1/portfolio/summary': SUMMARY,
-    })
-    renderAt(<Home />)
-    expect(await screen.findByText('€12,500.00')).toBeInTheDocument()
-    expect(screen.getByText('€10,000.00')).toBeInTheDocument()
-    expect(screen.getByText('2025-01-01 to 2025-03-03')).toBeInTheDocument()
-    expect(screen.getByText('Prices of 2025-03-03')).toBeInTheDocument()
-
-    await userEvent.click(screen.getByRole('button', { name: '1 month' }))
-    await waitFor(() =>
-      expect(calls.some((c) => c.path === '/api/v1/portfolio/summary')).toBe(true),
-    )
-    await waitFor(() =>
-      expect(screen.getByRole('button', { name: '1 month' })).toHaveAttribute(
-        'aria-pressed',
-        'true',
-      ),
-    )
-  })
-
-  it('warns about holdings that have no price and are left out', async () => {
-    mockApi({
-      '/api/v1/settings/general': GENERAL_US,
-      '/api/v1/accounts': [ACCOUNT],
-      '/api/v1/portfolio/summary': { ...SUMMARY, unvalued_positions: 2 },
-    })
-    renderAt(<Home />)
-    expect(
-      await screen.findByText('2 holdings have no price yet and are left out of the value.'),
-    ).toBeInTheDocument()
-  })
-
-  it('does not ask the server for a custom period before both dates are chosen', async () => {
-    const { calls } = mockApi({
-      '/api/v1/settings/general': GENERAL_US,
-      '/api/v1/accounts': [ACCOUNT],
-      '/api/v1/portfolio/summary': SUMMARY,
-    })
-    renderAt(<Home />)
-    await screen.findByText('€12,500.00')
-    const before = calls.filter((c) => c.path === '/api/v1/portfolio/summary').length
-    await userEvent.click(screen.getByRole('button', { name: 'Custom' }))
-    expect(screen.getByText(/Pick a start and an end date/)).toBeInTheDocument()
-    expect(calls.filter((c) => c.path === '/api/v1/portfolio/summary')).toHaveLength(before + 1) // the query key changed once; no valid dates yet
   })
 })
 

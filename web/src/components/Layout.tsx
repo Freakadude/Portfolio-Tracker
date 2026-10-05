@@ -6,6 +6,7 @@ import { api, unwrap } from '../api/client'
 import { STATUS_KEY } from '../api/hooks'
 import { Button } from './ui'
 import { cn } from '../lib/cn'
+import { useLiveUpdates } from '../dashboards/useLiveUpdates'
 
 export const NAV = [
   { to: '/', key: 'home', end: true },
@@ -43,6 +44,7 @@ export function Layout() {
   const queryClient = useQueryClient()
   const navigate = useNavigate()
   useTheme()
+  useLiveUpdates()
 
   const signOut = useMutation({
     mutationFn: () => unwrap(api.POST('/api/v1/auth/logout')),

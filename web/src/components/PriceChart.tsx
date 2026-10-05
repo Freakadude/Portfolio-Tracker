@@ -7,6 +7,7 @@ import {
   type Time,
 } from 'lightweight-charts'
 import { useEffect, useRef, useState } from 'react'
+import { css, useThemeKey } from '../dashboards/charts/theme'
 import { useTranslation } from 'react-i18next'
 import { useFormat } from '../lib/useFormat'
 import { Button } from './ui'
@@ -26,31 +27,6 @@ const RANGES = [
   { key: '1Y', days: 366 },
   { key: 'MAX', days: null },
 ] as const
-
-function css(name: string, fallback: string) {
-  const value = getComputedStyle(document.documentElement).getPropertyValue(name).trim()
-  return value || fallback
-}
-
-/** The theme can change while the page is open; this changes whenever it does. */
-function useThemeKey() {
-  const [key, setKey] = useState(0)
-  useEffect(() => {
-    const bump = () => setKey((k) => k + 1)
-    const observer = new MutationObserver(bump)
-    observer.observe(document.documentElement, {
-      attributes: true,
-      attributeFilter: ['data-theme'],
-    })
-    const media = window.matchMedia?.('(prefers-color-scheme: dark)')
-    media?.addEventListener?.('change', bump)
-    return () => {
-      observer.disconnect()
-      media?.removeEventListener?.('change', bump)
-    }
-  }, [])
-  return key
-}
 
 /** Markers must sit on a day that has a price; snap each trade to the close on or before it. */
 export function snapToPrices(prices: PricePoint[], markers: TradeMarker[]): TradeMarker[] {

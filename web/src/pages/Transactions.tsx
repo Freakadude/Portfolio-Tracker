@@ -26,7 +26,15 @@ export function Transactions() {
   const drafts = useDrafts()
   const invalidate = useInvalidateLedger()
 
-  const [filters, setFilters] = useState<TransactionFilters>({})
+  const [filters, setFilters] = useState<TransactionFilters>(() => ({
+    account: params.get('account') ? Number(params.get('account')) : undefined,
+    // with ?add= the instrument is the one to prefill the form with, not a filter
+    instrument:
+      params.get('instrument') && !params.has('add') ? Number(params.get('instrument')) : undefined,
+    type: params.get('type') ?? undefined,
+    from: params.get('from') ?? undefined,
+    to: params.get('to') ?? undefined,
+  }))
   const list = useTransactions(filters)
   const [editing, setEditing] = useState<Transaction | undefined>()
   const [adding, setAdding] = useState(() => params.has('add'))
@@ -51,7 +59,7 @@ export function Transactions() {
   function closeForm() {
     setAdding(false)
     setEditing(undefined)
-    if (params.has('add') || params.has('instrument')) setParams({}, { replace: true })
+    if (params.has('add')) setParams({}, { replace: true })
   }
 
   function confirmDelete(tx: Transaction) {

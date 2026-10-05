@@ -1,8 +1,15 @@
 import { useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Link } from 'react-router-dom'
+import { Link, useSearchParams } from 'react-router-dom'
 import { errorMessage } from '../api/client'
-import { useAccounts, useInstruments, usePositions, type Position } from '../api/queries'
+import { useSleeves } from '../dashboards/api'
+import {
+  useAccounts,
+  useInstruments,
+  usePositions,
+  type Instrument,
+  type Position,
+} from '../api/queries'
 import { AddInstrumentDialog } from '../components/AddInstrumentDialog'
 import { AsOf, Badge, EmptyState, Gain, SortHeader, useSort } from '../components/display'
 import { InstrumentsTab } from '../components/InstrumentsTab'
@@ -23,6 +30,40 @@ type SortKey =
   | 'unrealized'
   | 'day'
   | 'weight'
+
+type GroupMode = 'none' | 'account' | 'sleeve' | 'asset_class'
+const GROUP_MODES: GroupMode[] = ['none', 'account', 'sleeve', 'asset_class']
+
+/** The value of a position under a grouping, as the allocation widgets name it. */
+function groupValue(
+  p: Position,
+  instruments: Map<number, Instrument>,
+  sleeves: Map<number, string>,
+  by: string,
+): string {
+  const instrument = instruments.get(p.instrument_id)
+  switch (by) {
+    case 'account':
+      return p.account_name
+    case 'asset_class':
+      return p.asset_class
+    case 'instrument':
+      return p.name
+    case 'currency':
+      return p.currency ?? 'Unclassified'
+    case 'sleeve':
+      return (
+        (instrument?.sleeve_id != null ? sleeves.get(instrument.sleeve_id) : undefined) ??
+        'Unclassified'
+      )
+    case 'region':
+      return instrument?.region ?? 'Unclassified'
+    case 'sector':
+      return instrument?.sector ?? 'Unclassified'
+    default:
+      return ''
+  }
+}
 
 const ACCESSORS: Record<SortKey, (p: Position) => string | number | null> = {
   name: (p) => p.name.toLowerCase(),
@@ -78,23 +119,42 @@ function PositionsTab({ onAdd }: { onAdd: () => void }) {
   const { eur, qty, pct } = useFormat()
   const [account, setAccount] = useState<number | undefined>()
   const [includeClosed, setIncludeClosed] = useState(false)
-  const [group, setGroup] = useState(false)
+  const [groupMode, setGroupMode] = useState<GroupMode>('none')
+  const [params, setParams] = useSearchParams()
   const accounts = useAccounts()
   const instruments = useInstruments('all')
+  const sleeves = useSleeves()
   const { data, isPending, isError, error } = usePositions({ account, includeClosed })
-  const rows = useMemo(() => data?.positions ?? [], [data])
+  const filterBy = params.get('group_by')
+  const filterValue = params.get('value')
+  const sleeveName = useMemo(
+    () => new Map((sleeves.data ?? []).map((s) => [s.id, s.name])),
+    [sleeves.data],
+  )
+  const instrumentById = useMemo(
+    () => new Map((instruments.data ?? []).map((i) => [i.id, i])),
+    [instruments.data],
+  )
+  // a slice of a chart opens this list filtered to it (FR-DB-06)
+  const rows = useMemo(() => {
+    const all = data?.positions ?? []
+    if (!filterBy || filterValue === null) return all
+    return all.filter((p) => groupValue(p, instrumentById, sleeveName, filterBy) === filterValue)
+  }, [data, filterBy, filterValue, instrumentById, sleeveName])
   const { sorted, sort, toggle } = useSort<Position, SortKey>(rows, ACCESSORS, {
     key: 'value',
     dir: 'desc',
   })
 
   const groups = useMemo(() => {
-    if (!group) return [{ name: null as string | null, rows: sorted }]
-    const byAccount = new Map<string, Position[]>()
-    for (const p of sorted)
-      byAccount.set(p.account_name, [...(byAccount.get(p.account_name) ?? []), p])
-    return [...byAccount].map(([name, list]) => ({ name, rows: list }))
-  }, [sorted, group])
+    if (groupMode === 'none') return [{ name: null as string | null, rows: sorted }]
+    const grouped = new Map<string, Position[]>()
+    for (const p of sorted) {
+      const key = groupValue(p, instrumentById, sleeveName, groupMode)
+      grouped.set(key, [...(grouped.get(key) ?? []), p])
+    }
+    return [...grouped].map(([name, list]) => ({ name, rows: list }))
+  }, [sorted, groupMode, instrumentById, sleeveName])
 
   if (isPending) return <p role="status">{t('app.loading')}</p>
   if (isError) return <Alert>{errorMessage(error)}</Alert>
@@ -121,11 +181,36 @@ function PositionsTab({ onAdd }: { onAdd: () => void }) {
         checked={includeClosed}
         onChange={(e) => setIncludeClosed(e.target.checked)}
       />
-      <Checkbox
-        label={t('holdings.groupByAccount')}
-        checked={group}
-        onChange={(e) => setGroup(e.target.checked)}
-      />
+      <label className="flex items-center gap-2 text-sm">
+        {t('holdings.groupBy')}
+        <Select
+          className="w-auto"
+          value={groupMode}
+          onChange={(e) => setGroupMode(e.target.value as GroupMode)}
+        >
+          {GROUP_MODES.map((m) => (
+            <option key={m} value={m}>
+              {t(`holdings.groupModes.${m}`)}
+            </option>
+          ))}
+        </Select>
+      </label>
+      {filterBy && filterValue !== null && (
+        <span className="flex items-center gap-2 rounded-md border border-border px-2 py-1 text-sm">
+          {t('holdings.filteredBy', {
+            group: t(`widgets.groups.${filterBy}`, { defaultValue: filterBy }),
+            value: filterValue,
+          })}
+          <Button
+            variant="ghost"
+            className="min-h-8 px-2"
+            aria-label={t('holdings.clearFilter')}
+            onClick={() => setParams({}, { replace: true })}
+          >
+            ✕
+          </Button>
+        </span>
+      )}
     </div>
   )
 
@@ -159,7 +244,7 @@ function PositionsTab({ onAdd }: { onAdd: () => void }) {
   }
 
   const totals = data.totals
-  const showAccount = group || (accounts.data?.length ?? 0) > 1
+  const showAccount = groupMode === 'account' || (accounts.data?.length ?? 0) > 1
   return (
     <div className="space-y-3">
       {toolbar}
@@ -278,6 +363,14 @@ function PositionsTab({ onAdd }: { onAdd: () => void }) {
                         {eur(p.price.close)}
                         {p.currency && p.currency !== 'EUR' && (
                           <span className="ml-1 text-xs text-muted">{p.currency}</span>
+                        )}
+                        {p.price.delayed_price && p.price.delayed_at && (
+                          <div className="text-xs">
+                            <Badge tone="neutral" title={t('holdings.delayedHint')}>
+                              {t('holdings.delayed', { time: p.price.delayed_at.slice(11, 16) })}
+                            </Badge>{' '}
+                            {p.price.delayed_price} {p.currency}
+                          </div>
                         )}
                         {p.price.stale && (
                           <div>

@@ -27,7 +27,7 @@ class Template:
 
 
 def _kpi(metric: str, x: int, y: int = 0) -> TemplateWidget:
-    return TemplateWidget("kpi", x, y, 3, 2, {"metric": metric})
+    return TemplateWidget("kpi", x, y, 3, 3, {"metric": metric})
 
 
 TEMPLATES: dict[str, Template] = {
@@ -42,9 +42,9 @@ TEMPLATES: dict[str, Template] = {
                 _kpi("total_return", 3),
                 _kpi("day_change", 6),
                 _kpi("xirr", 9),
-                TemplateWidget("value_history", 0, 2, 8, 5, {}),
-                TemplateWidget("allocation", 8, 2, 4, 5, {"group_by": "asset_class"}),
-                TemplateWidget("holdings_table", 0, 7, 12, 6, {}),
+                TemplateWidget("value_history", 0, 3, 8, 6, {}),
+                TemplateWidget("allocation", 8, 3, 4, 7, {"group_by": "asset_class"}),
+                TemplateWidget("holdings_table", 0, 10, 12, 5, {}),
             ),
         ),
         Template(
@@ -56,9 +56,9 @@ TEMPLATES: dict[str, Template] = {
                 _kpi("max_drawdown", 3),
                 _kpi("sharpe", 6),
                 _kpi("beta", 9),
-                TemplateWidget("drawdown", 0, 2, 12, 4, {}),
-                TemplateWidget("correlation_matrix", 0, 6, 6, 6, {"window": "1Y"}),
-                TemplateWidget("performance_comparison", 6, 6, 6, 6, {}),
+                TemplateWidget("drawdown", 0, 3, 12, 5, {}),
+                TemplateWidget("correlation_matrix", 0, 8, 6, 6, {"window": "1Y"}),
+                TemplateWidget("performance_comparison", 6, 8, 6, 6, {}),
             ),
         ),
         Template(
@@ -70,9 +70,9 @@ TEMPLATES: dict[str, Template] = {
                 _kpi("net_contributions", 3),
                 _kpi("total_return", 6),
                 _kpi("value", 9),
-                TemplateWidget("income", 0, 2, 12, 5, {}),
-                TemplateWidget("return_bridge", 0, 7, 8, 5, {}),
-                TemplateWidget("allocation", 8, 7, 4, 5, {"group_by": "instrument"}),
+                TemplateWidget("income", 0, 3, 12, 5, {}),
+                TemplateWidget("return_bridge", 0, 8, 8, 5, {}),
+                TemplateWidget("allocation", 8, 8, 4, 7, {"group_by": "instrument"}),
             ),
         ),
         Template(

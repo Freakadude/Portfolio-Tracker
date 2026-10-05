@@ -226,7 +226,7 @@ describe('the positions table', () => {
     })
     renderAt(<Holdings />)
     await screen.findByRole('table')
-    await userEvent.click(screen.getByLabelText('Group by account'))
+    await userEvent.selectOptions(screen.getByLabelText('Group by'), 'account')
     expect(screen.getAllByRole('rowheader').map((h) => h.textContent)).toEqual([
       'Degiro',
       'Pension',

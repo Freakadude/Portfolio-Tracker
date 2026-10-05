@@ -5,11 +5,11 @@ import { euro, login } from './helpers'
 // (FIFO: remaining cost basis 360,60; average cost: 320,40). Net invested is
 //   1.001,00 + 601,00 - 1.560,00 = 42,00.
 
-test('overview: a missing price is flagged, then value and result follow a hand-entered price', async ({
+test('home: a missing price is flagged, then value and result follow a hand-entered price', async ({
   page,
 }) => {
   await login(page)
-  await expect(page.getByRole('heading', { name: 'Overview' })).toBeVisible()
+  await expect(page.getByRole('heading', { level: 1, name: 'Overview' })).toBeVisible()
   await expect(
     page.getByText('1 holding has no price yet and is left out of the value.'),
   ).toBeVisible()
@@ -31,16 +31,15 @@ test('overview: a missing price is flagged, then value and result follow a hand-
     'aria-pressed',
     'true',
   )
-  const value = page.getByText('Value', { exact: true }).locator('..')
-  await expect(value).toContainText(euro('450,00')) // 3 units x 150
-  await expect(page.getByText('Invested (net)').locator('..')).toContainText(euro('42,00'))
-  await expect(page.getByText('Total result').locator('..')).toContainText(euro('408,00')) // 450 - 42
+  const tile = (name: string) => page.getByRole('region', { name, exact: true })
+  await expect(tile('Value')).toContainText(euro('450,00')) // 3 units x 150
+  await expect(tile('Total result')).toContainText(euro('408,00')) // 450 - 42 put in
   await expect(page.getByText(/has no price yet/)).toHaveCount(0)
 
   // another period reloads without leaving the page
   await page.getByRole('button', { name: '1 week' }).click()
   await expect(page.getByRole('button', { name: '1 week' })).toHaveAttribute('aria-pressed', 'true')
-  await expect(value).toContainText(euro('450,00'))
+  await expect(tile('Value')).toContainText(euro('450,00'))
 })
 
 test('accounts: switching to average cost warns, recalculates, and can be switched back', async ({

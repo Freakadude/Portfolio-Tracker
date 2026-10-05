@@ -10,7 +10,7 @@ from typing import Any
 
 import pytest
 from fastapi.testclient import TestClient
-from sqlalchemy import select
+from sqlalchemy import func, select
 
 from folio.analytics_service import clear_cache
 from folio.api.routers import events as events_router
@@ -172,9 +172,9 @@ def test_a_widget_can_be_added_configured_and_removed(api) -> None:
     assert added.status_code == 201, added.text
     [widget] = added.json()["widgets"]
     assert widget["config"]["metric"] == "xirr" and widget["config"]["scope"]["kind"] == "portfolio"
-    assert widget["grid"] == {"x": 0, "y": 0, "w": 3, "h": 2}  # the library's size
+    assert widget["grid"] == {"x": 0, "y": 0, "w": 3, "h": 3}  # the library's size
     second = api.post(f"/api/v1/dashboards/{d['id']}/widgets", json={"type": "allocation"}).json()
-    assert second["widgets"][1]["grid"]["y"] == 2  # placed below, never on top
+    assert second["widgets"][1]["grid"]["y"] == 3  # placed below, never on top
 
     path = f"/api/v1/dashboards/{d['id']}/widgets/{widget['id']}"
     changed = api.patch(path, json={"config": {"metric": "twr", "title": "Return"}})
@@ -201,7 +201,7 @@ def test_the_widget_library_lists_all_eighteen(api) -> None:
     library = api.get("/api/v1/dashboard-widgets").json()
     assert len(library) == 18
     kpi = next(w for w in library if w["type"] == "kpi")
-    assert (kpi["width"], kpi["height"], kpi["defaults"]["metric"]) == (3, 2, "value")
+    assert (kpi["width"], kpi["height"], kpi["defaults"]["metric"]) == (3, 3, "value")
 
 
 # --- templates (FR-DB-07) -----------------------------------------------------------------------
@@ -318,6 +318,23 @@ def test_the_dashboards_period_is_followed_unless_the_widget_says_otherwise(api,
     assert follows["start"] == "2024-01-08" and own["start"] == "2023-12-31"
     assert ignores["start"] == "2023-12-31"  # not following: the default, year to date
     assert D(follows["value"]) != D(own["value"])
+
+
+def test_a_custom_period_is_a_filter_too(api, book) -> None:
+    ok = one(
+        api,
+        "kpi",
+        {"metric": "period_return"},
+        period="CUSTOM",
+        start="2024-01-11",
+        end="2024-01-12",
+    )
+    assert (ok["start"], ok["end"]) == ("2024-01-11", "2024-01-12")
+    assert D(ok["value"]) == 11  # 1177 on the 11th, 1188 on the 12th
+    missing = data(api, {"w": ("kpi", {"metric": "period_return"})}, period="CUSTOM")["w"]
+    assert "needs both a start and an end" in missing["error"]
+    chart = one(api, "value_history", {}, period="CUSTOM", start="2024-01-02", end="2024-01-05")
+    assert [p["date"] for p in chart["points"]][-1] == "2024-01-05"
 
 
 def test_the_account_filter_is_followed_too(api, book) -> None:
@@ -537,3 +554,35 @@ def test_a_new_close_stored_by_the_worker_produces_an_event(settings, api, db) -
     db.expire_all()
     kinds = [e.type for e in db.scalars(select(AppEvent).order_by(AppEvent.id))]
     assert kinds == ["price_update", "job_status"]
+
+
+def test_a_price_entered_by_hand_tells_the_browser(api, db) -> None:
+    """The web process publishes too, so a dashboard open in another tab updates."""
+    instrument, _ = make_listing(db, ticker="M", isin=None, manual=True)
+    db.commit()
+    before = db.scalar(select(func.max(AppEvent.id))) or 0
+    r = api.post(
+        f"/api/v1/instruments/{instrument.id}/prices", json={"date": "2024-01-09", "close": "12.5"}
+    )
+    assert r.status_code == 201, r.text
+    db.expire_all()
+    new = db.scalars(select(AppEvent).where(AppEvent.id > before)).all()
+    assert [e.type for e in new] == ["price_update"] and new[0].payload["source"] == "manual"
+
+
+def test_a_portfolio_without_any_price_says_so_in_the_allocation(api, db) -> None:
+    fund, _ = make_listing(db, ticker="U")
+    db.commit()
+    account = api.post("/api/v1/accounts", json={"name": "A"}).json()["id"]
+    tx(
+        api,
+        account_id=account,
+        instrument_id=fund.id,
+        type="buy",
+        trade_date="2024-01-02",
+        quantity="1",
+        price="10",
+    )
+    out = one(api, "allocation")
+    assert out["empty"] is True and out["unvalued"] == 1
+    assert "None of your holdings has a price yet" in out["reason"]

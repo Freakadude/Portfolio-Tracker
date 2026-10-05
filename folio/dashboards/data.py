@@ -36,6 +36,8 @@ class WidgetDataError(ValueError):
 class Filters:
     period: str | None = None
     account: int | None = None
+    start: date | None = None  # for a CUSTOM period
+    end: date | None = None
 
 
 @dataclass
@@ -81,7 +83,7 @@ def context(env: Env, account: int | None, extras: Sequence[int] = ()) -> svc.An
 
 def window_of(ctx: svc.AnalyticsContext, period: str, env: Env) -> tuple[date, date]:
     try:
-        return svc.resolve(ctx, period, env.today)
+        return svc.resolve(ctx, period, env.today, env.filters.start, env.filters.end)
     except ValueError as exc:
         raise WidgetDataError(str(exc)) from exc
 
@@ -114,6 +116,18 @@ _KINDS = {
 }  # fmt: skip
 
 
+# the figures a line of portfolio value says something about
+_TRENDS = {
+    "value",
+    "total_return",
+    "period_return",
+    "twr",
+    "xirr",
+    "net_contributions",
+    "day_change",
+}
+
+
 def kpi(env: Env, cfg: Any) -> dict[str, Any]:
     metric: str = cfg.metric
     kind = _KINDS[metric]
@@ -130,7 +144,7 @@ def kpi(env: Env, cfg: Any) -> dict[str, Any]:
 
     points = series_for(env, ctx, cfg, start, end)
     result = svc.returns_for(points)
-    if cfg.sparkline and points:
+    if cfg.sparkline and points and metric in _TRENDS:
         base["sparkline"] = [
             {"date": p.day.isoformat(), "value": str(p.value)} for p in thin(points, SPARK_POINTS)
         ]
@@ -293,7 +307,13 @@ def allocation(env: Env, cfg: Any) -> dict[str, Any]:
     ctx = context(env, account_of(cfg, env))
     result, unvalued = svc.allocation_at(env.db, ctx, env.today, cfg.group_by)
     if result.total_eur == 0 and not result.slices:
-        return _empty("Add a holding to see how your portfolio is divided.")
+        reason = (
+            "None of your holdings has a price yet. Enter one under Holdings, Instruments, "
+            "or wait for the nightly fetch."
+            if unvalued
+            else "Add a holding to see how your portfolio is divided."
+        )
+        return {**_empty(reason), "unvalued": unvalued}
     return {
         "group_by": cfg.group_by,
         "chart": cfg.chart,
@@ -521,7 +541,9 @@ def price_chart(env: Env, cfg: Any) -> dict[str, Any]:
     first_day = ctx.first_transaction_day
     try:
         start, end = (
-            svc.resolve(ctx, period_of(cfg, env, "1Y"), env.today)
+            svc.resolve(
+                ctx, period_of(cfg, env, "1Y"), env.today, env.filters.start, env.filters.end
+            )
             if not ctx.empty
             else (env.today - timedelta(days=365), env.today)
         )

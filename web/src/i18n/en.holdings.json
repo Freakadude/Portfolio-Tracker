@@ -17,7 +17,17 @@
     "showClosed": "Show closed positions",
     "account": "Account",
     "allAccounts": "All accounts",
-    "groupByAccount": "Group by account",
+    "groupBy": "Group by",
+    "groupModes": {
+      "none": "No grouping",
+      "account": "Account",
+      "sleeve": "Sleeve",
+      "asset_class": "Asset class"
+    },
+    "filteredBy": "{{group}}: {{value}}",
+    "clearFilter": "Show all positions",
+    "delayed": "Delayed {{time}}",
+    "delayedHint": "A quote about 15 minutes old. Values and returns use the last close.",
     "empty": {
       "title": "No holdings yet",
       "body": "Add your first instrument, then record what you bought."

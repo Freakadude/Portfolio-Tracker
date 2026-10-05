@@ -312,8 +312,10 @@ def templates(_user: UserDep) -> list[TemplateOut]:
 class FiltersIn(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
-    period: str | None = None
+    period: str | None = None  # 1D ... MAX, or CUSTOM with start and end
     account: int | None = None
+    start: date | None = None
+    end: date | None = None
 
 
 class WidgetRequest(BaseModel):
@@ -345,7 +347,8 @@ class WidgetsDataOut(BaseModel):
 def widgets_data(body: WidgetsDataIn, _user: UserDep, db: DbDep) -> WidgetsDataOut:
     """The data of many widgets in one request, so a dashboard shares one analytics context.
     A widget that cannot be drawn reports its own error without failing the others."""
-    env = Env(db, body.as_of or date.today(), Filters(body.filters.period, body.filters.account))
+    f = body.filters
+    env = Env(db, body.as_of or date.today(), Filters(f.period, f.account, f.start, f.end))
     results: dict[str, WidgetResult] = {}
     for request in body.requests:
         try:
