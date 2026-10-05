@@ -368,6 +368,68 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/portfolio/allocation": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Allocation
+         * @description What the portfolio holds, by instrument, asset class, sleeve, region, sector or currency,
+         *     with drift from the sleeve targets where there are any (FR-PF-04).
+         */
+        get: operations["allocation_api_v1_portfolio_allocation_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/portfolio/attribution": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Attribution
+         * @description What each position contributed to the period's result, in euro and in points (FR-PF-07).
+         */
+        get: operations["attribution_api_v1_portfolio_attribution_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/portfolio/benchmarks": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Benchmarks
+         * @description The portfolio and up to three benchmarks, all 100 at the start of the period (FR-PF-08).
+         *     Without `ids`, the instruments flagged as benchmarks are used.
+         */
+        get: operations["benchmarks_api_v1_portfolio_benchmarks_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/portfolio/history": {
         parameters: {
             query?: never;
@@ -377,11 +439,95 @@ export interface paths {
         };
         /**
          * History
-         * @description The stored daily snapshots: value against net contributions.
+         * @description Daily value against net contributions from the first transaction (FR-PF-02), with the
+         *     time-weighted index and the drawdown from the running peak. Days are those on which
+         *     something happened or a close was stored; between them the value is unchanged.
          */
         get: operations["history_api_v1_portfolio_history_get"];
         put?: never;
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/portfolio/returns": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Returns
+         * @description Time-weighted and money-weighted return of the portfolio, an account, a sleeve or one
+         *     instrument over a period (FR-PF-03).
+         */
+        get: operations["returns_api_v1_portfolio_returns_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/portfolio/returns/instruments": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Instrument Returns
+         * @description Return and result of every position that was held in the period (heatmap, FR-PF-03).
+         */
+        get: operations["instrument_returns_api_v1_portfolio_returns_instruments_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/portfolio/risk": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Risk
+         * @description Volatility, drawdowns, Sharpe, beta and the correlation matrices (FR-PF-06).
+         */
+        get: operations["risk_api_v1_portfolio_risk_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/portfolio/simulate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Simulate Trades
+         * @description Show the allocation, drift and cash need after hypothetical trades. Nothing is written:
+         *     the simulation works on copies of the numbers (FR-PF-09).
+         */
+        post: operations["simulate_trades_api_v1_portfolio_simulate_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -898,6 +1044,43 @@ export interface components {
             /** Type */
             type: string;
         };
+        /** AllocationOut */
+        AllocationOut: {
+            /**
+             * As Of
+             * Format: date
+             */
+            as_of: string;
+            /** Group By */
+            group_by: string;
+            /** Slices */
+            slices: components["schemas"]["SliceOut"][];
+            /** Total Eur */
+            total_eur: string;
+            /** Unvalued Positions */
+            unvalued_positions: number;
+        };
+        /** AttributionOut */
+        AttributionOut: {
+            /** Capital Eur */
+            capital_eur: string;
+            /** Contributions */
+            contributions: components["schemas"]["ContributionOut"][];
+            /**
+             * End
+             * Format: date
+             */
+            end: string;
+            /** Portfolio Pnl Eur */
+            portfolio_pnl_eur: string;
+            /**
+             * Start
+             * Format: date
+             */
+            start: string;
+            /** Total Return */
+            total_return: string | null;
+        };
         /** AuditOut */
         AuditOut: {
             /** Action */
@@ -957,6 +1140,21 @@ export interface components {
             /** Status */
             status: string;
         };
+        /** BenchmarksOut */
+        BenchmarksOut: {
+            /**
+             * End
+             * Format: date
+             */
+            end: string;
+            /** Series */
+            series: components["schemas"]["SeriesOut"][];
+            /**
+             * Start
+             * Format: date
+             */
+            start: string;
+        };
         /** Body_upload_api_v1_imports_post */
         Body_upload_api_v1_imports_post: {
             /** Account Id */
@@ -999,6 +1197,27 @@ export interface components {
              * @default false
              */
             skip_errors: boolean;
+        };
+        /** ContributionOut */
+        ContributionOut: {
+            /** Key */
+            key: string;
+            /** Name */
+            name: string;
+            /** Pnl Eur */
+            pnl_eur: string;
+            /** Points */
+            points: string | null;
+        };
+        /** DrawdownPoint */
+        DrawdownPoint: {
+            /**
+             * Date
+             * Format: date
+             */
+            date: string;
+            /** Value */
+            value: string;
         };
         /** DryRunOut */
         DryRunOut: {
@@ -1068,10 +1287,14 @@ export interface components {
              * Format: date
              */
             date: string;
+            /** Drawdown */
+            drawdown: string;
             /** Is Peildatum */
             is_peildatum: boolean;
             /** Net Contributions Eur */
             net_contributions_eur: string;
+            /** Twr Index */
+            twr_index: string;
             /** Unvalued Positions */
             unvalued_positions: number;
             /** Value Eur */
@@ -1238,6 +1461,23 @@ export interface components {
             /** Ticker */
             ticker: string | null;
         };
+        /** InstrumentReturnOut */
+        InstrumentReturnOut: {
+            /** Instrument Id */
+            instrument_id: number;
+            /** Name */
+            name: string;
+            /** Pnl Eur */
+            pnl_eur: string;
+            /** Twr */
+            twr: string | null;
+            /** Value End Eur */
+            value_end_eur: string;
+            /** Value Start Eur */
+            value_start_eur: string;
+            /** Xirr */
+            xirr: string | null;
+        };
         /** ItemChanges */
         ItemChanges: {
             /** Note */
@@ -1377,6 +1617,17 @@ export interface components {
             mapping: components["schemas"]["ImportMapping"];
             /** Save As Preset */
             save_as_preset?: string | null;
+        };
+        /** MatrixOut */
+        MatrixOut: {
+            /** Instruments */
+            instruments: number[];
+            /** Labels */
+            labels: string[];
+            /** Values */
+            values: (string | null)[][];
+            /** Window */
+            window: string;
         };
         /** MeOut */
         MeOut: {
@@ -1653,6 +1904,76 @@ export interface components {
             /** Name */
             name: string;
         };
+        /** ReturnsOut */
+        ReturnsOut: {
+            /**
+             * End
+             * Format: date
+             */
+            end: string;
+            /** Income Eur */
+            income_eur: string;
+            /** Net Flows Eur */
+            net_flows_eur: string;
+            /** Pnl Eur */
+            pnl_eur: string;
+            /** Scope */
+            scope: string;
+            /**
+             * Start
+             * Format: date
+             */
+            start: string;
+            /** Twr */
+            twr: string | null;
+            /** Twr Annualised */
+            twr_annualised: string | null;
+            /** Value End Eur */
+            value_end_eur: string;
+            /** Value Start Eur */
+            value_start_eur: string;
+            /** Xirr */
+            xirr: string | null;
+        };
+        /** RiskOut */
+        RiskOut: {
+            /** Annual Return */
+            annual_return: string | null;
+            /** Benchmark Id */
+            benchmark_id: number | null;
+            /** Beta */
+            beta: string | null;
+            /** Correlations */
+            correlations: components["schemas"]["MatrixOut"][];
+            /** Current Drawdown */
+            current_drawdown: string;
+            /** Drawdown */
+            drawdown: components["schemas"]["DrawdownPoint"][];
+            /**
+             * End
+             * Format: date
+             */
+            end: string;
+            /** Max Drawdown */
+            max_drawdown: string;
+            /** Max Drawdown End */
+            max_drawdown_end: string | null;
+            /** Max Drawdown Start */
+            max_drawdown_start: string | null;
+            /** Risk Free */
+            risk_free: string;
+            /** Sharpe */
+            sharpe: string | null;
+            /**
+             * Start
+             * Format: date
+             */
+            start: string;
+            /** Volatility */
+            volatility: string | null;
+            /** Window */
+            window: string;
+        };
         /** RowOut */
         RowOut: {
             /** Reason */
@@ -1714,6 +2035,25 @@ export interface components {
             /** Remaining Quantity */
             remaining_quantity: string;
         };
+        /** SeriesOut */
+        SeriesOut: {
+            /** Key */
+            key: string;
+            /** Label */
+            label: string;
+            /** Points */
+            points: components["schemas"]["SeriesPoint"][];
+        };
+        /** SeriesPoint */
+        SeriesPoint: {
+            /**
+             * Date
+             * Format: date
+             */
+            date: string;
+            /** Value */
+            value: string;
+        };
         /** SetupStatus */
         SetupStatus: {
             /** Authenticated */
@@ -1724,6 +2064,69 @@ export interface components {
             needs_owner: boolean;
             /** Setup Complete */
             setup_complete: boolean;
+        };
+        /** SimPositionOut */
+        SimPositionOut: {
+            /** Instrument Id */
+            instrument_id: number;
+            /** Name */
+            name: string;
+            /** Quantity After */
+            quantity_after: string;
+            /** Quantity Before */
+            quantity_before: string;
+            /** Value After Eur */
+            value_after_eur: string;
+            /** Value Before Eur */
+            value_before_eur: string;
+        };
+        /** SimTradeIn */
+        SimTradeIn: {
+            /**
+             * Fees Eur
+             * @default 0
+             */
+            fees_eur: number | string;
+            /** Instrument Id */
+            instrument_id: number;
+            /** Price Eur */
+            price_eur?: number | string | null;
+            /** Quantity */
+            quantity: number | string;
+            /**
+             * Side
+             * @enum {string}
+             */
+            side: "buy" | "sell";
+        };
+        /** SimulateIn */
+        SimulateIn: {
+            /** Account */
+            account?: number | null;
+            /** As Of */
+            as_of?: string | null;
+            /**
+             * Group By
+             * @default asset_class
+             * @enum {string}
+             */
+            group_by: "instrument" | "asset_class" | "sleeve" | "region" | "sector" | "currency";
+            /** Trades */
+            trades: components["schemas"]["SimTradeIn"][];
+        };
+        /** SimulationOut */
+        SimulationOut: {
+            after: components["schemas"]["AllocationOut"];
+            /**
+             * As Of
+             * Format: date
+             */
+            as_of: string;
+            before: components["schemas"]["AllocationOut"];
+            /** Cash Needed Eur */
+            cash_needed_eur: string;
+            /** Positions */
+            positions: components["schemas"]["SimPositionOut"][];
         };
         /** SleeveChanges */
         SleeveChanges: {
@@ -1757,6 +2160,23 @@ export interface components {
             sort_order: number;
             /** Target Pct */
             target_pct: string | null;
+        };
+        /** SliceOut */
+        SliceOut: {
+            /** Drift Pp */
+            drift_pp: string | null;
+            /** Drift Relative */
+            drift_relative: string | null;
+            /** Key */
+            key: string;
+            /** Outside Band */
+            outside_band: boolean | null;
+            /** Target */
+            target: string | null;
+            /** Value Eur */
+            value_eur: string;
+            /** Weight */
+            weight: string;
         };
         /** SummaryOut */
         SummaryOut: {
@@ -3023,9 +3443,45 @@ export interface operations {
             };
         };
     };
-    history_api_v1_portfolio_history_get: {
+    allocation_api_v1_portfolio_allocation_get: {
         parameters: {
             query?: {
+                group_by?: "instrument" | "asset_class" | "sleeve" | "region" | "sector" | "currency";
+                account?: number | null;
+                as_of?: string | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AllocationOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    attribution_api_v1_portfolio_attribution_get: {
+        parameters: {
+            query?: {
+                period?: string;
+                account?: number | null;
+                as_of?: string | null;
                 from?: string | null;
                 to?: string | null;
             };
@@ -3041,7 +3497,215 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
+                    "application/json": components["schemas"]["AttributionOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    benchmarks_api_v1_portfolio_benchmarks_get: {
+        parameters: {
+            query?: {
+                ids?: number[] | null;
+                period?: string;
+                account?: number | null;
+                as_of?: string | null;
+                from?: string | null;
+                to?: string | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BenchmarksOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    history_api_v1_portfolio_history_get: {
+        parameters: {
+            query?: {
+                from?: string | null;
+                to?: string | null;
+                account?: number | null;
+                as_of?: string | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
                     "application/json": components["schemas"]["HistoryPoint"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    returns_api_v1_portfolio_returns_get: {
+        parameters: {
+            query?: {
+                period?: string;
+                scope?: string;
+                as_of?: string | null;
+                from?: string | null;
+                to?: string | null;
+                account?: number | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReturnsOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    instrument_returns_api_v1_portfolio_returns_instruments_get: {
+        parameters: {
+            query?: {
+                period?: string;
+                as_of?: string | null;
+                from?: string | null;
+                to?: string | null;
+                account?: number | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InstrumentReturnOut"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    risk_api_v1_portfolio_risk_get: {
+        parameters: {
+            query?: {
+                window?: "90D" | "1Y" | "3Y" | "MAX";
+                benchmark?: number | null;
+                account?: number | null;
+                as_of?: string | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RiskOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    simulate_trades_api_v1_portfolio_simulate_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SimulateIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SimulationOut"];
                 };
             };
             /** @description Validation Error */

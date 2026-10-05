@@ -8,6 +8,7 @@ three days) and writes the daily snapshots (thousands of days), so the two never
 from __future__ import annotations
 
 from bisect import bisect_right
+from collections.abc import Iterable
 from dataclasses import dataclass
 from datetime import date, timedelta
 from decimal import Decimal
@@ -15,6 +16,7 @@ from decimal import Decimal
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
+from folio.analytics.timeline import Timeline, build_timeline
 from folio.analytics.valuation import (
     DayPoint,
     HoldingValue,
@@ -24,7 +26,7 @@ from folio.analytics.valuation import (
 )
 from folio.db.models import Account
 from folio.db.models_ledger import FxRate, LedgerTransaction, Listing, PortfolioSnapshot, PriceBar
-from folio.domain import CostBasisMethod, LedgerState, TxIn, rebuild
+from folio.domain import CostBasisMethod
 from folio.ledger_service import account_transactions, to_txin
 from folio.marketdata.fx import to_eur_multiplier
 
@@ -44,7 +46,7 @@ class _Series:
 class Valuation:
     def __init__(
         self,
-        accounts: dict[int, tuple[CostBasisMethod, list[TxIn]]],
+        accounts: dict[int, Timeline],
         listing_currency: dict[int, str],
         bars: dict[int, _Series],
         rates: dict[str, _Series],
@@ -57,25 +59,30 @@ class Valuation:
         self._bars = bars
         self._rates = rates
         self._listing_of = instrument_listing
-        self._dates = {a: sorted({t.trade_date for t in txs}) for a, (_, txs) in accounts.items()}
-        self._states: dict[tuple[int, date], LedgerState] = {}
         self._multipliers: dict[tuple[str, date], Decimal | None] = {}
 
     @classmethod
-    def load(cls, db: Session, *, account_id: int | None = None) -> Valuation:
+    def load(
+        cls,
+        db: Session,
+        *,
+        account_id: int | None = None,
+        extra_instrument_ids: Iterable[int] = (),
+    ) -> Valuation:
+        """Load the ledger and prices. `extra_instrument_ids` are priced too although no account
+        holds them (benchmarks, and anything else a chart compares against)."""
         query = select(Account).where(Account.deleted_at.is_(None))
         if account_id is not None:
             query = query.where(Account.id == account_id)
-        accounts: dict[int, tuple[CostBasisMethod, list[TxIn]]] = {}
+        accounts: dict[int, Timeline] = {}
         track_cash: set[int] = set()
-        instrument_ids: set[int] = set()
+        instrument_ids: set[int] = set(extra_instrument_ids)
         for account in db.scalars(query):
             if account.track_cash:
                 track_cash.add(account.id)
             txs = account_transactions(db, account.id)
-            accounts[account.id] = (
-                CostBasisMethod(account.cost_basis_method),
-                [to_txin(t) for t in txs],
+            accounts[account.id] = build_timeline(
+                (to_txin(t) for t in txs), CostBasisMethod(account.cost_basis_method)
             )
             instrument_ids.update(t.instrument_id for t in txs if t.instrument_id is not None)
 
@@ -122,21 +129,20 @@ class Valuation:
         return bool(self._track_cash)
 
     def first_date(self) -> date | None:
-        firsts = [dates[0] for dates in self._dates.values() if dates]
+        firsts = [t.days[0] for t in self._accounts.values() if t.days]
         return min(firsts) if firsts else None
 
-    def _state(self, account_id: int, day: date) -> LedgerState | None:
-        dates = self._dates[account_id]
-        index = bisect_right(dates, day)
-        if index == 0:
-            return None  # nothing had happened yet
-        key = (account_id, dates[index - 1])
-        state = self._states.get(key)
-        if state is None:
-            method, txs = self._accounts[account_id]
-            state = rebuild((t for t in txs if t.trade_date <= key[1]), method)
-            self._states[key] = state
-        return state
+    def transaction_dates(self) -> set[date]:
+        return {d for t in self._accounts.values() for d in t.days}
+
+    def price_dates(self, instrument_ids: Iterable[int] | None = None) -> set[date]:
+        """Every date on which one of the instruments (default: all loaded) has a close."""
+        wanted = None if instrument_ids is None else set(instrument_ids)
+        out: set[date] = set()
+        for instrument_id, listing_id in self._listing_of.items():
+            if wanted is None or instrument_id in wanted:
+                out.update(self._bars[listing_id].dates)
+        return out
 
     def _multiplier(self, currency: str, on: date) -> Decimal | None:
         if currency == "EUR":
@@ -157,27 +163,30 @@ class Valuation:
         multiplier = self._multiplier(self._currency[listing_id], found[0])
         return None if multiplier is None else PricePoint(found[0], found[1], multiplier)
 
+    def eur_price(self, instrument_id: int, day: date) -> Decimal | None:
+        """The latest close on or before `day`, in euro (the ECB rate of the close's date)."""
+        price = self._price(instrument_id, day)
+        return None if price is None else price.price * price.fx
+
     def point(self, day: date) -> DayPoint:
         """The portfolio as it stood at the end of `day`, valued at the latest closes."""
         holdings: list[HoldingValue] = []
         contributions, income, costs = ZERO, ZERO, ZERO
         cash, income_in_cash, costs_in_cash = ZERO, ZERO, ZERO
         for account_id in sorted(self._accounts):
-            state = self._state(account_id, day)
-            if state is None:
-                continue
-            account_income = state.total_income_eur
-            account_costs = state.standalone_fees_eur + state.taxes_eur
-            income += account_income
-            costs += account_costs
+            at = self._accounts[account_id].at(day)
+            if at is None:
+                continue  # nothing had happened yet
+            income += at.income_eur
+            costs += at.costs_eur
             if account_id in self._track_cash:  # cash holds the income and costs (FR-TX-09)
-                contributions += state.external_flows_eur
-                cash += state.cash_eur
-                income_in_cash += account_income
-                costs_in_cash += account_costs
+                contributions += at.external_flows_eur
+                cash += at.cash_eur
+                income_in_cash += at.income_eur
+                costs_in_cash += at.costs_eur
             else:
-                contributions += state.net_contributions_eur
-            for instrument_id, position in sorted(state.positions.items()):
+                contributions += at.net_contributions_eur
+            for instrument_id, position in sorted(at.positions.items()):
                 if position.quantity == 0:
                     continue
                 holdings.append(
@@ -187,11 +196,49 @@ class Valuation:
                         position.quantity,
                         position.cost_basis_eur,
                         self._price(instrument_id, day),
+                        position.net_invested_eur,
+                        position.income_eur,
                     )
                 )
         return make_day_point(
             day, holdings, contributions, income, costs, cash, income_in_cash, costs_in_cash
         )
+
+    def instrument_values(self, day: date) -> dict[int, InstrumentAt]:
+        """Per instrument, across accounts: value (None when held but unpriced), cumulative net
+        invested and income. Instruments sold out are included, with value 0."""
+        out: dict[int, InstrumentAt] = {}
+        for account_id in sorted(self._accounts):
+            at = self._accounts[account_id].at(day)
+            if at is None:
+                continue
+            for instrument_id, position in at.positions.items():
+                value: Decimal | None = ZERO
+                if position.quantity != 0:
+                    price = self.eur_price(instrument_id, day)
+                    value = None if price is None else position.quantity * price
+                previous = out.get(instrument_id)
+                if previous is None:
+                    out[instrument_id] = InstrumentAt(
+                        value, position.net_invested_eur, position.income_eur
+                    )
+                else:
+                    merged = (
+                        None if previous.value is None or value is None else previous.value + value
+                    )
+                    out[instrument_id] = InstrumentAt(
+                        merged,
+                        previous.net_invested_eur + position.net_invested_eur,
+                        previous.income_eur + position.income_eur,
+                    )
+        return out
+
+
+@dataclass(frozen=True)
+class InstrumentAt:
+    value: Decimal | None
+    net_invested_eur: Decimal
+    income_eur: Decimal
 
 
 # --- snapshots ----------------------------------------------------------------------------------

@@ -12,6 +12,7 @@ and one more for each following trading day: 3 Jan 101, 4 Jan 102, 5 Jan 103, 8 
 
 from datetime import UTC, date, datetime
 from decimal import Decimal
+from fractions import Fraction
 from typing import Any
 
 import pytest
@@ -510,18 +511,44 @@ def test_locking_only_touches_closed_years(db) -> None:  # type: ignore[no-untyp
     assert locked == {date(2023, 1, 1): True, date(2024, 1, 1): False, date(2024, 2, 1): False}
 
 
-def test_history_endpoint_serves_the_stored_snapshots(
-    settings: Settings, api: TestClient, book: dict[str, Any]
+def test_history_runs_from_the_first_transaction_with_index_and_drawdown(
+    api: TestClient, book: dict[str, Any]
 ) -> None:
-    snapshots_job(ctx_for(settings, "2024-01-15"))
-    rows = api.get("/api/v1/portfolio/history").json()
-    assert len(rows) == 14 and rows[0]["date"] == "2024-01-02" and D(rows[0]["value_eur"]) == 1000
-    window = api.get("/api/v1/portfolio/history?from=2024-01-10&to=2024-01-11").json()
+    rows = api.get("/api/v1/portfolio/history", params={"as_of": "2024-01-15"}).json()
+    assert [r["date"] for r in rows] == [
+        "2024-01-02", "2024-01-03", "2024-01-04", "2024-01-05", "2024-01-08",
+        "2024-01-09", "2024-01-10", "2024-01-11", "2024-01-12", "2024-01-15",
+    ]  # fmt: skip
+    assert D(rows[0]["value_eur"]) == 1000 and D(rows[0]["net_contributions_eur"]) == 1001
+    window = api.get(
+        "/api/v1/portfolio/history",
+        params={"from": "2024-01-10", "to": "2024-01-11", "as_of": "2024-01-15"},
+    ).json()
     assert [(r["date"], D(r["value_eur"]), D(r["net_contributions_eur"])) for r in window] == [
         ("2024-01-10", D(1590), D(1521)),
         ("2024-01-11", D(1177), D(1098)),
     ]
     assert rows[0]["is_peildatum"] is False and rows[0]["unvalued_positions"] == 0
+
+    # the index chains the daily returns; flows come in at the start of their day, income counts
+    expected = Fraction(1030, 1001) * Fraction(1593, 1550) * Fraction(1188, 1167)
+    assert abs(D(rows[-1]["twr_index"]) - D(expected.numerator) / D(expected.denominator)) < D(
+        "1E-20"
+    )
+    assert all(D(r["drawdown"]) <= 0 for r in rows) and D(rows[-1]["drawdown"]) == 0
+
+
+def test_history_flags_the_first_of_january_and_can_follow_one_account(
+    api: TestClient, book: dict[str, Any]
+) -> None:
+    rows = api.get("/api/v1/portfolio/history", params={"as_of": "2025-01-15"}).json()
+    peildatum = [r for r in rows if r["is_peildatum"]]
+    assert [(r["date"], D(r["value_eur"])) for r in peildatum] == [("2025-01-01", D(1188))]
+    one = api.get(
+        "/api/v1/portfolio/history", params={"as_of": "2024-01-15", "account": book["account"]}
+    ).json()
+    assert len(one) == 10
+    assert api.get("/api/v1/portfolio/history", params={"account": 999}).status_code == 404
 
 
 # --- cash tracking (FR-TX-09) -------------------------------------------------------------------

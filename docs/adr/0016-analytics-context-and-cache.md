@@ -1,0 +1,15 @@
+# ADR 0016: One analytics context, rebuilt when the data change
+
+Status: accepted (2026-10-05)
+
+## Decisions
+- **One pass over the ledger.** `domain.replay` walks an account's transactions once and yields the state after each trade date; `analytics.timeline` keeps a compact summary of each (positions with quantity, cost, net invested and income; cash; contributions; income; costs). Valuation looks a day up by bisection instead of rebuilding the ledger once per date. The summaries equal `rebuild` of the history up to each date (property-tested), and the nightly snapshot job benefits too.
+- **Analytics read the ledger and prices, not the snapshots.** The plan was to add per-holding flows to the snapshot rows and read those. Instead `AnalyticsContext` values the portfolio itself on every day on which something happened (a transaction, a close, a 1 January, today) and keeps per-instrument value, net invested and income next to it. This avoids a snapshot format change, a migration that must rebuild thousands of rows, and an exception to the locked 1 January snapshot (the peildatum stays exactly as filed). Snapshots remain the stored record for the annual report and for audit; the charts and figures are computed, so they cannot be stale. A baseline day (the day before the first transaction, worth zero) lets the first purchase count as a flow.
+- **Cached on a fingerprint of the data.** A context is cached in memory under the count, newest update and newest id of the transactions, accounts, instruments, listings, prices and FX rates, plus the account filter and today's date. The first request after a change rebuilds (about 1 s for ten years of fifty instruments, measured); every other request is answered from memory. Derived results (series, price returns, correlation matrices) are memoised on the context. The cache holds four contexts. It lives in the web process; the worker never needs it.
+- **Calendar days are not stored; event days are.** Between event days nothing changes, and weekends and holidays carry a zero return that would dilute volatility, so risk uses only days on which a held listing had a close.
+- **Correlation matrices use floating point.** A correlation is a unitless statistic shown to two decimals; fifty holdings need 1,225 pairs, which Decimal arithmetic took 0.6 s for. The pairs are computed in binary floats (about 1e-15 accurate) and returned as Decimal. Money, quantities, returns, volatility, beta and every figure that is added up stay in Decimal.
+- **Sleeves and classification are as of today.** A sleeve's history uses the instruments' current sleeve; changing a classification changes the history of the groups, by design.
+- **Budget: NFR-03.** A performance test seeds ten years of fifty instruments (about 130,000 closes and 2,000 purchases) and requires p95 below 300 ms over the dashboard endpoints, uncached derivations included.
+
+## Consequences
+Memory is proportional to days times instruments (tens of megabytes at the largest size the spec names). If it ever matters, event days can be thinned for old years behind the same interface.

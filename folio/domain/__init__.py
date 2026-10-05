@@ -11,6 +11,7 @@ from folio.domain.ledger import (
     TxType,
     preview_sell,
     rebuild,
+    replay,
 )
 from folio.domain.metrics import (
     PortfolioMetrics,
@@ -39,5 +40,6 @@ __all__ = [
     "position_metrics",
     "preview_sell",
     "rebuild",
+    "replay",
     "round_cents",
 ]

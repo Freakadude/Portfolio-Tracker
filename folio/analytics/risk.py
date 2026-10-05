@@ -8,6 +8,7 @@ only those days are kept; dropping a zero-return day leaves the compounded index
 
 from __future__ import annotations
 
+import math
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from datetime import date
@@ -143,18 +144,47 @@ def correlation(
         return max(Decimal(-1), min(ONE, value))  # rounding must never leave [-1, 1]
 
 
+def _float_correlation(xs: Sequence[float], ys: Sequence[float]) -> float | None:
+    n = len(xs)
+    mx, my = sum(xs) / n, sum(ys) / n
+    sxx = sxy = syy = 0.0
+    for x, y in zip(xs, ys, strict=True):
+        dx, dy = x - mx, y - my
+        sxx += dx * dx
+        sxy += dx * dy
+        syy += dy * dy
+    if sxx == 0 or syy == 0:
+        return None
+    return max(-1.0, min(1.0, sxy / math.sqrt(sxx * syy)))
+
+
 def correlation_matrix(
     series: Mapping[int, Sequence[tuple[date, Decimal]]],
 ) -> dict[int, dict[int, Decimal | None]]:
-    """Pairwise correlations of daily returns; the diagonal is exactly 1."""
+    """Pairwise correlations of daily returns on the days both series have; the diagonal is
+    exactly 1.
+
+    A correlation is a unitless statistic shown to two decimals, and a matrix of fifty holdings
+    needs over a thousand pairs, which Decimal arithmetic computes about five times slower than
+    the dashboard can wait. The pairs are therefore computed in binary floating point
+    (accurate to about 1e-15) and returned as Decimal. Money and quantities never pass
+    through here (ADR 0014). `correlation` above is the exact Decimal version for one pair.
+    """
     keys = sorted(series)
+    values = {k: {day: float(r) for day, r in series[k]} for k in keys}
     matrix: dict[int, dict[int, Decimal | None]] = {k: {} for k in keys}
     for i, a in enumerate(keys):
         matrix[a][a] = ONE
         for b in keys[i + 1 :]:
-            value = correlation(series[a], series[b])
-            matrix[a][b] = value
-            matrix[b][a] = value
+            days = sorted(values[a].keys() & values[b].keys())
+            result = None
+            if len(days) >= MIN_POINTS:
+                found = _float_correlation(
+                    [values[a][d] for d in days], [values[b][d] for d in days]
+                )
+                result = None if found is None else Decimal(repr(found))
+            matrix[a][b] = result
+            matrix[b][a] = result
     return matrix
 
 

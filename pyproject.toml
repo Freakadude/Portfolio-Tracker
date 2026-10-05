@@ -67,3 +67,4 @@ strict = true
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 addopts = "-q"
+markers = ["slow: the 10 years x 50 instruments performance test (NFR-03); runs in CI"]

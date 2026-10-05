@@ -395,6 +395,27 @@ def rebuild(txs: Iterable[TxIn], method: CostBasisMethod = CostBasisMethod.FIFO)
     return state
 
 
+def replay(
+    txs: Iterable[TxIn], method: CostBasisMethod = CostBasisMethod.FIFO
+) -> Iterator[tuple[date, LedgerState]]:
+    """Replay once, yielding the state after each distinct trade date, oldest first.
+
+    The yielded state is the live one: read what you need before asking for the next date.
+    After each date it equals `rebuild` of the transactions up to and including that date, but
+    the whole history costs one pass instead of one pass per date.
+    """
+    ordered = sorted(txs, key=_sort_key)
+    state = LedgerState(method=method)
+    i = 0
+    while i < len(ordered):
+        day = ordered[i].trade_date
+        with precise():
+            while i < len(ordered) and ordered[i].trade_date == day:
+                _HANDLERS[ordered[i].type](state, ordered[i])
+                i += 1
+        yield day, state
+
+
 @dataclass(frozen=True)
 class SellPreview:
     matches: tuple[LotMatch, ...]

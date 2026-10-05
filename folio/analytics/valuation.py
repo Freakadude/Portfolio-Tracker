@@ -41,6 +41,8 @@ class HoldingValue:
     cost_basis_eur: Decimal
     price: PricePoint | None  # None: no close on or before this day
     value_eur: Decimal | None
+    net_invested_eur: Decimal = ZERO  # cumulative money put in less taken out
+    income_eur: Decimal = ZERO  # cumulative dividends and interest
 
 
 @dataclass(frozen=True)
@@ -84,9 +86,20 @@ def value_holding(
     quantity: Decimal,
     cost_basis_eur: Decimal,
     price: PricePoint | None,
+    net_invested_eur: Decimal = ZERO,
+    income_eur: Decimal = ZERO,
 ) -> HoldingValue:
     value = None if price is None else quantity * price.price * price.fx
-    return HoldingValue(account_id, instrument_id, quantity, cost_basis_eur, price, value)
+    return HoldingValue(
+        account_id,
+        instrument_id,
+        quantity,
+        cost_basis_eur,
+        price,
+        value,
+        net_invested_eur,
+        income_eur,
+    )
 
 
 def make_day_point(

@@ -135,6 +135,14 @@ class RetentionSettings(Section):
     news_days: int = Field(default=365, ge=1)
 
 
+class AnalyticsSettings(Section):
+    """The risk-free rate for the Sharpe ratio (FR-PF-06): the ECB deposit facility rate, or a
+    fixed percentage when the owner prefers one (or the ECB series is not yet loaded)."""
+
+    risk_free_source: Literal["ecb_deposit", "fixed"] = "ecb_deposit"
+    risk_free_fixed_pct: Decimal = Field(default=Decimal("2"), ge=0, le=25)
+
+
 SECTIONS: dict[str, type[Section]] = {
     "general": GeneralSettings,
     "providers": ProvidersSettings,
@@ -144,4 +152,5 @@ SECTIONS: dict[str, type[Section]] = {
     "appearance": AppearanceSettings,
     "language": LanguageSettings,
     "retention": RetentionSettings,
+    "analytics": AnalyticsSettings,
 }

@@ -7,8 +7,8 @@ from typing import Annotated
 
 from fastapi import APIRouter, Query
 from pydantic import BaseModel
-from sqlalchemy import select
 
+from folio import analytics_service as svc
 from folio.analytics.valuation import (
     PeriodFigures,
     period_figures,
@@ -18,7 +18,6 @@ from folio.analytics.valuation import (
 from folio.api.deps import DbDep, UserDep
 from folio.api.errors import ApiError
 from folio.db.models import Account
-from folio.db.models_ledger import PortfolioSnapshot
 from folio.portfolio import Valuation
 
 router = APIRouter(prefix="/portfolio", tags=["portfolio"])
@@ -62,6 +61,8 @@ class HistoryPoint(BaseModel):
     date: dt.date
     value_eur: Decimal
     net_contributions_eur: Decimal
+    twr_index: Decimal  # time-weighted growth, 1 on the first day shown
+    drawdown: Decimal  # distance below the running peak of that index (0 or negative)
     unvalued_positions: int
     is_peildatum: bool
 
@@ -129,20 +130,26 @@ def history(
     db: DbDep,
     from_: Annotated[date | None, Query(alias="from")] = None,
     to: date | None = None,
+    account: int | None = None,
+    as_of: date | None = None,
 ) -> list[HistoryPoint]:
-    """The stored daily snapshots: value against net contributions."""
-    query = select(PortfolioSnapshot).order_by(PortfolioSnapshot.date)
-    if from_ is not None:
-        query = query.where(PortfolioSnapshot.date >= from_)
-    if to is not None:
-        query = query.where(PortfolioSnapshot.date <= to)
+    """Daily value against net contributions from the first transaction (FR-PF-02), with the
+    time-weighted index and the drawdown from the running peak. Days are those on which
+    something happened or a close was stored; between them the value is unchanged."""
+    if account is not None:
+        found = db.get(Account, account)
+        if found is None or found.deleted_at is not None:
+            raise ApiError(404, "Not found", "That account does not exist.")
+    ctx = svc.get_context(db, as_of or date.today(), account)
     return [
         HistoryPoint(
-            date=s.date,
-            value_eur=s.total_value_eur,
-            net_contributions_eur=s.net_contributions_eur,
-            unvalued_positions=s.unvalued_positions,
-            is_peildatum=s.is_peildatum,
+            date=r.day,
+            value_eur=r.value,
+            net_contributions_eur=r.net_contributions,
+            twr_index=r.twr_index,
+            drawdown=r.drawdown,
+            unvalued_positions=r.unvalued,
+            is_peildatum=r.is_peildatum,
         )
-        for s in db.scalars(query)
+        for r in svc.history(ctx, from_, to)
     ]

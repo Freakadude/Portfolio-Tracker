@@ -187,6 +187,97 @@
         "title": "ActionOut",
         "type": "object"
       },
+      "AllocationOut": {
+        "properties": {
+          "as_of": {
+            "format": "date",
+            "title": "As Of",
+            "type": "string"
+          },
+          "group_by": {
+            "title": "Group By",
+            "type": "string"
+          },
+          "slices": {
+            "items": {
+              "$ref": "#/components/schemas/SliceOut"
+            },
+            "title": "Slices",
+            "type": "array"
+          },
+          "total_eur": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Total Eur",
+            "type": "string"
+          },
+          "unvalued_positions": {
+            "title": "Unvalued Positions",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "group_by",
+          "as_of",
+          "total_eur",
+          "unvalued_positions",
+          "slices"
+        ],
+        "title": "AllocationOut",
+        "type": "object"
+      },
+      "AttributionOut": {
+        "properties": {
+          "capital_eur": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Capital Eur",
+            "type": "string"
+          },
+          "contributions": {
+            "items": {
+              "$ref": "#/components/schemas/ContributionOut"
+            },
+            "title": "Contributions",
+            "type": "array"
+          },
+          "end": {
+            "format": "date",
+            "title": "End",
+            "type": "string"
+          },
+          "portfolio_pnl_eur": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Portfolio Pnl Eur",
+            "type": "string"
+          },
+          "start": {
+            "format": "date",
+            "title": "Start",
+            "type": "string"
+          },
+          "total_return": {
+            "anyOf": [
+              {
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Total Return"
+          }
+        },
+        "required": [
+          "start",
+          "end",
+          "portfolio_pnl_eur",
+          "total_return",
+          "capital_eur",
+          "contributions"
+        ],
+        "title": "AttributionOut",
+        "type": "object"
+      },
       "AuditOut": {
         "properties": {
           "action": {
@@ -357,6 +448,34 @@
         "title": "BatchOut",
         "type": "object"
       },
+      "BenchmarksOut": {
+        "properties": {
+          "end": {
+            "format": "date",
+            "title": "End",
+            "type": "string"
+          },
+          "series": {
+            "items": {
+              "$ref": "#/components/schemas/SeriesOut"
+            },
+            "title": "Series",
+            "type": "array"
+          },
+          "start": {
+            "format": "date",
+            "title": "Start",
+            "type": "string"
+          }
+        },
+        "required": [
+          "start",
+          "end",
+          "series"
+        ],
+        "title": "BenchmarksOut",
+        "type": "object"
+      },
       "Body_upload_api_v1_imports_post": {
         "properties": {
           "account_id": {
@@ -485,6 +604,63 @@
           }
         },
         "title": "CommitIn",
+        "type": "object"
+      },
+      "ContributionOut": {
+        "properties": {
+          "key": {
+            "title": "Key",
+            "type": "string"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "pnl_eur": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Pnl Eur",
+            "type": "string"
+          },
+          "points": {
+            "anyOf": [
+              {
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Points"
+          }
+        },
+        "required": [
+          "key",
+          "name",
+          "pnl_eur",
+          "points"
+        ],
+        "title": "ContributionOut",
+        "type": "object"
+      },
+      "DrawdownPoint": {
+        "properties": {
+          "date": {
+            "format": "date",
+            "title": "Date",
+            "type": "string"
+          },
+          "value": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Value",
+            "type": "string"
+          }
+        },
+        "required": [
+          "date",
+          "value"
+        ],
+        "title": "DrawdownPoint",
         "type": "object"
       },
       "DryRunOut": {
@@ -645,6 +821,11 @@
             "title": "Date",
             "type": "string"
           },
+          "drawdown": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Drawdown",
+            "type": "string"
+          },
           "is_peildatum": {
             "title": "Is Peildatum",
             "type": "boolean"
@@ -652,6 +833,11 @@
           "net_contributions_eur": {
             "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
             "title": "Net Contributions Eur",
+            "type": "string"
+          },
+          "twr_index": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Twr Index",
             "type": "string"
           },
           "unvalued_positions": {
@@ -668,6 +854,8 @@
           "date",
           "value_eur",
           "net_contributions_eur",
+          "twr_index",
+          "drawdown",
           "unvalued_positions",
           "is_peildatum"
         ],
@@ -1369,6 +1557,68 @@
         "title": "InstrumentRef",
         "type": "object"
       },
+      "InstrumentReturnOut": {
+        "properties": {
+          "instrument_id": {
+            "title": "Instrument Id",
+            "type": "integer"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "pnl_eur": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Pnl Eur",
+            "type": "string"
+          },
+          "twr": {
+            "anyOf": [
+              {
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Twr"
+          },
+          "value_end_eur": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Value End Eur",
+            "type": "string"
+          },
+          "value_start_eur": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Value Start Eur",
+            "type": "string"
+          },
+          "xirr": {
+            "anyOf": [
+              {
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Xirr"
+          }
+        },
+        "required": [
+          "instrument_id",
+          "name",
+          "twr",
+          "xirr",
+          "pnl_eur",
+          "value_start_eur",
+          "value_end_eur"
+        ],
+        "title": "InstrumentReturnOut",
+        "type": "object"
+      },
       "ItemChanges": {
         "additionalProperties": false,
         "properties": {
@@ -1818,6 +2068,54 @@
           "mapping"
         ],
         "title": "MappingIn",
+        "type": "object"
+      },
+      "MatrixOut": {
+        "properties": {
+          "instruments": {
+            "items": {
+              "type": "integer"
+            },
+            "title": "Instruments",
+            "type": "array"
+          },
+          "labels": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Labels",
+            "type": "array"
+          },
+          "values": {
+            "items": {
+              "items": {
+                "anyOf": [
+                  {
+                    "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "type": "array"
+            },
+            "title": "Values",
+            "type": "array"
+          },
+          "window": {
+            "title": "Window",
+            "type": "string"
+          }
+        },
+        "required": [
+          "window",
+          "instruments",
+          "labels",
+          "values"
+        ],
+        "title": "MatrixOut",
         "type": "object"
       },
       "MeOut": {
@@ -2947,6 +3245,249 @@
         "title": "ResolutionOut",
         "type": "object"
       },
+      "ReturnsOut": {
+        "properties": {
+          "end": {
+            "format": "date",
+            "title": "End",
+            "type": "string"
+          },
+          "income_eur": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Income Eur",
+            "type": "string"
+          },
+          "net_flows_eur": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Net Flows Eur",
+            "type": "string"
+          },
+          "pnl_eur": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Pnl Eur",
+            "type": "string"
+          },
+          "scope": {
+            "title": "Scope",
+            "type": "string"
+          },
+          "start": {
+            "format": "date",
+            "title": "Start",
+            "type": "string"
+          },
+          "twr": {
+            "anyOf": [
+              {
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Twr"
+          },
+          "twr_annualised": {
+            "anyOf": [
+              {
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Twr Annualised"
+          },
+          "value_end_eur": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Value End Eur",
+            "type": "string"
+          },
+          "value_start_eur": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Value Start Eur",
+            "type": "string"
+          },
+          "xirr": {
+            "anyOf": [
+              {
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Xirr"
+          }
+        },
+        "required": [
+          "scope",
+          "start",
+          "end",
+          "twr",
+          "twr_annualised",
+          "xirr",
+          "pnl_eur",
+          "value_start_eur",
+          "value_end_eur",
+          "net_flows_eur",
+          "income_eur"
+        ],
+        "title": "ReturnsOut",
+        "type": "object"
+      },
+      "RiskOut": {
+        "properties": {
+          "annual_return": {
+            "anyOf": [
+              {
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Annual Return"
+          },
+          "benchmark_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Benchmark Id"
+          },
+          "beta": {
+            "anyOf": [
+              {
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Beta"
+          },
+          "correlations": {
+            "items": {
+              "$ref": "#/components/schemas/MatrixOut"
+            },
+            "title": "Correlations",
+            "type": "array"
+          },
+          "current_drawdown": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Current Drawdown",
+            "type": "string"
+          },
+          "drawdown": {
+            "items": {
+              "$ref": "#/components/schemas/DrawdownPoint"
+            },
+            "title": "Drawdown",
+            "type": "array"
+          },
+          "end": {
+            "format": "date",
+            "title": "End",
+            "type": "string"
+          },
+          "max_drawdown": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Max Drawdown",
+            "type": "string"
+          },
+          "max_drawdown_end": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Max Drawdown End"
+          },
+          "max_drawdown_start": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Max Drawdown Start"
+          },
+          "risk_free": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Risk Free",
+            "type": "string"
+          },
+          "sharpe": {
+            "anyOf": [
+              {
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sharpe"
+          },
+          "start": {
+            "format": "date",
+            "title": "Start",
+            "type": "string"
+          },
+          "volatility": {
+            "anyOf": [
+              {
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Volatility"
+          },
+          "window": {
+            "title": "Window",
+            "type": "string"
+          }
+        },
+        "required": [
+          "start",
+          "end",
+          "window",
+          "volatility",
+          "annual_return",
+          "sharpe",
+          "beta",
+          "benchmark_id",
+          "risk_free",
+          "max_drawdown",
+          "max_drawdown_start",
+          "max_drawdown_end",
+          "current_drawdown",
+          "drawdown",
+          "correlations"
+        ],
+        "title": "RiskOut",
+        "type": "object"
+      },
       "RowOut": {
         "properties": {
           "reason": {
@@ -3134,6 +3675,52 @@
         "title": "SellPreviewOut",
         "type": "object"
       },
+      "SeriesOut": {
+        "properties": {
+          "key": {
+            "title": "Key",
+            "type": "string"
+          },
+          "label": {
+            "title": "Label",
+            "type": "string"
+          },
+          "points": {
+            "items": {
+              "$ref": "#/components/schemas/SeriesPoint"
+            },
+            "title": "Points",
+            "type": "array"
+          }
+        },
+        "required": [
+          "key",
+          "label",
+          "points"
+        ],
+        "title": "SeriesOut",
+        "type": "object"
+      },
+      "SeriesPoint": {
+        "properties": {
+          "date": {
+            "format": "date",
+            "title": "Date",
+            "type": "string"
+          },
+          "value": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Value",
+            "type": "string"
+          }
+        },
+        "required": [
+          "date",
+          "value"
+        ],
+        "title": "SeriesPoint",
+        "type": "object"
+      },
       "SetupStatus": {
         "properties": {
           "authenticated": {
@@ -3160,6 +3747,204 @@
           "setup_complete"
         ],
         "title": "SetupStatus",
+        "type": "object"
+      },
+      "SimPositionOut": {
+        "properties": {
+          "instrument_id": {
+            "title": "Instrument Id",
+            "type": "integer"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "quantity_after": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Quantity After",
+            "type": "string"
+          },
+          "quantity_before": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Quantity Before",
+            "type": "string"
+          },
+          "value_after_eur": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Value After Eur",
+            "type": "string"
+          },
+          "value_before_eur": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Value Before Eur",
+            "type": "string"
+          }
+        },
+        "required": [
+          "instrument_id",
+          "name",
+          "quantity_before",
+          "quantity_after",
+          "value_before_eur",
+          "value_after_eur"
+        ],
+        "title": "SimPositionOut",
+        "type": "object"
+      },
+      "SimTradeIn": {
+        "properties": {
+          "fees_eur": {
+            "anyOf": [
+              {
+                "minimum": 0.0,
+                "type": "number"
+              },
+              {
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+                "type": "string"
+              }
+            ],
+            "default": "0",
+            "title": "Fees Eur"
+          },
+          "instrument_id": {
+            "title": "Instrument Id",
+            "type": "integer"
+          },
+          "price_eur": {
+            "anyOf": [
+              {
+                "exclusiveMinimum": 0.0,
+                "type": "number"
+              },
+              {
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Price Eur"
+          },
+          "quantity": {
+            "anyOf": [
+              {
+                "exclusiveMinimum": 0.0,
+                "type": "number"
+              },
+              {
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+                "type": "string"
+              }
+            ],
+            "title": "Quantity"
+          },
+          "side": {
+            "enum": [
+              "buy",
+              "sell"
+            ],
+            "title": "Side",
+            "type": "string"
+          }
+        },
+        "required": [
+          "instrument_id",
+          "side",
+          "quantity"
+        ],
+        "title": "SimTradeIn",
+        "type": "object"
+      },
+      "SimulateIn": {
+        "properties": {
+          "account": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Account"
+          },
+          "as_of": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "As Of"
+          },
+          "group_by": {
+            "default": "asset_class",
+            "enum": [
+              "instrument",
+              "asset_class",
+              "sleeve",
+              "region",
+              "sector",
+              "currency"
+            ],
+            "title": "Group By",
+            "type": "string"
+          },
+          "trades": {
+            "items": {
+              "$ref": "#/components/schemas/SimTradeIn"
+            },
+            "maxItems": 50,
+            "minItems": 1,
+            "title": "Trades",
+            "type": "array"
+          }
+        },
+        "required": [
+          "trades"
+        ],
+        "title": "SimulateIn",
+        "type": "object"
+      },
+      "SimulationOut": {
+        "properties": {
+          "after": {
+            "$ref": "#/components/schemas/AllocationOut"
+          },
+          "as_of": {
+            "format": "date",
+            "title": "As Of",
+            "type": "string"
+          },
+          "before": {
+            "$ref": "#/components/schemas/AllocationOut"
+          },
+          "cash_needed_eur": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Cash Needed Eur",
+            "type": "string"
+          },
+          "positions": {
+            "items": {
+              "$ref": "#/components/schemas/SimPositionOut"
+            },
+            "title": "Positions",
+            "type": "array"
+          }
+        },
+        "required": [
+          "as_of",
+          "cash_needed_eur",
+          "before",
+          "after",
+          "positions"
+        ],
+        "title": "SimulationOut",
         "type": "object"
       },
       "SleeveChanges": {
@@ -3318,6 +4103,82 @@
           "instrument_count"
         ],
         "title": "SleeveOut",
+        "type": "object"
+      },
+      "SliceOut": {
+        "properties": {
+          "drift_pp": {
+            "anyOf": [
+              {
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Drift Pp"
+          },
+          "drift_relative": {
+            "anyOf": [
+              {
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Drift Relative"
+          },
+          "key": {
+            "title": "Key",
+            "type": "string"
+          },
+          "outside_band": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Outside Band"
+          },
+          "target": {
+            "anyOf": [
+              {
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Target"
+          },
+          "value_eur": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Value Eur",
+            "type": "string"
+          },
+          "weight": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Weight",
+            "type": "string"
+          }
+        },
+        "required": [
+          "key",
+          "value_eur",
+          "weight",
+          "target",
+          "drift_pp",
+          "drift_relative",
+          "outside_band"
+        ],
+        "title": "SliceOut",
         "type": "object"
       },
       "SummaryOut": {
@@ -6061,11 +6922,139 @@
         ]
       }
     },
-    "/api/v1/portfolio/history": {
+    "/api/v1/portfolio/allocation": {
       "get": {
-        "description": "The stored daily snapshots: value against net contributions.",
-        "operationId": "history_api_v1_portfolio_history_get",
+        "description": "What the portfolio holds, by instrument, asset class, sleeve, region, sector or currency,\nwith drift from the sleeve targets where there are any (FR-PF-04).",
+        "operationId": "allocation_api_v1_portfolio_allocation_get",
         "parameters": [
+          {
+            "in": "query",
+            "name": "group_by",
+            "required": false,
+            "schema": {
+              "default": "asset_class",
+              "enum": [
+                "instrument",
+                "asset_class",
+                "sleeve",
+                "region",
+                "sector",
+                "currency"
+              ],
+              "title": "Group By",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "account",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Account"
+            }
+          },
+          {
+            "in": "query",
+            "name": "as_of",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "date",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "As Of"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AllocationOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Allocation",
+        "tags": [
+          "analytics"
+        ]
+      }
+    },
+    "/api/v1/portfolio/attribution": {
+      "get": {
+        "description": "What each position contributed to the period's result, in euro and in points (FR-PF-07).",
+        "operationId": "attribution_api_v1_portfolio_attribution_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "period",
+            "required": false,
+            "schema": {
+              "default": "1Y",
+              "title": "Period",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "account",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Account"
+            }
+          },
+          {
+            "in": "query",
+            "name": "as_of",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "date",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "As Of"
+            }
+          },
           {
             "in": "query",
             "name": "from",
@@ -6106,6 +7095,237 @@
             "content": {
               "application/json": {
                 "schema": {
+                  "$ref": "#/components/schemas/AttributionOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Attribution",
+        "tags": [
+          "analytics"
+        ]
+      }
+    },
+    "/api/v1/portfolio/benchmarks": {
+      "get": {
+        "description": "The portfolio and up to three benchmarks, all 100 at the start of the period (FR-PF-08).\nWithout `ids`, the instruments flagged as benchmarks are used.",
+        "operationId": "benchmarks_api_v1_portfolio_benchmarks_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "ids",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "items": {
+                    "type": "integer"
+                  },
+                  "type": "array"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Ids"
+            }
+          },
+          {
+            "in": "query",
+            "name": "period",
+            "required": false,
+            "schema": {
+              "default": "1Y",
+              "title": "Period",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "account",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Account"
+            }
+          },
+          {
+            "in": "query",
+            "name": "as_of",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "date",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "As Of"
+            }
+          },
+          {
+            "in": "query",
+            "name": "from",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "date",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "From"
+            }
+          },
+          {
+            "in": "query",
+            "name": "to",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "date",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "To"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BenchmarksOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Benchmarks",
+        "tags": [
+          "analytics"
+        ]
+      }
+    },
+    "/api/v1/portfolio/history": {
+      "get": {
+        "description": "Daily value against net contributions from the first transaction (FR-PF-02), with the\ntime-weighted index and the drawdown from the running peak. Days are those on which\nsomething happened or a close was stored; between them the value is unchanged.",
+        "operationId": "history_api_v1_portfolio_history_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "from",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "date",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "From"
+            }
+          },
+          {
+            "in": "query",
+            "name": "to",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "date",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "To"
+            }
+          },
+          {
+            "in": "query",
+            "name": "account",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Account"
+            }
+          },
+          {
+            "in": "query",
+            "name": "as_of",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "date",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "As Of"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
                   "items": {
                     "$ref": "#/components/schemas/HistoryPoint"
                   },
@@ -6130,6 +7350,383 @@
         "summary": "History",
         "tags": [
           "portfolio"
+        ]
+      }
+    },
+    "/api/v1/portfolio/returns": {
+      "get": {
+        "description": "Time-weighted and money-weighted return of the portfolio, an account, a sleeve or one\ninstrument over a period (FR-PF-03).",
+        "operationId": "returns_api_v1_portfolio_returns_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "period",
+            "required": false,
+            "schema": {
+              "default": "1Y",
+              "title": "Period",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "scope",
+            "required": false,
+            "schema": {
+              "default": "portfolio",
+              "title": "Scope",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "as_of",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "date",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "As Of"
+            }
+          },
+          {
+            "in": "query",
+            "name": "from",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "date",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "From"
+            }
+          },
+          {
+            "in": "query",
+            "name": "to",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "date",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "To"
+            }
+          },
+          {
+            "in": "query",
+            "name": "account",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Account"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReturnsOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Returns",
+        "tags": [
+          "analytics"
+        ]
+      }
+    },
+    "/api/v1/portfolio/returns/instruments": {
+      "get": {
+        "description": "Return and result of every position that was held in the period (heatmap, FR-PF-03).",
+        "operationId": "instrument_returns_api_v1_portfolio_returns_instruments_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "period",
+            "required": false,
+            "schema": {
+              "default": "1Y",
+              "title": "Period",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "as_of",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "date",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "As Of"
+            }
+          },
+          {
+            "in": "query",
+            "name": "from",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "date",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "From"
+            }
+          },
+          {
+            "in": "query",
+            "name": "to",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "date",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "To"
+            }
+          },
+          {
+            "in": "query",
+            "name": "account",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Account"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/InstrumentReturnOut"
+                  },
+                  "title": "Response Instrument Returns Api V1 Portfolio Returns Instruments Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Instrument Returns",
+        "tags": [
+          "analytics"
+        ]
+      }
+    },
+    "/api/v1/portfolio/risk": {
+      "get": {
+        "description": "Volatility, drawdowns, Sharpe, beta and the correlation matrices (FR-PF-06).",
+        "operationId": "risk_api_v1_portfolio_risk_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "window",
+            "required": false,
+            "schema": {
+              "default": "1Y",
+              "enum": [
+                "90D",
+                "1Y",
+                "3Y",
+                "MAX"
+              ],
+              "title": "Window",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "benchmark",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Benchmark"
+            }
+          },
+          {
+            "in": "query",
+            "name": "account",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Account"
+            }
+          },
+          {
+            "in": "query",
+            "name": "as_of",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "date",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "As Of"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RiskOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Risk",
+        "tags": [
+          "analytics"
+        ]
+      }
+    },
+    "/api/v1/portfolio/simulate": {
+      "post": {
+        "description": "Show the allocation, drift and cash need after hypothetical trades. Nothing is written:\nthe simulation works on copies of the numbers (FR-PF-09).",
+        "operationId": "simulate_trades_api_v1_portfolio_simulate_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SimulateIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SimulationOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Simulate Trades",
+        "tags": [
+          "analytics"
         ]
       }
     },
