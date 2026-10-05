@@ -65,6 +65,8 @@ class ImportMapping(BaseModel):
     currency_col: int | None = None
     fx_col: int | None = None
     fees_col: int | None = None
+    # More columns added to the fees, in the fees' currency (for example Degiro's AutoFX fee)
+    extra_fee_cols: list[int] = Field(default_factory=list)
     fees_currency_col: int | None = None
     amount_col: int | None = None
     reference_col: int | None = None
@@ -151,6 +153,30 @@ def detect_separators(samples: list[str]) -> tuple[str, str]:
     return ".", thousands
 
 
+_DEGIRO_EXCHANGE = ("reference exchange", "referentie beurs", "beurs")
+_DEGIRO_VENUE = ("venue", "uitvoeringsplaats", "plaats van uitvoering")
+_DEGIRO_ORDER = ("order id", "order-id")
+
+
+def detect_preset(headers: list[str]) -> str | None:
+    """The broker an export comes from, when its header row says so (FR-TX-08). Only the
+    column names are looked at, in English or Dutch."""
+    lowered = {h.strip().lower() for h in headers}
+    if (
+        "isin" in lowered
+        and lowered.intersection(_DEGIRO_EXCHANGE)
+        and lowered.intersection(_DEGIRO_VENUE)
+        and lowered.intersection(_DEGIRO_ORDER)
+    ):
+        return "degiro"
+    return None
+
+
+def _is_fee_header(header: str) -> bool:
+    """Degiro's fee column: "Transaction and/or third party fees EUR" and its Dutch form."""
+    return header.startswith(("transaction and/or third party fees", "transactiekosten"))
+
+
 def suggest_mapping(parsed: ParsedFile) -> ImportMapping:
     """A first guess from the header names and the data; the owner confirms or corrects it."""
     lowered = [h.strip().lower() for h in parsed.headers]
@@ -167,6 +193,17 @@ def suggest_mapping(parsed: ParsedFile) -> ImportMapping:
             return None
         cells = _first(parsed.rows, col + 1)
         return col + 1 if cells and all(_CURRENCY.match(c) for c in cells) else None
+
+    if "fees_col" not in found:
+        for index, header in enumerate(lowered):
+            if _is_fee_header(header) and index not in found.values():
+                found["fees_col"] = index
+                break
+    extra_fees = [
+        index
+        for index, header in enumerate(lowered)
+        if "autofx" in header and index not in found.values()
+    ]
 
     if "quantity_col" not in found and "type_col" not in found:
         taken = {col for field, col in found.items() if field != "note_col"}
@@ -197,6 +234,7 @@ def suggest_mapping(parsed: ParsedFile) -> ImportMapping:
         decimal_separator=decimal_sep,
         thousands_separator=thousands,
         type_mode=mode,
+        extra_fee_cols=extra_fees,
         **found,
     )
 
@@ -280,6 +318,9 @@ def convert_row(
         fees = Decimal(0)
         if _cell(cells, mapping.fees_col):
             fees = abs(parse_decimal(_cell(cells, mapping.fees_col), dec, thou))
+        for extra in mapping.extra_fee_cols:
+            if _cell(cells, extra):
+                fees += abs(parse_decimal(_cell(cells, extra), dec, thou))
 
         currency = _cell(cells, mapping.currency_col).upper() or (mapping.default_currency or "")
         if currency and not _CURRENCY.match(currency):

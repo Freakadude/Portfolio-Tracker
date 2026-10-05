@@ -11,7 +11,7 @@ from folio.api.errors import ApiError
 from folio.db.models import Account
 from folio.db.models_ledger import ImportBatch, ImportPreset
 from folio.imports import service
-from folio.imports.mapping import ImportMapping
+from folio.imports.mapping import ImportMapping, detect_preset
 from folio.imports.parse import MAX_BYTES, ParsedFile
 from folio.imports.service import ImportProblem
 from folio.ledger_service import TransactionError
@@ -51,6 +51,7 @@ class PreviewOut(BaseModel):
     row_count: int
     mapping: ImportMapping
     from_preset: bool
+    detected_preset: str | None  # the broker the header row identifies, for example degiro
 
 
 class RowOut(BaseModel):
@@ -121,6 +122,7 @@ def _preview(
         row_count=len(parsed.rows),
         mapping=mapping,
         from_preset=from_preset,
+        detected_preset=detect_preset(parsed.headers),
     )
 
 

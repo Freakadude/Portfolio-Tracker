@@ -1407,6 +1407,8 @@ export interface components {
             decimal_separator: "," | ".";
             /** Default Currency */
             default_currency?: string | null;
+            /** Extra Fee Cols */
+            extra_fee_cols?: number[];
             /** Fees Col */
             fees_col?: number | null;
             /** Fees Currency Col */
@@ -1953,6 +1955,8 @@ export interface components {
             batch: components["schemas"]["BatchOut"];
             /** Delimiter */
             delimiter: string;
+            /** Detected Preset */
+            detected_preset: string | null;
             /** Encoding */
             encoding: string;
             /** From Preset */

@@ -121,6 +121,12 @@
     },
     "map": {
       "intro": "{{count}} rows found ({{encoding}}, separator {{delimiter}}). Tell Folio which column holds what; the first guess is filled in.",
+      "recognised": {
+        "degiro": "Recognised as a Degiro transactions export. The columns are filled in, including the AutoFX fee; check them and continue."
+      },
+      "recognisedOther": "Recognised as a known broker export. The columns are filled in; check them and continue.",
+      "extraFees": "Also add these columns to the fees",
+      "extraFeesHint": "Columns holding other costs of the same trade, in the same currency as the fees, such as Degiro's AutoFX fee. Leave them all unticked if there are none.",
       "sample": "First rows of your file",
       "sampleCaption": "Sample of the uploaded file",
       "fields": {

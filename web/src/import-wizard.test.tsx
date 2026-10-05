@@ -119,7 +119,7 @@ describe('the import wizard', () => {
 
     // columns: the first guess is filled in from the server
     expect(await screen.findByText(/2 rows found/)).toBeInTheDocument()
-    expect(screen.getByLabelText('ISIN')).toHaveValue('1')
+    expect(screen.getByLabelText('ISIN', { selector: 'select' })).toHaveValue('1')
     await userEvent.click(screen.getByRole('button', { name: 'Check the file' }))
 
     // review: one row is fine, one has a problem, and the commit is blocked until the owner chooses
@@ -165,5 +165,23 @@ describe('the import wizard', () => {
     await waitFor(() =>
       expect(calls.some((c) => c.method === 'DELETE' && c.path === '/api/v1/imports/3')).toBe(true),
     )
+  })
+
+  it('says which broker it recognised and lets the owner add a fee column', async () => {
+    const { calls } = mockApi({
+      ...ROUTES,
+      'POST /api/v1/imports': { ...PREVIEW, detected_preset: 'degiro' },
+      'PUT /api/v1/imports/5/mapping': DRY,
+    })
+    renderAt(<ImportWizard />)
+    await uploadFile()
+    expect(
+      await screen.findByText(/Recognised as a Degiro transactions export/),
+    ).toBeInTheDocument()
+    await userEvent.click(screen.getByRole('checkbox', { name: 'Koers' }))
+    await userEvent.click(screen.getByRole('button', { name: 'Check the file' }))
+    await screen.findByText(/1 new/)
+    const put = calls.find((c) => c.method === 'PUT')
+    expect(put?.body).toMatchObject({ mapping: { extra_fee_cols: [3] } })
   })
 })

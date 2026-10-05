@@ -248,6 +248,13 @@ function MapStep({
         check.mutate()
       }}
     >
+      {preview.detected_preset && (
+        <p role="status" className="font-medium">
+          {t(`import.map.recognised.${preview.detected_preset}`, {
+            defaultValue: t('import.map.recognisedOther'),
+          })}
+        </p>
+      )}
       <p>
         {t('import.map.intro', {
           count: preview.row_count,
@@ -411,6 +418,27 @@ function MapStep({
           </Field>
         </div>
       </div>
+
+      <fieldset className="space-y-1">
+        <legend className="font-medium">{t('import.map.extraFees')}</legend>
+        <p className="text-sm text-muted">{t('import.map.extraFeesHint')}</p>
+        <div className="flex flex-wrap gap-x-6">
+          {preview.headers.map((h, i) => (
+            <Checkbox
+              key={i}
+              label={h.label || `(${i + 1})`}
+              checked={(mapping.extra_fee_cols ?? []).includes(i)}
+              onChange={(e) =>
+                patch({
+                  extra_fee_cols: e.target.checked
+                    ? [...(mapping.extra_fee_cols ?? []), i].sort((a, b) => a - b)
+                    : (mapping.extra_fee_cols ?? []).filter((c) => c !== i),
+                })
+              }
+            />
+          ))}
+        </div>
+      </fieldset>
 
       {mapping.type_mode === 'column' && (
         <fieldset className="space-y-2">

@@ -924,6 +924,13 @@
             ],
             "title": "Default Currency"
           },
+          "extra_fee_cols": {
+            "items": {
+              "type": "integer"
+            },
+            "title": "Extra Fee Cols",
+            "type": "array"
+          },
           "fees_col": {
             "anyOf": [
               {
@@ -3139,6 +3146,17 @@
             "title": "Delimiter",
             "type": "string"
           },
+          "detected_preset": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Detected Preset"
+          },
           "encoding": {
             "title": "Encoding",
             "type": "string"
@@ -3180,7 +3198,8 @@
           "sample_rows",
           "row_count",
           "mapping",
-          "from_preset"
+          "from_preset",
+          "detected_preset"
         ],
         "title": "PreviewOut",
         "type": "object"
