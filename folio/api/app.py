@@ -14,8 +14,10 @@ from folio.api.routers import (
     instruments,
     portfolio,
     positions,
+    sleeves,
     system,
     transactions,
+    watchlists,
 )
 from folio.api.routers import settings as settings_router
 from folio.api.routers import setup as setup_router
@@ -70,6 +72,8 @@ def create_app(
     app.include_router(system.router, prefix=API_PREFIX)
     app.include_router(imports.router, prefix=API_PREFIX)
     app.include_router(corporate_actions.router, prefix=API_PREFIX)
+    app.include_router(sleeves.router, prefix=API_PREFIX)
+    app.include_router(watchlists.router, prefix=API_PREFIX)
     app.include_router(health.router)
     mount_spa(app, static_dir or STATIC_DIR)  # last: its catch-all route must not shadow the API
     return app

@@ -5,6 +5,7 @@
 - Analytics maths: time-weighted return and XIRR, volatility, drawdown, Sharpe, beta, correlation matrix, attribution that adds up exactly, allocation with the single shared drift function, rebased series, monthly returns and the return bridge; per-position net invested in the ledger [FR-PF-03, FR-PF-04, FR-PF-06, FR-PF-07]. See ADR 0014.
 - Schema (migration 0004): sleeves with optional targets and bands, region, sector, sleeve and benchmark flag on instruments, watchlists, delayed quotes, dashboards and widgets, the event table the worker uses to tell the browser about new data, and an opt-in cash-tracking flag per account [FR-INS-04, FR-INS-05, FR-MD-05, FR-DB-01, FR-DB-02, FR-TX-09].
 - Opt-in cash tracking per account: cash derived from deposits, withdrawals, trades, income, fees and taxes; when on, the account's value includes its cash and only deposits and withdrawals count as money put in, without counting income and costs twice; the overview shows the cash; switching is audited and rebuilds the history [FR-TX-09]. See ADR 0015.
+- Classification API: region, sector, sleeve and benchmark flag on instruments (audited with old and new values), sleeves with optional targets and bands (renamed, reordered, refused deletion while in use), and watchlists with a note and the latest price per item; watched instruments are priced by the existing nightly jobs and leave the list when deleted [FR-INS-04, FR-INS-05, FR-MD-12].
 
 ## Phase 1 — Ledger and prices (code complete, awaiting owner gate)
 

@@ -80,6 +80,10 @@ class InstrumentOut(BaseModel):
     listings: list[ListingOut]
     last_close: LastClose | None
     stale: bool
+    region: str | None
+    sector: str | None
+    sleeve_id: int | None
+    is_benchmark: bool
 
 
 class CandidateOut(BaseModel):
@@ -164,6 +168,10 @@ def _view(db: Session, instrument: Instrument) -> InstrumentOut:
         ],
         last_close=last,
         stale=stale,
+        region=instrument.region,
+        sector=instrument.sector,
+        sleeve_id=instrument.sleeve_id,
+        is_benchmark=instrument.is_benchmark,
     )
 
 
@@ -253,7 +261,10 @@ def read(instrument_id: int, _user: UserDep, db: DbDep) -> InstrumentOut:
 @router.patch("/{instrument_id}", response_model=InstrumentOut)
 def patch(instrument_id: int, body: InstrumentChanges, _user: UserDep, db: DbDep) -> InstrumentOut:
     instrument = _load(db, instrument_id)
-    update_instrument(db, instrument, body)
+    try:
+        update_instrument(db, instrument, body)
+    except InstrumentError as exc:
+        raise ApiError(422, "Invalid instrument", str(exc)) from exc
     return _view(db, instrument)
 
 

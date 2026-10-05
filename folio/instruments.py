@@ -9,12 +9,13 @@ from decimal import Decimal
 from typing import Any, Literal
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
-from sqlalchemy import func, select
+from sqlalchemy import delete, func, select
 from sqlalchemy.orm import Session
 
 from folio.audit import write_audit
 from folio.db.base import utcnow
 from folio.db.models import Account
+from folio.db.models_analytics import Sleeve, WatchlistItem
 from folio.db.models_ledger import Instrument, LedgerTransaction, Listing
 from folio.marketdata import exchanges
 from folio.marketdata.isin import normalize_isin
@@ -52,6 +53,10 @@ class InstrumentFields(BaseModel):
     coupon_pct: Decimal | None = Field(default=None, ge=0, le=100)
     maturity_date: date | None = None
     rating: str | None = Field(default=None, max_length=10)
+    region: str | None = Field(default=None, max_length=40)
+    sector: str | None = Field(default=None, max_length=60)
+    sleeve_id: int | None = None
+    is_benchmark: bool | None = None  # None means no
 
     @field_validator("name")
     @classmethod
@@ -113,6 +118,10 @@ class InstrumentChanges(BaseModel):
     maturity_date: date | None = None
     rating: str | None = Field(default=None, max_length=10)
     status: Literal["active", "archived"] | None = None
+    region: str | None = Field(default=None, max_length=40)
+    sector: str | None = Field(default=None, max_length=60)
+    sleeve_id: int | None = None
+    is_benchmark: bool | None = None
 
 
 _FIELDS = (
@@ -127,6 +136,10 @@ _FIELDS = (
     "maturity_date",
     "rating",
     "status",
+    "region",
+    "sector",
+    "sleeve_id",
+    "is_benchmark",
 )
 
 
@@ -144,6 +157,14 @@ def _snapshot(instrument: Instrument) -> dict[str, Any]:
 
 def _slug(text: str) -> str:
     return re.sub(r"[^A-Z0-9]+", "", text.upper())[:30] or "PRIVATE"
+
+
+def _check_sleeve(db: Session, sleeve_id: int | None) -> None:
+    if sleeve_id is None:
+        return
+    sleeve = db.get(Sleeve, sleeve_id)
+    if sleeve is None or sleeve.deleted_at is not None:
+        raise InstrumentError("That sleeve does not exist. Add it under Settings, Sleeves first.")
 
 
 def get_instrument(db: Session, instrument_id: int) -> Instrument:
@@ -169,6 +190,8 @@ def create_instrument(
     pricing listing, and whether it was newly created. The caller queues the price backfill."""
     isin = normalize_isin(data.isin) if data.isin else None
     fields = data.model_dump(include=set(_FIELDS) - {"status"})
+    _check_sleeve(db, data.sleeve_id)
+    fields["is_benchmark"] = bool(fields.get("is_benchmark"))
     existing = (
         db.scalar(select(Instrument).where(Instrument.isin == isin)) if isin is not None else None
     )
@@ -239,7 +262,11 @@ def update_instrument(
     db: Session, instrument: Instrument, changes: InstrumentChanges, actor: str = "user"
 ) -> dict[str, Any]:
     before = _snapshot(instrument)
-    for key, value in changes.model_dump(exclude_unset=True).items():
+    given = changes.model_dump(exclude_unset=True)
+    if given.get("is_benchmark") is None:
+        given.pop("is_benchmark", None)  # a flag cannot be unset to nothing
+    _check_sleeve(db, given.get("sleeve_id"))
+    for key, value in given.items():
         if key == "domicile" and value is not None:
             value = value.upper()
         setattr(instrument, key, value)
@@ -285,6 +312,7 @@ def delete_instrument(db: Session, instrument: Instrument, actor: str = "user") 
     if total:
         raise InstrumentInUse(instrument.name, total, blocking)
     instrument.deleted_at = utcnow()
+    db.execute(delete(WatchlistItem).where(WatchlistItem.instrument_id == instrument.id))
     db.flush()
     write_audit(
         db, actor, "instrument", "delete", entity_id=instrument.id, diff=_snapshot(instrument)

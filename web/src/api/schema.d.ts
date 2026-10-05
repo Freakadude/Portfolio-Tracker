@@ -531,6 +531,59 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/sleeves": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Sleeves */
+        get: operations["list_sleeves_api_v1_sleeves_get"];
+        put?: never;
+        /** Create Sleeve */
+        post: operations["create_sleeve_api_v1_sleeves_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sleeves/order": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Reorder */
+        put: operations["reorder_api_v1_sleeves_order_put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sleeves/{sleeve_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Delete Sleeve */
+        delete: operations["delete_sleeve_api_v1_sleeves__sleeve_id__delete"];
+        options?: never;
+        head?: never;
+        /** Update Sleeve */
+        patch: operations["update_sleeve_api_v1_sleeves__sleeve_id__patch"];
+        trace?: never;
+    };
     "/api/v1/system/jobs": {
         parameters: {
             query?: never;
@@ -683,6 +736,77 @@ export interface paths {
         options?: never;
         head?: never;
         patch?: never;
+        trace?: never;
+    };
+    "/api/v1/watchlists": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Watchlists */
+        get: operations["list_watchlists_api_v1_watchlists_get"];
+        put?: never;
+        /** Create Watchlist */
+        post: operations["create_watchlist_api_v1_watchlists_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/watchlists/{watchlist_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Delete Watchlist */
+        delete: operations["delete_watchlist_api_v1_watchlists__watchlist_id__delete"];
+        options?: never;
+        head?: never;
+        /** Rename Watchlist */
+        patch: operations["rename_watchlist_api_v1_watchlists__watchlist_id__patch"];
+        trace?: never;
+    };
+    "/api/v1/watchlists/{watchlist_id}/items": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Add Item */
+        post: operations["add_item_api_v1_watchlists__watchlist_id__items_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/watchlists/{watchlist_id}/items/{item_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Remove Item */
+        delete: operations["remove_item_api_v1_watchlists__watchlist_id__items__item_id__delete"];
+        options?: never;
+        head?: never;
+        /** Edit Item */
+        patch: operations["edit_item_api_v1_watchlists__watchlist_id__items__item_id__patch"];
         trace?: never;
     };
     "/healthz": {
@@ -1032,6 +1156,8 @@ export interface components {
             distribution?: ("ACC" | "DIST") | null;
             /** Domicile */
             domicile?: string | null;
+            /** Is Benchmark */
+            is_benchmark?: boolean | null;
             /** Issuer */
             issuer?: string | null;
             /** Maturity Date */
@@ -1040,6 +1166,12 @@ export interface components {
             name?: string | null;
             /** Rating */
             rating?: string | null;
+            /** Region */
+            region?: string | null;
+            /** Sector */
+            sector?: string | null;
+            /** Sleeve Id */
+            sleeve_id?: number | null;
             /** Status */
             status?: ("active" | "archived") | null;
             /** Tags */
@@ -1059,6 +1191,8 @@ export interface components {
             domicile: string | null;
             /** Id */
             id: number;
+            /** Is Benchmark */
+            is_benchmark: boolean;
             /** Isin */
             isin: string | null;
             /** Issuer */
@@ -1074,6 +1208,12 @@ export interface components {
             name: string;
             /** Rating */
             rating: string | null;
+            /** Region */
+            region: string | null;
+            /** Sector */
+            sector: string | null;
+            /** Sleeve Id */
+            sleeve_id: number | null;
             /** Stale */
             stale: boolean;
             /** Status */
@@ -1095,6 +1235,43 @@ export interface components {
             isin: string | null;
             /** Name */
             name: string;
+            /** Ticker */
+            ticker: string | null;
+        };
+        /** ItemChanges */
+        ItemChanges: {
+            /** Note */
+            note?: string | null;
+        };
+        /** ItemIn */
+        ItemIn: {
+            /** Instrument Id */
+            instrument_id: number;
+            /** Note */
+            note?: string | null;
+        };
+        /** ItemOut */
+        ItemOut: {
+            /** Close */
+            close: string | null;
+            /** Close Date */
+            close_date: string | null;
+            /** Currency */
+            currency: string | null;
+            /** Id */
+            id: number;
+            /** Instrument Id */
+            instrument_id: number;
+            /** Isin */
+            isin: string | null;
+            /** Name */
+            name: string;
+            /** Note */
+            note: string | null;
+            /** Previous Close */
+            previous_close: string | null;
+            /** Stale */
+            stale: boolean;
             /** Ticker */
             ticker: string | null;
         };
@@ -1221,6 +1398,8 @@ export interface components {
             distribution?: ("ACC" | "DIST") | null;
             /** Domicile */
             domicile?: string | null;
+            /** Is Benchmark */
+            is_benchmark?: boolean | null;
             /** Isin */
             isin?: string | null;
             /** Issuer */
@@ -1237,10 +1416,21 @@ export interface components {
             name: string;
             /** Rating */
             rating?: string | null;
+            /** Region */
+            region?: string | null;
+            /** Sector */
+            sector?: string | null;
+            /** Sleeve Id */
+            sleeve_id?: number | null;
             /** Tags */
             tags?: string[];
             /** Ter Pct */
             ter_pct?: number | string | null;
+        };
+        /** OrderIn */
+        OrderIn: {
+            /** Ids */
+            ids: number[];
         };
         /** OwnerIn */
         OwnerIn: {
@@ -1535,6 +1725,39 @@ export interface components {
             /** Setup Complete */
             setup_complete: boolean;
         };
+        /** SleeveChanges */
+        SleeveChanges: {
+            /** Band Pct */
+            band_pct?: number | string | null;
+            /** Name */
+            name?: string | null;
+            /** Target Pct */
+            target_pct?: number | string | null;
+        };
+        /** SleeveIn */
+        SleeveIn: {
+            /** Band Pct */
+            band_pct?: number | string | null;
+            /** Name */
+            name: string;
+            /** Target Pct */
+            target_pct?: number | string | null;
+        };
+        /** SleeveOut */
+        SleeveOut: {
+            /** Band Pct */
+            band_pct: string | null;
+            /** Id */
+            id: number;
+            /** Instrument Count */
+            instrument_count: number;
+            /** Name */
+            name: string;
+            /** Sort Order */
+            sort_order: number;
+            /** Target Pct */
+            target_pct: string | null;
+        };
         /** SummaryOut */
         SummaryOut: {
             /** Account Id */
@@ -1767,6 +1990,20 @@ export interface components {
             msg: string;
             /** Error Type */
             type: string;
+        };
+        /** WatchlistIn */
+        WatchlistIn: {
+            /** Name */
+            name: string;
+        };
+        /** WatchlistOut */
+        WatchlistOut: {
+            /** Id */
+            id: number;
+            /** Items */
+            items: components["schemas"]["ItemOut"][];
+            /** Name */
+            name: string;
         };
         /** AccountIn */
         folio__api__routers__accounts__AccountIn: {
@@ -3096,6 +3333,156 @@ export interface operations {
             };
         };
     };
+    list_sleeves_api_v1_sleeves_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SleeveOut"][];
+                };
+            };
+        };
+    };
+    create_sleeve_api_v1_sleeves_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SleeveIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SleeveOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    reorder_api_v1_sleeves_order_put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["OrderIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SleeveOut"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_sleeve_api_v1_sleeves__sleeve_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                sleeve_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_sleeve_api_v1_sleeves__sleeve_id__patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                sleeve_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SleeveChanges"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SleeveOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     jobs_api_v1_system_jobs_get: {
         parameters: {
             query?: {
@@ -3404,6 +3791,226 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["TransactionOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_watchlists_api_v1_watchlists_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WatchlistOut"][];
+                };
+            };
+        };
+    };
+    create_watchlist_api_v1_watchlists_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["WatchlistIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WatchlistOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_watchlist_api_v1_watchlists__watchlist_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                watchlist_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    rename_watchlist_api_v1_watchlists__watchlist_id__patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                watchlist_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["WatchlistIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WatchlistOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    add_item_api_v1_watchlists__watchlist_id__items_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                watchlist_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ItemIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WatchlistOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    remove_item_api_v1_watchlists__watchlist_id__items__item_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                watchlist_id: number;
+                item_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WatchlistOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    edit_item_api_v1_watchlists__watchlist_id__items__item_id__patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                watchlist_id: number;
+                item_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ItemChanges"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WatchlistOut"];
                 };
             };
             /** @description Validation Error */
