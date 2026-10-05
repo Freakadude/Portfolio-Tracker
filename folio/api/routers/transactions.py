@@ -20,6 +20,7 @@ from folio.ledger_service import (
     create_batch,
     create_transaction,
     delete_transaction,
+    preview_amount,
     preview_sell_transaction,
     update_transaction,
 )
@@ -80,6 +81,15 @@ class SellPreviewOut(BaseModel):
     realized_pct: Decimal | None
     remaining_quantity: Decimal
     remaining_cost_basis_eur: Decimal
+
+
+class AmountPreviewOut(BaseModel):
+    currency: str
+    fx_rate_to_eur: Decimal
+    gross_eur: Decimal
+    fees_eur: Decimal
+    taxes_eur: Decimal
+    net_amount_eur: Decimal
 
 
 class FxPrefillOut(BaseModel):
@@ -322,6 +332,17 @@ def preview_sell(body: TransactionIn, _user: UserDep, db: DbDep) -> SellPreviewO
         remaining_quantity=result.remaining_quantity,
         remaining_cost_basis_eur=result.remaining_cost_basis_eur,
     )
+
+
+@router.post("/preview-amount", response_model=AmountPreviewOut)
+def preview_trade_amount(body: TransactionIn, _user: UserDep, db: DbDep) -> AmountPreviewOut:
+    """The euro amount a buy or sell would be stored with (units x price x rate, plus or minus
+    fees and taxes), worked out by the same code as saving. Nothing is written (FR-TX-14)."""
+    try:
+        result = preview_amount(db, body)
+    except TransactionError as exc:
+        raise _fail(exc) from exc
+    return AmountPreviewOut(**result.model_dump())
 
 
 @router.get("/fx-prefill", response_model=FxPrefillOut)

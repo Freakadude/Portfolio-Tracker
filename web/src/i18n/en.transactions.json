@@ -89,8 +89,17 @@
     "save": "Save transaction",
     "saving": "Saving…",
     "required": "This is required.",
-    "positive": "Enter a number greater than zero.",
-    "locked": "Account and type cannot be changed. Delete the transaction and add it again instead."
+    "positive": "Enter a number greater than zero."
+  },
+  "amountPreview": {
+    "title": "Calculated amount",
+    "caption": "How the amount in euros is calculated",
+    "gross": "Units × price (in €)",
+    "fees": "Fees (€)",
+    "taxes": "Taxes (€)",
+    "paid": "Total paid (€)",
+    "received": "Total received (€)",
+    "waiting": "Fill in the units and price to see the amount."
   },
   "sellPreview": {
     "title": "What this sale does",

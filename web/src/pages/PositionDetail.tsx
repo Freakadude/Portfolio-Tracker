@@ -1,13 +1,15 @@
-import { useMemo, type ReactNode } from 'react'
+import { useMutation } from '@tanstack/react-query'
+import { useMemo, useState, type ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link, useParams } from 'react-router-dom'
-import { ApiProblem, errorMessage } from '../api/client'
-import { usePositionDetail, usePrices } from '../api/queries'
-import { AsOf, Badge, EmptyState, Gain } from '../components/display'
+import { ApiProblem, api, errorMessage, unwrap } from '../api/client'
+import { useInvalidateLedger, usePositionDetail, usePrices, type Transaction } from '../api/queries'
+import { AsOf, Badge, Dialog, EmptyState, Gain } from '../components/display'
 import { HoldingsPanel } from '../lookthrough/HoldingsPanel'
 import { PriceAlerts } from '../notify/PriceAlerts'
 import { PriceChart } from '../components/PriceChart'
-import { Alert, Card } from '../components/ui'
+import { TransactionForm } from '../components/TransactionForm'
+import { Alert, Button, Card } from '../components/ui'
 import { useFormat } from '../lib/useFormat'
 
 function Stat({ label, children }: { label: string; children: ReactNode }) {
@@ -25,6 +27,21 @@ export function PositionDetail() {
   const id = Number(useParams().instrumentId)
   const detail = usePositionDetail(id)
   const prices = usePrices(id)
+  const invalidate = useInvalidateLedger()
+  const [editing, setEditing] = useState<Transaction | undefined>()
+  const remove = useMutation({
+    mutationFn: (tx: Transaction) =>
+      unwrap(
+        api.DELETE('/api/v1/transactions/{transaction_id}', {
+          params: { path: { transaction_id: tx.id } },
+        }),
+      ),
+    onSuccess: invalidate,
+  })
+  function confirmDelete(tx: Transaction) {
+    const label = { type: t(`transactions.types.${tx.type}`), date: tx.trade_date }
+    if (window.confirm(t('transactions.deleteConfirm', label))) remove.mutate(tx)
+  }
   const markers = useMemo(
     () => (detail.data?.transactions ?? []).map((tx) => ({ date: tx.trade_date, type: tx.type })),
     [detail.data],
@@ -287,6 +304,9 @@ export function PositionDetail() {
                   <th scope="col" className="px-3 py-2 text-right font-medium">
                     {t('position.historyColumns.amount')}
                   </th>
+                  <th scope="col" className="px-3 py-2 text-right font-medium">
+                    <span className="sr-only">{t('position.historyColumns.actions')}</span>
+                  </th>
                 </tr>
               </thead>
               <tbody>
@@ -303,6 +323,28 @@ export function PositionDetail() {
                     <td className="px-3 py-2 text-right tabular-nums">
                       {tx.net_amount_eur ? eur(tx.net_amount_eur) : '–'}
                     </td>
+                    <td className="px-3 py-2 text-right whitespace-nowrap">
+                      <Button
+                        variant="ghost"
+                        onClick={() => setEditing(tx)}
+                        aria-label={t('position.editRow', {
+                          type: t(`transactions.types.${tx.type}`),
+                          date: tx.trade_date,
+                        })}
+                      >
+                        {t('transactions.edit')}
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        onClick={() => confirmDelete(tx)}
+                        aria-label={t('position.deleteRow', {
+                          type: t(`transactions.types.${tx.type}`),
+                          date: tx.trade_date,
+                        })}
+                      >
+                        {t('transactions.delete')}
+                      </Button>
+                    </td>
                   </tr>
                 ))}
               </tbody>
@@ -310,6 +352,16 @@ export function PositionDetail() {
           </div>
         </section>
       )}
+
+      {remove.isError && <Alert>{errorMessage(remove.error)}</Alert>}
+      <Dialog
+        open={Boolean(editing)}
+        onClose={() => setEditing(undefined)}
+        title={t('txForm.editTitle')}
+        wide
+      >
+        <TransactionForm editing={editing} onDone={() => setEditing(undefined)} />
+      </Dialog>
     </div>
   )
 }

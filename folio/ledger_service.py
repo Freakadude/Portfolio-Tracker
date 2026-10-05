@@ -97,6 +97,8 @@ class TransactionChanges(BaseModel):
 
     model_config = ConfigDict(extra="forbid")
 
+    account_id: int | None = None
+    type: TransactionType | None = None
     trade_date: date | None = None
     instrument_id: int | None = None
     settle_date: date | None = None
@@ -476,8 +478,14 @@ def update_transaction(
     row = _live(db, transaction_id)
     before = _snapshot(row)
     old_date = row.trade_date
+    old_account_id = row.account_id
     merged = _as_input(row)
     given = changes.model_dump(exclude_unset=True)
+    if given.get("type") not in (None, row.type):
+        # A different type needs different fields: keep only what every type shares, so nothing
+        # of the old type's price, units or costs lingers unless the caller sent it again.
+        shared = {"account_id", "instrument_id", "trade_date", "settle_date", "note"}
+        merged = {key: value for key, value in merged.items() if key in shared}
     merged.update(given)
     # A new currency invalidates the stored rate. A new date does too, unless the owner had
     # overridden the ECB rate (then their broker's rate is kept): a stored rate equal to the
@@ -497,10 +505,12 @@ def update_transaction(
         ):
             merged[rate_key] = None
     fields = normalize(db, TransactionIn.model_validate(merged))
-    account = _account(db, row.account_id)
+    account = _account(db, fields["account_id"])
     for key, value in fields.items():
         setattr(row, key, value)
     db.flush()
+    if old_account_id != account.id:  # moved: the account it left is rebuilt as well
+        _rebuild_or_reject(db, _account(db, old_account_id))
     _rebuild_or_reject(db, account)
     after = _snapshot(row)
     diff = {k: {"old": before[k], "new": after[k]} for k in after if before[k] != after[k]}
@@ -621,3 +631,34 @@ def preview_sell_transaction(db: Session, data: TransactionIn) -> SellPreview:
         return preview_sell(history, candidate, CostBasisMethod(account.cost_basis_method))
     except LedgerError as exc:
         raise TransactionError(str(exc), [("quantity", str(exc))]) from exc
+
+
+# --- amount preview ------------------------------------------------------------------------------
+
+
+class AmountPreview(BaseModel):
+    """How a trade's euro amount is made up (FR-TX-14), from the same code as saving."""
+
+    currency: str
+    fx_rate_to_eur: Decimal
+    gross_eur: Decimal
+    fees_eur: Decimal
+    taxes_eur: Decimal
+    net_amount_eur: Decimal  # negative for a buy (cash out), positive for a sell
+
+
+def preview_amount(db: Session, data: TransactionIn) -> AmountPreview:
+    """The euro amount a buy or a sell would be stored with, and what it is made of.
+    Nothing is written."""
+    if data.type not in ("buy", "sell"):
+        raise TransactionError("Only a buy or a sell has a calculated amount.")
+    fields = normalize(db, data)
+    gross = fields["quantity"] * fields["price"] * fields["fx_rate_to_eur"]
+    return AmountPreview(
+        currency=fields["currency"],
+        fx_rate_to_eur=fields["fx_rate_to_eur"],
+        gross_eur=gross,
+        fees_eur=fields["fees"] * fields["fees_fx_rate_to_eur"],
+        taxes_eur=fields["taxes"] * fields["taxes_fx_rate_to_eur"],
+        net_amount_eur=fields["net_amount_eur"],
+    )

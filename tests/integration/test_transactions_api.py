@@ -19,7 +19,12 @@ from folio.db.models_ledger import (
     LotMatch,
     Position,
 )
-from folio.ledger_service import insert_transaction, rebuild_account
+from folio.ledger_service import (
+    TransactionIn,
+    insert_transaction,
+    normalize,
+    rebuild_account,
+)
 from folio.marketdata.fx import to_eur_multiplier
 from tests.conftest import PASSWORD, USERNAME
 from tests.marketdata_helpers import make_listing
@@ -696,3 +701,133 @@ def test_accounts_crud_and_protection(api: TestClient, fund: int) -> None:
     assert api.delete(f"/api/v1/accounts/{empty['id']}").status_code == 204
     assert "Empty" not in {a["name"] for a in api.get("/api/v1/accounts").json()}
     assert api.patch("/api/v1/accounts/999", json={"name": "x"}).status_code == 404
+
+
+# --- FR-TX-14: a calculated amount while typing, and editing any posted row -------------------
+
+
+def test_the_amount_preview_is_what_saving_stores_and_writes_nothing(
+    api: TestClient, account: dict[str, Any], fund: int, db
+) -> None:  # type: ignore[no-untyped-def]
+    a = account["id"]
+    body = {"account_id": a, "instrument_id": fund, "type": "buy", "trade_date": "2024-01-02",
+            "quantity": "10", "price": "100", "currency": "USD", "fx_rate_to_eur": "0.9",
+            "fees": "1.5", "taxes": "0.5"}  # fmt: skip
+    audits, jobs = db.query(AuditLog).count(), db.query(JobRequest).count()
+    r = api.post("/api/v1/transactions/preview-amount", json=body)
+    assert r.status_code == 200, r.text
+    p = r.json()
+    assert (p["currency"], D(p["fx_rate_to_eur"])) == ("USD", D("0.9"))
+    assert (D(p["gross_eur"]), D(p["fees_eur"]), D(p["taxes_eur"])) == (
+        D("900"),
+        D("1.5"),
+        D("0.5"),
+    )
+    assert D(p["net_amount_eur"]) == D("-902")  # a buy: cash out, costs included
+    assert api.get("/api/v1/transactions").json()["items"] == []
+    assert (db.query(AuditLog).count(), db.query(JobRequest).count()) == (audits, jobs)
+
+    saved = post(api, **body)
+    assert D(saved["net_amount_eur"]) == D(p["net_amount_eur"])
+
+    sold = api.post("/api/v1/transactions/preview-amount", json={**body, "type": "sell"}).json()
+    assert D(sold["net_amount_eur"]) == D("898")  # a sell: proceeds less costs
+
+
+def test_the_amount_preview_refuses_other_types_and_bad_input(
+    api: TestClient, account: dict[str, Any], fund: int
+) -> None:
+    a = account["id"]
+    dividend = {"account_id": a, "instrument_id": fund, "type": "dividend",
+                "trade_date": "2024-01-02", "net_amount_eur": "5"}  # fmt: skip
+    r = api.post("/api/v1/transactions/preview-amount", json=dividend)
+    assert r.status_code == 422 and "Only a buy or a sell" in r.json()["detail"]
+    r = api.post(
+        "/api/v1/transactions/preview-amount",
+        json={"account_id": a, "instrument_id": fund, "type": "buy", "trade_date": "2024-01-02",
+              "quantity": "0", "price": "1"},
+    )  # fmt: skip
+    assert r.status_code == 422
+    assert [e["field"] for e in r.json()["errors"]] == ["quantity"]
+
+
+def test_an_imported_row_can_be_edited_in_date_type_units_and_price(
+    api: TestClient, account: dict[str, Any], fund: int, db
+) -> None:  # type: ignore[no-untyped-def]
+    a = account["id"]
+    fields = normalize(
+        db,
+        TransactionIn(account_id=a, instrument_id=fund, type="buy", trade_date=date(2024, 1, 2),
+                      quantity=D("10"), price=D("100"), fees=D("2")),
+    )  # fmt: skip
+    row = insert_transaction(db, fields, source="csv", external_ref="DEGIRO-ORDER-1")
+    insert_transaction(
+        db,
+        normalize(
+            db,
+            TransactionIn(account_id=a, instrument_id=fund, type="buy",
+                          trade_date=date(2024, 1, 5), quantity=D("5"), price=D("110")),
+        ),
+    )  # fmt: skip
+    rebuild_account(db, db.get(Account, a))
+    db.commit()
+    assert D(api.get("/api/v1/transactions").json()["items"][-1]["net_amount_eur"]) == D("-1002")
+
+    # the date, the units and the price change: the amount follows, and so do the lots
+    r = api.patch(
+        f"/api/v1/transactions/{row.id}",
+        json={"trade_date": "2024-01-03", "quantity": "12", "price": "101"},
+    )
+    assert r.status_code == 200, r.text
+    edited = r.json()
+    assert D(edited["net_amount_eur"]) == D("-1214")  # 12 x 101 + 2 fees
+    assert (edited["source"], edited["external_ref"]) == ("csv", "DEGIRO-ORDER-1")
+    db.expire_all()
+    assert position(db, a).quantity == D("17")
+
+    # a sell before any buy cannot be saved, and the failed edit leaves the row as it was
+    refused = api.patch(
+        f"/api/v1/transactions/{row.id}", json={"type": "sell", "quantity": "12", "price": "101"}
+    )
+    assert refused.status_code == 422 and "only 0 are held" in refused.json()["detail"]
+    assert api.get("/api/v1/transactions").json()["items"][-1]["type"] == "buy"
+
+
+def test_the_type_and_the_account_of_a_row_can_be_changed(
+    api: TestClient, account: dict[str, Any], fund: int, db
+) -> None:  # type: ignore[no-untyped-def]
+    a = account["id"]
+    other = api.post("/api/v1/accounts", json={"name": "Second", "broker": "Degiro"}).json()["id"]
+    buy(api, a, fund, "2024-01-02", "10", "100")
+    second = buy(api, a, fund, "2024-01-05", "5", "110", fees="3")
+    assert position(db, a).quantity == D("15")
+
+    # buy -> sell: the old buy's fees do not linger, the new price and units give the amount
+    r = api.patch(
+        f"/api/v1/transactions/{second['id']}",
+        json={"type": "sell", "quantity": "4", "price": "120"},
+    )
+    assert r.status_code == 200, r.text
+    assert (r.json()["type"], D(r.json()["net_amount_eur"]), D(r.json()["fees"])) == (
+        "sell",
+        D("480"),
+        D("0"),
+    )
+    db.expire_all()
+    pos = position(db, a)
+    assert pos.quantity == D("6") and pos.realized_pnl_eur == D("80")  # 4 x (120 - 100)
+
+    # the sell moves to another account, which holds nothing: refused, nothing changes
+    refused = api.patch(f"/api/v1/transactions/{second['id']}", json={"account_id": other})
+    assert refused.status_code == 422
+    db.expire_all()
+    assert position(db, a).quantity == D("6")
+
+    # a buy moves to another account: both accounts are rebuilt
+    third = buy(api, a, fund, "2024-01-09", "2", "130")
+    moved = api.patch(f"/api/v1/transactions/{third['id']}", json={"account_id": other})
+    assert moved.status_code == 200, moved.text
+    db.expire_all()
+    assert position(db, a).quantity == D("6") and position(db, other).quantity == D("2")
+    changed = db.query(AuditLog).filter(AuditLog.action == "update").all()
+    assert any("account_id" in (row.diff or {}) for row in changed)

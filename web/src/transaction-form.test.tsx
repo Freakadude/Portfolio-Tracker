@@ -196,3 +196,164 @@ describe('the form', () => {
     expect(screen.getByLabelText(/Exchange rate/)).toHaveAttribute('placeholder', '1.095')
   })
 })
+
+// FR-TX-14: a calculated amount while typing, and every stored parameter can be edited
+const STORED = {
+  id: 5,
+  account_id: 1,
+  account_name: 'Degiro',
+  instrument_id: 1,
+  instrument_name: 'Acme Corp',
+  ticker: 'ACME',
+  type: 'buy',
+  status: 'posted',
+  trade_date: '2025-01-10',
+  settle_date: null,
+  quantity: '10',
+  price: '100',
+  currency: 'USD',
+  fx_rate_to_eur: '0.9',
+  fees: '1.5',
+  fees_currency: 'EUR',
+  fees_fx_rate_to_eur: '1',
+  taxes: '0',
+  taxes_currency: 'EUR',
+  taxes_fx_rate_to_eur: '1',
+  net_amount_eur: '-901.5',
+  ratio: null,
+  note: null,
+  source: 'csv',
+  external_ref: 'ORDER-1',
+  import_batch_id: 3,
+}
+const AMOUNT = {
+  currency: 'USD',
+  fx_rate_to_eur: '0.9',
+  gross_eur: '900',
+  fees_eur: '1.5',
+  taxes_eur: '0',
+  net_amount_eur: '-901.5',
+}
+
+describe('the calculated amount (FR-TX-14)', () => {
+  it('shows what the server calculates as units and price are typed', async () => {
+    const { calls } = mockApi({
+      ...BASE,
+      'POST /api/v1/transactions/preview-amount': AMOUNT,
+      '/api/v1/transactions/fx-prefill': {
+        currency: 'USD',
+        date: '2025-01-10',
+        rate_per_eur: '1.1111',
+        rate_date: '2025-01-10',
+        fx_rate_to_eur: '0.9',
+      },
+    })
+    renderAt(<TransactionForm onDone={vi.fn()} initial={{ type: 'buy' }} />)
+    expect(screen.getByText(/Fill in the units and price to see the amount/)).toBeInTheDocument()
+    await screen.findByRole('option', { name: /Acme Corp/ })
+    await userEvent.selectOptions(screen.getByLabelText('Instrument'), '1')
+    await userEvent.type(screen.getByLabelText('Units'), '10')
+    await userEvent.type(screen.getByLabelText('Price per unit'), '100')
+    const table = await screen.findByRole('table', {
+      name: 'How the amount in euros is calculated',
+    })
+    expect(table).toHaveTextContent('Units × price (in €)€900.00')
+    expect(table).toHaveTextContent('Fees (€)€1.50')
+    expect(table).toHaveTextContent('Total paid (€)€901.50') // a buy: shown as what you paid
+    const call = calls.filter((c) => c.path === '/api/v1/transactions/preview-amount').at(-1)
+    expect(call?.body).toMatchObject({ type: 'buy', quantity: '10', price: '100' })
+  })
+
+  it('calls a sale proceeds, and shows nothing for types without a calculated amount', async () => {
+    mockApi({
+      ...BASE,
+      'POST /api/v1/transactions/preview-amount': { ...AMOUNT, net_amount_eur: '898' },
+      'POST /api/v1/transactions/preview-sell': PREVIEW,
+    })
+    renderAt(<TransactionForm onDone={vi.fn()} initial={{ type: 'sell' }} />)
+    await screen.findByRole('option', { name: /Acme Corp/ })
+    await userEvent.selectOptions(screen.getByLabelText('Instrument'), '1')
+    await userEvent.type(screen.getByLabelText('Units'), '10')
+    await userEvent.type(screen.getByLabelText('Price per unit'), '100')
+    await userEvent.type(screen.getByLabelText(/Exchange rate/), '1.1111')
+    expect(await screen.findByText('Total received (€)')).toBeInTheDocument()
+    await userEvent.selectOptions(screen.getByLabelText('Type'), 'dividend')
+    expect(screen.queryByText('Calculated amount')).not.toBeInTheDocument()
+  })
+})
+
+describe('editing a stored transaction (FR-TX-14)', () => {
+  const editRoutes = {
+    ...BASE,
+    '/api/v1/accounts': [ACCOUNT, { ...ACCOUNT, id: 2, name: 'Second' }],
+    'POST /api/v1/transactions/preview-amount': AMOUNT,
+    'PATCH /api/v1/transactions/5': STORED,
+  }
+
+  it('lets the type and the account be changed, which were locked before', async () => {
+    mockApi(editRoutes)
+    renderAt(<TransactionForm onDone={vi.fn()} editing={STORED as never} />)
+    await screen.findByRole('option', { name: 'Second' })
+    expect(screen.getByLabelText('Type')).toBeEnabled()
+    expect(screen.getByLabelText('Account')).toBeEnabled()
+    expect(screen.queryByText(/cannot be changed/)).not.toBeInTheDocument()
+  })
+
+  it('sends only what changed when the type stays', async () => {
+    const { calls } = mockApi(editRoutes)
+    const onDone = vi.fn()
+    renderAt(<TransactionForm onDone={onDone} editing={STORED as never} />)
+    await screen.findByRole('option', { name: 'Second' })
+    await userEvent.clear(screen.getByLabelText('Units'))
+    await userEvent.type(screen.getByLabelText('Units'), '12')
+    await userEvent.clear(screen.getByLabelText('Price per unit'))
+    await userEvent.type(screen.getByLabelText('Price per unit'), '101')
+    await userEvent.clear(screen.getByLabelText('Trade date'))
+    await userEvent.type(screen.getByLabelText('Trade date'), '2025-01-09')
+    await userEvent.click(screen.getByRole('button', { name: 'Save transaction' }))
+    await waitFor(() => expect(onDone).toHaveBeenCalled())
+    const patch = calls.find((c) => c.method === 'PATCH')
+    expect(patch?.path).toBe('/api/v1/transactions/5')
+    expect(patch?.body).toEqual({ quantity: '12', price: '101', trade_date: '2025-01-09' })
+  })
+
+  it('sends the whole transaction when the type changes, and the account when it moves', async () => {
+    const { calls } = mockApi(editRoutes)
+    const onDone = vi.fn()
+    renderAt(<TransactionForm onDone={onDone} editing={STORED as never} />)
+    await screen.findByRole('option', { name: 'Second' })
+    await userEvent.selectOptions(screen.getByLabelText('Type'), 'sell')
+    await userEvent.selectOptions(screen.getByLabelText('Account'), '2')
+    await userEvent.click(screen.getByRole('button', { name: 'Save transaction' }))
+    await waitFor(() => expect(onDone).toHaveBeenCalled())
+    const patch = calls.find((c) => c.method === 'PATCH')
+    expect(patch?.body).toMatchObject({
+      type: 'sell',
+      account_id: 2,
+      instrument_id: 1,
+      quantity: '10',
+      price: '100',
+      trade_date: '2025-01-10',
+    })
+  })
+
+  it('shows the amount of the stored trade at once, and recalculates it on a change', async () => {
+    mockApi({
+      ...editRoutes,
+      'POST /api/v1/transactions/preview-amount': async (request: Request) => {
+        const body = (await request.clone().json()) as { quantity: string }
+        const gross = Number(body.quantity) * 90
+        return { ...AMOUNT, gross_eur: String(gross), net_amount_eur: String(-(gross + 1.5)) }
+      },
+    })
+    renderAt(<TransactionForm onDone={vi.fn()} editing={STORED as never} />)
+    const amountTable = () =>
+      screen.getByRole('table', { name: 'How the amount in euros is calculated' })
+    await waitFor(() => expect(amountTable()).toHaveTextContent('Total paid (€)€901.50'))
+    await userEvent.clear(screen.getByLabelText('Units'))
+    // with the units gone there is nothing to calculate, and no old figure is left standing
+    expect(screen.getByText(/Fill in the units and price to see the amount/)).toBeInTheDocument()
+    await userEvent.type(screen.getByLabelText('Units'), '20')
+    await waitFor(() => expect(amountTable()).toHaveTextContent('Total paid (€)€1,801.50'))
+  })
+})

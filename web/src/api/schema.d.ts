@@ -2011,6 +2011,27 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/transactions/preview-amount": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Preview Trade Amount
+         * @description The euro amount a buy or sell would be stored with (units x price x rate, plus or minus
+         *     fees and taxes), worked out by the same code as saving. Nothing is written (FR-TX-14).
+         */
+        post: operations["preview_trade_amount_api_v1_transactions_preview_amount_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/transactions/preview-sell": {
         parameters: {
             query?: never;
@@ -2547,6 +2568,21 @@ export interface components {
             unopened?: string[];
             /** Unvalued Positions */
             unvalued_positions: number;
+        };
+        /** AmountPreviewOut */
+        AmountPreviewOut: {
+            /** Currency */
+            currency: string;
+            /** Fees Eur */
+            fees_eur: string;
+            /** Fx Rate To Eur */
+            fx_rate_to_eur: string;
+            /** Gross Eur */
+            gross_eur: string;
+            /** Net Amount Eur */
+            net_amount_eur: string;
+            /** Taxes Eur */
+            taxes_eur: string;
         };
         /** AttributionOut */
         AttributionOut: {
@@ -4883,6 +4919,8 @@ export interface components {
          * @description Any subset of the input fields; the merged result is validated again.
          */
         TransactionChanges: {
+            /** Account Id */
+            account_id?: number | null;
             /** Currency */
             currency?: string | null;
             /** Fees */
@@ -4915,6 +4953,8 @@ export interface components {
             taxes_fx_rate_to_eur?: number | string | null;
             /** Trade Date */
             trade_date?: string | null;
+            /** Type */
+            type?: ("buy" | "sell" | "dividend" | "interest" | "fee" | "tax" | "split" | "transfer_in" | "transfer_out" | "deposit" | "withdrawal") | null;
         };
         /** TransactionIn */
         TransactionIn: {
@@ -9361,6 +9401,39 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["FxPrefillOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    preview_trade_amount_api_v1_transactions_preview_amount_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TransactionIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AmountPreviewOut"];
                 };
             };
             /** @description Validation Error */

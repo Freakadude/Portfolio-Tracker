@@ -992,6 +992,49 @@
         "title": "AllocationOut",
         "type": "object"
       },
+      "AmountPreviewOut": {
+        "properties": {
+          "currency": {
+            "title": "Currency",
+            "type": "string"
+          },
+          "fees_eur": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Fees Eur",
+            "type": "string"
+          },
+          "fx_rate_to_eur": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Fx Rate To Eur",
+            "type": "string"
+          },
+          "gross_eur": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Gross Eur",
+            "type": "string"
+          },
+          "net_amount_eur": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Net Amount Eur",
+            "type": "string"
+          },
+          "taxes_eur": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Taxes Eur",
+            "type": "string"
+          }
+        },
+        "required": [
+          "currency",
+          "fx_rate_to_eur",
+          "gross_eur",
+          "fees_eur",
+          "taxes_eur",
+          "net_amount_eur"
+        ],
+        "title": "AmountPreviewOut",
+        "type": "object"
+      },
       "AttributionOut": {
         "properties": {
           "capital_eur": {
@@ -8670,6 +8713,17 @@
         "additionalProperties": false,
         "description": "Any subset of the input fields; the merged result is validated again.",
         "properties": {
+          "account_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Account Id"
+          },
           "currency": {
             "anyOf": [
               {
@@ -8890,6 +8944,30 @@
               }
             ],
             "title": "Trade Date"
+          },
+          "type": {
+            "anyOf": [
+              {
+                "enum": [
+                  "buy",
+                  "sell",
+                  "dividend",
+                  "interest",
+                  "fee",
+                  "tax",
+                  "split",
+                  "transfer_in",
+                  "transfer_out",
+                  "deposit",
+                  "withdrawal"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Type"
           }
         },
         "title": "TransactionChanges",
@@ -16940,6 +17018,48 @@
           }
         },
         "summary": "Fx Prefill",
+        "tags": [
+          "transactions"
+        ]
+      }
+    },
+    "/api/v1/transactions/preview-amount": {
+      "post": {
+        "description": "The euro amount a buy or sell would be stored with (units x price x rate, plus or minus\nfees and taxes), worked out by the same code as saving. Nothing is written (FR-TX-14).",
+        "operationId": "preview_trade_amount_api_v1_transactions_preview_amount_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TransactionIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AmountPreviewOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Preview Trade Amount",
         "tags": [
           "transactions"
         ]

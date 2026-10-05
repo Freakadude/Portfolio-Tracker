@@ -1,4 +1,4 @@
-import { useMutation, useQuery } from '@tanstack/react-query'
+import { keepPreviousData, useMutation, useQuery } from '@tanstack/react-query'
 import { useEffect, useMemo, useState, type FormEvent } from 'react'
 import { useTranslation } from 'react-i18next'
 import { ApiProblem, api, errorMessage, unwrap } from '../api/client'
@@ -6,6 +6,7 @@ import {
   useAccounts,
   useInstruments,
   useInvalidateLedger,
+  type AmountPreview,
   type SellPreview,
   type Transaction,
   type TransactionInput,
@@ -246,6 +247,23 @@ export function TransactionForm({ onDone, initial, editing }: Props) {
     if (foreign && !v.fxRate.trim() && !prefill.data) return null
     return buildBody(v)
   }, [v, editing, foreign, prefill.data])
+  // --- the calculated amount of a buy or sell, from the server's own arithmetic (FR-TX-14) ---
+  const amountBody = useMemo(() => {
+    if (!TRADE.includes(v.type)) return null
+    if (!v.accountId || !v.instrumentId || !v.tradeDate) return null
+    if (!isPositiveDecimal(v.quantity) || !/^\s*\d+([.,]\d+)?\s*$/.test(v.price)) return null
+    if (foreign && !v.fxRate.trim() && !prefill.data) return null
+    return buildBody(v)
+  }, [v, foreign, prefill.data])
+  const debouncedAmount = useDebounced(amountBody, 400)
+  const amount = useQuery({
+    queryKey: ['amount-preview', debouncedAmount],
+    queryFn: () =>
+      unwrap(api.POST('/api/v1/transactions/preview-amount', { body: debouncedAmount! })),
+    enabled: debouncedAmount !== null,
+    placeholderData: keepPreviousData, // no flicker while the next figure is on its way
+    retry: false,
+  })
   const debouncedSell = useDebounced(sellBody, 400)
   const preview = useQuery({
     queryKey: ['sell-preview', debouncedSell],
@@ -259,10 +277,13 @@ export function TransactionForm({ onDone, initial, editing }: Props) {
       if (editing) {
         const next = buildBody(v) as unknown as Record<string, unknown>
         const before = buildBody(initialValues) as unknown as Record<string, unknown>
-        const changes: Record<string, unknown> = {}
-        for (const key of Object.keys(next)) {
-          if (key === 'account_id' || key === 'type') continue
-          if (JSON.stringify(next[key]) !== JSON.stringify(before[key])) changes[key] = next[key]
+        // A different type needs different fields, so everything is sent again; otherwise only
+        // what the owner changed is.
+        const changes: Record<string, unknown> = v.type !== initialValues.type ? { ...next } : {}
+        if (v.type === initialValues.type) {
+          for (const key of Object.keys(next)) {
+            if (JSON.stringify(next[key]) !== JSON.stringify(before[key])) changes[key] = next[key]
+          }
         }
         return unwrap(
           api.PATCH('/api/v1/transactions/{transaction_id}', {
@@ -333,18 +354,12 @@ export function TransactionForm({ onDone, initial, editing }: Props) {
 
   return (
     <form onSubmit={submit} className="space-y-4" noValidate>
-      {editing && <p className="text-sm text-muted">{t('txForm.locked')}</p>}
       {noAccount && <Alert>{t('transactions.noAccounts')}</Alert>}
       {noInstrument && <Alert>{t('transactions.noInstruments')}</Alert>}
       <div className="grid gap-4 sm:grid-cols-2">
         <Field label={t('txForm.type')}>
           {(p) => (
-            <Select
-              value={v.type}
-              onChange={(e) => set('type', e.target.value as TxType)}
-              disabled={Boolean(editing)}
-              {...p}
-            >
+            <Select value={v.type} onChange={(e) => set('type', e.target.value as TxType)} {...p}>
               {TYPES.map((x) => (
                 <option key={x} value={x}>
                   {t(`transactions.types.${x}`)}
@@ -355,12 +370,7 @@ export function TransactionForm({ onDone, initial, editing }: Props) {
         </Field>
         <Field label={t('txForm.account')} error={errors.accountId}>
           {(p) => (
-            <Select
-              value={v.accountId}
-              onChange={(e) => set('accountId', e.target.value)}
-              disabled={Boolean(editing)}
-              {...p}
-            >
+            <Select value={v.accountId} onChange={(e) => set('accountId', e.target.value)} {...p}>
               {accounts.data?.map((a) => (
                 <option key={a.id} value={a.id}>
                   {a.name}
@@ -574,6 +584,25 @@ export function TransactionForm({ onDone, initial, editing }: Props) {
         </div>
       </div>
 
+      {TRADE.includes(v.type) && (
+        <section
+          aria-live="polite"
+          aria-label={t('amountPreview.title')}
+          className="rounded-md border border-border p-3"
+        >
+          <h3 className="mb-2 font-medium">{t('amountPreview.title')}</h3>
+          {amountBody === null ? (
+            <p className="text-sm text-muted">{t('amountPreview.waiting')}</p>
+          ) : amount.isError ? (
+            <Alert>{errorMessage(amount.error)}</Alert>
+          ) : amount.data ? (
+            <AmountLines data={amount.data} type={v.type} />
+          ) : (
+            <p className="text-sm text-muted">{t('amountPreview.waiting')}</p>
+          )}
+        </section>
+      )}
+
       {v.type === 'sell' && !editing && (
         <section
           aria-live="polite"
@@ -601,6 +630,35 @@ export function TransactionForm({ onDone, initial, editing }: Props) {
         {qty(0)}
       </span>
     </form>
+  )
+}
+
+function AmountLines({ data, type }: { data: AmountPreview; type: TxType }) {
+  const { t } = useTranslation()
+  const { eur } = useFormat()
+  const row = (label: string, value: string, strong = false) => (
+    <tr className={strong ? 'border-t border-border font-medium' : ''}>
+      <th scope="row" className="py-1 text-left font-normal">
+        {label}
+      </th>
+      <td className="py-1 text-right tabular-nums">{value}</td>
+    </tr>
+  )
+  const net = data.net_amount_eur
+  return (
+    <table className="w-full text-sm">
+      <caption className="sr-only">{t('amountPreview.caption')}</caption>
+      <tbody>
+        {row(t('amountPreview.gross'), eur(data.gross_eur))}
+        {Number(data.fees_eur) !== 0 && row(t('amountPreview.fees'), eur(data.fees_eur))}
+        {Number(data.taxes_eur) !== 0 && row(t('amountPreview.taxes'), eur(data.taxes_eur))}
+        {row(
+          t(type === 'buy' ? 'amountPreview.paid' : 'amountPreview.received'),
+          eur(type === 'buy' ? net.replace(/^-/, '') : net),
+          true,
+        )}
+      </tbody>
+    </table>
   )
 }
 

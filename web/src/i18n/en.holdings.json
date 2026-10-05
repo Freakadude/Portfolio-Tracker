@@ -174,8 +174,11 @@
       "type": "Type",
       "units": "Units",
       "price": "Price",
-      "amount": "Amount"
+      "amount": "Amount",
+      "actions": "Actions"
     },
+    "editRow": "Edit the {{type}} of {{date}}",
+    "deleteRow": "Delete the {{type}} of {{date}}",
     "noPosition": "You hold none of this instrument.",
     "chart": "Price chart",
     "chartRanges": { "1M": "1M", "3M": "3M", "1Y": "1Y", "MAX": "Max" },

@@ -1,4 +1,4 @@
-import { screen, within } from '@testing-library/react'
+import { screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { PositionDetail } from './pages/PositionDetail'
@@ -292,5 +292,102 @@ describe('position detail', () => {
       'href',
       '/holdings',
     )
+  })
+})
+
+describe('editing a transaction from the position (FR-TX-14)', () => {
+  const stored = (id: number, type: string, date: string, qty: string, price: string) => ({
+    id,
+    account_id: 1,
+    account_name: 'Degiro',
+    instrument_id: 1,
+    instrument_name: 'iShares Core S&P 500',
+    ticker: 'SXR8',
+    type,
+    status: 'posted',
+    trade_date: date,
+    settle_date: null,
+    quantity: qty,
+    price,
+    currency: 'EUR',
+    fx_rate_to_eur: '1',
+    fees: '0',
+    fees_currency: 'EUR',
+    fees_fx_rate_to_eur: '1',
+    taxes: '0',
+    taxes_currency: 'EUR',
+    taxes_fx_rate_to_eur: '1',
+    net_amount_eur: '-1001',
+    ratio: null,
+    note: null,
+    source: 'csv',
+    external_ref: 'X',
+    import_batch_id: 1,
+  })
+  const withRows = () =>
+    detail({
+      transactions: [
+        stored(2, 'buy', '2024-02-01', '10', '120'),
+        stored(1, 'buy', '2024-01-02', '10', '100'),
+      ],
+    })
+  const routes = (body: unknown) => ({
+    '/api/v1/settings/general': GENERAL_US,
+    '/api/v1/positions/1': body,
+    '/api/v1/instruments/1/prices': prices,
+    '/api/v1/accounts': [
+      {
+        id: 1,
+        name: 'Degiro',
+        broker: 'Degiro',
+        cost_basis_method: 'FIFO',
+        base_currency: 'EUR',
+        active: true,
+        transaction_count: 2,
+      },
+    ],
+    '/api/v1/instruments': [],
+    'POST /api/v1/transactions/preview-amount': {
+      currency: 'EUR',
+      fx_rate_to_eur: '1',
+      gross_eur: '1100',
+      fees_eur: '0',
+      taxes_eur: '0',
+      net_amount_eur: '-1100',
+    },
+  })
+
+  it('opens the stored values of a row, saves the change and reloads the position', async () => {
+    const { calls } = mockApi({
+      ...routes(withRows()),
+      'PATCH /api/v1/transactions/1': stored(1, 'buy', '2024-01-02', '10', '110'),
+    })
+    renderAt(<PositionDetail />, '/holdings/1', '/holdings/:instrumentId')
+    await userEvent.click(await screen.findByRole('button', { name: 'Edit the Buy of 2024-01-02' }))
+    const dialog = await screen.findByRole('dialog', { name: 'Edit transaction' })
+    expect(within(dialog).getByLabelText('Units')).toHaveValue('10')
+    expect(within(dialog).getByLabelText('Price per unit')).toHaveValue('100')
+    await userEvent.clear(within(dialog).getByLabelText('Price per unit'))
+    await userEvent.type(within(dialog).getByLabelText('Price per unit'), '110')
+    await userEvent.click(within(dialog).getByRole('button', { name: 'Save transaction' }))
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument())
+    expect(calls.find((c) => c.method === 'PATCH')?.body).toEqual({ price: '110' })
+    expect(calls.filter((c) => c.path === '/api/v1/positions/1').length).toBeGreaterThan(1)
+  })
+
+  it('deletes a row after asking', async () => {
+    const confirm = vi.spyOn(window, 'confirm').mockReturnValue(true)
+    const { calls } = mockApi({ ...routes(withRows()), 'DELETE /api/v1/transactions/2': null })
+    renderAt(<PositionDetail />, '/holdings/1', '/holdings/:instrumentId')
+    await userEvent.click(
+      await screen.findByRole('button', { name: 'Delete the Buy of 2024-02-01' }),
+    )
+    await waitFor(() =>
+      expect(calls.some((c) => c.method === 'DELETE' && c.path === '/api/v1/transactions/2')).toBe(
+        true,
+      ),
+    )
+    expect(confirm).toHaveBeenCalledWith(expect.stringContaining('2024-02-01'))
+    confirm.mockRestore()
   })
 })

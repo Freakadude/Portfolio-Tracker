@@ -279,6 +279,7 @@ Native-currency versions of the same metrics are shown next to EUR for non-EUR l
 | FR-TX-11 | S | Quick-add grid for several buys at once (e.g. one monthly contribution spread over five ETFs). | Five buys saved in one submit |
 | FR-TX-12 | S | Realized P&L and income report per calendar year, per account and instrument. | Export to CSV |
 | FR-TX-13 | C | Export all transactions and positions to CSV and JSON. | Export re-imports cleanly through FR-TX-07 |
+| FR-TX-14 | S | Added by the owner after Phase 4. Any stored transaction, imported or typed, can be edited from the position page as well as from Transactions: date, type, account, units, price, fees and the rest. The euro amount is calculated from the inputs while they are typed, by the same arithmetic as saving. | Changing units and price recalculates the amount before saving; the saved row, the lots and the position follow; a change that would sell units never held is refused in words |
 
 ## 8. Valuation, performance and allocation
 
