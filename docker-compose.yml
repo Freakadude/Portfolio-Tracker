@@ -1,16 +1,27 @@
-# Deploy as a Portainer stack on the Docker LXC. Reach it over the LAN or Tailscale only;
-# never put it behind a publicly exposed reverse proxy.
+# Deploy as a Portainer stack on the Docker LXC (see docs/deployment.md). Reach it over the LAN
+# or Tailscale only; never put it behind a publicly exposed reverse proxy.
+#
+# The image is built and published by CI on every green push to main. To build it here instead,
+# add the override: docker compose -f docker-compose.yml -f docker-compose.build.yml up --build
+#
+# Settings come from the stack's environment variables (Portainer's "Environment variables"
+# panel, or a .env file next to this file). A variable left empty is not passed on.
+x-folio-env: &folio-env
+  FOLIO_SECRET_KEY: ${FOLIO_SECRET_KEY:?set FOLIO_SECRET_KEY (uv run folio init makes one)}
+  FOLIO_BASE_URL: # the address links in notifications open, e.g. http://192.168.1.10:8080
+  FOLIO_TZ:
+  FOLIO_LOG_LEVEL:
+  FOLIO_EXTRA_BACKUP_DIR:
+
 services:
   web:
-    image: folio:latest
-    build:
-      context: .
-      dockerfile: docker/Dockerfile
+    image: ${FOLIO_IMAGE:-ghcr.io/freakadude/portfolio-tracker:latest}
+    pull_policy: always
     command: ["web"]
     init: true
-    env_file: .env
+    environment: *folio-env
     volumes: ["folio-data:/data"]
-    ports: ["${FOLIO_LAN_IP:?set FOLIO_LAN_IP in .env}:8080:8080"] # LAN interface only
+    ports: ["${FOLIO_LAN_IP:?set FOLIO_LAN_IP}:8080:8080"] # LAN interface only
     read_only: true
     tmpfs: ["/tmp"]
     security_opt: ["no-new-privileges:true"]
@@ -22,10 +33,11 @@ services:
       retries: 3
     restart: unless-stopped
   worker:
-    image: folio:latest
+    image: ${FOLIO_IMAGE:-ghcr.io/freakadude/portfolio-tracker:latest}
+    pull_policy: always
     command: ["worker"]
     init: true
-    env_file: .env
+    environment: *folio-env
     volumes: ["folio-data:/data"]
     read_only: true
     tmpfs: ["/tmp"]
@@ -39,7 +51,7 @@ services:
     command: ["serve"]
     profiles: ["ntfy"]
     volumes: ["ntfy-data:/var/lib/ntfy"]
-    ports: ["${FOLIO_LAN_IP:?set FOLIO_LAN_IP in .env}:8081:80"]
+    ports: ["${FOLIO_LAN_IP:?set FOLIO_LAN_IP}:8081:80"]
     restart: unless-stopped
 volumes:
   folio-data: {}

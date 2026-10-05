@@ -42,6 +42,6 @@ The tests never call a real service: providers, news sites and the Anthropic API
 
 ## Deployment
 
-Deploy as a Portainer stack on the Docker LXC from [docker-compose.yml](docker-compose.yml): a `web` container (it runs the database migrations on start) and a `worker` container, one volume for `/data`, and `.env` for the secret key and `FOLIO_LAN_IP`. CI builds the image; the first real run is the owner's deployment ([ADR 0003](docs/adr/0003-image-built-in-ci.md)). After an update, redeploy both containers: the worker carries the news, look-through and agent jobs.
+CI builds the image on every green push to `main` and publishes it to `ghcr.io/freakadude/portfolio-tracker` ([ADR 0033](docs/adr/0033-publish-image-to-ghcr.md)). Deploy [docker-compose.yml](docker-compose.yml) as a Portainer stack on the Docker LXC (a `web` container that runs the database migrations on start, and a `worker`; one volume for `/data`), with `FOLIO_SECRET_KEY` and `FOLIO_LAN_IP` set as stack environment variables. To update, press "Update the stack" with "Re-pull image" in Portainer; both containers restart, and the worker carries the news, look-through and agent jobs. The one-time setup (registry access, variables) and rollback are in [docs/deployment.md](docs/deployment.md).
 
 Not exposed to the public internet: LAN or Tailscale only.

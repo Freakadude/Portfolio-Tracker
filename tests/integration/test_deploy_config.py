@@ -58,3 +58,29 @@ def test_env_example_lists_every_documented_variable() -> None:
         "FOLIO_EXTRA_BACKUP_DIR",
     ):
         assert name in text
+
+
+def test_the_stack_pulls_the_published_image_and_needs_no_env_file(
+    compose: dict[str, Any],
+) -> None:
+    for service in ("web", "worker"):
+        svc = compose["services"][service]
+        assert svc["image"].startswith("${FOLIO_IMAGE:-ghcr.io/freakadude/portfolio-tracker:")
+        assert "build" not in svc  # building is the optional override
+        assert "env_file" not in svc  # a Portainer stack has no .env next to it
+        assert svc["pull_policy"] == "always"
+    env = compose["services"]["web"]["environment"]
+    assert env["FOLIO_SECRET_KEY"].startswith("${FOLIO_SECRET_KEY:?")  # refuses to start without
+    assert compose["services"]["worker"]["environment"] == env
+
+
+def test_ci_publishes_only_a_green_main_with_the_workflows_own_token() -> None:
+    workflow = yaml.safe_load((ROOT / ".github" / "workflows" / "ci.yml").read_text("utf-8"))
+    job = workflow["jobs"]["publish"]
+    assert job["if"] == "github.event_name == 'push' && github.ref == 'refs/heads/main'"
+    assert set(job["needs"]) >= {"python", "web", "image", "secrets"}
+    assert job["permissions"] == {"contents": "read", "packages": "write"}
+    assert workflow["permissions"] == {"contents": "read"}  # nothing else can publish
+    text = yaml.safe_dump(job)
+    assert "secrets.GITHUB_TOKEN" in text
+    assert "secrets.GITHUB_TOKEN" not in yaml.safe_dump(workflow["jobs"]["image"])

@@ -1,0 +1,11 @@
+# Optional override: build the image from this checkout instead of pulling the published one.
+#   docker compose -f docker-compose.yml -f docker-compose.build.yml up --build
+# The web service builds the image and the worker reuses it (it only starts once web is healthy).
+services:
+  web:
+    pull_policy: build
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+  worker:
+    pull_policy: never
