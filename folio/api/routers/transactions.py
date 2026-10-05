@@ -198,25 +198,25 @@ def create(body: TransactionIn, _user: UserDep, db: DbDep) -> TransactionOut:
     return transaction_out(db, row)
 
 
-class BatchIn(BaseModel):
+class TransactionBatchIn(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     transactions: list[TransactionIn] = Field(min_length=1, max_length=100)
 
 
-class BatchOut(BaseModel):
+class TransactionBatchOut(BaseModel):
     created: list[TransactionOut]
 
 
-@router.post("/batch", response_model=BatchOut, status_code=201)
-def create_many(body: BatchIn, _user: UserDep, db: DbDep) -> BatchOut:
+@router.post("/batch", response_model=TransactionBatchOut, status_code=201)
+def create_many(body: TransactionBatchIn, _user: UserDep, db: DbDep) -> TransactionBatchOut:
     """Several transactions in one request, saved together or not at all (FR-TX-11): a bad row
     saves nothing and every problem is reported with its row number."""
     try:
         rows = create_batch(db, body.transactions)
     except TransactionError as exc:
         raise _fail(exc) from exc
-    return BatchOut(created=[transaction_out(db, r) for r in rows])
+    return TransactionBatchOut(created=[transaction_out(db, r) for r in rows])
 
 
 class ReconcileRowIn(BaseModel):

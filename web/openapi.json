@@ -365,23 +365,87 @@
         "title": "AuditPage",
         "type": "object"
       },
-      "BatchIn": {
-        "additionalProperties": false,
+      "BatchOut": {
         "properties": {
-          "transactions": {
+          "account_id": {
+            "title": "Account Id",
+            "type": "integer"
+          },
+          "committed_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Committed At"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "errors": {
             "items": {
-              "$ref": "#/components/schemas/TransactionIn"
+              "additionalProperties": true,
+              "type": "object"
             },
-            "maxItems": 100,
-            "minItems": 1,
-            "title": "Transactions",
+            "title": "Errors",
             "type": "array"
+          },
+          "file_name": {
+            "title": "File Name",
+            "type": "string"
+          },
+          "id": {
+            "title": "Id",
+            "type": "integer"
+          },
+          "preset_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Preset Id"
+          },
+          "rows_imported": {
+            "title": "Rows Imported",
+            "type": "integer"
+          },
+          "rows_skipped": {
+            "title": "Rows Skipped",
+            "type": "integer"
+          },
+          "rows_total": {
+            "title": "Rows Total",
+            "type": "integer"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
           }
         },
         "required": [
-          "transactions"
+          "id",
+          "account_id",
+          "file_name",
+          "status",
+          "rows_total",
+          "rows_imported",
+          "rows_skipped",
+          "preset_id",
+          "created_at",
+          "committed_at",
+          "errors"
         ],
-        "title": "BatchIn",
+        "title": "BatchOut",
         "type": "object"
       },
       "BenchmarksOut": {
@@ -3069,7 +3133,7 @@
       "PreviewOut": {
         "properties": {
           "batch": {
-            "$ref": "#/components/schemas/folio__api__routers__imports__BatchOut"
+            "$ref": "#/components/schemas/BatchOut"
           },
           "delimiter": {
             "title": "Delimiter",
@@ -4574,6 +4638,41 @@
         "title": "TotalsOut",
         "type": "object"
       },
+      "TransactionBatchIn": {
+        "additionalProperties": false,
+        "properties": {
+          "transactions": {
+            "items": {
+              "$ref": "#/components/schemas/TransactionIn"
+            },
+            "maxItems": 100,
+            "minItems": 1,
+            "title": "Transactions",
+            "type": "array"
+          }
+        },
+        "required": [
+          "transactions"
+        ],
+        "title": "TransactionBatchIn",
+        "type": "object"
+      },
+      "TransactionBatchOut": {
+        "properties": {
+          "created": {
+            "items": {
+              "$ref": "#/components/schemas/TransactionOut"
+            },
+            "title": "Created",
+            "type": "array"
+          }
+        },
+        "required": [
+          "created"
+        ],
+        "title": "TransactionBatchOut",
+        "type": "object"
+      },
       "TransactionChanges": {
         "additionalProperties": false,
         "description": "Any subset of the input fields; the merged result is validated again.",
@@ -5578,89 +5677,6 @@
         "title": "AccountOut",
         "type": "object"
       },
-      "folio__api__routers__imports__BatchOut": {
-        "properties": {
-          "account_id": {
-            "title": "Account Id",
-            "type": "integer"
-          },
-          "committed_at": {
-            "anyOf": [
-              {
-                "format": "date-time",
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Committed At"
-          },
-          "created_at": {
-            "format": "date-time",
-            "title": "Created At",
-            "type": "string"
-          },
-          "errors": {
-            "items": {
-              "additionalProperties": true,
-              "type": "object"
-            },
-            "title": "Errors",
-            "type": "array"
-          },
-          "file_name": {
-            "title": "File Name",
-            "type": "string"
-          },
-          "id": {
-            "title": "Id",
-            "type": "integer"
-          },
-          "preset_id": {
-            "anyOf": [
-              {
-                "type": "integer"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Preset Id"
-          },
-          "rows_imported": {
-            "title": "Rows Imported",
-            "type": "integer"
-          },
-          "rows_skipped": {
-            "title": "Rows Skipped",
-            "type": "integer"
-          },
-          "rows_total": {
-            "title": "Rows Total",
-            "type": "integer"
-          },
-          "status": {
-            "title": "Status",
-            "type": "string"
-          }
-        },
-        "required": [
-          "id",
-          "account_id",
-          "file_name",
-          "status",
-          "rows_total",
-          "rows_imported",
-          "rows_skipped",
-          "preset_id",
-          "created_at",
-          "committed_at",
-          "errors"
-        ],
-        "title": "BatchOut",
-        "type": "object"
-      },
       "folio__api__routers__instruments__PriceOut": {
         "properties": {
           "close": {
@@ -5958,22 +5974,6 @@
           "cost_basis_method"
         ],
         "title": "AccountOut",
-        "type": "object"
-      },
-      "folio__api__routers__transactions__BatchOut": {
-        "properties": {
-          "created": {
-            "items": {
-              "$ref": "#/components/schemas/TransactionOut"
-            },
-            "title": "Created",
-            "type": "array"
-          }
-        },
-        "required": [
-          "created"
-        ],
-        "title": "BatchOut",
         "type": "object"
       },
       "folio__api__routers__transactions__MatchOut": {
@@ -6660,7 +6660,7 @@
               "application/json": {
                 "schema": {
                   "items": {
-                    "$ref": "#/components/schemas/folio__api__routers__imports__BatchOut"
+                    "$ref": "#/components/schemas/BatchOut"
                   },
                   "title": "Response History Api V1 Imports Get",
                   "type": "array"
@@ -6820,7 +6820,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/folio__api__routers__imports__BatchOut"
+                  "$ref": "#/components/schemas/BatchOut"
                 }
               }
             },
@@ -9234,7 +9234,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/BatchIn"
+                "$ref": "#/components/schemas/TransactionBatchIn"
               }
             }
           },
@@ -9245,7 +9245,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/folio__api__routers__transactions__BatchOut"
+                  "$ref": "#/components/schemas/TransactionBatchOut"
                 }
               }
             },

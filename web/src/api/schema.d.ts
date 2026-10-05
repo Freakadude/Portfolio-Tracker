@@ -1193,10 +1193,35 @@ export interface components {
             /** Next Cursor */
             next_cursor: number | null;
         };
-        /** BatchIn */
-        BatchIn: {
-            /** Transactions */
-            transactions: components["schemas"]["TransactionIn"][];
+        /** BatchOut */
+        BatchOut: {
+            /** Account Id */
+            account_id: number;
+            /** Committed At */
+            committed_at: string | null;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Errors */
+            errors: {
+                [key: string]: unknown;
+            }[];
+            /** File Name */
+            file_name: string;
+            /** Id */
+            id: number;
+            /** Preset Id */
+            preset_id: number | null;
+            /** Rows Imported */
+            rows_imported: number;
+            /** Rows Skipped */
+            rows_skipped: number;
+            /** Rows Total */
+            rows_total: number;
+            /** Status */
+            status: string;
         };
         /** BenchmarksOut */
         BenchmarksOut: {
@@ -1925,7 +1950,7 @@ export interface components {
         };
         /** PreviewOut */
         PreviewOut: {
-            batch: components["schemas"]["folio__api__routers__imports__BatchOut"];
+            batch: components["schemas"]["BatchOut"];
             /** Delimiter */
             delimiter: string;
             /** Encoding */
@@ -2373,6 +2398,16 @@ export interface components {
             /** Unvalued Positions */
             unvalued_positions: number;
         };
+        /** TransactionBatchIn */
+        TransactionBatchIn: {
+            /** Transactions */
+            transactions: components["schemas"]["TransactionIn"][];
+        };
+        /** TransactionBatchOut */
+        TransactionBatchOut: {
+            /** Created */
+            created: components["schemas"]["TransactionOut"][];
+        };
         /**
          * TransactionChanges
          * @description Any subset of the input fields; the merged result is validated again.
@@ -2623,36 +2658,6 @@ export interface components {
             /** Transaction Count */
             transaction_count: number;
         };
-        /** BatchOut */
-        folio__api__routers__imports__BatchOut: {
-            /** Account Id */
-            account_id: number;
-            /** Committed At */
-            committed_at: string | null;
-            /**
-             * Created At
-             * Format: date-time
-             */
-            created_at: string;
-            /** Errors */
-            errors: {
-                [key: string]: unknown;
-            }[];
-            /** File Name */
-            file_name: string;
-            /** Id */
-            id: number;
-            /** Preset Id */
-            preset_id: number | null;
-            /** Rows Imported */
-            rows_imported: number;
-            /** Rows Skipped */
-            rows_skipped: number;
-            /** Rows Total */
-            rows_total: number;
-            /** Status */
-            status: string;
-        };
         /** PriceOut */
         folio__api__routers__instruments__PriceOut: {
             /** Close */
@@ -2741,11 +2746,6 @@ export interface components {
             id: number;
             /** Name */
             name: string;
-        };
-        /** BatchOut */
-        folio__api__routers__transactions__BatchOut: {
-            /** Created */
-            created: components["schemas"]["TransactionOut"][];
         };
         /** MatchOut */
         folio__api__routers__transactions__MatchOut: {
@@ -3187,7 +3187,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["folio__api__routers__imports__BatchOut"][];
+                    "application/json": components["schemas"]["BatchOut"][];
                 };
             };
         };
@@ -3306,7 +3306,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["folio__api__routers__imports__BatchOut"];
+                    "application/json": components["schemas"]["BatchOut"];
                 };
             };
             /** @description Validation Error */
@@ -4568,7 +4568,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["BatchIn"];
+                "application/json": components["schemas"]["TransactionBatchIn"];
             };
         };
         responses: {
@@ -4578,7 +4578,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["folio__api__routers__transactions__BatchOut"];
+                    "application/json": components["schemas"]["TransactionBatchOut"];
                 };
             };
             /** @description Validation Error */
