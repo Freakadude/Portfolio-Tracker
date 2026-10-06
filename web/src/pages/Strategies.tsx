@@ -26,6 +26,7 @@ import { Backtest } from '../strategies/Backtest'
 import { FormEditor } from '../strategies/FormEditor'
 import { Wizard } from '../strategies/Wizard'
 import { YamlEditor } from '../strategies/YamlEditor'
+import { JobStatus } from '../system/JobStatus'
 
 type Tab = 'editor' | 'rules' | 'calculators' | 'backtest' | 'history'
 const TABS: Tab[] = ['editor', 'rules', 'calculators', 'backtest', 'history']
@@ -184,11 +185,7 @@ function StrategyView({ id }: { id: number }) {
         </div>
       </div>
       <p className="text-sm text-muted">{t(`strategies.modeHint.${s.mode}`)}</p>
-      {run.isSuccess && (
-        <p role="status" className="text-sm">
-          {t('strategies.runQueued')}
-        </p>
-      )}
+      <JobStatus jobs={['rules']} from={run} />
       {mode.isError && <Alert>{errorMessage(mode.error)}</Alert>}
       {remove.isError && <Alert>{errorMessage(remove.error)}</Alert>}
 

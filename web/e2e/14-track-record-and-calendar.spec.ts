@@ -65,7 +65,7 @@ test('events are added, changed and deleted on the calendar', async ({ page }) =
   await expect(table.getByRole('row', { name: /E2E annual meeting/ })).toContainText(moved)
 
   await page.getByRole('button', { name: 'Refresh dates' }).click()
-  await expect(page.getByText(/Asked the worker to refresh/)).toBeVisible()
+  await expect(page.getByText(/(Asking the worker|Waiting for the worker)/)).toBeVisible()
 
   page.once('dialog', (d) => void d.accept())
   await page.getByRole('button', { name: 'Delete E2E annual meeting' }).click()

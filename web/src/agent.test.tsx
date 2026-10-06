@@ -223,7 +223,7 @@ describe('recommendations on Insights (FR-AG-05)', () => {
     renderAt(<Recommendations />)
     expect(await screen.findByText('Nothing is waiting for a decision.')).toBeInTheDocument()
     await userEvent.click(screen.getByRole('button', { name: 'Run a review now' }))
-    expect(await screen.findByText(/Asked the worker for a review/)).toBeInTheDocument()
+    expect(await screen.findByText(/Asking the worker to start/)).toBeInTheDocument()
     expect(calls.find((c) => c.path === '/api/v1/agent/runs')?.body).toEqual({
       run_type: 'daily_review',
       question: null,

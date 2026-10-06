@@ -87,8 +87,7 @@
       "eodhd": "Use EODHD fundamentals",
       "save": "Save",
       "saved": "Saved.",
-      "refresh": "Refresh now",
-      "queued": "Asked the worker to refresh. It appears here when done."
+      "refresh": "Refresh now"
     }
   }
 }

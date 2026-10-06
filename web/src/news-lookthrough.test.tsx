@@ -248,7 +248,7 @@ describe('what a fund holds (FR-MD-09)', () => {
       }),
     )
     await userEvent.click(screen.getByRole('button', { name: 'Refresh now' }))
-    expect(await screen.findByText(/Asked the worker to refresh/)).toBeInTheDocument()
+    expect(await screen.findByText(/Asking the worker to start/)).toBeInTheDocument()
   })
 })
 
@@ -637,7 +637,7 @@ describe('news sources', () => {
     await userEvent.click(
       await screen.findByRole('button', { name: 'Fetch now ECB press releases' }),
     )
-    expect(await screen.findByText(/Asked the worker to fetch/)).toBeInTheDocument()
+    expect(await screen.findByText(/Asking the worker to start/)).toBeInTheDocument()
     await userEvent.click(screen.getByRole('button', { name: 'Delete ECB press releases' }))
     await waitFor(() =>
       expect(calls.some((c) => c.method === 'DELETE' && c.path.endsWith('/3'))).toBe(true),

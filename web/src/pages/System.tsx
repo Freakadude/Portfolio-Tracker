@@ -9,6 +9,7 @@ import { SystemInfo } from '../notify/SystemInfo'
 import { BackupsPanel } from '../system/BackupsPanel'
 import { MarketsPanel } from '../system/MarketsPanel'
 import { Alert, Button, Field, Input, Select } from '../components/ui'
+import { JobStatus } from '../system/JobStatus'
 
 export function System() {
   const { t } = useTranslation()
@@ -116,7 +117,7 @@ function Jobs() {
           {t('system.jobs.refresh')}
         </Button>
       </div>
-      {refresh.isSuccess && <p role="status">{t('system.jobs.queued')}</p>}
+      <JobStatus jobs={['refresh']} from={refresh} onDone={() => void jobs.refetch()} />
       {refresh.isError && <Alert>{errorMessage(refresh.error)}</Alert>}
       {jobs.isError && <Alert>{errorMessage(jobs.error)}</Alert>}
 

@@ -1,15 +1,17 @@
-import { useMutation } from '@tanstack/react-query'
+import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
 import { api, errorMessage, unwrap } from '../api/client'
 import { SectionForm } from '../components/SectionForm'
 import { Alert, Button, Help } from '../components/ui'
 import { useMacroSeries } from './api'
+import { JobStatus } from '../system/JobStatus'
 
 /** Settings, Macro: the indicator series fetched every morning, what is stored, and a way to
  * fetch now (FR-MD-08). FRED series need the free key under Providers. */
 export function MacroTab() {
   const { t } = useTranslation()
   const series = useMacroSeries()
+  const queryClient = useQueryClient()
   const fetchNow = useMutation({ mutationFn: () => unwrap(api.POST('/api/v1/macro/refresh')) })
   return (
     <div className="space-y-6">
@@ -60,12 +62,12 @@ export function MacroTab() {
         <Button variant="secondary" onClick={() => fetchNow.mutate()} disabled={fetchNow.isPending}>
           {t('macroSettings.fetchNow')}
         </Button>
-        {fetchNow.isSuccess && (
-          <span role="status" className="text-sm">
-            {t('macroSettings.queued')}
-          </span>
-        )}
       </div>
+      <JobStatus
+        jobs={['macro']}
+        from={fetchNow}
+        onDone={() => void queryClient.invalidateQueries({ queryKey: ['macro'] })}
+      />
       {fetchNow.isError && <Alert>{errorMessage(fetchNow.error)}</Alert>}
       <SectionForm section="macro" />
     </div>

@@ -11,6 +11,7 @@ import { PriceChart } from '../components/PriceChart'
 import { PriceAlerts } from '../notify/PriceAlerts'
 import { Alert, Button, Card, Field, Input, Select } from '../components/ui'
 import { useFormat } from '../lib/useFormat'
+import { JobStatus } from '../system/JobStatus'
 
 const KEY = ['watchlists'] as const
 
@@ -170,6 +171,7 @@ function WatchlistBody({ list }: { list: List }) {
           {t('watchlist.fetching')}
         </p>
       )}
+      <JobStatus jobs={['refresh', 'backfill']} from={fetchNow} />
       {fetchNow.isError && <Alert>{errorMessage(fetchNow.error)}</Alert>}
       {add.isError && <Alert>{errorMessage(add.error)}</Alert>}
       {remove.isError && <Alert>{errorMessage(remove.error)}</Alert>}

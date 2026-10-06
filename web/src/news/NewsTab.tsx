@@ -13,6 +13,7 @@ import {
   type NewsSource,
   type NewsSourceInput,
 } from './api'
+import { JobStatus } from '../system/JobStatus'
 
 const EMPTY: NewsSourceInput = {
   name: '',
@@ -86,11 +87,7 @@ export function NewsTab() {
           </tbody>
         </table>
       </div>
-      {fetchNow.isSuccess && (
-        <p role="status" className="text-sm">
-          {t('newsSettings.queued')}
-        </p>
-      )}
+      <JobStatus jobs={['news']} from={fetchNow} />
       {fetchNow.isError && <Alert>{errorMessage(fetchNow.error)}</Alert>}
       {editing ? (
         <SourceForm

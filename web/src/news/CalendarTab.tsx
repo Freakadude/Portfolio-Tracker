@@ -12,6 +12,7 @@ import {
   useSaveEvent,
   type CalendarEvent,
 } from './calendarApi'
+import { JobStatus } from '../system/JobStatus'
 
 /** Dated events (FR-NW-09): ready-made central bank decisions, earnings of directly held
  * equities when EODHD provides them, and your own. A brief goes out the evening before. */
@@ -46,11 +47,7 @@ export function CalendarTab() {
             <Button onClick={() => setEditing('new')}>{t('calendar.add')}</Button>
           </div>
         </div>
-        {refresh.isSuccess && (
-          <p role="status" className="text-sm text-muted">
-            {t('calendar.refreshQueued')}
-          </p>
-        )}
+        <JobStatus jobs={['calendar']} from={refresh} />
         {events.isError && <Alert>{errorMessage(events.error)}</Alert>}
         {remove.isError && <Alert>{errorMessage(remove.error)}</Alert>}
         {events.isPending && <p role="status">{t('app.loading')}</p>}

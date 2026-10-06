@@ -131,7 +131,7 @@ describe('the calendar tab (FR-NW-09)', () => {
     const { calls } = mockApi({ ...routes(), 'POST /api/v1/calendar/refresh': { queued: true } })
     show()
     await userEvent.click(await screen.findByRole('button', { name: 'Refresh dates' }))
-    expect(await screen.findByText(/Asked the worker to refresh/)).toBeInTheDocument()
+    expect(await screen.findByText(/Asking the worker to start/)).toBeInTheDocument()
     expect(calls.some((c) => c.method === 'POST' && c.path === '/api/v1/calendar/refresh')).toBe(
       true,
     )

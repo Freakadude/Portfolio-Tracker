@@ -42,7 +42,11 @@
       "weeks": "Over weeks",
       "structural": "Structural"
     },
-    "level": { "low": "low", "medium": "medium", "high": "high" },
+    "level": {
+      "low": "low",
+      "medium": "medium",
+      "high": "high"
+    },
     "confidence": "Confidence: {{level}}",
     "affects": "Affects: {{names}}.",
     "links": "What it is linked to",
@@ -79,14 +83,16 @@
       "status": "Status",
       "actions": ""
     },
-    "kinds": { "rss": "Feed", "eodhd": "EODHD news" },
+    "kinds": {
+      "rss": "Feed",
+      "eodhd": "EODHD news"
+    },
     "off": "off",
     "trust": "Trust {{trust}}",
     "items": "{{count}} stories stored",
     "ok": "Working",
     "failing": "Failing ({{count}})",
     "fetch": "Fetch now",
-    "queued": "Asked the worker to fetch. New stories appear on the News page.",
     "edit": "Edit",
     "delete": "Delete",
     "deleteConfirm": "Delete the source {{name}}?",
@@ -135,7 +141,6 @@
     "deleteButton": "Delete",
     "deleteConfirm": "Delete \"{{title}}\" on {{date}}?",
     "refresh": "Refresh dates",
-    "refreshQueued": "Asked the worker to refresh the dates. Reload in a moment.",
     "verify": "The ready-made dates (ECB and Federal Reserve decisions) come from the banks' published schedules: check them against ecb.europa.eu and federalreserve.gov. The evening before an event Folio sends a short brief from the agent, or a plain reminder when the agent is off.",
     "settings": "Earnings dates",
     "settingsHelp": "Earnings dates of the equities you hold come from EODHD's earnings calendar, which needs a plan that includes it. Until you switch it on, add earnings dates yourself.",

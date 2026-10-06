@@ -198,7 +198,7 @@ describe('strategies (FR-ST-01, FR-ST-02)', () => {
     await waitFor(() => expect(calls.some((c) => c.path.endsWith('/mode'))).toBe(true))
     expect(calls.find((c) => c.path.endsWith('/mode'))?.body).toEqual({ mode: 'active' })
     await userEvent.click(screen.getByRole('button', { name: 'Run rules now' }))
-    expect(await screen.findByText('The rules run within a few seconds.')).toBeInTheDocument()
+    expect(await screen.findByText(/Asking the worker to start/)).toBeInTheDocument()
   })
 })
 

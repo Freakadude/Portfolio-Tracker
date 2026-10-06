@@ -18,7 +18,6 @@
     },
     "label": "AI-generated, not financial advice. Folio's own calculators work out every order; the agent only chooses what to look at and explains why.",
     "runNow": "Run a review now",
-    "queued": "Asked the worker for a review. New recommendations appear here when it is done.",
     "budget": "AI cost this month: {{spent}} of {{budget}} EUR.",
     "noKey": "Add your Anthropic API key under Settings, Agent to switch the agent on.",
     "paused": "The budget is used up; the agent is paused.",
@@ -53,7 +52,10 @@
       "price": "Price",
       "amount": "Amount"
     },
-    "side": { "buy": "Buy", "sell": "Sell" },
+    "side": {
+      "buy": "Buy",
+      "sell": "Sell"
+    },
     "stale": "The portfolio or the prices have changed since this advice was made, so its order list is out of date. Ask for a new review before making drafts.",
     "evidence": "Evidence and sources",
     "kind": {

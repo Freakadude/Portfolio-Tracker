@@ -14,6 +14,7 @@ import {
   type RecStatus,
   type Recommendation,
 } from './api'
+import { JobStatus } from '../system/JobStatus'
 
 const TONE = {
   critical: 'bad',
@@ -77,11 +78,7 @@ export function Recommendations() {
           {budget.data.paused && ` ${t('recs.paused')}`}
         </p>
       )}
-      {run.isSuccess && (
-        <p role="status" className="text-sm">
-          {t('recs.queued')}
-        </p>
-      )}
+      <JobStatus jobs={['agent_run']} from={run} />
       {run.isError && <Alert>{errorMessage(run.error)}</Alert>}
       {list.isError && <Alert>{errorMessage(list.error)}</Alert>}
       {list.isSuccess && items.length === 0 && (

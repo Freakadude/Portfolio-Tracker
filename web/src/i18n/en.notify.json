@@ -111,8 +111,7 @@
     },
     "notListed": "no longer on the list",
     "none": "Nothing yet",
-    "fetchNow": "Fetch now",
-    "queued": "Fetching within a few seconds."
+    "fetchNow": "Fetch now"
   },
   "alerts": {
     "title": "Price alerts for {{name}}",

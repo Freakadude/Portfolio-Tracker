@@ -91,7 +91,7 @@ test('system: usage, the refresh button and the audit log with old and new value
   await expect(usage.getByRole('row', { name: /yahoo/i })).toBeVisible()
 
   await page.getByRole('button', { name: 'Refresh prices now' }).click()
-  await expect(page.getByText(/Asked the worker to refresh prices/)).toBeVisible()
+  await expect(page.getByText(/(Asking the worker|Waiting for the worker)/)).toBeVisible()
 
   const log = page.getByRole('table', { name: /Changes made to your data/ })
   await expect(log.getByRole('row', { name: /transaction #\d+/ }).first()).toBeVisible()

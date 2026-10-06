@@ -72,6 +72,15 @@
       "deleteConfirm": "Delete the proposed dividend of {{name}} on {{date}}? It will not be proposed again."
     }
   },
+  "jobStatus": {
+    "asking": "Asking the worker to start...",
+    "waiting": "Waiting for the worker to pick it up (usually a few seconds)...",
+    "running": "The worker is on it...",
+    "done": "Finished at {{time}}.",
+    "failed": "It did not work: {{reason}}",
+    "noReason": "the worker gave no reason; the System page has its log",
+    "slow": "This is taking longer than usual. The worker may not be running: check the System page."
+  },
   "system": {
     "markets": {
       "title": "Market hours",
@@ -111,7 +120,6 @@
     "jobs": {
       "title": "Jobs",
       "refresh": "Refresh prices now",
-      "queued": "Asked the worker to refresh prices. It starts within a few seconds.",
       "runsCaption": "Recent job runs",
       "requestsCaption": "Requests waiting for the worker",
       "requests": "Requests",

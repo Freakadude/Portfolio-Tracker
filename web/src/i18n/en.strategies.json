@@ -22,7 +22,6 @@
       "off": "Not evaluated."
     },
     "runNow": "Run rules now",
-    "runQueued": "The rules run within a few seconds.",
     "tabs": {
       "editor": "Editor",
       "rules": "Rules and signals",

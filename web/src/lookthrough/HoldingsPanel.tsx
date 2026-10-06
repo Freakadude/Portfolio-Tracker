@@ -13,6 +13,7 @@ import {
   type HoldingsMapping,
   type HoldingsPreview,
 } from './api'
+import { JobStatus } from '../system/JobStatus'
 
 const COLUMNS = ['name', 'weight', 'isin', 'ticker', 'sector', 'country', 'currency'] as const
 
@@ -329,12 +330,8 @@ function Source({
             {t('etfHoldings.source.saved')}
           </span>
         )}
-        {refresh.isSuccess && (
-          <span role="status" className="text-sm">
-            {t('etfHoldings.source.queued')}
-          </span>
-        )}
       </div>
+      <JobStatus jobs={['lookthrough']} from={refresh} />
       {save.isError && <Alert>{errorMessage(save.error)}</Alert>}
       {refresh.isError && <Alert>{errorMessage(refresh.error)}</Alert>}
     </form>

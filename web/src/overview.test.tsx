@@ -153,7 +153,7 @@ describe('System', () => {
     expect(within(usage).getByRole('row', { name: /yahoo/i })).toHaveTextContent('No limit')
 
     await userEvent.click(screen.getByRole('button', { name: 'Refresh prices now' }))
-    expect(await screen.findByText(/Asked the worker to refresh prices/)).toBeInTheDocument()
+    expect(await screen.findByText(/Asking the worker to start/)).toBeInTheDocument()
     expect(
       calls.some((c) => c.method === 'POST' && c.path === '/api/v1/system/jobs/refresh/run'),
     ).toBe(true)

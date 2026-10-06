@@ -309,7 +309,7 @@ describe('macro (FR-MD-08)', () => {
     const row = (await screen.findByText('US 10-year real yield')).closest('tr') as HTMLElement
     expect(row).toHaveTextContent('2.34 (2024-06-14)')
     await userEvent.click(screen.getByRole('button', { name: 'Fetch now' }))
-    expect(await screen.findByText('Fetching within a few seconds.')).toBeInTheDocument()
+    expect(await screen.findByText(/Asking the worker to start/)).toBeInTheDocument()
     expect(calls.some((c) => c.path === '/api/v1/macro/refresh')).toBe(true)
   })
 })
