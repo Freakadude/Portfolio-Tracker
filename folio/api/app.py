@@ -31,6 +31,7 @@ from folio.api.routers import (
     positions,
     recommendations,
     reports,
+    schedules,
     sleeves,
     strategies,
     strategy_review,
@@ -88,6 +89,7 @@ def create_app(
     app.include_router(auth.router, prefix=API_PREFIX)
     app.include_router(setup_router.router, prefix=API_PREFIX)
     app.include_router(settings_router.router, prefix=API_PREFIX)
+    app.include_router(schedules.router, prefix=API_PREFIX)
     app.include_router(accounts.router, prefix=API_PREFIX)
     app.include_router(instruments.router, prefix=API_PREFIX)
     app.include_router(holdings.router, prefix=API_PREFIX)

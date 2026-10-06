@@ -136,16 +136,26 @@ class AgentSettings(Section):
 
 
 class SchedulesSettings(Section):
-    """Cron overrides per job name, e.g. {"nightly_eod": "30 19 * * 1-5"}."""
+    """Cron overrides per job name, e.g. {"snapshots": "30 22 * * mon-fri"} (see folio.jobs.cron
+    for the jobs that can be moved)."""
 
     cron_overrides: dict[str, str] = Field(default_factory=dict)
 
     @field_validator("cron_overrides")
     @classmethod
     def _cron(cls, v: dict[str, str]) -> dict[str, str]:
+        from folio.jobs.cron import OVERRIDABLE, parse_cron
+
         for job, expr in v.items():
-            if len(expr.split()) != 5:
-                raise ValueError(f"Cron expression for {job!r} needs 5 fields, got {expr!r}.")
+            if job not in OVERRIDABLE:
+                raise ValueError(
+                    f"{job!r} is not a job that can be moved: {', '.join(OVERRIDABLE)}."
+                )
+            info = OVERRIDABLE[job]
+            try:
+                parse_cron(expr, info.tz)
+            except ValueError as exc:
+                raise ValueError(f"{job}: {exc}") from exc
         return v
 
 

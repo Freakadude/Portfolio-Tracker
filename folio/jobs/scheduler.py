@@ -30,6 +30,7 @@ from folio.db.models_ledger import JobRequest
 from folio.jobs.agent import agent_ask_job, agent_run_job, agent_tick, outcomes_job
 from folio.jobs.calendar import calendar_job, event_briefs_job
 from folio.jobs.context import JobContext
+from folio.jobs.cron import LOCAL_TZ, OVERRIDABLE, parse_cron
 from folio.jobs.lookthrough import lookthrough_job
 from folio.jobs.macro import macro_job
 from folio.jobs.market import (
@@ -52,7 +53,6 @@ from folio.marketdata import exchanges
 
 log = get_logger("folio.scheduler")
 
-LOCAL_TZ = "Europe/Amsterdam"
 MISFIRE_GRACE_SECONDS = 6 * 3600
 POLL_SECONDS = 5
 AGENT_SECONDS = 300  # what is due for the AI agent (FR-AG-01)
@@ -109,6 +109,7 @@ JOB_PARAMS: dict[str, tuple[str, ...]] = {
     "agent_ask": ("run_id",),
     "calendar": (),
     "quarterly_review": ("quarter",),
+    "reschedule": (),
 }
 
 
@@ -117,6 +118,11 @@ def _refresh(ctx: JobContext) -> JobResult:
     snapshots_job(ctx)  # new closes change the recent values
     rules_job(ctx)  # and may move a sleeve out of its band
     return result
+
+
+def _rescheduled(ctx: JobContext) -> JobResult:
+    count = apply_overrides(ctx)
+    return JobResult(0, "reschedule", "ok", f"{count} schedules set.")
 
 
 def handlers(
@@ -133,6 +139,7 @@ def handlers(
         "backup": lambda p: backup_job(ctx, settings),
         "refresh": lambda p: _refresh(ctx),
         "quotes": lambda p: quotes_job(ctx),
+        "reschedule": lambda p: _rescheduled(ctx),
         "retention": lambda p: retention_job(ctx),
         "rules": lambda p: rules_job(ctx),
         "macro": lambda p: macro_job(ctx),
@@ -217,7 +224,7 @@ def eod_trigger(mic: str) -> CronTrigger:
     )
 
 
-def build_schedules() -> list[Schedule]:
+def build_schedules(overrides: dict[str, str] | None = None) -> list[Schedule]:
     schedules = [Schedule(f"eod-{mic}", eod_trigger(mic)) for mic in exchanges.EXCHANGES]
     local = {"timezone": LOCAL_TZ}
     schedules += [
@@ -256,7 +263,47 @@ def build_schedules() -> list[Schedule]:
         Schedule("quotes", CronTrigger(minute="*/15", timezone="UTC")),  # FR-MD-05
         Schedule("actions", CronTrigger(day_of_week="sun", hour=9, minute=0, **local)),
     ]
-    return schedules
+    # times the owner has chosen replace the normal ones (Settings, Schedules)
+    moved = {j: x for j, x in (overrides or {}).items() if j in OVERRIDABLE}
+    return [
+        Schedule(sc.job_id, parse_cron(moved[sc.job_id], OVERRIDABLE[sc.job_id].tz))
+        if sc.job_id in moved
+        else sc
+        for sc in schedules
+    ]
+
+
+def stored_overrides(ctx: JobContext) -> dict[str, str]:
+    """The schedule changes saved under Settings, Schedules; empty if none or unreadable."""
+    from folio.settings_schema import SchedulesSettings
+    from folio.settings_store import load_section
+
+    try:
+        with ctx.session_factory() as db:
+            section = load_section(db, "schedules")
+            assert isinstance(section, SchedulesSettings)  # noqa: S101 - narrows the type
+            return dict(section.cron_overrides)
+    except Exception:  # noqa: BLE001 - a bad saved value must not stop the worker starting
+        log.exception("could not read the saved schedules")
+        return {}
+
+
+_scheduler: BackgroundScheduler | None = None
+
+
+def apply_overrides(ctx: JobContext) -> int:
+    """Move the running jobs to the saved times (and back to normal where a change was
+    removed). Returns how many jobs were set."""
+    if _scheduler is None:
+        return 0
+    wanted = {sc.job_id: sc.trigger for sc in build_schedules(stored_overrides(ctx))}
+    count = 0
+    for job_id, trigger in wanted.items():
+        if job_id.startswith("eod-") or _scheduler.get_job(job_id) is None:
+            continue
+        _scheduler.reschedule_job(job_id, trigger=trigger)
+        count += 1
+    return count
 
 
 # A persistent job store pickles each job's callable, so jobs are registered by importable name
@@ -364,6 +411,7 @@ def make_scheduler(
 ) -> BackgroundScheduler:
     """Scheduler with every job registered. One scheduled job runs at a time: SQLite has a
     single writer, and the nightly jobs are short."""
+    global _scheduler  # noqa: PLW0603 - the worker's one scheduler, for reschedule requests
     set_runtime(ctx, settings)
     store: BaseJobStore = (
         SQLAlchemyJobStore(url=settings.db_url, tablename="apscheduler_jobs")
@@ -379,7 +427,8 @@ def make_scheduler(
             "misfire_grace_time": MISFIRE_GRACE_SECONDS,
         },
     )
-    for schedule in build_schedules():
+    _scheduler = scheduler
+    for schedule in build_schedules(stored_overrides(ctx)):
         if schedule.job_id.startswith("eod-"):
             scheduler.add_job(
                 f"{_MODULE}:run_eod",

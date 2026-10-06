@@ -1,0 +1,31 @@
+{
+  "schedules": {
+    "intro": "Folio's worker runs jobs in the background: fetching prices and exchange rates, saving daily snapshots, checking your rules and news, and making backups. Here you can see what each one does, when it runs next, and move it to a time that suits you.",
+    "helpTitle": "How do I change a time? Examples",
+    "help1": "Press Change on a job and write its time as five parts separated by spaces: minute, hour, day of the month, month, weekday. A star (*) means every one. Write weekdays as names (mon, tue, wed, thu, fri, sat, sun), a dash for a range (mon-fri) and commas for several values.",
+    "help2": "Some times you could use (press them in the Change window to fill them in):",
+    "help3": "Times are in {{zone}} time. A change applies within seconds and survives a restart; Put back returns the job to its normal time. Fetching prices more often than normal uses more of a provider's daily call allowance.",
+    "caption": "Background jobs and their times",
+    "columns": {
+      "job": "Job",
+      "normal": "Normally",
+      "now": "Now",
+      "next": "Next run",
+      "actions": ""
+    },
+    "changed": "set by you",
+    "asNormal": "as normal",
+    "change": "Change the time of {{name}}",
+    "changeShort": "Change",
+    "putBack": "Put {{name}} back to its normal time",
+    "putBackShort": "Put back",
+    "fixedTitle": "These follow the markets and cannot be moved:",
+    "editTitle": "When should {{name}} run?",
+    "normallyRuns": "Normally it runs {{when}}.",
+    "cronLabel": "Time",
+    "cronHint": "Minute, hour, day of month, month, weekday, in {{zone}} time. For example 30 19 * * mon-fri is weekdays at 19:30.",
+    "tryOne": "Or start from one of these:",
+    "useNormal": "The normal time",
+    "save": "Save time"
+  }
+}

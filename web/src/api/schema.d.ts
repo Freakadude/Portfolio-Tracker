@@ -1846,6 +1846,40 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/schedules": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Schedules */
+        get: operations["list_schedules_api_v1_schedules_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/schedules/{job_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Set Schedule */
+        put: operations["set_schedule_api_v1_schedules__job_id__put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/settings/{section}": {
         parameters: {
             query?: never;
@@ -3847,6 +3881,13 @@ export interface components {
             /** Quantity Before */
             quantity_before: string;
         };
+        /** ExampleOut */
+        ExampleOut: {
+            /** Cron */
+            cron: string;
+            /** Words */
+            words: string;
+        };
         /** FeedPreviewIn */
         FeedPreviewIn: {
             /** Url */
@@ -5512,6 +5553,43 @@ export interface components {
             params?: {
                 [key: string]: unknown;
             };
+        };
+        /** ScheduleIn */
+        ScheduleIn: {
+            /** Cron */
+            cron: string | null;
+        };
+        /** ScheduleOut */
+        ScheduleOut: {
+            /** Changed */
+            changed: boolean;
+            /** Cron */
+            cron: string;
+            /** Job Id */
+            job_id: string;
+            /** Next Run */
+            next_run: string | null;
+            /** Normal */
+            normal: string;
+            /** Normal Cron */
+            normal_cron: string;
+            /** Timezone */
+            timezone: string;
+            /** Title */
+            title: string;
+            /** What */
+            what: string;
+        };
+        /** SchedulesOut */
+        SchedulesOut: {
+            /** Examples */
+            examples: components["schemas"]["ExampleOut"][];
+            /** Fixed */
+            fixed: string[];
+            /** Items */
+            items: components["schemas"]["ScheduleOut"][];
+            /** Timezone */
+            timezone: string;
         };
         /** SellPreviewOut */
         SellPreviewOut: {
@@ -10223,6 +10301,61 @@ export interface operations {
                 };
                 content: {
                     "application/json": number[];
+                };
+            };
+        };
+    };
+    list_schedules_api_v1_schedules_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SchedulesOut"];
+                };
+            };
+        };
+    };
+    set_schedule_api_v1_schedules__job_id__put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                job_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ScheduleIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ScheduleOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
                 };
             };
         };

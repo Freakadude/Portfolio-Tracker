@@ -101,3 +101,22 @@ test('the Reconcile button says what it does, and the position sections fold awa
   await expect(history).toHaveAttribute('aria-expanded', 'false')
   await history.click()
 })
+
+test('the Schedules settings explain themselves and move a job', async ({ page }) => {
+  await login(page)
+  await page.getByRole('link', { name: 'Settings' }).click()
+  await page.getByRole('tab', { name: 'Schedules' }).click()
+  await expect(page.getByText('How do I change a time? Examples')).toBeVisible()
+  await expect(page.getByRole('row', { name: /Value snapshots/ })).toContainText(
+    'every day at 23:00',
+  )
+  await page.getByRole('button', { name: 'Change the time of Value snapshots' }).click()
+  const dialog = page.getByRole('dialog')
+  await dialog.getByRole('button', { name: 'weekdays at 19:30' }).click()
+  await dialog.getByRole('button', { name: 'Save time' }).click()
+  const row = page.getByRole('row', { name: /Value snapshots/ })
+  await expect(row).toContainText('30 19 * * mon-fri')
+  await expect(row).toContainText('set by you')
+  await page.getByRole('button', { name: 'Put Value snapshots back to its normal time' }).click()
+  await expect(row).toContainText('as normal')
+})
