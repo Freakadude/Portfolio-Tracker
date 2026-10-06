@@ -1,6 +1,7 @@
 """System page data: provider usage today, job runs and requests, the audit log."""
 
 import datetime as dt
+import json
 import shutil
 import tomllib
 from datetime import UTC, date, datetime, timedelta
@@ -9,7 +10,7 @@ from importlib.metadata import version as package_version
 from pathlib import Path
 from typing import Annotated, Any
 
-from fastapi import APIRouter, Query, Request
+from fastapi import APIRouter, Query, Request, Response
 from pydantic import BaseModel, Field
 from sqlalchemy import func, select
 
@@ -21,6 +22,7 @@ from folio.db.base import utcnow
 from folio.db.models import AuditLog
 from folio.db.models_insight import NewsSource
 from folio.db.models_ledger import JobRequest, JobRun, ProviderCall
+from folio.diagnostics import build_report
 from folio.jobs.requests import enqueue
 from folio.jobs.scheduler import JOB_PARAMS
 from folio.security.secrets import SecretStore
@@ -280,6 +282,21 @@ def info(request: Request, _user: UserDep, db: DbDep) -> InfoOut:
                 select(NewsSource).where(NewsSource.deleted_at.is_(None), NewsSource.failures > 0)
             )
         ],
+    )
+
+
+@router.get("/system/diagnostics")
+def diagnostics(request: Request, _user: UserDep, db: DbDep, store: StoreDep) -> Response:
+    """A file to attach when something goes wrong: set-up, recent failures and the server's
+    warnings. No keys, holdings or amounts (FR-SY-10)."""
+    report = build_report(
+        db, request.app.state.engine, request.app.state.settings, set(store.names())
+    )
+    stamp = utcnow().strftime("%Y%m%d-%H%M%S")
+    return Response(
+        json.dumps(report, indent=2, default=str),
+        media_type="application/json",
+        headers={"Content-Disposition": f'attachment; filename="folio-diagnostics-{stamp}.json"'},
     )
 
 

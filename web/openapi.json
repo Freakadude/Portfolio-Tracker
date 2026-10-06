@@ -19633,6 +19633,26 @@
         ]
       }
     },
+    "/api/v1/system/diagnostics": {
+      "get": {
+        "description": "A file to attach when something goes wrong: set-up, recent failures and the server's\nwarnings. No keys, holdings or amounts (FR-SY-10).",
+        "operationId": "diagnostics_api_v1_system_diagnostics_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Diagnostics",
+        "tags": [
+          "system"
+        ]
+      }
+    },
     "/api/v1/system/info": {
       "get": {
         "description": "Version, disk use, agent cost this month and recent job failures (FR-SY-10).",

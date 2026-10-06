@@ -1,5 +1,6 @@
 import logging
 import sys
+from collections import deque
 from contextvars import ContextVar
 from typing import Any
 
@@ -24,6 +25,23 @@ def _redact(_: Any, __: str, event: EventDict) -> EventDict:
     return scrubbed if isinstance(scrubbed, dict) else event
 
 
+_PROBLEMS: deque[str] = deque(maxlen=200)
+
+
+class _RecentProblems(logging.Handler):
+    """Keeps the last warnings and errors, already scrubbed, for the diagnostics file."""
+
+    def emit(self, record: logging.LogRecord) -> None:
+        try:
+            _PROBLEMS.append(self.format(record)[:4000])
+        except Exception:  # noqa: BLE001 - logging must never break the request it describes
+            self.handleError(record)
+
+
+def recent_problems() -> list[str]:
+    return list(_PROBLEMS)
+
+
 def configure_logging(level: str = "INFO", stream: Any = None) -> None:
     """JSON lines on stdout for our code and for stdlib loggers (uvicorn, sqlalchemy, ...)."""
     shared: list[Any] = [
@@ -42,19 +60,20 @@ def configure_logging(level: str = "INFO", stream: Any = None) -> None:
         cache_logger_on_first_use=False,
     )
     handler = logging.StreamHandler(stream or sys.stdout)
-    handler.setFormatter(
-        structlog.stdlib.ProcessorFormatter(
-            foreign_pre_chain=shared,
-            processors=[
-                structlog.stdlib.ProcessorFormatter.remove_processors_meta,
-                _redact,
-                structlog.processors.format_exc_info,
-                structlog.processors.JSONRenderer(),
-            ],
-        )
+    formatter = structlog.stdlib.ProcessorFormatter(
+        foreign_pre_chain=shared,
+        processors=[
+            structlog.stdlib.ProcessorFormatter.remove_processors_meta,
+            _redact,
+            structlog.processors.format_exc_info,
+            structlog.processors.JSONRenderer(),
+        ],
     )
+    handler.setFormatter(formatter)
+    problems = _RecentProblems(level=logging.WARNING)
+    problems.setFormatter(formatter)
     root = logging.getLogger()
-    root.handlers[:] = [handler]
+    root.handlers[:] = [handler, problems]
     root.setLevel(level.upper())
 
 

@@ -8,7 +8,7 @@ from fastapi.testclient import TestClient
 
 from folio.config import Settings
 from folio.jobs.market import backfill_job
-from tests.conftest import PASSWORD, USERNAME
+from tests.conftest import FAKE_API_KEY, PASSWORD, USERNAME
 from tests.marketdata_helpers import make_ctx
 
 
@@ -76,3 +76,50 @@ def test_the_build_comes_from_the_image(make_client, owner: None, settings: Sett
     api = make_client()
     api.post("/api/v1/auth/login", json={"username": USERNAME, "password": PASSWORD})
     assert api.get("/api/v1/system/info").json()["build"] == "abc1234"
+
+
+def test_the_diagnostics_file_shows_failures_and_nothing_private(
+    api: TestClient, settings: Settings
+) -> None:
+    """FR-SY-10: a file to attach to a bug report; no keys, holdings or amounts in it."""
+    import logging
+    import re
+
+    from folio.logging import configure_logging
+
+    api.put("/api/v1/settings/providers", json={"eodhd_api_key": FAKE_API_KEY})
+    made = api.post(
+        "/api/v1/instruments",
+        json={
+            "name": "Secret Holdings Fund",
+            "asset_class": "BOND",
+            "manual": True,
+            "currency": "EUR",
+        },
+    )
+    assert made.status_code == 201, made.text
+    backfill_job(make_ctx(settings, [], now=datetime.now(UTC)), 99999)  # a failing job
+    configure_logging()
+    logging.getLogger("folio.test").warning("the key sk-ant-abcdefghijkl1234 was rejected")
+
+    response = api.get("/api/v1/system/diagnostics")
+    assert response.status_code == 200
+    assert re.fullmatch(
+        r'attachment; filename="folio-diagnostics-\d{8}-\d{6}\.json"',
+        response.headers["content-disposition"],
+    )
+    report = response.json()
+    assert report["database"]["migration_at_head"] is True
+    assert report["database"]["rows"]["instruments"] == 1  # counted, never named
+    assert report["failed_jobs_24h"] == 1
+    assert [r["job"] for r in report["recent_job_runs"]] == ["backfill"]
+    assert report["configuration"]["secrets_with_a_value"] == ["providers.eodhd_api_key"]
+    problems = report["recent_warnings_and_errors_from_the_web_server"]
+    assert any("was rejected" in line for line in problems)  # other tests log warnings too
+    assert not any("sk-ant-abcdefghijkl1234" in line for line in problems)
+    for private in (FAKE_API_KEY, "Secret Holdings Fund", PASSWORD):
+        assert private not in response.text
+
+
+def test_the_diagnostics_file_needs_a_login(client: TestClient) -> None:
+    assert client.get("/api/v1/system/diagnostics").status_code == 401

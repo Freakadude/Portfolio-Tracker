@@ -65,6 +65,16 @@ export function SystemInfo() {
           </Item>
         </dl>
       )}
+      <p className="max-w-2xl text-sm text-muted">
+        {t('systemInfo.diagnosticsNote')}{' '}
+        <a
+          href="/api/v1/system/diagnostics"
+          download
+          className="font-medium text-primary underline underline-offset-2"
+        >
+          {t('systemInfo.diagnostics')}
+        </a>
+      </p>
     </section>
   )
 }

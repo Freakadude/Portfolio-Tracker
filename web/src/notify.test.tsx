@@ -346,5 +346,10 @@ describe('system information (FR-SY-10)', () => {
     expect(screen.getByText('1')).toHaveClass('text-danger')
     expect(screen.getByText(/Add your Anthropic API key/)).toBeInTheDocument()
     expect(screen.getByText('ECB press releases')).toHaveClass('text-danger') // a failing source
+    expect(screen.getByRole('link', { name: 'Download diagnostics' })).toHaveAttribute(
+      'href',
+      '/api/v1/system/diagnostics',
+    )
+    expect(screen.getByText(/no API keys, passwords, holdings or amounts/)).toBeInTheDocument()
   })
 })

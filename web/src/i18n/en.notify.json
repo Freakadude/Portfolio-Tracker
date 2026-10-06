@@ -141,6 +141,8 @@
     "agent": "AI agent this month",
     "agentValue": "{{runs}} runs, {{cost}} of {{budget}} EUR",
     "failed": "Failed jobs (24 h)",
-    "failingNews": "News sources failing"
+    "failingNews": "News sources failing",
+    "diagnosticsNote": "Something not working? This file lists how Folio is set up, what failed lately and what the server logged. It holds no API keys, passwords, holdings or amounts, so it is safe to attach to a question.",
+    "diagnostics": "Download diagnostics"
   }
 }
