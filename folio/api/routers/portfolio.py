@@ -7,6 +7,7 @@ from typing import Annotated
 
 from fastapi import APIRouter, Query
 from pydantic import BaseModel
+from sqlalchemy import func, select
 
 from folio import analytics_service as svc
 from folio.analytics.valuation import (
@@ -18,6 +19,8 @@ from folio.analytics.valuation import (
 from folio.api.deps import DbDep, UserDep
 from folio.api.errors import ApiError
 from folio.db.models import Account
+from folio.db.models_analytics import Quote
+from folio.db.models_ledger import JobRun, Listing, Position, PriceBar
 from folio.portfolio import Valuation
 
 router = APIRouter(prefix="/portfolio", tags=["portfolio"])
@@ -156,3 +159,52 @@ def history(
         )
         for r in svc.history(ctx, from_, to)
     ]
+
+
+class PriceStatusOut(BaseModel):
+    last_checked_at: dt.datetime | None  # the worker last looked for new prices
+    newest_close: dt.date | None  # the newest closing price among your holdings
+    last_quote_at: dt.datetime | None  # the newest delayed intraday quote of a holding
+    holdings_priced: int
+    holdings_total: int
+
+
+PRICE_JOBS = ("eod", "refresh", "quotes", "backfill")
+
+
+@router.get("/price-status", response_model=PriceStatusOut)
+def price_status(_user: UserDep, db: DbDep) -> PriceStatusOut:
+    """When the prices behind the figures were last refreshed (shown on Home)."""
+    held = select(Position.instrument_id).where(Position.quantity > 0)
+    listings = list(
+        db.scalars(
+            select(Listing.id).where(
+                Listing.pricing_primary.is_(True), Listing.instrument_id.in_(held)
+            )
+        )
+    )
+    checked = db.scalar(
+        select(func.max(JobRun.finished_at)).where(
+            JobRun.job.in_(PRICE_JOBS), JobRun.status == "ok"
+        )
+    )
+    newest = quote = None
+    if listings:
+        newest = db.scalar(select(func.max(PriceBar.date)).where(PriceBar.listing_id.in_(listings)))
+        quote = db.scalar(select(func.max(Quote.ts)).where(Quote.listing_id.in_(listings)))
+    with_price = (
+        db.scalar(
+            select(func.count(func.distinct(PriceBar.listing_id))).where(
+                PriceBar.listing_id.in_(listings)
+            )
+        )
+        if listings
+        else 0
+    )
+    return PriceStatusOut(
+        last_checked_at=checked,
+        newest_close=newest,
+        last_quote_at=quote,
+        holdings_priced=with_price or 0,
+        holdings_total=len(listings),
+    )

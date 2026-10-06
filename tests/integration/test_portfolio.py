@@ -20,8 +20,9 @@ from fastapi.testclient import TestClient
 from sqlalchemy import select
 
 from folio.config import Settings
+from folio.db.base import utcnow
 from folio.db.engine import make_engine, make_session_factory
-from folio.db.models_ledger import FxRate, JobRequest, PortfolioSnapshot, PriceBar
+from folio.db.models_ledger import FxRate, JobRequest, JobRun, PortfolioSnapshot, PriceBar
 from folio.jobs.portfolio import snapshots_job
 from folio.portfolio import Valuation, lock_closed_years, save_snapshots
 from tests.conftest import PASSWORD, USERNAME
@@ -602,3 +603,19 @@ def test_switching_cash_tracking_is_audited_and_rebuilds_the_snapshots(  # type:
     assert request.params == {"from": "2024-01-02"}  # the first transaction of the account
     audit = api.get("/api/v1/audit", params={"entity": "account"}).json()["items"]
     assert any(e["diff"] == {"track_cash": {"old": False, "new": True}} for e in audit)
+
+
+def test_the_price_status_says_when_prices_were_last_checked(
+    api: TestClient,
+    book: dict[str, Any],
+    db,  # type: ignore[no-untyped-def]
+) -> None:
+    """Home shows how fresh the prices behind its figures are."""
+
+    status = api.get("/api/v1/portfolio/price-status").json()
+    assert status["newest_close"] == "2024-01-12" and status["last_checked_at"] is None
+    assert (status["holdings_priced"], status["holdings_total"]) == (1, 1)
+    db.add(JobRun(job="eod", params={}, status="ok", finished_at=utcnow()))
+    db.add(JobRun(job="news", params={}, status="ok", finished_at=utcnow()))  # not a price job
+    db.commit()
+    assert api.get("/api/v1/portfolio/price-status").json()["last_checked_at"] is not None

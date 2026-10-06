@@ -6947,6 +6947,63 @@
         "title": "PreviewOut",
         "type": "object"
       },
+      "PriceStatusOut": {
+        "properties": {
+          "holdings_priced": {
+            "title": "Holdings Priced",
+            "type": "integer"
+          },
+          "holdings_total": {
+            "title": "Holdings Total",
+            "type": "integer"
+          },
+          "last_checked_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Checked At"
+          },
+          "last_quote_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Quote At"
+          },
+          "newest_close": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Newest Close"
+          }
+        },
+        "required": [
+          "last_checked_at",
+          "newest_close",
+          "last_quote_at",
+          "holdings_priced",
+          "holdings_total"
+        ],
+        "title": "PriceStatusOut",
+        "type": "object"
+      },
       "ProblemOut": {
         "properties": {
           "line": {
@@ -16946,6 +17003,28 @@
         "summary": "Look Through",
         "tags": [
           "analytics"
+        ]
+      }
+    },
+    "/api/v1/portfolio/price-status": {
+      "get": {
+        "description": "When the prices behind the figures were last refreshed (shown on Home).",
+        "operationId": "price_status_api_v1_portfolio_price_status_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PriceStatusOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Price Status",
+        "tags": [
+          "portfolio"
         ]
       }
     },

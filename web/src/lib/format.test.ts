@@ -1,3 +1,4 @@
+import { formatMoment } from './useFormat'
 import { describe, expect, it } from 'vitest'
 import {
   direction,
@@ -55,5 +56,14 @@ describe('gains and losses', () => {
     expect(direction('-0.01')).toBe('down')
     expect(direction('0.001')).toBe('flat')
     expect(direction(null)).toBe('none')
+  })
+})
+
+describe('formatMoment', () => {
+  it('shows a moment in the owner time zone, and nothing for a missing or broken value', () => {
+    expect(formatMoment('2026-10-06T13:20:00Z', 'Europe/Amsterdam')).toBe('6 Oct 2026, 15:20')
+    expect(formatMoment('2026-10-06T13:20:00Z', 'America/New_York')).toBe('6 Oct 2026, 09:20')
+    expect(formatMoment(null)).toBe('')
+    expect(formatMoment('not a date')).toBe('')
   })
 })

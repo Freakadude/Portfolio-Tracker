@@ -215,3 +215,12 @@ export function useSleeves() {
     queryFn: () => unwrap(api.GET('/api/v1/sleeves')),
   })
 }
+
+/** When the prices behind the figures were last refreshed (shown on Home). */
+export function usePriceStatus() {
+  return useQuery({
+    queryKey: ['price-status'],
+    queryFn: () => unwrap(api.GET('/api/v1/portfolio/price-status')),
+    refetchInterval: 60_000,
+  })
+}

@@ -1503,6 +1503,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/portfolio/price-status": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Price Status
+         * @description When the prices behind the figures were last refreshed (shown on Home).
+         */
+        get: operations["price_status_api_v1_portfolio_price_status_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/portfolio/projection": {
         parameters: {
             query?: never;
@@ -4929,6 +4949,19 @@ export interface components {
             row_count: number;
             /** Sample Rows */
             sample_rows: string[][];
+        };
+        /** PriceStatusOut */
+        PriceStatusOut: {
+            /** Holdings Priced */
+            holdings_priced: number;
+            /** Holdings Total */
+            holdings_total: number;
+            /** Last Checked At */
+            last_checked_at: string | null;
+            /** Last Quote At */
+            last_quote_at: string | null;
+            /** Newest Close */
+            newest_close: string | null;
         };
         /** ProblemOut */
         ProblemOut: {
@@ -9553,6 +9586,26 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    price_status_api_v1_portfolio_price_status_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PriceStatusOut"];
                 };
             };
         };

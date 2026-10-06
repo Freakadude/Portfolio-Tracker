@@ -7,6 +7,12 @@
     "year": "Year"
   },
   "dashboard": {
+    "pricesChecked": "Prices last checked: {{when}}.",
+    "pricesNeverChecked": "Prices have not been fetched yet by the worker.",
+    "pricesNewestClose": "Newest closing price: {{date}}.",
+    "pricesQuote": "Latest delayed quote: {{when}}.",
+    "pricesMissing_one": "{{count}} holding has no price yet.",
+    "pricesMissing_other": "{{count}} holdings have no price yet.",
     "unknownWidget": "Unknown widget type {{type}}.",
     "move": "Move {{name}}",
     "moveHint": "Drag to move. Or open the settings and type a position.",

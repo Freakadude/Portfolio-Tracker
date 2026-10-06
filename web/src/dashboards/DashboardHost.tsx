@@ -7,12 +7,14 @@ import { useAccounts } from '../api/queries'
 import { EmptyState } from '../components/display'
 import { Alert, Button, Input, Select } from '../components/ui'
 import { cn } from '../lib/cn'
+import { useFormat } from '../lib/useFormat'
 import { AddWidgetDialog } from './AddWidgetDialog'
 import { ConfigPanel } from './ConfigPanel'
 import { DashboardView, type Breakpoint } from './DashboardView'
 import {
   useDashboardActions,
   useDashboards,
+  usePriceStatus,
   type Box,
   type Config,
   type Dashboard,
@@ -32,6 +34,8 @@ export function DashboardHost({ dashboard }: { dashboard: Dashboard }) {
   const actions = useDashboardActions()
   const list = useDashboards()
   const accounts = useAccounts()
+  const prices = usePriceStatus()
+  const { when } = useFormat()
   const [editing, setEditing] = useState(false)
   const [adding, setAdding] = useState(false)
   const [configuring, setConfiguring] = useState<DashboardWidget | null>(null)
@@ -87,7 +91,10 @@ export function DashboardHost({ dashboard }: { dashboard: Dashboard }) {
           )}
           <Button
             variant="secondary"
-            onClick={() => void queryClient.invalidateQueries({ queryKey: ['widget-data'] })}
+            onClick={() => {
+              void queryClient.invalidateQueries({ queryKey: ['widget-data'] })
+              void queryClient.invalidateQueries({ queryKey: ['price-status'] })
+            }}
           >
             {t('dashboard.refresh')}
           </Button>
@@ -111,6 +118,28 @@ export function DashboardHost({ dashboard }: { dashboard: Dashboard }) {
           </Link>
         </div>
       </div>
+
+      {prices.data && prices.data.holdings_total > 0 && (
+        <p className="text-sm text-muted" data-testid="price-status">
+          {prices.data.last_checked_at
+            ? t('dashboard.pricesChecked', { when: when(prices.data.last_checked_at) })
+            : t('dashboard.pricesNeverChecked')}
+          {prices.data.newest_close && (
+            <> {t('dashboard.pricesNewestClose', { date: prices.data.newest_close })}</>
+          )}
+          {prices.data.last_quote_at && (
+            <> {t('dashboard.pricesQuote', { when: when(prices.data.last_quote_at) })}</>
+          )}
+          {prices.data.holdings_priced < prices.data.holdings_total && (
+            <>
+              {' '}
+              {t('dashboard.pricesMissing', {
+                count: prices.data.holdings_total - prices.data.holdings_priced,
+              })}
+            </>
+          )}
+        </p>
+      )}
 
       <div
         className="flex flex-wrap items-end gap-4"

@@ -14,3 +14,9 @@ test('the value history says which period it shows and follows the dashboard per
   await group.getByRole('button', { name: '1 week', exact: true }).click()
   await expect(page.getByText(/\(1W\)\./)).toBeVisible()
 })
+
+test('Home says how fresh the prices behind its figures are', async ({ page }) => {
+  await login(page)
+  await page.getByRole('link', { name: 'Home' }).click()
+  await expect(page.getByTestId('price-status')).toContainText('Newest closing price')
+})
