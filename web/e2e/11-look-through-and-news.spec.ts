@@ -47,10 +47,10 @@ test('an ETF gets its holdings from a file and shows what it holds (FR-MD-09, FR
   const panel = page.getByRole('region', { name: 'What this fund holds' })
   await expect(panel.getByText('No holdings yet. Upload a file below.')).toBeVisible()
   await panel.getByRole('button', { name: 'Preview' }).click()
-  await expect(panel.getByText('Choose a CSV file first.')).toBeVisible()
+  await expect(panel.getByText('Choose a CSV or Excel file first.')).toBeVisible()
 
   await panel
-    .getByLabel('Holdings file (CSV)')
+    .getByLabel('Holdings file (CSV or Excel)')
     .setInputFiles('../tests/fixtures/lookthrough/ishares_style.csv')
   await panel.getByRole('button', { name: 'Preview' }).click()
   await expect(

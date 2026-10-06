@@ -122,10 +122,13 @@ function Upload({ instrumentId }: { instrumentId: number }) {
   const [asOf, setAsOf] = useState('')
   const shown: HoldingsPreview | undefined = preview.data
 
-  function read(next?: HoldingsMapping) {
+  function read(next?: HoldingsMapping, sheet?: string) {
     if (!file) return setMissing(true)
     setMissing(false)
-    preview.mutate({ file, mapping: next }, { onSuccess: (p) => setMapping(next ?? p.mapping) })
+    preview.mutate(
+      { file, mapping: next, sheet },
+      { onSuccess: (p) => setMapping(next ?? p.mapping) },
+    )
   }
 
   const change = (key: (typeof COLUMNS)[number], value: string) =>
@@ -138,7 +141,7 @@ function Upload({ instrumentId }: { instrumentId: number }) {
         {(p) => (
           <Input
             type="file"
-            accept=".csv,text/csv,text/plain"
+            accept=".csv,.xlsx,text/csv,text/plain,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
             onChange={(e) => {
               setFile(e.target.files?.[0] ?? null)
               setMapping(undefined)
@@ -175,6 +178,23 @@ function Upload({ instrumentId }: { instrumentId: number }) {
             <p className="text-sm text-muted">
               {t('etfHoldings.upload.dropped', { lines: shown.dropped.join('; ') })}
             </p>
+          )}
+          {shown.sheets.length > 1 && (
+            <Field label={t('etfHoldings.upload.sheet')} hint={t('etfHoldings.upload.sheetHint')}>
+              {(p) => (
+                <Select
+                  value={mapping?.sheet ?? ''}
+                  onChange={(e) => read(undefined, e.target.value)}
+                  {...p}
+                >
+                  {shown.sheets.map((s) => (
+                    <option key={s.name} value={s.name}>
+                      {t('etfHoldings.upload.sheetOption', { name: s.name, count: s.holdings })}
+                    </option>
+                  ))}
+                </Select>
+              )}
+            </Field>
           )}
           <fieldset className="space-y-2">
             <legend className="text-sm font-medium">{t('etfHoldings.upload.mapping')}</legend>

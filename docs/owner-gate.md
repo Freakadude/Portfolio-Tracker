@@ -18,7 +18,7 @@ You deferred the phase checks until the last phase was finished. Everything belo
 
 ## Phase 4: news and the agent
 - [ ] Anthropic key in Settings, Agent; "Test the key"; check the price table against Anthropic's pricing page.
-- [ ] Upload one real ETF holdings file; the Look-through widget should list the underlying companies.
+- [ ] Upload one real ETF holdings file (CSV or Excel; send the first lines of any that is not recognised); the Look-through widget should list the underlying companies.
 - [ ] Preview the ECB and Fed feeds; add one issuer feed.
 - [ ] Let one daily review run (or "Run a review now"), read its advice and trace, check its cost, accept one piece of advice with drafts.
 

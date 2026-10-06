@@ -7,25 +7,26 @@ from decimal import Decimal, InvalidOperation
 from typing import Any
 from urllib.parse import urlparse
 
-from folio.imports.parse import MAX_BYTES
+from folio.lookthrough.formats import HOLDINGS_MAX_BYTES
 from folio.lookthrough.parse import Constituent, HoldingsRead
 from folio.marketdata.base import ProviderError
 from folio.marketdata.http import HttpClient, check_status
 
 
 def fetch_issuer_file(http: HttpClient, url: str) -> bytes:
-    """Download an issuer's holdings CSV. The address must be http(s); a web page (an issuer's
-    download button that needs a click-through) is reported instead of being parsed."""
+    """Download an issuer's holdings file (CSV or Excel). The address must be http(s); a web page
+    (an issuer's download button that needs a click-through) is reported instead of being
+    parsed."""
     if urlparse(url).scheme not in ("http", "https"):
         raise ProviderError("The holdings address must start with http:// or https://.")
     response = http.request("GET", url)
     check_status("issuer", response)
     data = response.content
-    if len(data) > MAX_BYTES:
-        raise ProviderError("The holdings file is larger than 5 MB.")
+    if len(data) > HOLDINGS_MAX_BYTES:
+        raise ProviderError("The holdings file is larger than 10 MB.")
     if data.lstrip()[:15].lower().startswith((b"<!doctype", b"<html")):
         raise ProviderError(
-            "That address returned a web page, not a CSV file. Use the issuer's direct "
+            "That address returned a web page, not a holdings file. Use the issuer's direct "
             "download link, or upload the file instead."
         )
     return data

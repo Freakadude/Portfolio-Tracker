@@ -72,6 +72,7 @@ const MAPPING = {
   thousands_separator: '',
 }
 const PREVIEW = {
+  sheets: [] as { name: string; holdings: number }[],
   headers: [
     { index: 0, label: 'Ticker' },
     { index: 1, label: 'Name' },
@@ -89,8 +90,61 @@ const PREVIEW = {
 const HOLDINGS = '/api/v1/instruments/7/holdings'
 
 async function pick(file = new File(['x'], 'holdings.csv', { type: 'text/csv' })) {
-  await userEvent.upload(screen.getByLabelText('Holdings file (CSV)'), file)
+  await userEvent.upload(screen.getByLabelText('Holdings file (CSV or Excel)'), file)
 }
+
+describe('a workbook with several sheets', () => {
+  const SHEETS = [
+    { name: 'Cover', holdings: 0 },
+    { name: 'Holdings', holdings: 3 },
+  ]
+
+  it('offers the sheets and reads the one that is chosen with its own columns', async () => {
+    const bodies: string[] = []
+    mockApi({
+      [`GET ${HOLDINGS}`]: { ...VIEW, snapshots: [], top: [] },
+      [`POST ${HOLDINGS}/preview`]: async (request: Request) => {
+        const text = await request.text() // the form as sent: parts named "sheet", "mapping"...
+        bodies.push(text)
+        const sheet = /name="sheet"\s+(\S+)/.exec(text)?.[1] ?? 'Holdings'
+        return {
+          ...PREVIEW,
+          sheets: SHEETS,
+          mapping: { ...MAPPING, sheet },
+          holdings: sheet === 'Holdings' ? 3 : 0,
+        }
+      },
+    })
+    renderAt(<HoldingsPanel instrumentId={7} />)
+    await screen.findByText('No holdings yet. Upload a file below.')
+    expect(screen.queryByLabelText('Sheet')).toBeNull() // nothing to choose before a file is read
+    await pick(new File(['x'], 'holdings.xlsx'))
+    await userEvent.click(screen.getByRole('button', { name: 'Preview' }))
+    const sheet = await screen.findByLabelText('Sheet')
+    expect(sheet).toHaveValue('Holdings') // the one with the holdings is suggested
+    expect(screen.getByRole('option', { name: 'Cover (0 holdings)' })).toBeInTheDocument()
+    expect(screen.getByRole('option', { name: 'Holdings (3 holdings)' })).toBeInTheDocument()
+
+    await userEvent.selectOptions(sheet, 'Cover')
+    await waitFor(() => expect(bodies).toHaveLength(2))
+    expect(bodies[1]).toMatch(/name="sheet"\s+Cover/)
+    expect(bodies[1]).not.toContain('name="mapping"') // the columns are suggested again
+    await waitFor(() => expect(screen.getByLabelText('Sheet')).toHaveValue('Cover'))
+  })
+
+  it('shows no sheet choice for a file with one sheet', async () => {
+    mockApi({
+      [`GET ${HOLDINGS}`]: { ...VIEW, snapshots: [], top: [] },
+      [`POST ${HOLDINGS}/preview`]: PREVIEW,
+    })
+    renderAt(<HoldingsPanel instrumentId={7} />)
+    await screen.findByText('No holdings yet. Upload a file below.')
+    await pick()
+    await userEvent.click(screen.getByRole('button', { name: 'Preview' }))
+    await screen.findByText(/Read as: 3 holdings/)
+    expect(screen.queryByLabelText('Sheet')).toBeNull()
+  })
+})
 
 describe('what a fund holds (FR-MD-09)', () => {
   it('lists the saved holdings, calls out an old snapshot and shows the largest holdings', async () => {
@@ -117,7 +171,7 @@ describe('what a fund holds (FR-MD-09)', () => {
     renderAt(<HoldingsPanel instrumentId={7} />)
     expect(await screen.findByText('No holdings yet. Upload a file below.')).toBeInTheDocument()
     await userEvent.click(screen.getByRole('button', { name: 'Preview' }))
-    expect(await screen.findByText('Choose a CSV file first.')).toBeInTheDocument()
+    expect(await screen.findByText('Choose a CSV or Excel file first.')).toBeInTheDocument()
     expect(calls.some((c) => c.method === 'POST')).toBe(false)
 
     await pick()
@@ -181,7 +235,7 @@ describe('what a fund holds (FR-MD-09)', () => {
       }),
     })
     renderAt(<HoldingsPanel instrumentId={7} />)
-    const url = await screen.findByLabelText("Issuer's download address (CSV)")
+    const url = await screen.findByLabelText("Issuer's download address (CSV or Excel)")
     expect(url).toHaveValue('https://issuer.example/h.csv')
     await userEvent.clear(url)
     await userEvent.type(url, 'https://issuer.example/h2.csv')

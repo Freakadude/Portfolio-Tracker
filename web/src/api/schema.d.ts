@@ -1036,7 +1036,8 @@ export interface paths {
         put?: never;
         /**
          * Preview
-         * @description How the file would be read, with nothing stored. Send `mapping` to try other columns.
+         * @description How the file would be read, with nothing stored. Send `mapping` to try other columns, or
+         *     `sheet` to read another sheet of a workbook with its own suggested columns.
          */
         post: operations["preview_api_v1_instruments__instrument_id__holdings_preview_post"];
         delete?: never;
@@ -3402,6 +3403,8 @@ export interface components {
             file: string;
             /** Mapping */
             mapping?: string | null;
+            /** Sheet */
+            sheet?: string | null;
         };
         /** Body_upload_api_v1_imports_post */
         Body_upload_api_v1_imports_post: {
@@ -3920,6 +3923,8 @@ export interface components {
             name?: number | null;
             /** Sector */
             sector?: number | null;
+            /** Sheet */
+            sheet?: string | null;
             /**
              * Thousands Separator
              * @default
@@ -3961,6 +3966,8 @@ export interface components {
             /** Holdings */
             holdings: number;
             mapping: components["schemas"]["HoldingsMapping"];
+            /** Sheets */
+            sheets: components["schemas"]["SheetOut"][];
             /** Top */
             top: components["schemas"]["ConstituentOut"][];
             /** Warnings */
@@ -5481,6 +5488,13 @@ export interface components {
             needs_owner: boolean;
             /** Setup Complete */
             setup_complete: boolean;
+        };
+        /** SheetOut */
+        SheetOut: {
+            /** Holdings */
+            holdings: number;
+            /** Name */
+            name: string;
         };
         /** SignalOut */
         SignalOut: {

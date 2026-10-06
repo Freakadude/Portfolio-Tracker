@@ -14,10 +14,11 @@ from sqlalchemy.orm import Session
 from folio.api.deps import DbDep, StoreDep, UserDep
 from folio.api.errors import ApiError
 from folio.db.models_insight import EtfConstituent, EtfSnapshot
-from folio.imports.parse import MAX_BYTES, ParseError
+from folio.imports.parse import ParseError
 from folio.instruments import InstrumentError, get_instrument
 from folio.jobs.requests import enqueue
 from folio.lookthrough import service
+from folio.lookthrough.formats import HOLDINGS_MAX_BYTES
 from folio.lookthrough.parse import (
     HoldingsFile,
     HoldingsMapping,
@@ -47,7 +48,13 @@ class HeaderOut(BaseModel):
     label: str
 
 
+class SheetOut(BaseModel):
+    name: str
+    holdings: int
+
+
 class HoldingsPreviewOut(BaseModel):
+    sheets: list[SheetOut]  # more than one for a workbook with several sheets
     headers: list[HeaderOut]
     mapping: HoldingsMapping
     as_of: date | None
@@ -104,18 +111,20 @@ def _constituents(read: HoldingsRead) -> list[ConstituentOut]:
     ]
 
 
-def _read(data: bytes, mapping_json: str | None) -> tuple[HoldingsFile, HoldingsRead]:
-    try:
-        file = suggest(data)
-    except ParseError as exc:
-        raise ApiError(422, "Holdings problem", str(exc)) from exc
-    mapping = file.mapping
+def _read(
+    data: bytes, mapping_json: str | None, sheet: str | None = None
+) -> tuple[HoldingsFile, HoldingsRead]:
+    given: HoldingsMapping | None = None
     if mapping_json:
         try:
-            mapping = HoldingsMapping.model_validate(json.loads(mapping_json))
+            given = HoldingsMapping.model_validate(json.loads(mapping_json))
         except ValueError as exc:
             raise ApiError(422, "Holdings problem", "The column mapping is not valid.") from exc
-    return file, read_holdings(file, mapping)
+    try:
+        file = suggest(data, given.sheet if given else sheet)
+    except ParseError as exc:
+        raise ApiError(422, "Holdings problem", str(exc)) from exc
+    return file, read_holdings(file, given or file.mapping)
 
 
 def _snapshot_out(db: Session, snapshot: EtfSnapshot, stale_days: int, today: date) -> SnapshotOut:
@@ -160,13 +169,16 @@ async def preview(
     db: DbDep,
     file: Annotated[UploadFile, File()],
     mapping: Annotated[str | None, Form()] = None,
+    sheet: Annotated[str | None, Form()] = None,
 ) -> HoldingsPreviewOut:
-    """How the file would be read, with nothing stored. Send `mapping` to try other columns."""
+    """How the file would be read, with nothing stored. Send `mapping` to try other columns, or
+    `sheet` to read another sheet of a workbook with its own suggested columns."""
     _etf(db, instrument_id)
-    parsed, read = _read(await file.read(MAX_BYTES + 1), mapping)
+    parsed, read = _read(await file.read(HOLDINGS_MAX_BYTES + 1), mapping, sheet)
     used = HoldingsMapping.model_validate(json.loads(mapping)) if mapping else parsed.mapping
     header = parsed.table[used.header_row]
     return HoldingsPreviewOut(
+        sheets=[SheetOut(name=i.name, holdings=i.holdings) for i in parsed.sheets],
         headers=[HeaderOut(index=i, label=h or f"(column {i + 1})") for i, h in enumerate(header)],
         mapping=used,
         as_of=parsed.as_of,
@@ -190,7 +202,7 @@ async def upload(
 ) -> StoredOut:
     """Store the file as a snapshot, dated by the file itself unless `as_of` says otherwise."""
     _etf(db, instrument_id)
-    parsed, read = _read(await file.read(MAX_BYTES + 1), mapping)
+    parsed, read = _read(await file.read(HOLDINGS_MAX_BYTES + 1), mapping)
     try:
         snapshot = service.store_snapshot(
             db,

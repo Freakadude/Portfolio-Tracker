@@ -1795,6 +1795,17 @@
               }
             ],
             "title": "Mapping"
+          },
+          "sheet": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sheet"
           }
         },
         "required": [
@@ -3407,6 +3418,17 @@
             ],
             "title": "Sector"
           },
+          "sheet": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sheet"
+          },
           "thousands_separator": {
             "default": "",
             "enum": [
@@ -3529,6 +3551,13 @@
           "mapping": {
             "$ref": "#/components/schemas/HoldingsMapping"
           },
+          "sheets": {
+            "items": {
+              "$ref": "#/components/schemas/SheetOut"
+            },
+            "title": "Sheets",
+            "type": "array"
+          },
           "top": {
             "items": {
               "$ref": "#/components/schemas/ConstituentOut"
@@ -3545,6 +3574,7 @@
           }
         },
         "required": [
+          "sheets",
           "headers",
           "mapping",
           "as_of",
@@ -8650,6 +8680,24 @@
           "setup_complete"
         ],
         "title": "SetupStatus",
+        "type": "object"
+      },
+      "SheetOut": {
+        "properties": {
+          "holdings": {
+            "title": "Holdings",
+            "type": "integer"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          }
+        },
+        "required": [
+          "name",
+          "holdings"
+        ],
+        "title": "SheetOut",
         "type": "object"
       },
       "SignalOut": {
@@ -15177,7 +15225,7 @@
     },
     "/api/v1/instruments/{instrument_id}/holdings/preview": {
       "post": {
-        "description": "How the file would be read, with nothing stored. Send `mapping` to try other columns.",
+        "description": "How the file would be read, with nothing stored. Send `mapping` to try other columns, or\n`sheet` to read another sheet of a workbook with its own suggested columns.",
         "operationId": "preview_api_v1_instruments__instrument_id__holdings_preview_post",
         "parameters": [
           {

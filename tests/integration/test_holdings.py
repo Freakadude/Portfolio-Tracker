@@ -96,6 +96,56 @@ def test_a_file_is_previewed_then_stored_as_a_dated_snapshot(api: TestClient, db
     assert db.scalars(select(EtfConstituent)).all() == []
 
 
+def excel_file() -> bytes:
+    import io
+
+    from openpyxl import Workbook
+
+    book = Workbook()
+    cover = book.active
+    cover.title = "Cover"
+    cover.append(["Example ETF factsheet"])
+    sheet = book.create_sheet("Holdings")
+    sheet.append(["Holdings as of", "02/10/2026"])
+    sheet.append(["Weight (%)", "Name", "ISIN"])
+    sheet.append([60, "ALPHA TECH INC", "US0000000001"])
+    sheet.append([40, "BETA BANK PLC", "GB0000000002"])
+    out = io.BytesIO()
+    book.save(out)
+    return out.getvalue()
+
+
+def test_an_excel_workbook_is_previewed_with_its_sheets_then_stored(api: TestClient, db) -> None:  # type: ignore[no-untyped-def]
+    base = f"/api/v1/instruments/{etf(db)}/holdings"
+    data = excel_file()
+
+    shown = upload_to(api, f"{base}/preview", data).json()
+    assert [(s["name"], s["holdings"]) for s in shown["sheets"]] == [("Cover", 0), ("Holdings", 2)]
+    assert shown["mapping"]["sheet"] == "Holdings"
+    assert (shown["holdings"], shown["covered_pct"], shown["as_of"]) == (2, "100", "2026-10-02")
+    assert [t["name"] for t in shown["top"]] == ["ALPHA TECH INC", "BETA BANK PLC"]
+
+    # the owner can pick the other sheet: it has no holdings, and the preview says so
+    cover = upload_to(api, f"{base}/preview", data, sheet="Cover")
+    assert cover.status_code == 422 and "No header row" in cover.json()["detail"]
+    again = upload_to(api, f"{base}/preview", data, sheet="Holdings").json()
+    assert again["mapping"]["sheet"] == "Holdings" and again["holdings"] == 2
+
+    stored = upload_to(api, base, data, mapping=json.dumps(shown["mapping"]))
+    assert stored.status_code == 201 and stored.json()["snapshot"]["holdings"] == 2
+
+
+def test_the_job_refreshes_holdings_from_an_excel_download(settings: Settings, db) -> None:  # type: ignore[no-untyped-def]
+    instrument_id = etf(db)
+    set_source(
+        db, settings, instrument_id, HoldingsSource(url="https://issuer.example/holdings")
+    )  # no file extension: the kind is read from the content
+    issuer = Scripted(lambda r: httpx.Response(200, content=excel_file()))
+    result = lookthrough_job(job_ctx(settings, issuer=issuer))
+    assert result.status == "ok" and "2 holdings from url" in result.log
+    assert db.scalar(select(EtfSnapshot)).as_of == date(2026, 10, 2)
+
+
 def test_a_file_that_is_not_a_holdings_table_is_explained(api: TestClient, db) -> None:  # type: ignore[no-untyped-def]
     base = f"/api/v1/instruments/{etf(db)}/holdings"
     refused = upload_to(api, base, b"Date,Amount\n2026-01-01,5\n")
@@ -178,7 +228,7 @@ def test_a_web_page_instead_of_a_file_is_reported_not_parsed(settings: Settings,
     set_source(db, settings, instrument_id, HoldingsSource(url="https://issuer.example/page"))
     page = Scripted(lambda r: httpx.Response(200, content=b"<!DOCTYPE html><html></html>"))
     result = lookthrough_job(job_ctx(settings, issuer=page))
-    assert result.status == "failed" and "returned a web page, not a CSV" in result.log
+    assert result.status == "failed" and "returned a web page, not a holdings file" in result.log
     assert db.scalar(select(EtfSnapshot)) is None
 
 

@@ -21,7 +21,7 @@
   },
   "etfHoldings": {
     "title": "What this fund holds",
-    "intro": "Upload the issuer's holdings file (a CSV from the fund's page) so Folio can look through this fund: what you own underneath, across all your holdings.",
+    "intro": "Upload the issuer's holdings file (a CSV or Excel file from the fund's page) so Folio can look through this fund: what you own underneath, across all your holdings.",
     "empty": "No holdings yet. Upload a file below.",
     "snapshots": "Saved holdings",
     "columns": {
@@ -49,8 +49,11 @@
     },
     "upload": {
       "title": "Add a holdings file",
-      "file": "Holdings file (CSV)",
-      "choose": "Choose a CSV file first.",
+      "file": "Holdings file (CSV or Excel)",
+      "choose": "Choose a CSV or Excel file first.",
+      "sheet": "Sheet",
+      "sheetHint": "The workbook has several sheets. Folio suggests the one with the most holdings.",
+      "sheetOption": "{{name}} ({{count}} holdings)",
       "preview": "Preview",
       "date": "Holdings date",
       "dateHint": "Taken from the file when it states one.",
@@ -76,7 +79,7 @@
     "source": {
       "title": "Refresh automatically",
       "intro": "Folio can fetch the holdings again every month from the issuer's download address, or from EODHD. EODHD's free plan does not include fund holdings (its Fundamentals data), and one request uses 10 of the 20 calls a free plan allows a day, so with a free key leave EODHD off and upload the issuer's file above.",
-      "url": "Issuer's download address (CSV)",
+      "url": "Issuer's download address (CSV or Excel)",
       "eodhd": "Use EODHD fundamentals",
       "save": "Save",
       "saved": "Saved.",

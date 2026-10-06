@@ -20,7 +20,8 @@ from typing import Literal
 from pydantic import BaseModel
 
 from folio.imports.mapping import CellError, detect_separators, parse_decimal
-from folio.imports.parse import MAX_BYTES, ParseError, decode, sniff_delimiter
+from folio.imports.parse import ParseError, decode, sniff_delimiter
+from folio.lookthrough.formats import HOLDINGS_MAX_BYTES, Table, detect_kind, read_workbook
 
 _NAME = (
     "name",
@@ -96,6 +97,7 @@ class HoldingsMapping(BaseModel):
     among the file's non-blank rows."""
 
     header_row: int = 0
+    sheet: str | None = None  # the workbook sheet; None for a CSV
     name: int | None = None
     weight: int | None = None
     isin: int | None = None
@@ -121,11 +123,18 @@ class Constituent:
 
 
 @dataclass(frozen=True)
+class SheetInfo:
+    name: str
+    holdings: int  # rows below its header with a weight; 0 when it has no holdings table
+
+
+@dataclass(frozen=True)
 class HoldingsFile:
-    table: list[list[str]]  # every non-blank row of the file
+    table: list[list[str]]  # every non-blank row of the file (of the chosen sheet)
     headers: list[str]
     mapping: HoldingsMapping
     as_of: date | None  # the date the file states, if it does
+    sheets: list[SheetInfo] = field(default_factory=list)  # more than one for a workbook
 
 
 @dataclass
@@ -145,15 +154,30 @@ def _index(headers: list[str], names: tuple[str, ...]) -> int | None:
     return None
 
 
-def _read_table(data: bytes) -> list[list[str]]:
-    if not data.strip():
-        raise ParseError("The file is empty.")
-    if len(data) > MAX_BYTES:
-        raise ParseError("The file is larger than 5 MB.")
+def _csv_table(data: bytes) -> Table:
     text, _ = decode(data)
     delimiter = sniff_delimiter(_first_table_line(text))
     rows = list(csv.reader(io.StringIO(text, newline=""), delimiter=delimiter))
     return [[c.strip() for c in row] for row in rows if any(c.strip() for c in row)]
+
+
+def _read_tables(data: bytes) -> dict[str, Table]:
+    """The tables of a file: one for a CSV (named ""), one per visible sheet for a workbook."""
+    if not data.strip():
+        raise ParseError("The file is empty.")
+    if len(data) > HOLDINGS_MAX_BYTES:
+        raise ParseError("The file is larger than 10 MB.")
+    kind = detect_kind(data)
+    if kind == "xlsx":
+        return read_workbook(data)
+    if kind == "xls":
+        raise ParseError(
+            "That is an old Excel file (.xls). Open it in Excel and save it as .xlsx or as CSV, "
+            "then upload that."
+        )
+    if kind == "pdf":
+        raise ParseError("PDF files cannot be read yet. Use the issuer's Excel or CSV download.")
+    return {"": _csv_table(data)}
 
 
 def _first_table_line(text: str) -> str:
@@ -189,15 +213,40 @@ def _stated_date(preamble: list[list[str]]) -> date | None:
     return None
 
 
-def suggest(data: bytes) -> HoldingsFile:
-    """Find the header and match the columns by name. Raises ParseError, in words for the owner,
-    when the file does not look like a holdings table."""
-    table = _read_table(data)
-    header_row = find_header(table)
+def _holdings_below(table: Table, header_row: int) -> int:
+    """How many rows under the header look like holdings: a weight that is a number."""
+    headers = table[header_row]
+    weight = _index(headers, _WEIGHT)
+    if weight is None:
+        return 0
+    count = 0
+    for row in table[header_row + 1 :]:
+        if weight < len(row) and re.fullmatch(r"-?[\d.,\s]+%?", row[weight].replace(" ", "")):
+            count += 1
+    return count
+
+
+def suggest(data: bytes, sheet: str | None = None) -> HoldingsFile:
+    """Find the header and match the columns by name. For a workbook the sheet with the most
+    holdings is taken unless `sheet` names one. Raises ParseError, in words for the owner, when
+    the file does not look like a holdings table."""
+    tables = _read_tables(data)
+    info: list[SheetInfo] = []
+    headers_at: dict[str, int | None] = {}
+    for name, table in tables.items():
+        found = find_header(table)
+        headers_at[name] = found
+        info.append(SheetInfo(name, 0 if found is None else _holdings_below(table, found)))
+    if sheet is not None and sheet not in tables:
+        raise ParseError(f"The workbook has no sheet called {sheet!r}.")
+    chosen = sheet or max(info, key=lambda i: i.holdings).name
+    table, header_row = tables[chosen], headers_at[chosen]
     if header_row is None:
         raise ParseError(
-            "No header row with a name column and a weight column was found. Open the file in a "
-            "spreadsheet and check it lists the fund's holdings with their weight."
+            "No header row with a name column and a weight column was found"
+            + (" on any sheet" if len(tables) > 1 and sheet is None else "")
+            + ". Open the file in a spreadsheet and check it lists the fund's holdings with "
+            "their weight."
         )
     headers = table[header_row]
     body = table[header_row + 1 :]
@@ -213,6 +262,7 @@ def suggest(data: bytes) -> HoldingsFile:
             continue
     mapping = HoldingsMapping(
         header_row=header_row,
+        sheet=chosen or None,
         name=_index(headers, _NAME),
         weight=weight,
         isin=_index(headers, _ISIN),
@@ -225,7 +275,13 @@ def suggest(data: bytes) -> HoldingsFile:
         decimal_separator=decimal,
         thousands_separator=thousands,
     )
-    return HoldingsFile(table, headers, mapping, _stated_date(table[:header_row]))
+    return HoldingsFile(
+        table,
+        headers,
+        mapping,
+        _stated_date(table[:header_row]),
+        info if len(tables) > 1 else [],
+    )
 
 
 def _cell(row: list[str], col: int | None) -> str:

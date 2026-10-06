@@ -22,9 +22,10 @@ export function useHoldings(instrumentId: number) {
   })
 }
 
-function form(file: File, mapping?: HoldingsMapping, asOf?: string) {
+function form(file: File, mapping?: HoldingsMapping, asOf?: string, sheet?: string) {
   const data = new FormData()
   data.set('file', file)
+  if (sheet) data.set('sheet', sheet)
   if (mapping) data.set('mapping', JSON.stringify(mapping))
   if (asOf) data.set('as_of', asOf)
   return data
@@ -32,12 +33,20 @@ function form(file: File, mapping?: HoldingsMapping, asOf?: string) {
 
 export function usePreviewHoldings(instrumentId: number) {
   return useMutation({
-    mutationFn: ({ file, mapping }: { file: File; mapping?: HoldingsMapping }) =>
+    mutationFn: ({
+      file,
+      mapping,
+      sheet,
+    }: {
+      file: File
+      mapping?: HoldingsMapping
+      sheet?: string
+    }) =>
       unwrap(
         api.POST('/api/v1/instruments/{instrument_id}/holdings/preview', {
           params: { path: { instrument_id: instrumentId } },
           body: {} as never,
-          bodySerializer: () => form(file, mapping),
+          bodySerializer: () => form(file, mapping, undefined, sheet),
         }),
       ),
   })
