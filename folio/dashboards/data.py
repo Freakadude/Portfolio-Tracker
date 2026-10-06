@@ -19,7 +19,7 @@ from sqlalchemy.orm import Session
 from folio import analytics_service as svc
 from folio.agent.budget import agent_settings
 from folio.analytics.lookthrough import DIMENSIONS, Exposure
-from folio.analytics.returns import DailyPoint, twr_index
+from folio.analytics.returns import DailyPoint, twr_index, twr_segments, xirr_flow_rows
 from folio.analytics.risk import drawdown
 from folio.analytics.series import bridge, monthly_returns, rebase
 from folio.dashboards.widgets import WIDGET_TYPES, BaseConfig
@@ -134,6 +134,34 @@ _TRENDS = {
 }
 
 
+def _breakdown(metric: str, points: list[DailyPoint]) -> dict[str, Any]:
+    """The steps behind a return figure, from the same series the figure is computed from, so
+    the owner can follow it by hand or in a spreadsheet ("how is this calculated")."""
+    if metric == "twr":
+        return {
+            "kind": "twr",
+            "segments": [
+                {
+                    "start": g.start.isoformat(),
+                    "end": g.end.isoformat(),
+                    "flow": str(g.flow),
+                    "start_capital": str(g.start_capital),
+                    "end_value": str(g.end_value),
+                    "income": str(g.income),
+                    "ratio": str(g.ratio),
+                }
+                for g in twr_segments(points)
+            ],
+        }
+    return {
+        "kind": "xirr",
+        "flows": [
+            {"date": r.day.isoformat(), "amount": str(r.amount), "kind": r.kind}
+            for r in xirr_flow_rows(points)
+        ],
+    }
+
+
 def kpi(env: Env, cfg: Any) -> dict[str, Any]:
     metric: str = cfg.metric
     kind = _KINDS[metric]
@@ -184,6 +212,7 @@ def kpi(env: Env, cfg: Any) -> dict[str, Any]:
         else:
             base["value"] = s(getattr(figures, metric) if figures else None)
             base["change_eur"] = s(result.pnl)
+            base["breakdown"] = _breakdown(metric, points)
     elif metric == "cash":
         if not ctx.tracks_cash:
             return {**base, **_empty("Turn on cash tracking for an account to see its cash.")}

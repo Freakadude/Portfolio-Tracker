@@ -305,6 +305,26 @@ def test_kpi_tiles_match_a_hand_computation(api, book) -> None:
     assert drift["empty"] is True and "targets" in drift["reason"]
 
 
+def test_the_return_figures_come_with_the_steps_behind_them(api, book) -> None:
+    """ "How is this calculated": the segments chain to the figure, the flows are what XIRR used."""
+    twr = one(api, "kpi", {"metric": "twr", "period": "YTD"})
+    assert twr["breakdown"]["kind"] == "twr"
+    chained = D(1)
+    for segment in twr["breakdown"]["segments"]:
+        chained *= D(segment["ratio"])
+    assert abs(chained - 1 - D(twr["value"])) < D("1E-20")
+    assert all(
+        {"start", "end", "flow", "start_capital", "end_value", "income", "ratio"} <= set(g)
+        for g in twr["breakdown"]["segments"]
+    )
+    xirr = one(api, "kpi", {"metric": "xirr", "period": "YTD"})
+    flows = xirr["breakdown"]["flows"]
+    assert xirr["breakdown"]["kind"] == "xirr"
+    assert flows[-1]["kind"] == "end" and D(flows[-1]["amount"]) == 1188  # today's value comes back
+    assert any(f["kind"] == "put_in" and D(f["amount"]) < 0 for f in flows)
+    assert "breakdown" not in one(api, "kpi", {"metric": "value"})  # only for these two figures
+
+
 def test_risk_tiles_use_the_last_year(api, book) -> None:
     assert one(api, "kpi", {"metric": "volatility"})["value"] is not None
     assert D(one(api, "kpi", {"metric": "max_drawdown"})["value"]) <= 0

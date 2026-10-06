@@ -12,6 +12,22 @@ export interface Empty {
   reason?: string
 }
 
+/** The steps behind a time-weighted return or an XIRR ("how is this calculated"). */
+export type ReturnBreakdownData =
+  | {
+      kind: 'twr'
+      segments: {
+        start: string
+        end: string
+        flow: string
+        start_capital: string
+        end_value: string
+        income: string
+        ratio: string
+      }[]
+    }
+  | { kind: 'xirr'; flows: { date: string; amount: string; kind: string }[] }
+
 export interface KpiData extends Empty {
   metric: string
   kind: 'eur' | 'pct' | 'number'
@@ -24,6 +40,7 @@ export interface KpiData extends Empty {
   as_of?: string
   start?: string
   end?: string
+  breakdown?: ReturnBreakdownData
 }
 
 export interface ValueHistoryData extends Empty {

@@ -29,6 +29,51 @@
     "empty": {
       "title": "This dashboard is empty",
       "body": "Add a widget to start. Each shows one view of your portfolio, and you can arrange them by dragging."
+    },
+    "searchWidgets": "Search widgets and figures",
+    "searchPlaceholder": "For example: time-weighted, XIRR, allocation",
+    "searchHint": "Search by name or by figure. Figures such as returns, drift and risk are shown by the Key figure widget, and a search for one adds a Key figure already set to it.",
+    "figureOf": "Key figure",
+    "noMatch": "Nothing matches \"{{query}}\". Try a shorter word."
+  },
+  "breakdown": {
+    "open": "How is this calculated?",
+    "period": "Period: {{start}} to {{end}}",
+    "columns": {
+      "from": "From",
+      "to": "To",
+      "moved": "Money put in or taken out",
+      "startCapital": "Starting value, with that money",
+      "endValue": "Value at the end",
+      "income": "Income received",
+      "growth": "Growth",
+      "date": "Date",
+      "what": "What",
+      "amount": "Amount"
+    },
+    "kinds": {
+      "start": "Value at the start",
+      "put_in": "Money put in",
+      "received": "Money or income received",
+      "end": "Value at the end"
+    },
+    "twr": {
+      "title": "How the time-weighted return is calculated",
+      "what": "The time-weighted return shows how well the investments did, whatever money you added or took out and whenever you did it. Adding money just before a rise does not make the return look better, and taking money out just before a fall does not make it look worse.",
+      "steps": "The period is cut into stretches at every day money was put in or taken out. Each stretch grows from its starting value (the value the day before, plus or minus the money moved that day) to its value at the end, and income received counts as growth. The growth of all stretches is then multiplied together.",
+      "caption": "The stretches of the period and the growth of each",
+      "together": "All stretches together (the growth of each multiplied, minus 1)",
+      "note": "Check one stretch by hand: its growth is the value at the end plus the income received, divided by the starting value, minus 1. Within a stretch the same is done for each day, so a stretch of several days can differ a little from this simple division when income was received."
+    },
+    "xirr": {
+      "title": "How the return per year (XIRR) is calculated",
+      "what": "XIRR is the single yearly rate that makes all your money flows balance, each counted from its own date. It answers: what yearly interest rate on a savings account would have given the same end result, if the same amounts had gone in and out on the same dates.",
+      "steps": "The table lists the flows used: the value at the start counts as money put in on the first day, every purchase or deposit as money put in, every sale, withdrawal, dividend and interest payment as money received, and today's value as money received on the last day.",
+      "caption": "The money flows used for the XIRR",
+      "result": "The yearly rate that balances them (XIRR)",
+      "copy": "Copy for a spreadsheet",
+      "copied": "Copied. Paste it into a spreadsheet.",
+      "note": "In a spreadsheet, paste the two columns (dates and amounts) and use =XIRR(amounts, dates). Money put in is negative and money received is positive. The result should match within a hundredth of a percentage point."
     }
   },
   "dashboards": {

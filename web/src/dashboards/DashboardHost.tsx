@@ -4,15 +4,15 @@ import { useTranslation } from 'react-i18next'
 import { Link, useNavigate } from 'react-router-dom'
 import { errorMessage } from '../api/client'
 import { useAccounts } from '../api/queries'
-import { Dialog, EmptyState } from '../components/display'
+import { EmptyState } from '../components/display'
 import { Alert, Button, Input, Select } from '../components/ui'
 import { cn } from '../lib/cn'
+import { AddWidgetDialog } from './AddWidgetDialog'
 import { ConfigPanel } from './ConfigPanel'
 import { DashboardView, type Breakpoint } from './DashboardView'
 import {
   useDashboardActions,
   useDashboards,
-  useLibrary,
   type Box,
   type Config,
   type Dashboard,
@@ -22,35 +22,6 @@ import {
 } from './api'
 
 export const PERIODS = ['1D', '1W', '1M', '3M', 'YTD', '1Y', '3Y', '5Y', 'MAX'] as const
-
-function AddWidgetDialog({
-  onAdd,
-  onClose,
-}: {
-  onAdd: (type: string) => void
-  onClose: () => void
-}) {
-  const { t } = useTranslation()
-  const library = useLibrary()
-  return (
-    <Dialog open onClose={onClose} title={t('dashboard.addWidget')} wide>
-      <ul className="grid gap-2 sm:grid-cols-2">
-        {library.data?.map((w) => (
-          <li key={w.type}>
-            <button
-              type="button"
-              onClick={() => onAdd(w.type)}
-              className="w-full rounded-lg border border-border p-3 text-left hover:bg-border/30"
-            >
-              <span className="block font-medium">{t(`widgets.${w.type}`)}</span>
-              <span className="block text-sm text-muted">{t(`widgetHelp.${w.type}`)}</span>
-            </button>
-          </li>
-        ))}
-      </ul>
-    </Dialog>
-  )
-}
 
 /** A dashboard on screen: its period and account filters, the grid, and edit mode (FR-DB-02,
  * FR-DB-03, FR-DB-05). Used for Home (the default dashboard) and for any dashboard by id. */
@@ -251,9 +222,9 @@ export function DashboardHost({ dashboard }: { dashboard: Dashboard }) {
       {adding && (
         <AddWidgetDialog
           onClose={() => setAdding(false)}
-          onAdd={(type) =>
+          onAdd={(type, config) =>
             actions.addWidget.mutate(
-              { id: dashboard.id, type },
+              { id: dashboard.id, type, config },
               { onSuccess: () => setAdding(false) },
             )
           }

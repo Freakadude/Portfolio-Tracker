@@ -13,7 +13,9 @@ from folio.analytics.returns import (
     return_figures,
     twr,
     twr_index,
+    twr_segments,
     xirr,
+    xirr_flow_rows,
     xirr_flows,
 )
 
@@ -179,3 +181,71 @@ def test_xirr_inverts_compound_growth(amount: Decimal, rate: Decimal, days: int)
     result = xirr([(DAY0, -amount), (DAY0 + timedelta(days=days), end)])
     assert result is not None
     assert abs(result - rate) < D("1E-9")
+
+
+def test_the_breakdown_of_a_worked_example_can_be_followed_by_hand() -> None:
+    # 1000 grows 10 % over two days; then 1000 is added, the 2100 becomes 2310 with 22 of income
+    series = [
+        point(0, "1000"),
+        point(1, "1050"),
+        point(2, "1100"),
+        point(3, "2310", flow="1000", income="22"),
+        point(4, "2310"),
+    ]
+    first, second = twr_segments(series)
+    assert (first.start, first.end, first.flow) == (
+        DAY0 + timedelta(days=1),
+        DAY0 + timedelta(days=2),
+        0,
+    )
+    assert (first.start_capital, first.end_value, first.ratio) == (D(1000), D(1100), D("1.1"))
+    assert (second.start, second.end, second.flow) == (
+        DAY0 + timedelta(days=3),
+        DAY0 + timedelta(days=4),
+        D(1000),
+    )
+    assert (second.start_capital, second.end_value, second.income) == (D(2100), D(2310), D(22))
+    # the day's end value with its income over the start, then a flat day
+    assert abs(second.ratio - D(2332) / D(2100)) < D("1E-25")
+    result = twr(series)
+    assert result is not None and abs(result - (first.ratio * second.ratio - 1)) < D("1E-25")
+
+
+def test_the_cash_flow_rows_say_what_each_amount_is() -> None:
+    series = [
+        point(0, "1000"),
+        point(1, "1000", flow="200"),  # money put in
+        point(2, "1000", income="15"),  # a dividend
+        point(3, "1100"),
+    ]
+    rows = xirr_flow_rows(series)
+    assert [(r.kind, r.amount) for r in rows] == [
+        ("start", D(-1000)),
+        ("put_in", D(-200)),
+        ("received", D(15)),
+        ("end", D(1100)),
+    ]
+    assert xirr_flows(series) == [(r.day, r.amount) for r in rows]
+
+
+@settings(max_examples=60, deadline=None)
+@given(st.lists(st.tuples(_rate, _flow, _flow), min_size=1, max_size=40))
+def test_the_segments_chain_to_the_same_return_as_the_daily_series(
+    steps: list[tuple[Decimal, Decimal, Decimal]],
+) -> None:
+    value = D(10000)
+    series = [point(0, str(value))]
+    for i, (rate, flow, income) in enumerate(steps, start=1):
+        flow = flow if flow != 0 and i % 3 == 0 else D(0)  # money moves only now and then
+        income = abs(income) / 100 if i % 5 == 0 else D(0)
+        capital = value + flow
+        if capital <= 0:
+            flow, capital = D(0), value
+        value = capital * (1 + rate)
+        series.append(DailyPoint(DAY0 + timedelta(days=i), value, flow, income))
+    chained = D(1)
+    for segment in twr_segments(series):
+        chained *= segment.ratio
+    result = twr(series)
+    assert result is not None
+    assert abs(chained - 1 - result) < D("1E-25")

@@ -54,6 +54,66 @@ def twr_index(points: Sequence[DailyPoint]) -> list[tuple[date, Decimal]]:
     return out
 
 
+@dataclass(frozen=True)
+class Segment:
+    """Days between two external money movements, chained into the time-weighted return."""
+
+    start: date
+    end: date
+    flow: Decimal  # money put in (+) or taken out (-) on the first day
+    start_capital: Decimal  # the value the segment started from, with that flow added
+    end_value: Decimal
+    income: Decimal  # dividends and interest received in the segment
+    ratio: Decimal  # end over start, income counted: 1.02 is a gain of 2 %
+
+
+@dataclass
+class _Open:
+    """A segment while its days are being added."""
+
+    start: date
+    flow: Decimal
+    start_capital: Decimal
+    end: date
+    end_value: Decimal
+    income: Decimal = ZERO
+    ratio: Decimal = ONE
+
+    def close(self) -> Segment:
+        return Segment(
+            self.start,
+            self.end,
+            self.flow,
+            self.start_capital,
+            self.end_value,
+            self.income,
+            self.ratio,
+        )
+
+
+def twr_segments(points: Sequence[DailyPoint]) -> list[Segment]:
+    """The same chain as `twr_index`, grouped: a new segment starts on every day with an external
+    flow. The product of the ratios is 1 + the time-weighted return."""
+    segments: list[Segment] = []
+    current: _Open | None = None
+    with localcontext() as ctx:
+        ctx.prec = _PRECISION
+        for previous, point in zip(points, points[1:], strict=False):
+            capital = previous.value + point.flow
+            if current is None or point.flow != 0:
+                if current is not None:
+                    segments.append(current.close())
+                current = _Open(point.day, point.flow, capital, point.day, point.value)
+            sold_out = point.value == 0 and point.flow < 0
+            if capital > 0 and not sold_out:
+                current.ratio = current.ratio * ((point.value + point.income) / capital)
+            current.income += point.income
+            current.end, current.end_value = point.day, point.value
+    if current is not None:
+        segments.append(current.close())
+    return segments
+
+
 def twr(points: Sequence[DailyPoint]) -> Decimal | None:
     """Total time-weighted return over the series (0.05 = 5%); None for fewer than two days."""
     if len(points) < 2:
@@ -70,22 +130,34 @@ def annualise(rate: Decimal, days: int) -> Decimal | None:
         return ((ONE + rate).ln() * Decimal(365) / Decimal(days)).exp() - ONE
 
 
-def xirr_flows(points: Sequence[DailyPoint]) -> list[tuple[date, Decimal]]:
-    """The investor's cash flows for a series: what goes in is negative, what comes out and the
-    final value positive."""
+@dataclass(frozen=True)
+class FlowRow:
+    day: date
+    amount: Decimal  # what goes in is negative, what comes out and the final value positive
+    kind: str  # "start", "put_in", "received" or "end"
+
+
+def xirr_flow_rows(points: Sequence[DailyPoint]) -> list[FlowRow]:
+    """The investor's cash flows for a series, each with what it is."""
     if len(points) < 2:
         return []
-    flows: list[tuple[date, Decimal]] = []
+    rows: list[FlowRow] = []
     if points[0].value > 0:
-        flows.append((points[0].day, -points[0].value))
+        rows.append(FlowRow(points[0].day, -points[0].value, "start"))
     for point in points[1:]:
         net = point.income - point.flow
         if net != 0:
-            flows.append((point.day, net))
+            rows.append(FlowRow(point.day, net, "put_in" if net < 0 else "received"))
     last = points[-1]
     if last.value != 0:
-        flows.append((last.day, last.value))
-    return flows
+        rows.append(FlowRow(last.day, last.value, "end"))
+    return rows
+
+
+def xirr_flows(points: Sequence[DailyPoint]) -> list[tuple[date, Decimal]]:
+    """The investor's cash flows for a series: what goes in is negative, what comes out and the
+    final value positive."""
+    return [(row.day, row.amount) for row in xirr_flow_rows(points)]
 
 
 def xirr(flows: Sequence[tuple[date, Decimal]]) -> Decimal | None:
