@@ -58,6 +58,7 @@ jobs:
             echo "::error::the unit tests hung; the stuck processes are listed below"
             pkill -USR2 -x node || true
             sleep 10
+            shopt -s nullglob
             for f in "$RUNNER_TEMP"/node-reports/*.json; do
               echo "=== $f"
               node -e 'const r = require(process.argv[1]); console.log(r.header.commandLine.join(" ").slice(0, 200)); console.log(r.javascriptStack.message); console.log((r.javascriptStack.stack || []).slice(0, 30).join(String.fromCharCode(10)))' "$f" || true

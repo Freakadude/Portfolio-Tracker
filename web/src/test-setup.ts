@@ -15,3 +15,7 @@ class FakeResizeObserver {
 }
 globalThis.ResizeObserver ??= FakeResizeObserver as unknown as typeof ResizeObserver
 Object.defineProperty(HTMLElement.prototype, 'offsetWidth', { configurable: true, value: 1200 })
+// The grid measures its container with clientWidth. Without this it first reads 0 (a phone-sized
+// layout) and then 1200 from the observer above, and with the data arriving in between the two
+// layouts kept replacing each other: the test never finished, on slower machines every time.
+Object.defineProperty(HTMLElement.prototype, 'clientWidth', { configurable: true, value: 1200 })
