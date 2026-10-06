@@ -223,3 +223,30 @@ def test_an_issuers_german_workbook_is_read_with_its_cash_lines_and_date() -> No
 def test_dates_with_german_and_dutch_month_names_are_read(text: str, expected: date) -> None:
     rows = [["Per", text], ["Name", "Weight (%)"], ["A", 100]]
     assert suggest(workbook({"S": rows})).as_of == expected
+
+
+def test_a_workbook_with_a_title_line_date_fraction_weights_and_float_noise() -> None:
+    """The layout of a defence-themed ETF's workbook: one sheet, the date inside the title line
+    ('... As Of:05-10-2026'), 'Security Description' and 'Exposure Country' columns, weights as
+    fractions stored with floating-point noise (0.04769999999999999)."""
+    rows = [
+        ["Future of Defence UCITS ETF (IE000OJ5TQP4) As Of:05-10-2026"],
+        ["Security Description", "Shares", "Trading Currency", "Exposure Country", "ISIN", "Weight"],
+        ["PALANTIR TECHNOLOGIES INC", 1000549, "USD", "United States", "US69608A1088", 0.0581],
+        ["BAE SYSTEMS PLC", 6080252, "GBP", "United Kingdom", "GB0002634946", 0.04769999999999999],
+        ["SAAB AB COMMON STOCK SEK", 0, "SEK", "Sweden", "SE0021921269", 0],
+        ["REST", 5, "EUR", "Germany", "DE0007030009", 0.8943],
+    ]  # fmt: skip
+    file = suggest(workbook({"NATO Holdings": rows}))
+    assert file.as_of == date(2026, 10, 5) and file.mapping.weight_is_fraction is True
+    read = read_holdings(file)
+    assert [(c.name, c.weight_pct) for c in read.constituents] == [
+        ("PALANTIR TECHNOLOGIES INC", D("5.81")),
+        ("BAE SYSTEMS PLC", D("4.77")),  # the noise is gone
+        ("SAAB AB COMMON STOCK SEK", D("0")),
+        ("REST", D("89.43")),
+    ]
+    assert read.covered_pct == D("100.01") and read.errors == []
+    assert (read.constituents[0].isin, read.constituents[0].country, read.constituents[0].currency) == (
+        "US69608A1088", "United States", "USD",
+    )  # fmt: skip

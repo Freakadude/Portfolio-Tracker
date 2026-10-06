@@ -24,6 +24,7 @@ MAX_PDF_PAGES = 60
 FileKind = Literal["xlsx", "pdf", "xls", "csv"]
 Table = list[list[str]]
 
+_TWELVE_DECIMALS = Decimal("1E-12")
 _OLE2 = b"\xd0\xcf\x11\xe0\xa1\xb1\x1a\xe1"  # the old binary Excel format (.xls)
 
 
@@ -48,7 +49,9 @@ def _text(value: object) -> str:
         return str(value)
     if isinstance(value, float):
         try:
-            return format(Decimal(repr(value)), "f")
+            exact = Decimal(repr(value))
+            # Excel stores 0.0477 as 0.04769999999999999: twelve decimals are enough for a weight
+            return format(exact.quantize(_TWELVE_DECIMALS).normalize(), "f")
         except InvalidOperation:
             return str(value)
     if isinstance(value, datetime):

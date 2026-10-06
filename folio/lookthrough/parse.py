@@ -41,6 +41,7 @@ _NAME = (
     "instrument",
     "issuer",
     "description",
+    "security description",
     "naam",
 )
 _WEIGHT = (
@@ -74,6 +75,7 @@ _COUNTRY = (
     "country of domicile",
     "land",
     "standort",
+    "exposure country",
 )
 _CURRENCY = (
     "currency",
@@ -111,6 +113,7 @@ _DATE_FORMATS = (
     "%Y-%m-%d",
     "%d/%m/%Y",
     "%d.%m.%Y",
+    "%d-%m-%Y",
     "%B %d, %Y",
     "%d %b %Y",
 )
