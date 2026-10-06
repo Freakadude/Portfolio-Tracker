@@ -9,7 +9,7 @@ from folio.api.middleware import is_https
 from folio.audit import write_audit
 from folio.db.base import utcnow
 from folio.db.models import User
-from folio.security import ratelimit, totp, twofactor
+from folio.security import ratelimit, tailscale, totp, twofactor
 from folio.security.passwords import hash_password, needs_rehash, verify_password
 from folio.security.sessions import REMEMBER_TTL, create_session, end_session
 from folio.security.users import normalize_username
@@ -208,3 +208,36 @@ def totp_new_codes(
         raise ApiError(422, "Cannot make new codes", str(exc)) from exc
     write_audit(db, user.username, "user", "new recovery codes", entity_id=user.id)
     return RecoveryCodesOut(recovery_codes=codes)
+
+
+# --- sign in by Tailscale Serve's identity (FR-SY-04) ---------------------------------------------
+
+
+class AuthMethodsOut(BaseModel):
+    tailscale: bool  # this request comes through Tailscale Serve as the configured user
+
+
+def _tailscale_login(request: Request) -> str | None:
+    settings = request.app.state.settings
+    peer = request.client.host if request.client else None
+    return tailscale.identity(settings, peer, request.headers)
+
+
+@router.get("/methods", response_model=AuthMethodsOut)
+def auth_methods(request: Request) -> AuthMethodsOut:
+    """Which extra ways of signing in this request may use. Nothing is granted here."""
+    return AuthMethodsOut(tailscale=_tailscale_login(request) is not None)
+
+
+@router.post("/tailscale", response_model=MeOut)
+def tailscale_sign_in(request: Request, response: Response, db: DbDep) -> MeOut:
+    """Start a normal session for the owner when the request comes through Tailscale Serve as the
+    configured tailnet user. Off by default; the two-factor code is not asked, because the
+    device was already identified by the tailnet."""
+    login = _tailscale_login(request)
+    user = db.scalar(select(User).order_by(User.id)) if login is not None else None
+    if login is None or user is None:
+        raise ApiError(401, "Not available", "Signing in through Tailscale is not available here.")
+    issue_session(request, response, db, user, remember=False)
+    write_audit(db, user.username, "user", "sign in with Tailscale", diff={"tailnet_login": login})
+    return MeOut(username=user.username)

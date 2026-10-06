@@ -172,3 +172,41 @@ describe('the Security tab', () => {
     expect(calls.some((c) => c.path === '/api/v1/auth/totp/disable')).toBe(true)
   })
 })
+
+describe('signing in through Tailscale (FR-SY-04)', () => {
+  it('offers the button only when the request comes through Tailscale Serve, and signs in', async () => {
+    const { calls } = mockApi({
+      '/api/v1/setup/status': SIGNED_OUT,
+      '/api/v1/auth/methods': { tailscale: true },
+      'POST /api/v1/auth/tailscale': { username: 'owner' },
+    })
+    renderAt(<Login />, '/login')
+    await userEvent.click(await screen.findByRole('button', { name: 'Sign in through Tailscale' }))
+    await waitFor(() =>
+      expect(calls.some((c) => c.method === 'POST' && c.path === '/api/v1/auth/tailscale')).toBe(
+        true,
+      ),
+    )
+  })
+
+  it('shows no button otherwise', async () => {
+    mockApi({ '/api/v1/setup/status': SIGNED_OUT, '/api/v1/auth/methods': { tailscale: false } })
+    renderAt(<Login />, '/login')
+    await screen.findByLabelText('Username')
+    expect(
+      screen.queryByRole('button', { name: 'Sign in through Tailscale' }),
+    ).not.toBeInTheDocument()
+  })
+
+  it('says so when the sign-in is refused', async () => {
+    mockApi({
+      '/api/v1/setup/status': SIGNED_OUT,
+      '/api/v1/auth/methods': { tailscale: true },
+      'POST /api/v1/auth/tailscale': () =>
+        problem(401, 'Not available', 'Signing in through Tailscale is not available here.'),
+    })
+    renderAt(<Login />, '/login')
+    await userEvent.click(await screen.findByRole('button', { name: 'Sign in through Tailscale' }))
+    expect(await screen.findByText(/not available here/)).toBeInTheDocument()
+  })
+})

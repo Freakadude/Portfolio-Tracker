@@ -12,6 +12,8 @@ x-folio-env: &folio-env
   FOLIO_TZ:
   FOLIO_LOG_LEVEL:
   FOLIO_EXTRA_BACKUP_DIR:
+  FOLIO_TAILSCALE_USER: # optional: let this tailnet login in through Tailscale Serve (docs/deployment.md)
+  FOLIO_TRUSTED_PROXIES: # with it: the address Tailscale Serve connects from
 
 services:
   web:

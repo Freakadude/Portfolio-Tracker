@@ -124,8 +124,15 @@ def web(
     """Run migrations, then serve the API and the built UI."""
     import uvicorn
 
+    from folio.security.tailscale import TailscaleConfigError, networks
+
     settings = get_settings()
     settings.require_secret_key()
+    try:
+        networks(settings)  # a typo in FOLIO_TRUSTED_PROXIES stops the start, not a sign-in later
+    except TailscaleConfigError as exc:
+        typer.echo(f"Error: {exc}", err=True)
+        raise typer.Exit(1) from exc
     configure_logging(settings.log_level)
     _migrate_safely(settings)
     uvicorn.run(
@@ -136,7 +143,9 @@ def web(
         reload=reload,
         log_config=None,  # our JSON logging stays in charge
         access_log=False,  # the request middleware writes the access log
-        proxy_headers=True,
+        # the real peer address matters for the optional Tailscale sign-in (FR-SY-04), so no
+        # forwarded address may replace it; X-Forwarded-Proto is still read by the app itself
+        proxy_headers=False,
     )
 
 

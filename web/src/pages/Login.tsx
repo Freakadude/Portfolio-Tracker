@@ -1,5 +1,5 @@
 import { zodResolver } from '@hookform/resolvers/zod'
-import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { useTranslation } from 'react-i18next'
@@ -28,6 +28,18 @@ export function Login() {
     defaultValues: { username: '', password: '', remember: false, code: '' },
   })
   const [needCode, setNeedCode] = useState(false)
+  const methods = useQuery({
+    queryKey: ['auth', 'methods'],
+    queryFn: () => unwrap(api.GET('/api/v1/auth/methods')),
+    retry: false,
+  })
+  const tailnet = useMutation({
+    mutationFn: () => unwrap(api.POST('/api/v1/auth/tailscale')),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: STATUS_KEY })
+      navigate('/')
+    },
+  })
 
   const login = useMutation({
     mutationFn: (body: Values) =>
@@ -92,6 +104,19 @@ export function Login() {
             {t('login.submit')}
           </Button>
         </form>
+        {methods.data?.tailscale && (
+          <div className="space-y-2 border-t border-border pt-4">
+            <Button
+              variant="secondary"
+              className="w-full"
+              onClick={() => tailnet.mutate()}
+              disabled={tailnet.isPending}
+            >
+              {t('login.tailscale')}
+            </Button>
+            {tailnet.isError && <Alert>{errorMessage(tailnet.error)}</Alert>}
+          </div>
+        )}
       </Card>
     </main>
   )

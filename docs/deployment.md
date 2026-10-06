@@ -15,6 +15,7 @@ CI builds the image on every green push to `main` and publishes it to the GitHub
    | `FOLIO_WEB_PORT` | optional, the port Folio is reachable on; default 8555 |
    | `FOLIO_BASE_URL` | optional, for example `http://192.168.1.10:8555`, so a notification opens Folio |
    | `FOLIO_TZ`, `FOLIO_LOG_LEVEL`, `FOLIO_EXTRA_BACKUP_DIR` | optional |
+   | `FOLIO_TAILSCALE_USER`, `FOLIO_TRUSTED_PROXIES` | optional, both or neither: sign in through Tailscale Serve (see below) |
    | `FOLIO_IMAGE` | optional, to pin a build, for example `ghcr.io/freakadude/portfolio-tracker:sha-<commit>` |
 
 4. Deploy, open `http://<FOLIO_LAN_IP>:8555/healthz`, then finish the setup wizard.
@@ -34,3 +35,12 @@ To go back, set `FOLIO_IMAGE` to an earlier `sha-` tag and update the stack. Tak
 ## Not exposed to the internet
 
 LAN or Tailscale only. Do not put it behind a publicly exposed reverse proxy.
+
+## Signing in through Tailscale Serve (optional)
+
+If you reach Folio through Tailscale Serve, it can pass your tailnet login to Folio so you do not type the password. It is off unless you set both variables:
+
+- `FOLIO_TAILSCALE_USER`: the tailnet login that may sign in, for example `you@example.com`.
+- `FOLIO_TRUSTED_PROXIES`: the address Tailscale Serve connects to Folio from, as Folio sees it. With Tailscale Serve on the LXC host and Folio in a container, that is the Docker network's gateway, often `172.18.0.1` (`docker network inspect` on the stack's network shows its Gateway). A range such as `172.18.0.0/16` works too.
+
+The login page then shows "Sign in through Tailscale" when the request really comes through Tailscale Serve as that user. Anyone else who reaches Folio directly can write the same header, so Folio ignores it unless the connection comes from the address you listed; do not list an address that other people or devices can use to reach Folio. A tailnet sign-in does not ask for the two-factor code (the device was already identified by the tailnet); the password and the code still work as before. A typo in `FOLIO_TRUSTED_PROXIES` stops the web container from starting, with a message.

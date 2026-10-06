@@ -17,6 +17,10 @@ class Settings(BaseSettings):
     backup_dir: str = "/data/backups"
     extra_backup_dir: str | None = None
     version: str | None = None  # the build, e.g. the git commit; set by the image (FR-SY-10)
+    # Optional sign-in by Tailscale Serve's identity headers (FR-SY-04). Off unless BOTH are set:
+    # the tailnet login that may sign in, and the addresses Tailscale Serve connects from.
+    tailscale_user: str | None = None
+    trusted_proxies: str = ""  # comma separated addresses or ranges, e.g. 172.18.0.1,10.0.0.0/8
 
     def require_secret_key(self) -> str:
         if len(self.secret_key) < 32:

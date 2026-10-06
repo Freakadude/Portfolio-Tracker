@@ -258,6 +258,48 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/auth/methods": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Auth Methods
+         * @description Which extra ways of signing in this request may use. Nothing is granted here.
+         */
+        get: operations["auth_methods_api_v1_auth_methods_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/auth/tailscale": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Tailscale Sign In
+         * @description Start a normal session for the owner when the request comes through Tailscale Serve as the
+         *     configured tailnet user. Off by default; the two-factor code is not asked, because the
+         *     device was already identified by the tailnet.
+         */
+        post: operations["tailscale_sign_in_api_v1_auth_tailscale_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/auth/totp": {
         parameters: {
             query?: never;
@@ -3093,6 +3135,11 @@ export interface components {
             items: components["schemas"]["AuditOut"][];
             /** Next Cursor */
             next_cursor: number | null;
+        };
+        /** AuthMethodsOut */
+        AuthMethodsOut: {
+            /** Tailscale */
+            tailscale: boolean;
         };
         /** BacktestFiringOut */
         BacktestFiringOut: {
@@ -6795,6 +6842,46 @@ export interface operations {
         };
     };
     me_api_v1_auth_me_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MeOut"];
+                };
+            };
+        };
+    };
+    auth_methods_api_v1_auth_methods_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AuthMethodsOut"];
+                };
+            };
+        };
+    };
+    tailscale_sign_in_api_v1_auth_tailscale_post: {
         parameters: {
             query?: never;
             header?: never;

@@ -82,6 +82,7 @@
     "submit": "Sign in",
     "failed": "Could not sign in.",
     "code": "Code from your authenticator app, or a recovery code",
+    "tailscale": "Sign in through Tailscale",
     "codeNeeded": "Enter the code from your authenticator app, or one of your recovery codes."
   },
   "twofactor": {

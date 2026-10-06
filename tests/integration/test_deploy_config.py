@@ -91,3 +91,13 @@ def test_ci_publishes_only_a_green_main_with_the_workflows_own_token() -> None:
     text = yaml.safe_dump(job)
     assert "secrets.GITHUB_TOKEN" in text
     assert "secrets.GITHUB_TOKEN" not in yaml.safe_dump(workflow["jobs"]["image"])
+
+
+def test_the_stack_passes_the_tailscale_sign_in_settings_through_and_both_default_to_off(
+    compose: dict[str, Any],
+) -> None:
+    env = compose["services"]["web"]["environment"]
+    assert "FOLIO_TAILSCALE_USER" in env and "FOLIO_TRUSTED_PROXIES" in env
+    assert env["FOLIO_TAILSCALE_USER"] is None and env["FOLIO_TRUSTED_PROXIES"] is None  # unset
+    text = (ROOT / ".env.example").read_text(encoding="utf-8")
+    assert "FOLIO_TAILSCALE_USER" in text and "FOLIO_TRUSTED_PROXIES" in text
