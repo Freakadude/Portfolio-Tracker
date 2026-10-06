@@ -1,3 +1,4 @@
+import shutil
 from collections.abc import Callable, Iterator
 from pathlib import Path
 from typing import Any
@@ -18,10 +19,19 @@ PASSWORD = "correct horse battery staple"
 FAKE_API_KEY = "fake-provider-key-0123456789"  # gitleaks:allow
 
 
+@pytest.fixture(scope="session")
+def migrated_template(tmp_path_factory: pytest.TempPathFactory) -> Path:
+    """A database migrated to head once per run; each test starts from a copy of this file
+    instead of running every migration again (about 0.25 s each, most of the suite's time)."""
+    path = tmp_path_factory.mktemp("template") / "folio.db"
+    migrate.upgrade(f"sqlite:///{path}")
+    return path
+
+
 @pytest.fixture
-def settings(tmp_path: Path) -> Settings:
+def settings(tmp_path: Path, migrated_template: Path) -> Settings:
+    shutil.copyfile(migrated_template, tmp_path / "folio.db")
     url = f"sqlite:///{tmp_path / 'folio.db'}"
-    migrate.upgrade(url)
     return Settings(  # type: ignore[call-arg]
         secret_key=TEST_SECRET,
         db_url=url,

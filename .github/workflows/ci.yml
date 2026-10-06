@@ -19,14 +19,17 @@ jobs:
       - run: uv run ruff check .
       - run: uv run ruff format --check .
       - run: uv run mypy folio
-      - run: uv run pytest --cov=folio --cov-report=term-missing
+      # in parallel, one worker per core; the timing test runs alone afterwards, because a loaded
+      # machine would skew the 300 ms it measures
+      - run: uv run pytest -n auto --ignore=tests/perf --cov=folio --cov-report=term-missing
+      - run: uv run pytest tests/perf --cov=folio --cov-append --cov-report=term-missing
       - name: Coverage gate for domain, analytics and strategies (at least 85 percent)
         run: uv run coverage report --include="folio/domain/*,folio/analytics/*,folio/strategies/*,folio/lookthrough/*,folio/news/*,folio/agent/cost.py,folio/agent/budget.py,folio/agent/prompt_files.py,folio/agent/validate.py,folio/agent/outcomes.py,folio/agent/answers.py,folio/security/totp.py" --fail-under=85
       - run: uv run pip-audit
 
   web:
     runs-on: ubuntu-latest
-    timeout-minutes: 20  # a hung step must fail, not sit for hours
+    timeout-minutes: 15  # a hung step must fail, not sit for hours
     defaults:
       run:
         working-directory: web
@@ -42,7 +45,27 @@ jobs:
       - run: npm run lint
       - run: npm run format:check
       - run: npm run typecheck
-      - run: npm test -- --reporter=verbose  # names the last test that ran if one ever hangs
+      # The unit tests have hung on these runners now and then, never on a developer machine. A
+      # hang is cut off after 7 minutes and Node's diagnostic report says what the stuck process
+      # was running.
+      - name: Unit tests
+        run: |
+          export NODE_OPTIONS="--report-on-signal --report-signal=SIGUSR2 --report-directory=$RUNNER_TEMP/node-reports"
+          npm test -- --pool=forks --reporter=verbose &
+          pid=$!
+          for _ in $(seq 1 84); do kill -0 "$pid" 2>/dev/null || break; sleep 5; done
+          if kill -0 "$pid" 2>/dev/null; then
+            echo "::error::the unit tests hung; the stuck processes are listed below"
+            pkill -USR2 -x node || true
+            sleep 10
+            for f in "$RUNNER_TEMP"/node-reports/*.json; do
+              echo "=== $f"
+              node -e 'const r = require(process.argv[1]); console.log(r.header.commandLine.join(" ").slice(0, 200)); console.log(r.javascriptStack.message); console.log((r.javascriptStack.stack || []).slice(0, 30).join(String.fromCharCode(10)))' "$f" || true
+            done
+            kill -9 "$pid" || true
+            exit 1
+          fi
+          wait "$pid"
       - run: npm audit --audit-level=high
       - name: API schema is up to date
         run: |
