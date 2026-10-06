@@ -23,6 +23,7 @@ export default defineConfig({
       env: {
         FOLIO_SECRET_KEY: 'e2e-only-secret-key-0123456789abcdef0123456789',
         FOLIO_DB_URL: `sqlite:///${DB.replace('../', '')}`,
+        FOLIO_BACKUP_DIR: 'e2e-data/backups', // never the machine's own /data/backups
         FOLIO_PORT: String(PORT),
         FOLIO_HOST: '127.0.0.1',
       },
