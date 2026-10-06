@@ -4651,6 +4651,10 @@
             ],
             "title": "Currency"
           },
+          "fetching": {
+            "title": "Fetching",
+            "type": "boolean"
+          },
           "id": {
             "title": "Id",
             "type": "integer"
@@ -4724,7 +4728,8 @@
           "close",
           "close_date",
           "previous_close",
-          "stale"
+          "stale",
+          "fetching"
         ],
         "title": "ItemOut",
         "type": "object"
@@ -20843,6 +20848,49 @@
           }
         },
         "summary": "Edit Item",
+        "tags": [
+          "watchlists"
+        ]
+      }
+    },
+    "/api/v1/watchlists/{watchlist_id}/refresh": {
+      "post": {
+        "description": "Fetch prices now for what is on the list: the history of items that have none, and the\nnewest closes of all of them.",
+        "operationId": "refresh_items_api_v1_watchlists__watchlist_id__refresh_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "watchlist_id",
+            "required": true,
+            "schema": {
+              "title": "Watchlist Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "202": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WatchlistOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Refresh Items",
         "tags": [
           "watchlists"
         ]

@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
 import { api, errorMessage, unwrap } from '../api/client'
@@ -20,6 +20,9 @@ export function Watchlist() {
   const lists = useQuery({
     queryKey: KEY,
     queryFn: () => unwrap(api.GET('/api/v1/watchlists')),
+    // while the worker is fetching prices for an item, look again every few seconds
+    refetchInterval: (query) =>
+      query.state.data?.some((l) => l.items.some((i) => i.fetching)) ? 3000 : false,
   })
   if (lists.isPending) return <p role="status">{t('app.loading')}</p>
   if (lists.isError) return <Alert>{errorMessage(lists.error)}</Alert>
@@ -44,6 +47,7 @@ type List = {
     close_date: string | null
     previous_close: string | null
     stale: boolean
+    fetching: boolean
   }[]
 }
 
@@ -63,6 +67,24 @@ function WatchlistBody({ list }: { list: List }) {
   const [adding, setAdding] = useState(false)
   const [shown, setShown] = useState<number | null>(null)
   const refresh = () => queryClient.invalidateQueries({ queryKey: KEY })
+  const fetching = list.items.some((i) => i.fetching)
+  // when the fetching ends the new prices and history are shown
+  const wasFetching = useRef(false)
+  useEffect(() => {
+    if (wasFetching.current && !fetching) {
+      void queryClient.invalidateQueries({ queryKey: ['prices'] })
+    }
+    wasFetching.current = fetching
+  }, [fetching, queryClient])
+  const fetchNow = useMutation({
+    mutationFn: () =>
+      unwrap(
+        api.POST('/api/v1/watchlists/{watchlist_id}/refresh', {
+          params: { path: { watchlist_id: list.id } },
+        }),
+      ),
+    onSuccess: refresh,
+  })
 
   const watched = new Set(list.items.map((i) => i.instrument_id))
   const options = (instruments.data ?? []).filter((i) => !watched.has(i.id))
@@ -131,8 +153,22 @@ function WatchlistBody({ list }: { list: List }) {
           <Button type="button" variant="ghost" onClick={() => setAdding(true)}>
             {t('watchlist.newInstrument')}
           </Button>
+          <Button
+            type="button"
+            variant="secondary"
+            onClick={() => fetchNow.mutate()}
+            disabled={fetchNow.isPending || fetching || list.items.length === 0}
+          >
+            {t('watchlist.fetchNow')}
+          </Button>
         </form>
       </div>
+      {fetching && (
+        <p role="status" className="text-sm">
+          {t('watchlist.fetching')}
+        </p>
+      )}
+      {fetchNow.isError && <Alert>{errorMessage(fetchNow.error)}</Alert>}
       {add.isError && <Alert>{errorMessage(add.error)}</Alert>}
       {remove.isError && <Alert>{errorMessage(remove.error)}</Alert>}
       {note.isError && <Alert>{errorMessage(note.error)}</Alert>}
@@ -173,7 +209,9 @@ function WatchlistBody({ list }: { list: List }) {
                   </td>
                   <td className="py-2 pr-3 text-right tabular-nums">
                     {item.close === null ? (
-                      <span className="text-muted">{t('watchlist.noPrice')}</span>
+                      <span className="text-muted">
+                        {item.fetching ? t('watchlist.fetchingItem') : t('watchlist.noPrice')}
+                      </span>
                     ) : (
                       <>
                         {num(item.close)} {item.currency}

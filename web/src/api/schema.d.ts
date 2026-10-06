@@ -2721,6 +2721,27 @@ export interface paths {
         patch: operations["edit_item_api_v1_watchlists__watchlist_id__items__item_id__patch"];
         trace?: never;
     };
+    "/api/v1/watchlists/{watchlist_id}/refresh": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Refresh Items
+         * @description Fetch prices now for what is on the list: the history of items that have none, and the
+         *     newest closes of all of them.
+         */
+        post: operations["refresh_items_api_v1_watchlists__watchlist_id__refresh_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/widgets/data": {
         parameters: {
             query?: never;
@@ -4240,6 +4261,8 @@ export interface components {
             close_date: string | null;
             /** Currency */
             currency: string | null;
+            /** Fetching */
+            fetching: boolean;
             /** Id */
             id: number;
             /** Instrument Id */
@@ -11910,6 +11933,37 @@ export interface operations {
         responses: {
             /** @description Successful Response */
             200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WatchlistOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    refresh_items_api_v1_watchlists__watchlist_id__refresh_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                watchlist_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            202: {
                 headers: {
                     [name: string]: unknown;
                 };

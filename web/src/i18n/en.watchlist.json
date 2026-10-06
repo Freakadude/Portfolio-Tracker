@@ -13,6 +13,9 @@
       "actions": "Actions"
     },
     "noPrice": "No price yet",
+    "fetchNow": "Fetch prices now",
+    "fetching": "Fetching prices and history for the new items. This takes a few seconds and the list fills in by itself.",
+    "fetchingItem": "Fetching prices...",
     "stale": "out of date",
     "chart": "Chart",
     "remove": "Remove",

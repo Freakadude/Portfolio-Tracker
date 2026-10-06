@@ -1,6 +1,7 @@
-"""Delayed intraday quotes for held listings (FR-MD-05).
+"""Delayed intraday quotes for held and watched listings (FR-MD-05).
 
-Quotes are fetched every 15 minutes while an exchange is open, only for what is held, and only
+Quotes are fetched every 15 minutes while an exchange is open, only for what is held or on a
+watchlist, and only
 within the call budget: a provider is used for quotes only while enough of its daily budget is
 left over for the nightly closes. Budget exhaustion therefore pauses quotes and never EOD.
 """
@@ -15,7 +16,7 @@ from decimal import Decimal
 from sqlalchemy import delete, select
 from sqlalchemy.orm import Session
 
-from folio.db.models_analytics import Quote
+from folio.db.models_analytics import Quote, Watchlist, WatchlistItem
 from folio.db.models_ledger import Instrument, Listing, Position
 from folio.marketdata import exchanges
 from folio.marketdata.base import ListingRef, PriceProvider
@@ -27,11 +28,19 @@ EOD_MARGIN = 5  # calls kept back beyond one per tracked listing: a retry, a gap
 
 
 def held_listings(db: Session) -> list[tuple[Listing, Instrument]]:
-    """The pricing listing of every instrument with a positive holding in some account."""
+    """The pricing listing of every instrument with a positive holding in some account, and of
+    every instrument on a watchlist: watched ones are priced like holdings (FR-INS-05)."""
     held: set[int] = set()
     for instrument_id, quantity in db.execute(select(Position.instrument_id, Position.quantity)):
         if quantity > 0:
             held.add(instrument_id)
+    held.update(
+        db.scalars(
+            select(WatchlistItem.instrument_id)
+            .join(Watchlist, Watchlist.id == WatchlistItem.watchlist_id)
+            .where(Watchlist.deleted_at.is_(None))
+        )
+    )
     if not held:
         return []
     rows = db.execute(

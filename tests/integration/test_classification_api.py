@@ -11,8 +11,9 @@ from sqlalchemy import select
 from folio.config import Settings
 from folio.db.engine import make_engine, make_session_factory
 from folio.db.models import AuditLog
-from folio.db.models_ledger import PriceBar
+from folio.db.models_ledger import JobRequest, PriceBar
 from folio.marketdata.prices import tracked_listings
+from folio.marketdata.quotes import held_listings
 from tests.conftest import PASSWORD, USERNAME
 from tests.marketdata_helpers import make_listing
 
@@ -200,6 +201,36 @@ def test_watched_instruments_are_priced_by_the_nightly_jobs(api: TestClient, db)
     wl = api.get("/api/v1/watchlists").json()[0]
     api.post(f"/api/v1/watchlists/{wl['id']}/items", json={"instrument_id": instrument.id})
     assert [x.id for x, _ in tracked_listings(db)] == [listing.id]  # no transaction in sight
+
+
+def test_adding_an_instrument_without_prices_asks_the_worker_for_its_history(
+    api: TestClient,
+    db,  # type: ignore[no-untyped-def]
+) -> None:
+    """A watched item shows data soon after it is added, not only after the next nightly run."""
+    instrument, listing = make_listing(db, ticker="W")
+    db.commit()
+    wl = api.get("/api/v1/watchlists").json()[0]
+    added = api.post(f"/api/v1/watchlists/{wl['id']}/items", json={"instrument_id": instrument.id})
+    assert (
+        added.json()["items"][0]["fetching"] is True and added.json()["items"][0]["close"] is None
+    )
+    queued = db.scalars(select(JobRequest).where(JobRequest.job == "backfill")).all()
+    assert [r.params["listing_id"] for r in queued] == [listing.id]
+    # asking again does not queue a second backfill for the same listing
+    again = api.post(f"/api/v1/watchlists/{wl['id']}/refresh")
+    assert again.status_code == 202
+    assert len(db.scalars(select(JobRequest).where(JobRequest.job == "backfill")).all()) == 1
+    assert len(db.scalars(select(JobRequest).where(JobRequest.job == "refresh")).all()) == 1
+
+
+def test_watched_instruments_get_intraday_quotes_like_holdings(api: TestClient, db) -> None:  # type: ignore[no-untyped-def]
+    instrument, listing = make_listing(db, ticker="W")
+    db.commit()
+    assert held_listings(db) == []
+    wl = api.get("/api/v1/watchlists").json()[0]
+    api.post(f"/api/v1/watchlists/{wl['id']}/items", json={"instrument_id": instrument.id})
+    assert [x.id for x, _ in held_listings(db)] == [listing.id]
 
 
 def test_watchlist_management_and_deleting_a_watched_instrument(api: TestClient) -> None:

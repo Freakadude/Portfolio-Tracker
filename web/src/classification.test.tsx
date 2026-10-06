@@ -191,7 +191,22 @@ describe('watchlist (FR-INS-05)', () => {
     close_date: '2026-10-02',
     previous_close: '100',
     stale: false,
+    fetching: false,
     ...over,
+  })
+
+  it('says prices are being fetched for a new item and can ask for them again', async () => {
+    const { calls } = mockApi({
+      '/api/v1/settings/general': GENERAL_US,
+      '/api/v1/watchlists': list([item({ close: null, previous_close: null, fetching: true })]),
+      'POST /api/v1/watchlists/1/refresh': list([item()])[0],
+      '/api/v1/instruments': [],
+    })
+    renderAt(<Watchlist />)
+    expect(await screen.findByText('Fetching prices...')).toBeInTheDocument()
+    expect(screen.getByRole('status')).toHaveTextContent(/Fetching prices and history/)
+    expect(screen.getByRole('button', { name: 'Fetch prices now' })).toBeDisabled()
+    expect(calls.some((c) => c.method === 'POST')).toBe(false)
   })
 
   it('shows the last close, the day change and the note of a watched instrument', async () => {
