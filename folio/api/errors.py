@@ -49,6 +49,17 @@ def install_error_handlers(app: FastAPI) -> None:
     async def _http_error(_: Request, exc: StarletteHTTPException) -> JSONResponse:
         return problem(exc.status_code, str(exc.detail), headers=exc.headers)
 
+    @app.exception_handler(Exception)
+    async def _unexpected(_: Request, exc: Exception) -> JSONResponse:
+        # the traceback is in the server log (the "unhandled error" line); the page gets only the
+        # kind of error, never the message, which may hold data
+        return problem(
+            500,
+            "Unexpected error",
+            f"{type(exc).__name__}. The details are in the server log "
+            "(Portainer: the web container's logs, line 'unhandled error').",
+        )
+
     @app.exception_handler(RequestValidationError)
     async def _validation_error(_: Request, exc: RequestValidationError) -> JSONResponse:
         errors = [

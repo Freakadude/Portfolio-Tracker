@@ -2,7 +2,9 @@
 
 import datetime as dt
 import shutil
+import tomllib
 from datetime import UTC, date, datetime, timedelta
+from importlib.metadata import PackageNotFoundError
 from importlib.metadata import version as package_version
 from pathlib import Path
 from typing import Annotated, Any
@@ -198,6 +200,19 @@ class InfoOut(BaseModel):
     failing_news_sources: list[str]  # sources that failed their last fetch (FR-NW-02)
 
 
+def _folio_version() -> str:
+    """The installed version. The image installs only the dependencies (no package metadata),
+    so there it is read from the pyproject.toml the image carries."""
+    try:
+        return package_version("folio")
+    except PackageNotFoundError:
+        pyproject = Path(__file__).resolve().parents[3] / "pyproject.toml"
+        try:
+            return str(tomllib.loads(pyproject.read_text(encoding="utf-8"))["project"]["version"])
+        except (OSError, KeyError, tomllib.TOMLDecodeError):
+            return "unknown"
+
+
 def _sqlite_path(url: str) -> Path | None:
     prefix = "sqlite:///"
     if not url.startswith(prefix) or ":memory:" in url:
@@ -243,7 +258,7 @@ def info(request: Request, _user: UserDep, db: DbDep) -> InfoOut:
         or 0
     )
     return InfoOut(
-        version=package_version("folio"),
+        version=_folio_version(),
         build=settings.version,
         disk=DiskOut(
             database_bytes=database,

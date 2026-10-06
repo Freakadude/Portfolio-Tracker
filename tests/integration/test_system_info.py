@@ -1,6 +1,7 @@
 """The System page: version, disk use, agent cost and failing jobs (FR-SY-10)."""
 
 from datetime import UTC, datetime
+from importlib.metadata import PackageNotFoundError
 
 import pytest
 from fastapi.testclient import TestClient
@@ -27,6 +28,36 @@ def test_info_shows_version_disk_and_the_agent_row(api: TestClient) -> None:
     assert (info["disk"]["backups"], info["disk"]["backups_bytes"]) == (0, 0)
     assert info["agent"]["runs_this_month"] == 0 and info["agent"]["budget_eur"] == "5"  # Q6
     assert "Add your Anthropic API key" in info["agent"]["note"]  # nothing is spent without one
+
+
+def test_info_works_when_the_package_metadata_is_missing(
+    api: TestClient, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """The container image installs the dependencies only, so there is no metadata for folio and
+    the System page showed "Internal Server Error"."""
+
+    def missing(_name: str) -> str:
+        raise PackageNotFoundError("folio")
+
+    monkeypatch.setattr("folio.api.routers.system.package_version", missing)
+    response = api.get("/api/v1/system/info")
+    assert response.status_code == 200
+    assert response.json()["version"] == "0.1.0"  # read from pyproject.toml
+
+
+def test_an_unexpected_error_names_its_kind_and_points_to_the_log(
+    api: TestClient, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    def boom() -> str:
+        raise ZeroDivisionError("secret 1234.56 EUR")
+
+    monkeypatch.setattr("folio.api.routers.system._folio_version", boom)
+    quiet = TestClient(api.app, raise_server_exceptions=False, cookies=api.cookies)
+    response = quiet.get("/api/v1/system/info")
+    assert response.status_code == 500
+    body = response.json()
+    assert body["title"] == "Unexpected error" and "ZeroDivisionError" in body["detail"]
+    assert "1234.56" not in response.text  # the message may hold data and stays in the log
 
 
 def test_a_failing_job_is_visible_after_one_run(api: TestClient, settings: Settings) -> None:
