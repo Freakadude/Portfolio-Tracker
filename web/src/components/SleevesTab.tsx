@@ -2,11 +2,12 @@ import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useState, type FormEvent } from 'react'
 import { useTranslation } from 'react-i18next'
 import { api, errorMessage, unwrap } from '../api/client'
-import { useInvalidateLedger } from '../api/queries'
+import { useInstruments, useInvalidateLedger } from '../api/queries'
 import { Link } from 'react-router-dom'
 import { useSleeves } from '../dashboards/api'
 import { Dialog, EmptyState } from './display'
-import { Alert, Button, Field, Input } from './ui'
+import { TypeBadge } from './AssetType'
+import { Alert, Button, Checkbox, Field, Input } from './ui'
 
 type Sleeve = {
   id: number
@@ -183,8 +184,18 @@ function SleeveForm({
   const [target, setTarget] = useState(sleeve?.target_pct ?? '')
   const [band, setBand] = useState(sleeve?.band_pct ?? '')
   const [nameError, setNameError] = useState<string>()
+  const instruments = useInstruments()
+  const sleeves = useSleeves()
+  const sleeveNames = new Map((sleeves.data ?? []).map((x) => [x.id, x.name]))
+  // the instruments in this sleeve; None until the list has loaded so nothing is changed blind
+  const [members, setMembers] = useState<Set<number> | null>(null)
+  const chosen =
+    members ??
+    new Set(
+      (instruments.data ?? []).filter((i) => sleeve && i.sleeve_id === sleeve.id).map((i) => i.id),
+    )
   const save = useMutation({
-    mutationFn: () => {
+    mutationFn: async () => {
       // while a strategy is active it sets targets and bands; only the name is ours to change
       const body = managedBy
         ? { name: name.trim() }
@@ -193,14 +204,27 @@ function SleeveForm({
             target_pct: target.trim() === '' ? null : target.trim(),
             band_pct: band.trim() === '' ? null : band.trim(),
           }
-      return sleeve
-        ? unwrap(
+      const saved = sleeve
+        ? await unwrap(
             api.PATCH('/api/v1/sleeves/{sleeve_id}', {
               params: { path: { sleeve_id: sleeve.id } },
               body,
             }),
           )
-        : unwrap(api.POST('/api/v1/sleeves', { body }))
+        : await unwrap(api.POST('/api/v1/sleeves', { body }))
+      // put the chosen instruments in this sleeve, and take out the ones that were unticked
+      for (const i of instruments.data ?? []) {
+        const wanted = chosen.has(i.id)
+        const now = i.sleeve_id === saved.id
+        if (wanted === now) continue
+        await unwrap(
+          api.PATCH('/api/v1/instruments/{instrument_id}', {
+            params: { path: { instrument_id: i.id } },
+            body: { sleeve_id: wanted ? saved.id : null },
+          }),
+        )
+      }
+      return saved
     },
     onSuccess: onDone,
   })
@@ -247,6 +271,47 @@ function SleeveForm({
           )}
         </Field>
       </div>
+      <fieldset className="space-y-1">
+        <legend className="text-sm font-medium">{t('sleeves.members')}</legend>
+        <p className="text-xs text-muted">{t('sleeves.membersHint')}</p>
+        <div className="max-h-56 space-y-1 overflow-auto rounded-md border border-border p-2">
+          {(instruments.data ?? []).map((i) => {
+            const elsewhere =
+              i.sleeve_id && i.sleeve_id !== sleeve?.id ? sleeveNames.get(i.sleeve_id) : null
+            return (
+              <div key={i.id} className="flex flex-wrap items-center gap-2">
+                <Checkbox
+                  label={i.name}
+                  checked={chosen.has(i.id)}
+                  onChange={(e) => {
+                    const next = new Set(chosen)
+                    if (e.target.checked) next.add(i.id)
+                    else next.delete(i.id)
+                    setMembers(next)
+                  }}
+                />
+                <TypeBadge assetClass={i.asset_class} />
+                {elsewhere && chosen.has(i.id) && (
+                  <span className="text-xs text-muted">
+                    {t('sleeves.moveFrom', { name: elsewhere })}
+                  </span>
+                )}
+                {elsewhere && !chosen.has(i.id) && (
+                  <span className="text-xs text-muted">
+                    {t('sleeves.inOther', { name: elsewhere })}
+                  </span>
+                )}
+              </div>
+            )
+          })}
+          {instruments.data?.length === 0 && (
+            <p className="text-sm text-muted">{t('sleeves.noInstruments')}</p>
+          )}
+        </div>
+        {managedBy && (
+          <p className="text-xs text-muted">{t('sleeves.membersManaged', { name: managedBy })}</p>
+        )}
+      </fieldset>
       {save.isError && <Alert>{errorMessage(save.error)}</Alert>}
       <Button type="submit" disabled={save.isPending}>
         {t('sleeves.save')}

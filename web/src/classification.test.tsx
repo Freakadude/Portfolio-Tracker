@@ -94,6 +94,34 @@ describe('sleeves (FR-INS-04)', () => {
     })
   })
 
+  it('puts instruments in a sleeve from its own form, moving one from another sleeve', async () => {
+    const { calls } = mockApi({
+      '/api/v1/sleeves': (request: Request) =>
+        request.method === 'POST'
+          ? sleeve({ id: 7, name: 'Satellite', target_pct: null, band_pct: null })
+          : [sleeve({ id: 3, name: 'Core' })],
+      '/api/v1/instruments': [
+        instrument({ id: 5, name: 'Demo Gold ETC', sleeve_id: null }),
+        instrument({ id: 6, name: 'Demo Bond ETF', sleeve_id: 3 }),
+      ],
+      'PATCH /api/v1/instruments/5': {},
+      'PATCH /api/v1/instruments/6': {},
+    })
+    renderAt(<SleevesTab />)
+    await userEvent.click(await screen.findByRole('button', { name: 'Add sleeve' }))
+    const dialog = await screen.findByRole('dialog')
+    await userEvent.type(within(dialog).getByLabelText('Name'), 'Satellite')
+    await userEvent.click(await within(dialog).findByLabelText('Demo Gold ETC'))
+    await userEvent.click(within(dialog).getByLabelText('Demo Bond ETF'))
+    expect(within(dialog).getByText('moves from Core')).toBeInTheDocument()
+    await userEvent.click(within(dialog).getByRole('button', { name: 'Save sleeve' }))
+    await waitFor(() => expect(calls.filter((c) => c.method === 'PATCH').length).toBe(2))
+    const bodyOf = (id: number) =>
+      calls.find((c) => c.method === 'PATCH' && c.path === `/api/v1/instruments/${id}`)?.body
+    expect(bodyOf(5)).toEqual({ sleeve_id: 7 })
+    expect(bodyOf(6)).toEqual({ sleeve_id: 7 })
+  })
+
   it('needs a name', async () => {
     const { calls } = mockApi({ '/api/v1/sleeves': [] })
     renderAt(<SleevesTab />)

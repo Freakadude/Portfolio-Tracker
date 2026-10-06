@@ -21,11 +21,17 @@
     "bandLabel": "Band (percentage points)",
     "bandHint": "Optional. Drift inside the band counts as on target.",
     "save": "Save sleeve",
+    "members": "Instruments in this sleeve",
+    "membersHint": "Tick the instruments that belong here. An instrument is in one sleeve at a time, so ticking one that is in another sleeve moves it.",
+    "moveFrom": "moves from {{name}}",
+    "inOther": "in {{name}}",
+    "noInstruments": "You have no instruments yet. Add one under Holdings.",
+    "membersManaged": "The active strategy {{name}} can also place instruments in its sleeves (its members list), and does so each time it is saved.",
     "required": "This is required.",
     "over": "The targets add up to {{total}}%, which is more than 100%.",
     "empty": {
       "title": "No sleeves yet",
-      "body": "Add a sleeve, then choose it when you edit an instrument (Settings, Instruments)."
+      "body": "Add a sleeve and tick the instruments that belong in it, or set a sleeve when you edit an instrument."
     },
     "managed": "Targets and bands come from the active strategy {{name}}.",
     "openStrategy": "Change them there"
