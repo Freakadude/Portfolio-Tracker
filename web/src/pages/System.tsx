@@ -6,6 +6,7 @@ import { useAudit, useJobs, useSystemUsage, type AuditFilters } from '../api/que
 import { Badge } from '../components/display'
 import { RunsPanel } from '../agent/RunsPanel'
 import { SystemInfo } from '../notify/SystemInfo'
+import { BackupsPanel } from '../system/BackupsPanel'
 import { Alert, Button, Field, Input, Select } from '../components/ui'
 
 export function System() {
@@ -16,6 +17,7 @@ export function System() {
       <SystemInfo />
       <Usage />
       <Jobs />
+      <BackupsPanel />
       <RunsPanel />
       <AuditLog />
     </div>

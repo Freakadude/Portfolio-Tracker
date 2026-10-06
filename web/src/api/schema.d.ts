@@ -2298,6 +2298,74 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/system/backups": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Backups
+         * @description The backups on the server, newest first (nightly ones and the copies taken before a
+         *     migration or a restore).
+         */
+        get: operations["list_backups_api_v1_system_backups_get"];
+        put?: never;
+        /**
+         * Make Backup
+         * @description A verified backup now.
+         */
+        post: operations["make_backup_api_v1_system_backups_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/system/backups/upload": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Upload Backup
+         * @description Put a backup file made elsewhere on the server, after checking that it is a sound Folio
+         *     database. It is not restored until you say so.
+         */
+        post: operations["upload_backup_api_v1_system_backups_upload_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/system/backups/{name}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Download Backup
+         * @description Download a backup. The stored API keys are left out unless `include_secrets=true`: a copy
+         *     that leaves the server should not carry them.
+         */
+        get: operations["download_backup_api_v1_system_backups__name__get"];
+        put?: never;
+        post?: never;
+        /** Delete Backup */
+        delete: operations["delete_backup_api_v1_system_backups__name__delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/system/info": {
         parameters: {
             query?: never;
@@ -2350,6 +2418,28 @@ export interface paths {
          *     within a few seconds; the outcome appears in the job list.
          */
         post: operations["run_job_api_v1_system_jobs__job__run_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/system/restore": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Restore Status */
+        get: operations["restore_status_api_v1_system_restore_get"];
+        put?: never;
+        /**
+         * Start Restore
+         * @description Stage a restore and restart. The current database is kept as a pre-restore copy; nobody
+         *     is signed in afterwards, because the sessions come from the backup.
+         */
+        post: operations["start_restore_api_v1_system_restore_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -3212,6 +3302,31 @@ export interface components {
             /** Rule Type */
             rule_type: string;
         };
+        /** BackupMakeIn */
+        BackupMakeIn: {
+            /**
+             * Include Secrets
+             * @default true
+             */
+            include_secrets: boolean;
+        };
+        /** BackupOut */
+        BackupOut: {
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /**
+             * Kind
+             * @enum {string}
+             */
+            kind: "folio" | "pre-migrate" | "pre-restore" | "upload";
+            /** Name */
+            name: string;
+            /** Size */
+            size: number;
+        };
         /** BatchOut */
         BatchOut: {
             /** Account Id */
@@ -3281,6 +3396,11 @@ export interface components {
             file: string;
             /** Mapping */
             mapping?: string | null;
+        };
+        /** Body_upload_backup_api_v1_system_backups_upload_post */
+        Body_upload_backup_api_v1_system_backups_upload_post: {
+            /** File */
+            file: string;
         };
         /** CalculateIn */
         CalculateIn: {
@@ -5073,6 +5193,42 @@ export interface components {
             issuer: string | null;
             /** Name */
             name: string;
+        };
+        /** RestoreIn */
+        RestoreIn: {
+            /** Confirm */
+            confirm: string;
+            /** Name */
+            name: string;
+        };
+        /** RestoreResultOut */
+        RestoreResultOut: {
+            /**
+             * At
+             * Format: date-time
+             */
+            at: string;
+            /** Error */
+            error: string | null;
+            /** Ok */
+            ok: boolean;
+            /** Safety Copy */
+            safety_copy: string | null;
+            /** Source */
+            source: string;
+        };
+        /** RestoreStartedOut */
+        RestoreStartedOut: {
+            /** Note */
+            note: string;
+            /** Restarting */
+            restarting: boolean;
+        };
+        /** RestoreStatusOut */
+        RestoreStatusOut: {
+            last: components["schemas"]["RestoreResultOut"] | null;
+            /** Pending */
+            pending: boolean;
         };
         /** ReturnsOut */
         ReturnsOut: {
@@ -10842,6 +10998,154 @@ export interface operations {
             };
         };
     };
+    list_backups_api_v1_system_backups_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BackupOut"][];
+                };
+            };
+        };
+    };
+    make_backup_api_v1_system_backups_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["BackupMakeIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BackupOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    upload_backup_api_v1_system_backups_upload_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "multipart/form-data": components["schemas"]["Body_upload_backup_api_v1_system_backups_upload_post"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BackupOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    download_backup_api_v1_system_backups__name__get: {
+        parameters: {
+            query?: {
+                include_secrets?: boolean;
+            };
+            header?: never;
+            path: {
+                name: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_backup_api_v1_system_backups__name__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                name: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     info_api_v1_system_info_get: {
         parameters: {
             query?: never;
@@ -10915,6 +11219,59 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["RequestOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    restore_status_api_v1_system_restore_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RestoreStatusOut"];
+                };
+            };
+        };
+    };
+    start_restore_api_v1_system_restore_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RestoreIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RestoreStartedOut"];
                 };
             };
             /** @description Validation Error */

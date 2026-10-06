@@ -22,7 +22,12 @@ FAKE_API_KEY = "fake-provider-key-0123456789"  # gitleaks:allow
 def settings(tmp_path: Path) -> Settings:
     url = f"sqlite:///{tmp_path / 'folio.db'}"
     migrate.upgrade(url)
-    return Settings(secret_key=TEST_SECRET, db_url=url, _env_file=None)  # type: ignore[call-arg]
+    return Settings(  # type: ignore[call-arg]
+        secret_key=TEST_SECRET,
+        db_url=url,
+        backup_dir=str(tmp_path / "backups"),  # never the real /data/backups of the machine
+        _env_file=None,
+    )
 
 
 @pytest.fixture

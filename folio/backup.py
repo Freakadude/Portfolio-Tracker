@@ -126,6 +126,18 @@ def create_backup(
     return BackupResult(target, target.stat().st_size, copied, prune(directory))
 
 
+def stripped_copy(source: Path, target: Path) -> None:
+    """A copy of a backup without the stored API keys, for a file that leaves the machine."""
+    shutil.copy2(source, target)
+    con = sqlite3.connect(target)
+    try:
+        con.execute("DELETE FROM secret")
+        con.commit()
+        con.execute("VACUUM")
+    finally:
+        con.close()
+
+
 def _stamp(path: Path) -> datetime | None:
     match = _NAME.match(path.name)
     if match is None:

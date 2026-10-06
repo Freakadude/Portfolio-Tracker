@@ -134,6 +134,12 @@ def web(
         typer.echo(f"Error: {exc}", err=True)
         raise typer.Exit(1) from exc
     configure_logging(settings.log_level)
+    from folio import restore as restore_module
+
+    restored = restore_module.apply_pending(settings.db_url, settings.backup_dir)
+    if restored is not None:  # a restore chosen in the web app, swapped in before anything opens
+        log = get_logger("folio.restore")
+        (log.info if restored["ok"] else log.error)("restore applied", **restored)
     _migrate_safely(settings)
     uvicorn.run(
         "folio.api.app:create_app",
@@ -147,6 +153,9 @@ def web(
         # forwarded address may replace it; X-Forwarded-Proto is still read by the app itself
         proxy_headers=False,
     )
+
+
+RESTORE_CHECK_SECONDS = 15.0
 
 
 @app.command()
@@ -170,9 +179,17 @@ def worker() -> None:
 
     signal.signal(signal.SIGINT, _stop)
     signal.signal(signal.SIGTERM, _stop)
+    from folio import restore as restore_module
+
+    restored_at_start = restore_module.result_stamp(settings.db_url)
     scheduler.start()
     log.info("worker started", jobs=[job.id for job in scheduler.get_jobs()])
-    stop.wait()
+    # a restore from the web app swaps the database file: stop, so the container restarts the
+    # worker on the restored one
+    while not stop.wait(RESTORE_CHECK_SECONDS):
+        if restore_module.result_stamp(settings.db_url) != restored_at_start:
+            log.info("a backup was restored; restarting on the restored database")
+            break
     scheduler.shutdown(wait=True)
     log.info("worker stopped")
 

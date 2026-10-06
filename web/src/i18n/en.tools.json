@@ -171,5 +171,53 @@
     "columns": {
       "date": "Date"
     }
+  },
+  "backups": {
+    "title": "Backups and restore",
+    "intro": "Folio makes a verified backup every night and keeps the recent ones on the server. Here you can make one now, download one, bring one in from elsewhere, and restore one.",
+    "lastOk": "The last restore, of {{source}} on {{at}}, worked.",
+    "lastFailed": "The last restore, of {{source}}, did not work and changed nothing: {{error}}",
+    "now": "Back up now",
+    "withKeys": "Include the saved API keys (they stay encrypted)",
+    "none": "There are no backups yet.",
+    "caption": "Backups on the server",
+    "columns": {
+      "file": "File",
+      "made": "Made",
+      "size": "Size",
+      "actions": "Actions"
+    },
+    "kinds": {
+      "folio": "backup",
+      "pre-migrate": "before an update",
+      "pre-restore": "before a restore",
+      "upload": "uploaded"
+    },
+    "download": "Download",
+    "downloadFor": "Download {{name}} without the API keys",
+    "restore": "Restore",
+    "restoreFor": "Restore {{name}}",
+    "delete": "Delete",
+    "deleteFor": "Delete {{name}}",
+    "deleteConfirm": "Delete {{name}} from the server?",
+    "downloadNote": "A download leaves out your saved API keys, so a copy that leaves the server does not carry them. A restore of such a file needs the keys entered again.",
+    "upload": {
+      "title": "Bring in a backup",
+      "help": "A backup file made by Folio elsewhere. It is checked and kept on the server; nothing is restored until you choose to.",
+      "file": "Backup file (.db)",
+      "choose": "Choose a file first.",
+      "send": "Upload"
+    },
+    "restoreTitle": "Restore a backup",
+    "restoreWhat": "You are about to restore",
+    "warn": {
+      "replace": "Everything in Folio is replaced by what is in that backup: transactions, settings, strategies, recommendations.",
+      "kept": "What is there now is kept as a \"before a restore\" backup, so this can be undone by restoring that one.",
+      "restart": "Folio restarts to do it, which takes about a minute.",
+      "signedOut": "You are signed out and sign in again with the password (and the second factor) the backup had.",
+      "keys": "A backup made without the API keys brings no keys back: enter them again."
+    },
+    "typeWord": "Type RESTORE to confirm",
+    "restoreNow": "Restore and restart"
   }
 }

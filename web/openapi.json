@@ -1620,6 +1620,53 @@
         "title": "BacktestRuleOut",
         "type": "object"
       },
+      "BackupMakeIn": {
+        "additionalProperties": false,
+        "properties": {
+          "include_secrets": {
+            "default": true,
+            "title": "Include Secrets",
+            "type": "boolean"
+          }
+        },
+        "title": "BackupMakeIn",
+        "type": "object"
+      },
+      "BackupOut": {
+        "properties": {
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "kind": {
+            "enum": [
+              "folio",
+              "pre-migrate",
+              "pre-restore",
+              "upload"
+            ],
+            "title": "Kind",
+            "type": "string"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "size": {
+            "title": "Size",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "name",
+          "kind",
+          "size",
+          "created_at"
+        ],
+        "title": "BackupOut",
+        "type": "object"
+      },
       "BatchOut": {
         "properties": {
           "account_id": {
@@ -1821,6 +1868,20 @@
           "file"
         ],
         "title": "Body_upload_api_v1_instruments__instrument_id__holdings_post",
+        "type": "object"
+      },
+      "Body_upload_backup_api_v1_system_backups_upload_post": {
+        "properties": {
+          "file": {
+            "contentMediaType": "application/octet-stream",
+            "title": "File",
+            "type": "string"
+          }
+        },
+        "required": [
+          "file"
+        ],
+        "title": "Body_upload_backup_api_v1_system_backups_upload_post",
         "type": "object"
       },
       "CalculateIn": {
@@ -7754,6 +7815,118 @@
           "candidates"
         ],
         "title": "ResolutionOut",
+        "type": "object"
+      },
+      "RestoreIn": {
+        "additionalProperties": false,
+        "properties": {
+          "confirm": {
+            "maxLength": 20,
+            "title": "Confirm",
+            "type": "string"
+          },
+          "name": {
+            "maxLength": 120,
+            "minLength": 1,
+            "title": "Name",
+            "type": "string"
+          }
+        },
+        "required": [
+          "name",
+          "confirm"
+        ],
+        "title": "RestoreIn",
+        "type": "object"
+      },
+      "RestoreResultOut": {
+        "properties": {
+          "at": {
+            "format": "date-time",
+            "title": "At",
+            "type": "string"
+          },
+          "error": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Error"
+          },
+          "ok": {
+            "title": "Ok",
+            "type": "boolean"
+          },
+          "safety_copy": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Safety Copy"
+          },
+          "source": {
+            "title": "Source",
+            "type": "string"
+          }
+        },
+        "required": [
+          "at",
+          "source",
+          "ok",
+          "safety_copy",
+          "error"
+        ],
+        "title": "RestoreResultOut",
+        "type": "object"
+      },
+      "RestoreStartedOut": {
+        "properties": {
+          "note": {
+            "title": "Note",
+            "type": "string"
+          },
+          "restarting": {
+            "title": "Restarting",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "restarting",
+          "note"
+        ],
+        "title": "RestoreStartedOut",
+        "type": "object"
+      },
+      "RestoreStatusOut": {
+        "properties": {
+          "last": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/RestoreResultOut"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "pending": {
+            "title": "Pending",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "pending",
+          "last"
+        ],
+        "title": "RestoreStatusOut",
         "type": "object"
       },
       "ReturnsOut": {
@@ -19268,6 +19441,198 @@
         ]
       }
     },
+    "/api/v1/system/backups": {
+      "get": {
+        "description": "The backups on the server, newest first (nightly ones and the copies taken before a\nmigration or a restore).",
+        "operationId": "list_backups_api_v1_system_backups_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/BackupOut"
+                  },
+                  "title": "Response List Backups Api V1 System Backups Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "List Backups",
+        "tags": [
+          "system"
+        ]
+      },
+      "post": {
+        "description": "A verified backup now.",
+        "operationId": "make_backup_api_v1_system_backups_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BackupMakeIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BackupOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Make Backup",
+        "tags": [
+          "system"
+        ]
+      }
+    },
+    "/api/v1/system/backups/upload": {
+      "post": {
+        "description": "Put a backup file made elsewhere on the server, after checking that it is a sound Folio\ndatabase. It is not restored until you say so.",
+        "operationId": "upload_backup_api_v1_system_backups_upload_post",
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/Body_upload_backup_api_v1_system_backups_upload_post"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BackupOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Upload Backup",
+        "tags": [
+          "system"
+        ]
+      }
+    },
+    "/api/v1/system/backups/{name}": {
+      "delete": {
+        "operationId": "delete_backup_api_v1_system_backups__name__delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "name",
+            "required": true,
+            "schema": {
+              "title": "Name",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Delete Backup",
+        "tags": [
+          "system"
+        ]
+      },
+      "get": {
+        "description": "Download a backup. The stored API keys are left out unless `include_secrets=true`: a copy\nthat leaves the server should not carry them.",
+        "operationId": "download_backup_api_v1_system_backups__name__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "name",
+            "required": true,
+            "schema": {
+              "title": "Name",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "include_secrets",
+            "required": false,
+            "schema": {
+              "default": false,
+              "title": "Include Secrets",
+              "type": "boolean"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Download Backup",
+        "tags": [
+          "system"
+        ]
+      }
+    },
     "/api/v1/system/info": {
       "get": {
         "description": "Version, disk use, agent cost this month and recent job failures (FR-SY-10).",
@@ -19383,6 +19748,67 @@
           }
         },
         "summary": "Run Job",
+        "tags": [
+          "system"
+        ]
+      }
+    },
+    "/api/v1/system/restore": {
+      "get": {
+        "operationId": "restore_status_api_v1_system_restore_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RestoreStatusOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Restore Status",
+        "tags": [
+          "system"
+        ]
+      },
+      "post": {
+        "description": "Stage a restore and restart. The current database is kept as a pre-restore copy; nobody\nis signed in afterwards, because the sessions come from the backup.",
+        "operationId": "start_restore_api_v1_system_restore_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RestoreIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "202": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RestoreStartedOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Start Restore",
         "tags": [
           "system"
         ]

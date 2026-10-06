@@ -1,9 +1,11 @@
+from collections.abc import Callable
 from pathlib import Path
 
 import httpx
 import httpx2
 from fastapi import FastAPI
 
+from folio import restore as restore_module
 from folio.api.errors import install_error_handlers
 from folio.api.middleware import CsrfMiddleware, RequestLogMiddleware, SecurityHeadersMiddleware
 from folio.api.routers import (
@@ -12,6 +14,7 @@ from folio.api.routers import (
     alerts,
     analytics,
     auth,
+    backups,
     calendar,
     corporate_actions,
     dashboards,
@@ -51,6 +54,7 @@ def create_app(
     provider_transport: httpx.BaseTransport | None = None,
     provider_http_options: dict[str, object] | None = None,
     llm_transport: httpx2.BaseTransport | None = None,
+    restart: Callable[[], None] | None = None,
 ) -> FastAPI:
     cfg = settings or get_settings()
     cfg.require_secret_key()
@@ -72,6 +76,8 @@ def create_app(
     app.state.provider_transport = provider_transport
     app.state.provider_http_options = provider_http_options or {}
     app.state.llm_transport = llm_transport  # tests replay recorded Anthropic responses
+    # what a restore calls once the response is out: stop the process so the container restarts
+    app.state.restart = restart or restore_module.exit_soon
 
     install_error_handlers(app)
     # Added last runs first: security headers wrap everything, including CSRF rejections.
@@ -90,6 +96,7 @@ def create_app(
     app.include_router(portfolio.router, prefix=API_PREFIX)
     app.include_router(analytics.router, prefix=API_PREFIX)
     app.include_router(system.router, prefix=API_PREFIX)
+    app.include_router(backups.router, prefix=API_PREFIX)
     app.include_router(imports.router, prefix=API_PREFIX)
     app.include_router(corporate_actions.router, prefix=API_PREFIX)
     app.include_router(reports.router, prefix=API_PREFIX)
