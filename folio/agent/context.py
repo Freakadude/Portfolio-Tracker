@@ -36,6 +36,14 @@ RUN_TASKS = {
         "principles or theses it bears on. Make a recommendation only if something needs a "
         "decision before the event."
     ),
+    "ask": (
+        "The owner asked a question about the portfolio (see the question). Find the facts it "
+        "needs with the tools; do not make recommendations."
+    ),
+    "analyse_position": (
+        "The owner asked for an analysis of one position (see the focus). Find the facts with "
+        "the tools; do not make recommendations."
+    ),
     "on_demand": "The owner asked for an analysis.",
 }
 

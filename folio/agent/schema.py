@@ -90,3 +90,25 @@ RECOMMENDATION_SCHEMA: dict[str, Any] = {
         }
     },
 }
+
+
+# The answer to a question about the portfolio (FR-AG-08). Citations name the tools the answer
+# rests on; the code gate checks them against the tools the run really called.
+ANSWER_SCHEMA: dict[str, Any] = {
+    "type": "object",
+    "additionalProperties": False,
+    "required": ["answer", "citations", "not_found"],
+    "properties": {
+        "answer": {"type": "string"},
+        "citations": {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "additionalProperties": False,
+                "required": ["tool", "note"],
+                "properties": {"tool": {"type": "string"}, "note": {"type": "string"}},
+            },
+        },
+        "not_found": {"type": "string"},
+    },
+}

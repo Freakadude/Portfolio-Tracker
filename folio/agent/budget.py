@@ -36,6 +36,8 @@ AGENT_RUN_TYPES = (
     "contribution_plan",
     "on_demand",
     "event_brief",
+    "ask",
+    "analyse_position",
 )
 NEWS_RUN_TYPES = ("news_link", "news_assess")
 ZERO = Decimal(0)

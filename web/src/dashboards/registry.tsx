@@ -8,7 +8,7 @@ import {
   ValueHistoryWidget,
 } from './widgets/History'
 import { KpiWidget } from './widgets/Kpi'
-import { NewsFeedWidget, SignalsWidget } from './widgets/Feeds'
+import { AskWidget, NewsFeedWidget, SignalsWidget } from './widgets/Feeds'
 import { LookThroughWidget } from './widgets/LookThrough'
 import { MacroWidget } from './widgets/Macro'
 import {
@@ -269,6 +269,13 @@ const DEFS: Record<string, Omit<WidgetDef, 'type'>> = {
         labels: 'recs.severity',
       },
     ],
+  }),
+  ask: def(AskWidget, {
+    chart: false,
+    drillsTo: 'the answer lists the data it used',
+    scopes: ['portfolio'],
+    period: false,
+    fields: [{ key: 'show_last', kind: 'number', min: 1, max: 10 }],
   }),
   note: def(NoteWidget, {
     chart: false,

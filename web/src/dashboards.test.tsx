@@ -61,8 +61,8 @@ const where = () => screen.getByTestId('where').textContent
 // --- the library -----------------------------------------------------------------------------
 
 describe('the widget registry', () => {
-  it('knows the nineteen widgets of the library', () => {
-    expect(WIDGET_TYPES).toHaveLength(19)
+  it('knows the twenty widgets of the library', () => {
+    expect(WIDGET_TYPES).toHaveLength(20)
   })
   it('gives every chart a drill-down target (FR-DB-06)', () => {
     const charts = Object.values(REGISTRY).filter((d) => d.chart)

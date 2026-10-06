@@ -87,3 +87,22 @@ def test_the_signals_widget_puts_open_recommendations_before_signals_and_filters
     rec.expires_at = NOW - dt.timedelta(days=1)  # expired: it leaves the widget
     db.commit()
     assert [i["kind"] for i in widget(api, "signals")["items"]] == ["signal"]
+
+
+def test_the_ask_widget_says_whether_the_agent_is_on_and_keeps_its_option(
+    api: TestClient, db: Session, world
+) -> None:
+    on = widget(api, "ask", {"show_last": 5})
+    assert on == {"empty": False, "reason": None, "show_last": 5}
+    api.put("/api/v1/settings/agent", json={"enabled": False})
+    off = widget(api, "ask")
+    assert off["empty"] is True and "switched off" in off["reason"] and off["show_last"] == 3
+    bad = api.post(
+        "/api/v1/widgets/data",
+        json={
+            "as_of": NOW.date().isoformat(),
+            "filters": {},
+            "requests": [{"key": "w", "type": "ask", "config": {"show_last": 99}}],
+        },
+    ).json()["results"]["w"]
+    assert bad["error"]

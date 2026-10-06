@@ -1035,6 +1035,232 @@
         "title": "AmountPreviewOut",
         "type": "object"
       },
+      "AskCitationOut": {
+        "properties": {
+          "note": {
+            "title": "Note",
+            "type": "string"
+          },
+          "tool": {
+            "title": "Tool",
+            "type": "string"
+          }
+        },
+        "required": [
+          "tool",
+          "note"
+        ],
+        "title": "AskCitationOut",
+        "type": "object"
+      },
+      "AskDataOut": {
+        "properties": {
+          "input": {
+            "additionalProperties": true,
+            "title": "Input",
+            "type": "object"
+          },
+          "note": {
+            "title": "Note",
+            "type": "string"
+          },
+          "result": {
+            "title": "Result",
+            "type": "string"
+          },
+          "tool": {
+            "title": "Tool",
+            "type": "string"
+          }
+        },
+        "required": [
+          "tool",
+          "note",
+          "input",
+          "result"
+        ],
+        "title": "AskDataOut",
+        "type": "object"
+      },
+      "AskIn": {
+        "properties": {
+          "instrument_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Instrument Id"
+          },
+          "question": {
+            "anyOf": [
+              {
+                "maxLength": 600,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Question"
+          }
+        },
+        "title": "AskIn",
+        "type": "object"
+      },
+      "AskOut": {
+        "properties": {
+          "ai_label": {
+            "default": "AI-generated, not financial advice.",
+            "title": "Ai Label",
+            "type": "string"
+          },
+          "answer": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Answer"
+          },
+          "asked_at": {
+            "format": "date-time",
+            "title": "Asked At",
+            "type": "string"
+          },
+          "citations": {
+            "items": {
+              "$ref": "#/components/schemas/AskCitationOut"
+            },
+            "title": "Citations",
+            "type": "array"
+          },
+          "cost_eur": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Cost Eur",
+            "type": "string"
+          },
+          "data": {
+            "items": {
+              "$ref": "#/components/schemas/AskDataOut"
+            },
+            "title": "Data",
+            "type": "array"
+          },
+          "error": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Error"
+          },
+          "finished_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Finished At"
+          },
+          "id": {
+            "title": "Id",
+            "type": "integer"
+          },
+          "instrument_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Instrument Id"
+          },
+          "kind": {
+            "enum": [
+              "ask",
+              "analyse_position"
+            ],
+            "title": "Kind",
+            "type": "string"
+          },
+          "not_found": {
+            "title": "Not Found",
+            "type": "string"
+          },
+          "question": {
+            "title": "Question",
+            "type": "string"
+          },
+          "reasons": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Reasons",
+            "type": "array"
+          },
+          "refused": {
+            "title": "Refused",
+            "type": "boolean"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "kind",
+          "question",
+          "instrument_id",
+          "status",
+          "answer",
+          "refused",
+          "reasons",
+          "citations",
+          "data",
+          "not_found",
+          "error",
+          "cost_eur",
+          "asked_at",
+          "finished_at"
+        ],
+        "title": "AskOut",
+        "type": "object"
+      },
+      "AskQueuedOut": {
+        "properties": {
+          "run_id": {
+            "title": "Run Id",
+            "type": "integer"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          }
+        },
+        "required": [
+          "run_id",
+          "status"
+        ],
+        "title": "AskQueuedOut",
+        "type": "object"
+      },
       "AttributionOut": {
         "properties": {
           "capital_eur": {
@@ -11160,6 +11386,154 @@
         "summary": "Update Account",
         "tags": [
           "accounts"
+        ]
+      }
+    },
+    "/api/v1/agent/ask": {
+      "get": {
+        "description": "The latest questions with their answers, newest first.",
+        "operationId": "recent_questions_api_v1_agent_ask_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 10,
+              "maximum": 50,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "instrument_id",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Instrument Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/AskOut"
+                  },
+                  "title": "Response Recent Questions Api V1 Agent Ask Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Recent Questions",
+        "tags": [
+          "agent"
+        ]
+      },
+      "post": {
+        "description": "Put a question to the agent. It reads the portfolio with its tools and answers; it never\nchanges anything. The worker answers in the background: poll GET /agent/ask/{run_id}.",
+        "operationId": "ask_api_v1_agent_ask_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AskIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "202": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AskQueuedOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Ask",
+        "tags": [
+          "agent"
+        ]
+      }
+    },
+    "/api/v1/agent/ask/{run_id}": {
+      "get": {
+        "operationId": "get_question_api_v1_agent_ask__run_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "run_id",
+            "required": true,
+            "schema": {
+              "title": "Run Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AskOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Question",
+        "tags": [
+          "agent"
         ]
       }
     },

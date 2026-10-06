@@ -157,6 +157,10 @@ class SignalsConfig(BaseConfig):
     severity: Literal["all", "low", "medium", "high", "critical"] = "all"  # at least this
 
 
+class AskConfig(BaseConfig):
+    show_last: int = Field(default=3, ge=1, le=10)  # how many earlier answers stay on the widget
+
+
 class NoteConfig(BaseConfig):
     text: str = Field(default="", max_length=5000)
 
@@ -191,6 +195,7 @@ WIDGET_TYPES: dict[str, WidgetType] = {
         WidgetType("macro_overlay", MacroConfig, 8, 5, "widgets.macro_overlay"),
         WidgetType("news_feed", NewsConfig, 6, 6, "widgets.news_feed"),
         WidgetType("signals", SignalsConfig, 6, 6, "widgets.signals"),
+        WidgetType("ask", AskConfig, 6, 7, "widgets.ask"),
         WidgetType("note", NoteConfig, 4, 3, "widgets.note"),
     )
 }

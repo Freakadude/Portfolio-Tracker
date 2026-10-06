@@ -16,6 +16,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from folio import analytics_service as svc
+from folio.agent.budget import agent_settings
 from folio.analytics.lookthrough import DIMENSIONS, Exposure
 from folio.analytics.returns import DailyPoint, twr_index
 from folio.analytics.risk import drawdown
@@ -960,6 +961,17 @@ def note(env: Env, cfg: Any) -> dict[str, Any]:
     return {"text": cfg.text}
 
 
+def ask(env: Env, cfg: Any) -> dict[str, Any]:
+    """The question box needs only to know whether the agent is on; the questions and answers go
+    through the agent endpoints (FR-DB-09)."""
+    enabled = agent_settings(env.db).enabled
+    return {
+        "empty": not enabled,
+        "reason": None if enabled else "The AI agent is switched off in Settings, Agent.",
+        "show_last": cfg.show_last,
+    }
+
+
 COMPUTE: dict[str, Callable[[Env, Any], dict[str, Any]]] = {
     "kpi": kpi,
     "value_history": value_history,
@@ -979,6 +991,7 @@ COMPUTE: dict[str, Callable[[Env, Any], dict[str, Any]]] = {
     "macro_overlay": macro_overlay,
     "news_feed": news_feed,
     "signals": signals,
+    "ask": ask,
     "note": note,
 }
 

@@ -5,11 +5,12 @@ from decimal import Decimal
 from typing import Annotated, Any, Literal
 
 from fastapi import APIRouter, Query, Request
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from sqlalchemy import select
 
 from folio.agent import budget
 from folio.agent import outcomes as outcome_rules
+from folio.agent.ask import ANALYSE, AskError, position_question, queue_ask
 from folio.agent.llm import LlmClient, LlmError, system_blocks
 from folio.agent.runs import finish_run, metered_create, start_run
 from folio.agent.trackrecord import track_record
@@ -17,6 +18,7 @@ from folio.api.deps import DbDep, UserDep
 from folio.api.errors import ApiError
 from folio.db.base import utcnow
 from folio.db.models_insight import AgentRun, Recommendation
+from folio.db.models_ledger import Instrument
 from folio.jobs.requests import enqueue
 from folio.security.secrets import SecretStore
 
@@ -313,3 +315,124 @@ def get_track_record(
         ],
         note=TRACK_NOTE,
     )
+
+
+# --- questions: "Ask the portfolio" and "Analyse this position" (FR-AG-08, FR-DB-09) ----------
+
+
+class AskIn(BaseModel):
+    question: str | None = Field(default=None, max_length=600)
+    instrument_id: int | None = None  # set: analyse this position (the question is optional)
+
+
+class AskQueuedOut(BaseModel):
+    run_id: int
+    status: str
+
+
+class AskCitationOut(BaseModel):
+    tool: str
+    note: str
+
+
+class AskDataOut(BaseModel):
+    tool: str
+    note: str
+    input: dict[str, Any]
+    result: str  # what the tool returned (shortened), the rows the answer rests on
+
+
+class AskOut(BaseModel):
+    id: int
+    kind: Literal["ask", "analyse_position"]
+    question: str
+    instrument_id: int | None
+    status: str  # queued | running | ok | failed | budget
+    answer: str | None  # None until answered, and when the code gate refused the answer
+    refused: bool  # the run finished but its answer did not pass the check
+    reasons: list[str]  # why it did not pass
+    citations: list[AskCitationOut]
+    data: list[AskDataOut]
+    not_found: str
+    error: str | None
+    cost_eur: Decimal
+    asked_at: datetime
+    finished_at: datetime | None
+    ai_label: str = "AI-generated, not financial advice."
+
+
+def _ask_out(run: AgentRun) -> AskOut:
+    context = run.context or {}
+    output = run.output or {}
+    answer = output.get("answer")
+    return AskOut(
+        id=run.id,
+        kind=run.run_type,
+        question=str(output.get("question") or context.get("question") or ""),
+        instrument_id=context.get("instrument_id"),
+        status=run.status,
+        answer=answer if isinstance(answer, str) else None,
+        refused=run.status == "ok" and not output.get("accepted", False),
+        reasons=[str(r) for r in output.get("reasons") or []],
+        citations=[AskCitationOut(**c) for c in output.get("citations") or []],
+        data=[AskDataOut(**d) for d in output.get("data") or []],
+        not_found=str(output.get("not_found") or ""),
+        error=run.error,
+        cost_eur=run.cost_eur,
+        asked_at=run.started_at,
+        finished_at=run.finished_at,
+    )
+
+
+@router.post("/ask", response_model=AskQueuedOut, status_code=202)
+def ask(body: AskIn, request: Request, _user: UserDep, db: DbDep) -> AskQueuedOut:
+    """Put a question to the agent. It reads the portfolio with its tools and answers; it never
+    changes anything. The worker answers in the background: poll GET /agent/ask/{run_id}."""
+    cfg = budget.agent_settings(db)
+    if not cfg.enabled:
+        raise ApiError(409, "Agent is off", "The AI agent is switched off in Settings, Agent.")
+    if not key_is_set(db, request):
+        raise ApiError(409, "No API key", "Add your Anthropic API key in Settings, Agent.")
+    instrument = None
+    if body.instrument_id is not None:
+        instrument = db.get(Instrument, body.instrument_id)
+        if instrument is None or instrument.deleted_at is not None:
+            raise ApiError(404, "Not found", "That instrument does not exist.")
+    question = body.question if body.question and body.question.strip() else None
+    if question is None:
+        if instrument is None:
+            raise ApiError(422, "Question needed", "Write the question in a few words.")
+        question = position_question(instrument)
+    try:
+        run = queue_ask(db, cfg, question, instrument, utcnow())
+    except AskError as exc:
+        raise ApiError(422, "Cannot ask that", str(exc)) from exc
+    enqueue(db, "agent_ask", {"run_id": run.id})
+    return AskQueuedOut(run_id=run.id, status=run.status)
+
+
+@router.get("/ask", response_model=list[AskOut])
+def recent_questions(
+    _user: UserDep,
+    db: DbDep,
+    limit: Annotated[int, Query(ge=1, le=50)] = 10,
+    instrument_id: int | None = None,
+) -> list[AskOut]:
+    """The latest questions with their answers, newest first."""
+    rows = db.scalars(
+        select(AgentRun)
+        .where(AgentRun.run_type.in_(("ask", ANALYSE)))
+        .order_by(AgentRun.id.desc())
+        .limit(200 if instrument_id is not None else limit)
+    ).all()
+    if instrument_id is not None:
+        rows = [r for r in rows if (r.context or {}).get("instrument_id") == instrument_id][:limit]
+    return [_ask_out(r) for r in rows]
+
+
+@router.get("/ask/{run_id}", response_model=AskOut)
+def get_question(run_id: int, _user: UserDep, db: DbDep) -> AskOut:
+    run = db.get(AgentRun, run_id)
+    if run is None or run.run_type not in ("ask", ANALYSE):
+        raise ApiError(404, "Not found", "That question does not exist.")
+    return _ask_out(run)

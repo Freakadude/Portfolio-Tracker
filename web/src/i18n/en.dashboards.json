@@ -77,6 +77,7 @@
     "macro_overlay": "Macro overlay",
     "news_feed": "News",
     "signals": "Signals and recommendations",
+    "ask": "Ask the portfolio",
     "note": "Note",
     "noFigure": "No figure yet.",
     "resultInPeriod": "Result",
@@ -202,6 +203,7 @@
     "macro_overlay": "An economic indicator against a position (later).",
     "news_feed": "Stories linked to what you hold, with their impact.",
     "signals": "Recommendations and strategy signals waiting for you.",
+    "ask": "Ask the agent a question about your portfolio; it answers from your data and shows what it used.",
     "note": "Your own text."
   },
   "widgetOptions": {

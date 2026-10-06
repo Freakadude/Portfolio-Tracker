@@ -40,6 +40,48 @@ export interface paths {
         patch: operations["update_account_api_v1_accounts__account_id__patch"];
         trace?: never;
     };
+    "/api/v1/agent/ask": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Recent Questions
+         * @description The latest questions with their answers, newest first.
+         */
+        get: operations["recent_questions_api_v1_agent_ask_get"];
+        put?: never;
+        /**
+         * Ask
+         * @description Put a question to the agent. It reads the portfolio with its tools and answers; it never
+         *     changes anything. The worker answers in the background: poll GET /agent/ask/{run_id}.
+         */
+        post: operations["ask_api_v1_agent_ask_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/agent/ask/{run_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Question */
+        get: operations["get_question_api_v1_agent_ask__run_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/agent/runs": {
         parameters: {
             query?: never;
@@ -2703,6 +2745,84 @@ export interface components {
             net_amount_eur: string;
             /** Taxes Eur */
             taxes_eur: string;
+        };
+        /** AskCitationOut */
+        AskCitationOut: {
+            /** Note */
+            note: string;
+            /** Tool */
+            tool: string;
+        };
+        /** AskDataOut */
+        AskDataOut: {
+            /** Input */
+            input: {
+                [key: string]: unknown;
+            };
+            /** Note */
+            note: string;
+            /** Result */
+            result: string;
+            /** Tool */
+            tool: string;
+        };
+        /** AskIn */
+        AskIn: {
+            /** Instrument Id */
+            instrument_id?: number | null;
+            /** Question */
+            question?: string | null;
+        };
+        /** AskOut */
+        AskOut: {
+            /**
+             * Ai Label
+             * @default AI-generated, not financial advice.
+             */
+            ai_label: string;
+            /** Answer */
+            answer: string | null;
+            /**
+             * Asked At
+             * Format: date-time
+             */
+            asked_at: string;
+            /** Citations */
+            citations: components["schemas"]["AskCitationOut"][];
+            /** Cost Eur */
+            cost_eur: string;
+            /** Data */
+            data: components["schemas"]["AskDataOut"][];
+            /** Error */
+            error: string | null;
+            /** Finished At */
+            finished_at: string | null;
+            /** Id */
+            id: number;
+            /** Instrument Id */
+            instrument_id: number | null;
+            /**
+             * Kind
+             * @enum {string}
+             */
+            kind: "ask" | "analyse_position";
+            /** Not Found */
+            not_found: string;
+            /** Question */
+            question: string;
+            /** Reasons */
+            reasons: string[];
+            /** Refused */
+            refused: boolean;
+            /** Status */
+            status: string;
+        };
+        /** AskQueuedOut */
+        AskQueuedOut: {
+            /** Run Id */
+            run_id: number;
+            /** Status */
+            status: string;
         };
         /** AttributionOut */
         AttributionOut: {
@@ -5834,6 +5954,102 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["folio__api__routers__accounts__AccountOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    recent_questions_api_v1_agent_ask_get: {
+        parameters: {
+            query?: {
+                limit?: number;
+                instrument_id?: number | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AskOut"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    ask_api_v1_agent_ask_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AskIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AskQueuedOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_question_api_v1_agent_ask__run_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                run_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AskOut"];
                 };
             };
             /** @description Validation Error */

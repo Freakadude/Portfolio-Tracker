@@ -9,6 +9,7 @@ export type AgentBudget = S['AgentBudgetOut']
 export type AgentRun = S['AgentRunOut']
 export type AgentRunDetail = S['AgentRunDetailOut']
 export type TrackRecord = S['TrackRecordOut']
+export type Question = S['AskOut']
 
 export const REC_KEY = ['recommendations'] as const
 export const AGENT_KEY = ['agent'] as const
@@ -117,5 +118,46 @@ export function useTrackRecord(horizon: 7 | 30 | 90) {
     queryKey: [...AGENT_KEY, 'track-record', horizon],
     queryFn: () =>
       unwrap(api.GET('/api/v1/agent/track-record', { params: { query: { horizon } } })),
+  })
+}
+
+const WORKING = ['queued', 'running']
+
+/** Put a question to the agent (FR-AG-08). Without a question and with an instrument, the
+ * agent analyses that position. */
+export function useAsk() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: (body: { question?: string; instrumentId?: number }) =>
+      unwrap(
+        api.POST('/api/v1/agent/ask', {
+          body: { question: body.question || null, instrument_id: body.instrumentId ?? null },
+        }),
+      ),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: [...AGENT_KEY, 'ask'] }),
+  })
+}
+
+/** One question, refreshed every few seconds until the worker has answered. */
+export function useQuestion(runId: number | null) {
+  return useQuery({
+    queryKey: [...AGENT_KEY, 'ask', 'one', runId],
+    enabled: runId !== null,
+    queryFn: () =>
+      unwrap(api.GET('/api/v1/agent/ask/{run_id}', { params: { path: { run_id: runId ?? 0 } } })),
+    refetchInterval: (query) =>
+      query.state.data && !WORKING.includes(query.state.data.status) ? false : 3000,
+  })
+}
+
+export function useRecentQuestions(limit: number, instrumentId?: number) {
+  return useQuery({
+    queryKey: [...AGENT_KEY, 'ask', 'recent', limit, instrumentId ?? null],
+    queryFn: () =>
+      unwrap(
+        api.GET('/api/v1/agent/ask', {
+          params: { query: { limit, instrument_id: instrumentId } },
+        }),
+      ),
   })
 }

@@ -27,7 +27,7 @@ from folio.backup import BackupError, create_backup
 from folio.config import Settings
 from folio.db.base import utcnow
 from folio.db.models_ledger import JobRequest
-from folio.jobs.agent import agent_run_job, agent_tick, outcomes_job
+from folio.jobs.agent import agent_ask_job, agent_run_job, agent_tick, outcomes_job
 from folio.jobs.calendar import calendar_job, event_briefs_job
 from folio.jobs.context import JobContext
 from folio.jobs.lookthrough import lookthrough_job
@@ -106,6 +106,7 @@ JOB_PARAMS: dict[str, tuple[str, ...]] = {
     "news": ("source_id",),
     "agent_run": ("run_type",),
     "outcomes": (),
+    "agent_ask": ("run_id",),
     "calendar": (),
     "quarterly_review": ("quarter",),
 }
@@ -136,6 +137,7 @@ def handlers(
         "rules": lambda p: rules_job(ctx),
         "macro": lambda p: macro_job(ctx),
         "outcomes": lambda p: outcomes_job(ctx),
+        "agent_ask": lambda p: agent_ask_job(ctx, int(str(p["run_id"]))),
         "calendar": lambda p: calendar_job(ctx),
         "quarterly_review": lambda p: quarterly_review_job(
             ctx, None if not p.get("quarter") else str(p["quarter"])

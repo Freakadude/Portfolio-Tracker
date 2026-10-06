@@ -138,6 +138,26 @@
     "context": "What it was told",
     "answer": "Its answer"
   },
+  "ask": {
+    "title": "Ask the portfolio",
+    "positionTitle": "Ask about this position",
+    "form": "Ask the agent",
+    "question": "Your question",
+    "questionAbout": "Your question (or leave it empty to analyse the position)",
+    "placeholder": "For example: how far is each sleeve from its target, and why?",
+    "placeholderPosition": "For example: what has driven its result this year?",
+    "send": "Ask",
+    "analyse": "Analyse this position",
+    "readOnly": "The agent only reads your data. It never changes anything.",
+    "working": "The agent is looking at your data. This takes a minute or two.",
+    "earlier": "Earlier questions",
+    "notFound": "Not found:",
+    "refused": "The answer was not shown because it did not pass the check:",
+    "failed": "The question could not be answered.",
+    "budget": "The AI budget for this month is used up.",
+    "dataUsed_one": "The data it used ({{count}} tool)",
+    "dataUsed_other": "The data it used ({{count}} tools)"
+  },
   "track": {
     "title": "Track record of the agent's advice",
     "empty": "Nothing to measure yet. A recommendation is compared with the price 7, 30 and 90 days later.",

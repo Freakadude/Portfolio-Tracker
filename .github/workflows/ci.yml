@@ -20,7 +20,7 @@ jobs:
       - run: uv run mypy folio
       - run: uv run pytest --cov=folio --cov-report=term-missing
       - name: Coverage gate for domain, analytics and strategies (at least 85 percent)
-        run: uv run coverage report --include="folio/domain/*,folio/analytics/*,folio/strategies/*,folio/lookthrough/*,folio/news/*,folio/agent/cost.py,folio/agent/budget.py,folio/agent/prompt_files.py,folio/agent/validate.py,folio/agent/outcomes.py" --fail-under=85
+        run: uv run coverage report --include="folio/domain/*,folio/analytics/*,folio/strategies/*,folio/lookthrough/*,folio/news/*,folio/agent/cost.py,folio/agent/budget.py,folio/agent/prompt_files.py,folio/agent/validate.py,folio/agent/outcomes.py,folio/agent/answers.py" --fail-under=85
       - run: uv run pip-audit
 
   web:

@@ -5,6 +5,7 @@ import { Link, useParams } from 'react-router-dom'
 import { ApiProblem, api, errorMessage, unwrap } from '../api/client'
 import { useInvalidateLedger, usePositionDetail, usePrices, type Transaction } from '../api/queries'
 import { AsOf, Badge, Dialog, EmptyState, Gain } from '../components/display'
+import { AskPanel } from '../agent/Ask'
 import { HoldingsPanel } from '../lookthrough/HoldingsPanel'
 import { PriceAlerts } from '../notify/PriceAlerts'
 import { PriceChart } from '../components/PriceChart'
@@ -352,6 +353,13 @@ export function PositionDetail() {
           </div>
         </section>
       )}
+
+      <section aria-labelledby="ask-h" className="space-y-3">
+        <h2 id="ask-h" className="text-lg font-medium">
+          {t('ask.positionTitle')}
+        </h2>
+        <AskPanel instrumentId={id} />
+      </section>
 
       {remove.isError && <Alert>{errorMessage(remove.error)}</Alert>}
       <Dialog

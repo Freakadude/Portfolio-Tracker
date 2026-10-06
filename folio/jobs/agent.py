@@ -21,6 +21,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from folio.agent import budget
+from folio.agent.ask import run_ask
 from folio.agent.lifecycle import expire_due
 from folio.agent.run import run_agent
 from folio.agent.tools import untrusted
@@ -132,6 +133,32 @@ def agent_run_job(
             log.info(f"Paused: {outcome.error}")
 
     return run_job(ctx, "agent", body, {"run_type": run_type, "trigger": trigger})
+
+
+def agent_ask_job(ctx: JobContext, run_id: int) -> JobResult:
+    """Answer one queued question (FR-AG-08): the run row was made when it was asked."""
+
+    def body(db: Session, log: JobLog) -> None:
+        run = db.get(AgentRun, run_id)
+        if run is None or run.status != "queued":
+            log.info("That question is not waiting.")
+            return
+        llm = ctx.llm_for(db)
+        if llm is None:
+            run.status, run.finished_at = "failed", ctx.now()
+            run.error = "The agent is switched off or has no API key (Settings, Agent)."
+            log.info(run.error)
+            return
+        outcome = run_ask(db, llm, ctx.now(), run)
+        log.info(
+            f"{run.run_type}: {outcome.status}, "
+            + ("answered" if outcome.accepted else "no answer shown")
+            + f", {outcome.cost_eur:.4f} EUR"
+        )
+        if outcome.status == "failed":
+            log.error(outcome.error or "The question failed.")
+
+    return run_job(ctx, "agent_ask", body, {"run_id": run_id})
 
 
 def outcomes_job(ctx: JobContext) -> JobResult:

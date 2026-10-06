@@ -197,9 +197,9 @@ def test_options_that_do_not_exist_are_refused(api) -> None:
     assert missing.status_code == 404
 
 
-def test_the_widget_library_lists_all_nineteen(api) -> None:
+def test_the_widget_library_lists_all_twenty(api) -> None:
     library = api.get("/api/v1/dashboard-widgets").json()
-    assert len(library) == 19
+    assert len(library) == 20
     kpi = next(w for w in library if w["type"] == "kpi")
     assert (kpi["width"], kpi["height"], kpi["defaults"]["metric"]) == (3, 3, "value")
 

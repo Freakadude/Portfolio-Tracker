@@ -12,6 +12,7 @@ import {
 import { Alert, Button, Input } from '../components/ui'
 import { trimDecimal } from '../lib/decimal'
 import { Recommendations } from '../agent/Recommendations'
+import { AskPanel } from '../agent/Ask'
 import { TrackRecord } from '../agent/TrackRecord'
 import { Inbox } from '../notify/Inbox'
 import { OrderDrafts } from '../strategies/OrderDrafts'
@@ -23,6 +24,12 @@ export function Insights() {
     <div className="space-y-8">
       <h1 className="text-2xl font-semibold">{t('insights.title')}</h1>
       <Recommendations />
+      <section aria-labelledby="ask-h" className="space-y-3">
+        <h2 id="ask-h" className="text-lg font-semibold">
+          {t('ask.title')}
+        </h2>
+        <AskPanel />
+      </section>
       <TrackRecord />
       <Inbox />
       <OrderDrafts />

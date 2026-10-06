@@ -1,5 +1,6 @@
 import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
+import { AskPanel } from '../../agent/Ask'
 import { Badge } from '../../components/display'
 import type { WidgetProps } from '../types'
 
@@ -86,4 +87,17 @@ export function SignalsWidget({ data }: WidgetProps<SignalsData>) {
       ))}
     </ul>
   )
+}
+
+export interface AskData {
+  empty?: boolean
+  reason?: string | null
+  show_last?: number
+}
+
+/** The question box on a dashboard (FR-DB-09): the agent answers from your data and the answer
+ * lists the rows it used. */
+export function AskWidget({ data }: WidgetProps<AskData>) {
+  if (data.empty) return <p className="text-sm text-muted">{data.reason}</p>
+  return <AskPanel showLast={data.show_last ?? 3} />
 }
