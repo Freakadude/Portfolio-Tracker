@@ -172,3 +172,54 @@ def test_a_mapping_given_by_the_owner_is_used_on_the_chosen_sheet() -> None:
     )
     read = read_holdings(file, mapping)
     assert read.constituents[0].sector == "United States"
+
+
+GERMAN_ISHARES = [
+    ["All"],
+    ["Per", "05.Okt.2026"],
+    [
+        "Emittententicker", "Name", "Sektor", "Anlageklasse", "Marktwert", "Gewichtung (%)",
+        "Nominalwert", "Nominale", "Marktw\u00e4hrung",
+    ],
+    ["ASML", "ASML HOLDING", "IT", "Aktien", "EUR 837.207.444", "5,32", "837.207.443,80", "5", "EUR"],
+    ["HSBA", "HSBC HOLDINGS PLC", "Finanzwesen", "Aktien", "EUR 385.135.760", "94,25", "1,0", "2", "GBP"],
+    ["EUR", "EUR CASH", "Barmittel & Derivate", "Geldmarkt", "EUR 36.025.636", "0,23", "3", "4", "EUR"],
+    ["ZRPZ6", "MSCI EUROPE INDEX DEC 26", "Barmittel & Derivate", "Futures", "EUR 0", "0,00", "1", "2", "EUR"],
+    ["GBP", "GBP/EUR", "Barmittel & Derivate", "FX", "EUR -76.520", "0,00", "1", "2", "EUR"],
+    ["\u00bbFondspositionen und Kennzahlen\u00ab enth\u00e4lt eine detaillierte Aufstellung."],
+]  # fmt: skip
+
+
+def test_an_issuers_german_workbook_is_read_with_its_cash_lines_and_date() -> None:
+    """The layout of iShares' German Excel download: a sheet per topic, the table on 'Holdings'
+    below 'Per <date>' in German month names, German column names, decimal commas, no ISIN and
+    cash, futures and currency lines named in German."""
+    cover = [["iShares Core MSCI Europe UCITS ETF EUR (Acc)"], ["NAV per 05.Okt.2026"]]
+    file = suggest(workbook({"Fund Header": cover, "Holdings": GERMAN_ISHARES}))
+    assert file.mapping.sheet == "Holdings" and file.as_of == date(2026, 10, 5)
+    read = read_holdings(file)
+    assert [(c.name, c.weight_pct, c.ticker, c.sector, c.currency) for c in read.constituents] == [
+        ("ASML HOLDING", D("5.32"), "ASML", "IT", "EUR"),
+        ("HSBC HOLDINGS PLC", D("94.25"), "HSBA", "Finanzwesen", "GBP"),
+    ]
+    assert read.covered_pct == D("99.57") and read.errors == []
+    assert [d.split(":")[0] for d in read.dropped] == [
+        "EUR CASH",
+        "MSCI EUROPE INDEX DEC 26",
+        "GBP/EUR",
+    ]
+
+
+@pytest.mark.parametrize(
+    ("text", "expected"),
+    [
+        ("05.Okt.2026", date(2026, 10, 5)),
+        ("30.Sept.2026", date(2026, 9, 30)),
+        ("1. M\u00e4rz 2026", date(2026, 3, 1)),
+        ("31.Dez.2025", date(2025, 12, 31)),
+        ("02 mei 2026", date(2026, 5, 2)),
+    ],
+)
+def test_dates_with_german_and_dutch_month_names_are_read(text: str, expected: date) -> None:
+    rows = [["Per", text], ["Name", "Weight (%)"], ["A", 100]]
+    assert suggest(workbook({"S": rows})).as_of == expected

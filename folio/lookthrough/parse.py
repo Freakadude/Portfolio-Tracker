@@ -60,13 +60,31 @@ _WEIGHT = (
     "gewicht",
     "gewicht %",
     "gewicht (%)",
+    "gewichtung",
+    "gewichtung %",
+    "gewichtung (%)",
 )
 _ISIN = ("isin",)
-_TICKER = ("ticker", "symbol", "ticker symbol", "issuer ticker")
-_SECTOR = ("sector", "gics sector", "sector classification", "industry")
-_COUNTRY = ("location", "country", "country of risk", "country of domicile", "land")
-_CURRENCY = ("currency", "market currency", "base currency", "trading currency", "valuta")
-_KIND = ("asset class", "security type", "type")
+_TICKER = ("ticker", "symbol", "ticker symbol", "issuer ticker", "emittententicker")
+_SECTOR = ("sector", "gics sector", "sector classification", "industry", "sektor", "branche")
+_COUNTRY = (
+    "location",
+    "country",
+    "country of risk",
+    "country of domicile",
+    "land",
+    "standort",
+)
+_CURRENCY = (
+    "currency",
+    "market currency",
+    "base currency",
+    "trading currency",
+    "valuta",
+    "marktwährung",
+    "währung",
+)
+_KIND = ("asset class", "security type", "type", "anlageklasse")
 _NOT_A_COMPANY = (
     "cash",
     "derivative",
@@ -79,8 +97,14 @@ _NOT_A_COMPANY = (
     "margin",
     "other",
     "liquidity",
+    "geldmarkt",
+    "barmittel",
+    "derivat",
+    "termin",
 )
-_AS_OF = re.compile(r"as of|as at|holdings date|peildatum|\bstand\b", re.IGNORECASE)
+# a sector column that says the line is cash or derivatives ("other" can be a real sector)
+_NOT_A_COMPANY_SECTOR = ("cash and/or derivatives", "barmittel", "derivat", "liquidity")
+_AS_OF = re.compile(r"as of|as at|holdings date|peildatum|\bstand\b|\bper\b", re.IGNORECASE)
 _DATE_FORMATS = (
     "%b %d, %Y",
     "%d-%b-%Y",
@@ -93,8 +117,15 @@ _DATE_FORMATS = (
 _ISIN_SHAPE = re.compile(r"^[A-Z]{2}[A-Z0-9]{9}\d$")
 _DATE_TEXT = re.compile(
     r"\d{1,2}[./-]\w{2,3}[./-]\d{4}|[A-Za-z]+ \d{1,2}, \d{4}|\d{4}-\d{2}-\d{2}"
-    r"|\d{1,2}[./]\d{1,2}[./]\d{4}"
+    r"|\d{1,2}[./]\d{1,2}[./]\d{4}|\d{1,2}[. ]+[^\W\d_]{3,9}[. ]*\d{4}"
 )
+# month names as written in English, German, Dutch and French (by their first three letters)
+_MONTHS = {
+    "jan": 1, "feb": 2, "fév": 2, "mar": 3, "mär": 3, "mrt": 3, "apr": 4, "avr": 4,
+    "mai": 5, "may": 5, "mei": 5, "jun": 6, "jui": 6, "jul": 7, "aug": 8, "aoû": 8,
+    "sep": 9, "okt": 10, "oct": 10, "nov": 11, "dez": 12, "dec": 12, "déc": 12,
+}  # fmt: skip
+_DAY_MONTH_YEAR = re.compile(r"(\d{1,2})[. ]+([^\W\d_]{3,9})[. ]*(\d{4})")
 HEADER_SEARCH_ROWS = 60
 
 
@@ -225,6 +256,16 @@ def _stated_date(preamble: list[list[str]]) -> date | None:
                         return datetime.strptime(found.group(0), fmt).date()
                     except ValueError:
                         continue
+                written = _DAY_MONTH_YEAR.fullmatch(found.group(0).strip())
+                if written and written.group(2).lower()[:3] in _MONTHS:
+                    try:
+                        return date(
+                            int(written.group(3)),
+                            _MONTHS[written.group(2).lower()[:3]],
+                            int(written.group(1)),
+                        )
+                    except ValueError:
+                        continue
     return None
 
 
@@ -334,8 +375,11 @@ def read_holdings(file: HoldingsFile, mapping: HoldingsMapping | None = None) ->
             weight *= 100
         name = _cell(row, m.name)
         kind = _cell(row, m.kind).lower()
-        if any(word in kind for word in _NOT_A_COMPANY) or (
-            not _cell(row, m.isin) and any(word == name.lower() for word in _NOT_A_COMPANY)
+        sector_text = _cell(row, m.sector).lower()
+        if (
+            any(word in kind for word in _NOT_A_COMPANY)
+            or any(word in sector_text for word in _NOT_A_COMPANY_SECTOR)
+            or (not _cell(row, m.isin) and any(word == name.lower() for word in _NOT_A_COMPANY))
         ):
             result.dropped.append(f"{name or kind}: {weight.normalize():f} %")
             continue
