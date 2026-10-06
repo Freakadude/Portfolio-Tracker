@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next'
 import { errorMessage } from '../api/client'
 import { SectionForm } from '../components/SectionForm'
 import { Badge } from '../components/display'
-import { Alert, Button, Checkbox, Field, Input, Select } from '../components/ui'
+import { Alert, Button, Checkbox, Field, Help, Input, Select } from '../components/ui'
 import {
   useDeleteNewsSource,
   useFetchNow,
@@ -36,6 +36,11 @@ export function NewsTab() {
   const [editing, setEditing] = useState<{ id?: number; value: NewsSourceInput } | null>(null)
   return (
     <div className="space-y-6">
+      <Help title={t('newsSettings.helpTitle')}>
+        <p>{t('newsSettings.help1')}</p>
+        <p>{t('newsSettings.help2')}</p>
+        <p>{t('newsSettings.help3')}</p>
+      </Help>
       <p className="text-sm text-muted">{t('newsSettings.intro')}</p>
       {sources.isError && <Alert>{errorMessage(sources.error)}</Alert>}
       {remove.isError && <Alert>{errorMessage(remove.error)}</Alert>}

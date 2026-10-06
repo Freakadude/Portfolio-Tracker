@@ -96,6 +96,10 @@
     }
   },
   "macroSettings": {
+    "helpTitle": "What is this for?",
+    "help1": "Macro series are economic numbers such as interest rates, inflation and the dollar rate, one value per day or month. They are not prices of things you own. They help you see what the economy is doing around your holdings.",
+    "help2": "Folio fetches them every morning. You can chart one on a dashboard (add the Macro widget), and a strategy rule can watch one, for example 'alert me if the 10-year real yield rises above 2 %'. A rate decision in the news also links to the sleeves that watch the series it speaks to.",
+    "help3": "To start: get a free key at fred.stlouisfed.org (My Account, API Keys), paste it under Settings, Providers, then press Fetch now. If you do not care about macro numbers you can ignore this tab; nothing else depends on it.",
     "intro": "Indicator series are fetched every morning and can be charted on a dashboard and watched by a strategy rule. FRED series need the free FRED key under Providers.",
     "stored": "Series",
     "columns": {

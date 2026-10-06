@@ -1,7 +1,7 @@
 import { useTranslation } from 'react-i18next'
 import { errorMessage } from '../api/client'
 import { SectionForm } from '../components/SectionForm'
-import { Alert, Button } from '../components/ui'
+import { Alert, Button, Help } from '../components/ui'
 import { useAgentBudget, useTestKey } from './api'
 
 /** Settings, Agent: the month's cost against the budget, a test of the saved key, and every
@@ -15,6 +15,10 @@ export function AgentTab() {
   const b = budget.data
   return (
     <div className="space-y-6">
+      <Help title={t('agentSettings.helpTitle')}>
+        <p>{t('agentSettings.help1')}</p>
+        <p>{t('agentSettings.help2')}</p>
+      </Help>
       <p className="text-sm text-muted">{t('agentSettings.intro')}</p>
       {budget.isError && <Alert>{errorMessage(budget.error)}</Alert>}
       {b && (

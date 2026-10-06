@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { errorMessage } from '../api/client'
 import { Badge } from '../components/display'
-import { Alert, Button, Checkbox, Field, Input, Select } from '../components/ui'
+import { Alert, Button, Checkbox, Field, Help, Input, Select } from '../components/ui'
 import {
   useDeleteSnapshot,
   useHoldings,
@@ -30,6 +30,11 @@ export function HoldingsPanel({ instrumentId }: { instrumentId: number }) {
           {t('etfHoldings.title')}
         </h2>
         <p className="text-sm text-muted">{t('etfHoldings.intro')}</p>
+        <Help title={t('etfHoldings.helpTitle')}>
+          <p>{t('etfHoldings.help1')}</p>
+          <p>{t('etfHoldings.help2')}</p>
+          <p>{t('etfHoldings.help3')}</p>
+        </Help>
       </div>
       {holdings.isError && <Alert>{errorMessage(holdings.error)}</Alert>}
       {remove.isError && <Alert>{errorMessage(remove.error)}</Alert>}

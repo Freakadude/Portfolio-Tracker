@@ -81,6 +81,9 @@
     "confirmDrafts": "Confirm them below, under Orders from your strategy."
   },
   "agentSettings": {
+    "helpTitle": "What does the agent cost, and can my Claude subscription pay for it?",
+    "help1": "No. A Claude Pro or Max subscription covers the Claude chat apps and Claude Code. The agent uses Anthropic's API, which is a separate product billed by use: you create an account at console.anthropic.com, add credit and make an API key.",
+    "help2": "The monthly budget below is a hard stop: when it is used up the agent pauses and everything else keeps working. A daily review costs a few cents to a few tens of cents, depending on the models you choose.",
     "intro": "The AI agent reads your strategy, signals and news every weekday evening and proposes recommendations, which Folio's code checks before you see them. It never trades and cannot change your records. Switch it off at any time: rules, alerts and notifications keep working.",
     "month": "Cost in {{month}}",
     "spent": "{{spent}} of {{budget}} EUR ({{left}} left)",

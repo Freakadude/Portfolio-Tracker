@@ -66,6 +66,10 @@
     }
   },
   "newsSettings": {
+    "helpTitle": "How do news feeds work?",
+    "help1": "Folio only reads news from sources you trust: central banks, ETF issuers and EODHD. It never searches the open web for stories.",
+    "help2": "A feed is the address of a page's RSS or Atom list of new articles. Many issuers and companies publish one (look for an RSS icon on their news or press page, or a link ending in /rss or /feed). Add it below with a name, and Folio fetches it regularly and keeps the headline, a short summary and the link.",
+    "help3": "Each story is linked to what you hold, directly or through an ETF, and rated by impact. They show on the News page. Use 'Wrong link' on a story if it was tied to the wrong holding.",
     "intro": "Where news comes from. The ECB, the Federal Reserve and EODHD are ready; add the news feeds of the issuers of your ETFs and the companies you hold. Only the headline, a short summary and the link are kept.",
     "caption": "News sources",
     "columns": {

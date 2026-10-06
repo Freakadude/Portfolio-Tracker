@@ -94,6 +94,17 @@ export function Card({ className, ...props }: React.HTMLAttributes<HTMLDivElemen
   return <div className={cn('rounded-lg border border-border bg-card p-6', className)} {...props} />
 }
 
+/** A closed-by-default "What is this?" note: what a screen is for and how to use it, kept out of
+ * the way once the owner knows. */
+export function Help({ title, children }: { title: string; children: ReactNode }) {
+  return (
+    <details className="rounded-md border border-border bg-card px-3 py-2 text-sm">
+      <summary className="cursor-pointer font-medium">{title}</summary>
+      <div className="mt-2 space-y-2 text-muted">{children}</div>
+    </details>
+  )
+}
+
 export function Alert({ children }: { children: ReactNode }) {
   return (
     <p role="alert" className="rounded-md border border-danger/50 px-3 py-2 text-sm text-danger">

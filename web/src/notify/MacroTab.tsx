@@ -2,7 +2,7 @@ import { useMutation } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
 import { api, errorMessage, unwrap } from '../api/client'
 import { SectionForm } from '../components/SectionForm'
-import { Alert, Button } from '../components/ui'
+import { Alert, Button, Help } from '../components/ui'
 import { useMacroSeries } from './api'
 
 /** Settings, Macro: the indicator series fetched every morning, what is stored, and a way to
@@ -13,6 +13,11 @@ export function MacroTab() {
   const fetchNow = useMutation({ mutationFn: () => unwrap(api.POST('/api/v1/macro/refresh')) })
   return (
     <div className="space-y-6">
+      <Help title={t('macroSettings.helpTitle')}>
+        <p>{t('macroSettings.help1')}</p>
+        <p>{t('macroSettings.help2')}</p>
+        <p>{t('macroSettings.help3')}</p>
+      </Help>
       <p className="text-sm text-muted">{t('macroSettings.intro')}</p>
       {series.isError && <Alert>{errorMessage(series.error)}</Alert>}
       <div className="overflow-x-auto">

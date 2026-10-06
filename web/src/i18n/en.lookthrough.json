@@ -20,6 +20,10 @@
     "openPosition": "{{name}}, {{weight}}. Open the position."
   },
   "etfHoldings": {
+    "helpTitle": "Why upload holdings?",
+    "help1": "An ETF is a basket of companies. Look-through opens each basket, so Folio can show what you really own across everything: for instance how much ASML you hold in total, directly and inside your ETFs, and your true spread over sectors and countries.",
+    "help2": "Find the fund on its issuer's website (iShares, Vanguard, Xtrackers and so on), open its Holdings tab and download the full list as Excel, CSV or PDF. Choose that file below, check the preview, and save. Folio works out the columns by itself; change a choice if it is wrong.",
+    "help3": "Do it once per ETF and again when you want fresh figures; once a year is plenty for broad funds. A file that lists only the top 10 holdings is accepted, but then Folio says how little of the fund it covers.",
     "title": "What this fund holds",
     "intro": "Upload the issuer's holdings file (a CSV, Excel or PDF file from the fund's page) so Folio can look through this fund: what you own underneath, across all your holdings.",
     "empty": "No holdings yet. Upload a file below.",
