@@ -12,15 +12,19 @@ from folio.news.calendar import load_shipped, parse_earnings
 FIXTURE = Path(__file__).resolve().parents[2] / "fixtures" / "providers" / "eodhd_earnings.json"
 
 
-def test_the_shipped_dates_are_the_two_banks_2026_decisions() -> None:
+def test_the_shipped_dates_are_the_two_banks_2026_and_2027_decisions() -> None:
     events = load_shipped()
-    assert len(events) == 16 and len({e.external_id for e in events}) == 16
-    assert all(e.kind == "central_bank" and e.day.year == 2026 for e in events)
-    ecb = sorted(e.day for e in events if e.external_id.startswith("ecb-"))
-    fomc = sorted(e.day for e in events if e.external_id.startswith("fomc-"))
-    assert len(ecb) == len(fomc) == 8
-    assert ecb[0] == date(2026, 2, 5) and ecb[-1] == date(2026, 12, 17)
-    assert fomc[0] == date(2026, 1, 28) and fomc[-1] == date(2026, 12, 9)
+    assert len(events) == 32 and len({e.external_id for e in events}) == 32
+    assert all(e.kind == "central_bank" and e.day.year in (2026, 2027) for e in events)
+    for year, first_ecb, last_ecb, first_fomc, last_fomc in (
+        (2026, date(2026, 2, 5), date(2026, 12, 17), date(2026, 1, 28), date(2026, 12, 9)),
+        (2027, date(2027, 2, 4), date(2027, 12, 16), date(2027, 1, 27), date(2027, 12, 8)),
+    ):
+        ecb = sorted(e.day for e in events if e.external_id.startswith(f"ecb-{year}"))
+        fomc = sorted(e.day for e in events if e.external_id.startswith(f"fomc-{year}"))
+        assert len(ecb) == len(fomc) == 8
+        assert (ecb[0], ecb[-1]) == (first_ecb, last_ecb)
+        assert (fomc[0], fomc[-1]) == (first_fomc, last_fomc)
     # each id carries its own date, so a typo in one of them shows up here
     assert all(e.external_id.endswith(e.day.isoformat()) for e in events)
     assert {e.title for e in events} == {

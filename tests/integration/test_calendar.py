@@ -93,16 +93,16 @@ def test_the_ready_made_dates_are_written_once_and_a_deleted_one_stays_deleted(
     settings: Settings, db: Session
 ) -> None:
     first = calendar_job(ctx(settings))
-    assert first.status == "ok" and "16 added" in first.log
+    assert first.status == "ok" and "32 added" in first.log
     assert "switched off" in first.log  # earnings from EODHD are off until you turn them on
     assert calendar_job(ctx(settings)).log.splitlines()[0].endswith("0 added.")
     rows = live_events(db)
-    assert len(rows) == 16
+    assert len(rows) == 32
     victim = next(r for r in rows if r.external_id == "fomc-2026-10-28")
     victim.deleted_at = dt.datetime(2026, 10, 6, tzinfo=dt.UTC)
     db.commit()
     calendar_job(ctx(settings))
-    assert len(live_events(db)) == 15  # not brought back
+    assert len(live_events(db)) == 31  # not brought back
     assert sync_shipped(db) == 0
 
 
@@ -163,7 +163,7 @@ def test_earnings_need_a_key_a_plan_and_budget_and_never_stop_the_rest(
     refused = Scripted(lambda r: httpx.Response(403, text="forbidden"))
     plan = calendar_job(ctx(settings, eodhd=refused))
     assert plan.status == "failed" and "ERROR Earnings dates:" in plan.log
-    assert len(live_events(db)) == 16  # the ready-made dates were written before the call
+    assert len(live_events(db)) == 32  # the ready-made dates were written before the call
     poor = Scripted(lambda r: respond("eodhd_earnings.json"))
     kept = calendar_job(ctx(settings, eodhd=poor, eodhd_budget=3))
     assert "kept for the closes" in kept.log and poor.requests == []

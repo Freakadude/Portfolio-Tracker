@@ -23,7 +23,7 @@ You deferred the phase checks until the last phase was finished. Everything belo
 - [ ] Let one daily review run (or "Run a review now"), read its advice and trace, check its cost, accept one piece of advice with drafts.
 
 ## Phase 5: the extras
-- [ ] Check the ECB and Fed 2026 decision days under News, Calendar against the banks' own schedules.
+- [x] The ECB and Fed decision days (2026 and 2027) were checked against the banks' own pages on 2026-10-06; nothing left for you here.
 - [ ] Two-factor sign-in: set it up, keep the recovery codes, sign out and in.
 - [ ] Make a backup, download it, and restore one when you can afford a minute of downtime.
 - [ ] Ask the portfolio one question; read the data listed under the answer.
