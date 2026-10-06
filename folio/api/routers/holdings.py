@@ -7,6 +7,7 @@ from decimal import Decimal
 from typing import Annotated
 
 from fastapi import APIRouter, File, Form, UploadFile
+from fastapi.concurrency import run_in_threadpool
 from pydantic import BaseModel
 from sqlalchemy import select
 from sqlalchemy.orm import Session
@@ -174,7 +175,9 @@ async def preview(
     """How the file would be read, with nothing stored. Send `mapping` to try other columns, or
     `sheet` to read another sheet of a workbook with its own suggested columns."""
     _etf(db, instrument_id)
-    parsed, read = _read(await file.read(HOLDINGS_MAX_BYTES + 1), mapping, sheet)
+    parsed, read = await run_in_threadpool(
+        _read, await file.read(HOLDINGS_MAX_BYTES + 1), mapping, sheet
+    )
     used = HoldingsMapping.model_validate(json.loads(mapping)) if mapping else parsed.mapping
     header = parsed.table[used.header_row]
     return HoldingsPreviewOut(
@@ -202,7 +205,7 @@ async def upload(
 ) -> StoredOut:
     """Store the file as a snapshot, dated by the file itself unless `as_of` says otherwise."""
     _etf(db, instrument_id)
-    parsed, read = _read(await file.read(HOLDINGS_MAX_BYTES + 1), mapping)
+    parsed, read = await run_in_threadpool(_read, await file.read(HOLDINGS_MAX_BYTES + 1), mapping)
     try:
         snapshot = service.store_snapshot(
             db,

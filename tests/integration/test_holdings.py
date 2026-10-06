@@ -135,6 +135,44 @@ def test_an_excel_workbook_is_previewed_with_its_sheets_then_stored(api: TestCli
     assert stored.status_code == 201 and stored.json()["snapshot"]["holdings"] == 2
 
 
+def pdf_file() -> bytes:
+    from fpdf import FPDF
+
+    pdf = FPDF()
+    pdf.set_font("Helvetica", size=10)
+    pdf.add_page()
+    pdf.cell(0, 8, "Holdings as of 02/10/2026", new_x="LMARGIN", new_y="NEXT")
+    with pdf.table(col_widths=(90, 40)) as table:
+        for cells in (
+            ["Name", "Weight (%)"],
+            ["ALPHA TECH INC", "60.00"],
+            ["BETA BANK PLC", "40.00"],
+        ):
+            row = table.row()
+            for cell in cells:
+                row.cell(cell)
+    return bytes(pdf.output())
+
+
+def test_a_pdf_table_is_previewed_and_stored_like_any_other_file(api: TestClient, db) -> None:  # type: ignore[no-untyped-def]
+    base = f"/api/v1/instruments/{etf(db)}/holdings"
+    shown = upload_to(api, f"{base}/preview", pdf_file()).json()
+    assert (shown["holdings"], shown["covered_pct"], shown["as_of"]) == (2, "100.00", "2026-10-02")
+    assert shown["sheets"] == [] and shown["mapping"]["sheet"] is None
+    stored = upload_to(api, base, pdf_file(), mapping=json.dumps(shown["mapping"]))
+    assert stored.status_code == 201 and stored.json()["snapshot"]["holdings"] == 2
+    scan = upload_to(api, f"{base}/preview", b"%PDF-1.4\nnot a pdf")
+    assert scan.status_code == 422 and "could not be read" in scan.json()["detail"]
+
+
+def test_the_job_refreshes_holdings_from_a_pdf_download(settings: Settings, db) -> None:  # type: ignore[no-untyped-def]
+    instrument_id = etf(db)
+    set_source(db, settings, instrument_id, HoldingsSource(url="https://issuer.example/h.pdf"))
+    issuer = Scripted(lambda r: httpx.Response(200, content=pdf_file()))
+    result = lookthrough_job(job_ctx(settings, issuer=issuer))
+    assert result.status == "ok" and "2 holdings from url" in result.log
+
+
 def test_the_job_refreshes_holdings_from_an_excel_download(settings: Settings, db) -> None:  # type: ignore[no-untyped-def]
     instrument_id = etf(db)
     set_source(

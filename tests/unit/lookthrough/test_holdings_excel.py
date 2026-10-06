@@ -154,7 +154,7 @@ def test_files_that_cannot_be_read_get_a_plain_message() -> None:
         suggest(plain_zip.getvalue())
     with pytest.raises(ParseError, match="larger than 10 MB"):
         suggest(b"a," * (6 * 1024 * 1024))
-    with pytest.raises(ParseError, match="cannot be read yet"):
+    with pytest.raises(ParseError, match="PDF could not be read"):
         suggest(b"%PDF-1.7\n1 0 obj")
 
 

@@ -141,7 +141,7 @@ function Upload({ instrumentId }: { instrumentId: number }) {
         {(p) => (
           <Input
             type="file"
-            accept=".csv,.xlsx,text/csv,text/plain,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+            accept=".csv,.xlsx,.pdf,text/csv,text/plain,application/pdf,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
             onChange={(e) => {
               setFile(e.target.files?.[0] ?? null)
               setMapping(undefined)

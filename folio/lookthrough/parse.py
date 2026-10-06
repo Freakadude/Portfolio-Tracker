@@ -21,7 +21,13 @@ from pydantic import BaseModel
 
 from folio.imports.mapping import CellError, detect_separators, parse_decimal
 from folio.imports.parse import ParseError, decode, sniff_delimiter
-from folio.lookthrough.formats import HOLDINGS_MAX_BYTES, Table, detect_kind, read_workbook
+from folio.lookthrough.formats import (
+    HOLDINGS_MAX_BYTES,
+    Table,
+    detect_kind,
+    read_pdf,
+    read_workbook,
+)
 
 _NAME = (
     "name",
@@ -74,7 +80,7 @@ _NOT_A_COMPANY = (
     "other",
     "liquidity",
 )
-_AS_OF = re.compile(r"as of|as at|holdings date|peildatum", re.IGNORECASE)
+_AS_OF = re.compile(r"as of|as at|holdings date|peildatum|\bstand\b", re.IGNORECASE)
 _DATE_FORMATS = (
     "%b %d, %Y",
     "%d-%b-%Y",
@@ -161,6 +167,15 @@ def _csv_table(data: bytes) -> Table:
     return [[c.strip() for c in row] for row in rows if any(c.strip() for c in row)]
 
 
+def _without_repeated_headers(table: Table) -> Table:
+    """A table that goes over several pages repeats its header on each of them."""
+    header = find_header(table)
+    if header is None:
+        return table
+    row = table[header]
+    return table[: header + 1] + [r for r in table[header + 1 :] if r != row]
+
+
 def _read_tables(data: bytes) -> dict[str, Table]:
     """The tables of a file: one for a CSV (named ""), one per visible sheet for a workbook."""
     if not data.strip():
@@ -176,7 +191,7 @@ def _read_tables(data: bytes) -> dict[str, Table]:
             "then upload that."
         )
     if kind == "pdf":
-        raise ParseError("PDF files cannot be read yet. Use the issuer's Excel or CSV download.")
+        return {"": _without_repeated_headers(read_pdf(data))}
     return {"": _csv_table(data)}
 
 

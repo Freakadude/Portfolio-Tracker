@@ -8,6 +8,7 @@ of the header, the matching of the columns and the checks of the weights stay in
 from __future__ import annotations
 
 import io
+import re
 import zipfile
 from datetime import date, datetime, time
 from decimal import Decimal, InvalidOperation
@@ -18,6 +19,7 @@ from folio.imports.parse import ParseError
 HOLDINGS_MAX_BYTES = 10 * 1024 * 1024  # workbooks and PDFs are larger than a CSV of the same list
 MAX_UNPACKED_BYTES = 100 * 1024 * 1024  # what a workbook may unpack to (a zip bomb stops here)
 MAX_SHEET_ROWS = 50_000
+MAX_PDF_PAGES = 60
 
 FileKind = Literal["xlsx", "pdf", "xls", "csv"]
 Table = list[list[str]]
@@ -94,3 +96,59 @@ def read_workbook(data: bytes) -> dict[str, Table]:
     if not tables:
         raise ParseError("The workbook has no sheet with any content.")
     return tables
+
+
+_DATE_LINE = re.compile(r"as of|as at|holdings date|peildatum|\bstand\b", re.IGNORECASE)
+
+
+def _cell_text(value: object) -> str:
+    return " ".join(str(value).split()) if value is not None else ""
+
+
+def read_pdf(data: bytes) -> Table:
+    """The rows of the tables in a text PDF, pages joined. Tables with ruling lines are read by
+    their lines; where a page has none, by the alignment of the text. A line of text that states
+    a date ("Holdings as of ...") is kept above the table so the date can be found. A scanned
+    PDF has no text to read and is refused."""
+    import pdfplumber  # imported when needed: only an uploaded PDF loads it
+
+    try:
+        pdf = pdfplumber.open(io.BytesIO(data))
+    except Exception as exc:  # pdfminer raises many kinds for a damaged file
+        raise ParseError("The PDF could not be read. Is it damaged or password protected?") from exc
+    dates: Table = []
+    rows: Table = []
+    saw_text = False
+    with pdf:
+        for page in pdf.pages[:MAX_PDF_PAGES]:
+            try:
+                text = page.extract_text() or ""
+                if text.strip():
+                    saw_text = True
+                dates += [[line.strip()] for line in text.splitlines() if _DATE_LINE.search(line)]
+                tables = page.extract_tables()
+                if not any(any(any(c for c in row) for row in t) for t in tables):
+                    tables = page.extract_tables(
+                        {
+                            "vertical_strategy": "text",
+                            "horizontal_strategy": "text",
+                            "min_words_vertical": 2,  # a last page may hold a header and one row
+                        }
+                    )
+            except Exception as exc:
+                raise ParseError("A page of the PDF could not be read.") from exc
+            for table in tables:
+                for row in table:
+                    cells = [_cell_text(c) for c in row]
+                    if any(cells):
+                        rows.append(cells)
+    if not saw_text:
+        raise ParseError(
+            "This PDF has no readable text (it may be a scan). Use the issuer's Excel or CSV "
+            "download instead."
+        )
+    if not rows:
+        raise ParseError(
+            "No table was found in this PDF. Use the issuer's Excel or CSV download instead."
+        )
+    return dates[:5] + rows

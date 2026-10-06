@@ -90,7 +90,7 @@ const PREVIEW = {
 const HOLDINGS = '/api/v1/instruments/7/holdings'
 
 async function pick(file = new File(['x'], 'holdings.csv', { type: 'text/csv' })) {
-  await userEvent.upload(screen.getByLabelText('Holdings file (CSV or Excel)'), file)
+  await userEvent.upload(screen.getByLabelText('Holdings file (CSV, Excel or PDF)'), file)
 }
 
 describe('a workbook with several sheets', () => {
@@ -171,7 +171,7 @@ describe('what a fund holds (FR-MD-09)', () => {
     renderAt(<HoldingsPanel instrumentId={7} />)
     expect(await screen.findByText('No holdings yet. Upload a file below.')).toBeInTheDocument()
     await userEvent.click(screen.getByRole('button', { name: 'Preview' }))
-    expect(await screen.findByText('Choose a CSV or Excel file first.')).toBeInTheDocument()
+    expect(await screen.findByText('Choose a CSV, Excel or PDF file first.')).toBeInTheDocument()
     expect(calls.some((c) => c.method === 'POST')).toBe(false)
 
     await pick()
@@ -235,7 +235,7 @@ describe('what a fund holds (FR-MD-09)', () => {
       }),
     })
     renderAt(<HoldingsPanel instrumentId={7} />)
-    const url = await screen.findByLabelText("Issuer's download address (CSV or Excel)")
+    const url = await screen.findByLabelText("Issuer's download address (CSV, Excel or PDF)")
     expect(url).toHaveValue('https://issuer.example/h.csv')
     await userEvent.clear(url)
     await userEvent.type(url, 'https://issuer.example/h2.csv')
