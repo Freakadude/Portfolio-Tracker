@@ -18,6 +18,8 @@ KPI_METRICS = (
     "value",
     "day_change",
     "total_return",
+    "unrealized",
+    "realized",
     "period_return",
     "twr",
     "xirr",
@@ -54,7 +56,8 @@ class BaseConfig(BaseModel):
 
 class KpiConfig(BaseConfig):
     metric: Literal[
-        "value", "day_change", "total_return", "period_return", "twr", "xirr", "cash",
+        "value", "day_change", "total_return", "unrealized", "realized", "period_return", "twr",
+        "xirr", "cash",
         "net_contributions", "income", "largest_drift", "volatility", "max_drawdown",
         "current_drawdown", "sharpe", "beta",
     ] = "value"  # fmt: skip

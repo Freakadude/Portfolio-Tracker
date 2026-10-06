@@ -81,6 +81,8 @@ export const KPI_METRICS = [
   'value',
   'day_change',
   'total_return',
+  'unrealized',
+  'realized',
   'period_return',
   'twr',
   'xirr',

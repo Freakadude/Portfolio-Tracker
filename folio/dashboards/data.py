@@ -154,7 +154,8 @@ def _empty(reason: str) -> dict[str, Any]:
 # --- KPI ----------------------------------------------------------------------------------------
 
 _KINDS = {
-    "value": "eur", "day_change": "eur", "total_return": "eur", "period_return": "eur",
+    "value": "eur", "day_change": "eur", "total_return": "eur", "unrealized": "eur",
+    "realized": "eur", "period_return": "eur",
     "twr": "pct", "xirr": "pct", "cash": "eur", "net_contributions": "eur", "income": "eur",
     "largest_drift": "pct", "volatility": "pct", "max_drawdown": "pct",
     "current_drawdown": "pct", "sharpe": "number", "beta": "number",
@@ -259,6 +260,34 @@ def kpi(env: Env, cfg: Any) -> dict[str, Any]:
         if not ctx.tracks_cash:
             return {**base, **_empty("Turn on cash tracking for an account to see its cash.")}
         base["value"] = s(ctx.points[-1].cash_eur)
+    elif metric in ("unrealized", "realized"):
+        # open positions at the latest prices (unrealized) and what sales and closed positions
+        # have already locked in (realized), for the positions this widget looks at
+        rows, _ = load_positions(
+            env.db,
+            account_id=account_of(cfg, env),
+            group_by_isin=True,
+            include_closed=True,
+            today=env.today,
+        )
+        only = only_of(cfg, env)
+        if only is not None:
+            rows = [r for r in rows if r.instrument.id in set(only)]
+        if cfg.scope.kind == "instrument":
+            rows = [r for r in rows if r.instrument.id == cfg.scope.id]
+        elif cfg.scope.kind == "sleeve" and cfg.scope.id is not None:
+            ids = set(svc.instruments_in_sleeve(env.db, cfg.scope.id))
+            rows = [r for r in rows if r.instrument.id in ids]
+        if metric == "realized":
+            base["value"] = s(sum((r.state.realized_pnl_eur for r in rows), ZERO))
+        else:
+            valued = [r for r in rows if r.metrics is not None and r.state.quantity != 0]
+            gain = sum((r.metrics.unrealized_pnl_eur for r in valued), ZERO)  # type: ignore[union-attr]
+            cost = sum((r.state.cost_basis_eur for r in valued), ZERO)
+            base.update(value=s(gain), change_ratio=s(None if cost == 0 else gain / cost))
+            skipped = sum(1 for r in rows if r.metrics is None and r.state.quantity != 0)
+            if skipped:
+                base["note"] = f"{skipped} holding(s) without a price are left out."
     elif metric == "net_contributions":
         base["value"] = s(ctx.points[-1].net_contributions_eur)
     elif metric == "income":

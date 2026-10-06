@@ -706,3 +706,19 @@ def test_the_dashboard_can_look_at_one_type_or_some_holdings(api, book, db) -> N
     assert D(unfollowed["value"]) == 1688
     nothing = data(api, {"w": ("kpi", {"metric": "value"})}, types=["BOND"])["w"]
     assert nothing["error"] and "type or holding filter" in nothing["error"]
+
+
+def test_key_figures_for_unrealized_and_realized_result(api, book) -> None:
+    """The book: 10 @ 100 (fee 1) and 5 @ 104, then 4 sold at 106 (fee 1), 11 units left valued
+    at 108. Total result 93 = unrealized + realized + the dividend of 3."""
+    unrealized = one(api, "kpi", {"metric": "unrealized"})
+    realized = one(api, "kpi", {"metric": "realized"})
+    assert unrealized["kind"] == "eur" and realized["kind"] == "eur"
+    assert D(unrealized["value"]) + D(realized["value"]) + 3 == 93  # the dividend is income
+    assert D(realized["value"]) > 0 and D(unrealized["value"]) > 0
+    # the unrealized result is shown against what the open units cost
+    assert unrealized["change_ratio"] is not None
+    assert (
+        one(api, "kpi", {"metric": "realized", "follow_filters": False})["value"]
+        == realized["value"]
+    )

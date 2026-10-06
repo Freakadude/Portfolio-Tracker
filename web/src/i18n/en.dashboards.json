@@ -185,6 +185,8 @@
       "value": "Value",
       "day_change": "Today",
       "total_return": "Total result",
+      "unrealized": "Unrealized result",
+      "realized": "Realized result",
       "period_return": "Result in the period",
       "twr": "Return (time-weighted)",
       "xirr": "Return per year (XIRR)",
