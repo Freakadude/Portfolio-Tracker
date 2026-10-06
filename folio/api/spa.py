@@ -5,6 +5,11 @@ from fastapi.responses import FileResponse
 
 STATIC_DIR = Path(__file__).resolve().parents[1] / "static"
 _RESERVED = ("api/", "healthz", "readyz")
+# The page must be asked for again after an update, or a browser keeps showing the old one with
+# the old scripts. The files under assets/ carry a hash of their content in their name, so a
+# changed file has a new name and the old ones can be kept for good.
+REVALIDATE = {"Cache-Control": "no-cache"}
+FOREVER = {"Cache-Control": "public, max-age=31536000, immutable"}
 
 
 def mount_spa(app: FastAPI, static_dir: Path = STATIC_DIR) -> None:
@@ -18,6 +23,8 @@ def mount_spa(app: FastAPI, static_dir: Path = STATIC_DIR) -> None:
         if path.startswith(_RESERVED):
             raise HTTPException(status_code=404, detail="Not found")
         candidate = (static_dir / path).resolve()
-        if path and candidate.is_file() and static_dir.resolve() in candidate.parents:
-            return FileResponse(candidate)
-        return FileResponse(index)
+        root = static_dir.resolve()
+        if path and candidate.is_file() and root in candidate.parents:
+            hashed = candidate.parent == root / "assets"
+            return FileResponse(candidate, headers=FOREVER if hashed else REVALIDATE)
+        return FileResponse(index, headers=REVALIDATE)

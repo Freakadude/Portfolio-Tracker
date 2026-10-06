@@ -47,3 +47,24 @@ def test_spa_fallback_serves_index_but_not_for_api(tmp_path: Path, settings: Set
         assert client.get("/app.js").text == "console.log(1)"
         assert client.get("/api/v1/nope").status_code == 404
         assert client.get("/../secret").status_code in (200, 404)  # never escapes the folder
+
+
+def test_the_page_is_revalidated_after_an_update_and_hashed_files_are_kept(
+    tmp_path: Path, settings: Settings
+) -> None:
+    """A browser that kept the old page after an update showed a login that did nothing; the page
+    is asked for again every time (it is under a kilobyte), the content-hashed files under assets/
+    are cached for good, and any other file is revalidated too."""
+    static = tmp_path / "static"
+    (static / "assets").mkdir(parents=True)
+    (static / "index.html").write_text("<html>folio</html>")
+    (static / "assets" / "index-AbC123.js").write_text("console.log(1)")
+    (static / "favicon.svg").write_text("<svg/>")
+    with TestClient(create_app(settings, static_dir=static)) as client:
+        for path in ("/", "/holdings", "/login", "/index.html"):
+            assert client.get(path).headers["cache-control"] == "no-cache", path
+        assert (
+            client.get("/assets/index-AbC123.js").headers["cache-control"]
+            == "public, max-age=31536000, immutable"
+        )
+        assert client.get("/favicon.svg").headers["cache-control"] == "no-cache"
