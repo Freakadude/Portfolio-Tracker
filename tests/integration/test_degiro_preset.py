@@ -53,8 +53,10 @@ def test_the_columns_are_found_without_any_manual_mapping() -> None:
     assert (m.quantity_col, m.price_col, m.currency_col) == (6, 7, 8)  # the currency is unnamed
     assert (m.fx_col, m.fees_col, m.reference_col) == (12, 14, 16)
     assert m.extra_fee_cols == [13]  # the AutoFX fee
+    assert m.amount_col == 15  # "Total EUR", found although the header has a currency
     assert (m.type_mode, m.fx_semantics, m.date_format) == ("sign", "per_eur", "%d-%m-%Y")
-    assert (m.decimal_separator, m.thousands_separator) == (".", "")  # none in quantity or price
+    # no thousands mark in quantity or price, but the amounts ("-4,542.90") have one
+    assert (m.decimal_separator, m.thousands_separator) == (".", ",")
 
 
 def test_the_dutch_header_is_mapped_too() -> None:
@@ -66,7 +68,8 @@ def test_the_dutch_header_is_mapped_too() -> None:
     )
     m = suggest_mapping(parse_csv(text.encode("utf-8")))
     assert (m.fees_col, m.extra_fee_cols, m.quantity_col, m.price_col) == (14, [13], 6, 7)
-    assert (m.decimal_separator, m.thousands_separator) == (",", "")
+    assert m.amount_col == 15  # "Totaal EUR"
+    assert (m.decimal_separator, m.thousands_separator) == (",", ".")  # "-4.542,90"
 
 
 def test_the_upload_says_which_broker_it_recognised(api: TestClient, account: int) -> None:  # noqa: F811

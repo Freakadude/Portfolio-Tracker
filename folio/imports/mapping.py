@@ -23,6 +23,7 @@ VALID_TYPES = {
 _CASH_TYPES = {"dividend", "interest", "fee", "tax", "deposit", "withdrawal"}
 _DATE_FORMATS = ("%d-%m-%Y", "%Y-%m-%d", "%d/%m/%Y", "%d.%m.%Y", "%m/%d/%Y", "%d-%m-%y")
 _CURRENCY = re.compile(r"^[A-Z]{3}$")
+_CURRENCY_SUFFIX = re.compile(r"\s+[a-z]{3}$")  # a header like "total eur"
 
 _ALIASES: dict[str, tuple[str, ...]] = {
     "date_col": ("date", "datum", "trade date", "transaction date", "booking date", "tradedate"),
@@ -223,6 +224,15 @@ def suggest_mapping(parsed: ParsedFile) -> ImportMapping:
     lowered = [h.strip().lower() for h in parsed.headers]
     found: dict[str, int] = {}
     for field, names in _ALIASES.items():
+        if field == "amount_col":
+            # "Total EUR" is the amount, and "Total" beats "Value" when an export has both
+            plain = [_CURRENCY_SUFFIX.sub("", h) for h in lowered]
+            for name in names:
+                index = next((i for i, h in enumerate(plain) if h == name), None)
+                if index is not None and index not in found.values():
+                    found[field] = index
+                    break
+            continue
         for index, header in enumerate(lowered):
             if header in names and index not in found.values():
                 found[field] = index
@@ -263,8 +273,10 @@ def suggest_mapping(parsed: ParsedFile) -> ImportMapping:
     if fees_currency is not None:
         found["fees_currency_col"] = fees_currency
 
-    numbers = _first(parsed.rows, found.get("quantity_col")) + _first(
-        parsed.rows, found.get("price_col")
+    numbers = (
+        _first(parsed.rows, found.get("quantity_col"))
+        + _first(parsed.rows, found.get("price_col"))
+        + _first(parsed.rows, found.get("amount_col"))  # large amounts show the thousands mark
     )
     decimal_sep, thousands = detect_separators(numbers)
     dates = _first(parsed.rows, found.get("date_col"))
