@@ -130,6 +130,17 @@ function StrategyView({ id }: { id: number }) {
     onSuccess: invalidate,
   })
   const run = useMutation({ mutationFn: () => unwrap(api.POST('/api/v1/strategies/run')) })
+  const [, setParams] = useSearchParams()
+  const remove = useMutation({
+    mutationFn: () =>
+      unwrap(
+        api.DELETE('/api/v1/strategies/{strategy_id}', { params: { path: { strategy_id: id } } }),
+      ),
+    onSuccess: async () => {
+      await invalidate()
+      setParams({})
+    },
+  })
 
   if (strategy.isPending) return <p role="status">{t('app.loading')}</p>
   if (strategy.isError) return <Alert>{errorMessage(strategy.error)}</Alert>
@@ -161,6 +172,15 @@ function StrategyView({ id }: { id: number }) {
           <Button variant="ghost" onClick={() => run.mutate()} disabled={run.isPending}>
             {t('strategies.runNow')}
           </Button>
+          <Button
+            variant="ghost"
+            disabled={remove.isPending}
+            onClick={() => {
+              if (window.confirm(t('strategies.deleteConfirm', { name: s.name }))) remove.mutate()
+            }}
+          >
+            {t('strategies.delete')}
+          </Button>
         </div>
       </div>
       <p className="text-sm text-muted">{t(`strategies.modeHint.${s.mode}`)}</p>
@@ -170,6 +190,7 @@ function StrategyView({ id }: { id: number }) {
         </p>
       )}
       {mode.isError && <Alert>{errorMessage(mode.error)}</Alert>}
+      {remove.isError && <Alert>{errorMessage(remove.error)}</Alert>}
 
       <div role="tablist" aria-label={s.name} className="flex flex-wrap gap-1">
         {TABS.map((x) => (

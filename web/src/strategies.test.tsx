@@ -82,6 +82,27 @@ describe('strategies (FR-ST-01, FR-ST-02)', () => {
     expect(calls.find((c) => c.method === 'POST')?.body).toEqual({ yaml: YAML, note: 'starter' })
   })
 
+  it('deletes a strategy after asking, and shows the list without it', async () => {
+    let gone = false
+    vi.stubGlobal(
+      'confirm',
+      vi.fn(() => true),
+    )
+    const { calls } = mockApi(
+      routes({
+        'GET /api/v1/strategies': () => (gone ? [] : [summary]),
+        'DELETE /api/v1/strategies/1': () => {
+          gone = true
+          return new Response(null, { status: 204 })
+        },
+      }),
+    )
+    renderAt(<Strategies />)
+    await userEvent.click(await screen.findByRole('button', { name: 'Delete' }))
+    await waitFor(() => expect(calls.some((c) => c.method === 'DELETE')).toBe(true))
+    expect(await screen.findByText('No strategy yet')).toBeInTheDocument()
+  })
+
   it('saves the form as a new version', async () => {
     const { calls } = mockApi(routes({ 'POST /api/v1/strategies/1/versions': strategy() }))
     renderAt(<Strategies />)

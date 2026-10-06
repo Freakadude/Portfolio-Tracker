@@ -37,4 +37,9 @@ test('a strategy is made by answering a few questions (FR-ST-01)', async ({ page
   await expect(page.getByText('Made with the guided setup')).toBeVisible()
   await expect(page.getByLabel('Target % of sleeve 1')).toHaveValue('100')
   await expect(page.getByLabel('Soft band of sleeve 1')).toHaveValue('2')
+
+  // and a strategy can be deleted, after a confirmation
+  page.once('dialog', (dialog) => dialog.accept())
+  await page.getByRole('button', { name: 'Delete', exact: true }).click()
+  await expect(page.getByRole('heading', { level: 2, name: 'Guided e2e' })).toHaveCount(0)
 })

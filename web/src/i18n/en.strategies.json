@@ -1,6 +1,8 @@
 {
   "strategies": {
     "new": "New strategy",
+    "delete": "Delete",
+    "deleteConfirm": "Delete the strategy \"{{name}}\" and all its versions? If it is active, its sleeve targets are released. This cannot be undone.",
     "list": "Your strategies",
     "version": "Version {{version}}",
     "mode": "Mode",
