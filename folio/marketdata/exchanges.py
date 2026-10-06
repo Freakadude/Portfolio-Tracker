@@ -118,6 +118,34 @@ def previous_trading_day(mic: str, day: date) -> date | None:
     return days[-1] if days else None
 
 
+@dataclass(frozen=True)
+class MarketHours:
+    """Trading hours around a moment: today's session (None on a holiday or weekend) and the
+    next time the exchange opens, all in UTC."""
+
+    timezone: str
+    open_now: bool
+    opens: datetime | None  # today's session, exchange-local day
+    closes: datetime | None
+    next_open: datetime | None  # strictly after `now`
+
+
+def market_hours(mic: str, now: datetime) -> MarketHours:
+    cal = calendar(mic)
+    zone = str(cal.tz)
+    day = pd.Timestamp(now.astimezone(ZoneInfo(zone)).date())
+    opens = closes = None
+    if cal.is_session(day):
+        opens = cal.session_open(day).to_pydatetime()
+        closes = cal.session_close(day).to_pydatetime()
+    stamp = pd.Timestamp(now).tz_convert("UTC").floor("min")
+    try:
+        following = cal.next_open(stamp).to_pydatetime()
+    except Exception:  # noqa: BLE001 - past the end of the calendar: nothing to announce
+        following = None
+    return MarketHours(zone, is_open(mic, now), opens, closes, following)
+
+
 def eod_job_time(mic: str, day: date) -> datetime | None:
     """When to fetch closes for `day`: two hours after the exchange closes, in exchange-local
     time. None when the exchange is closed that day (no fetch is attempted)."""

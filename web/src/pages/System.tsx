@@ -7,6 +7,7 @@ import { Badge } from '../components/display'
 import { RunsPanel } from '../agent/RunsPanel'
 import { SystemInfo } from '../notify/SystemInfo'
 import { BackupsPanel } from '../system/BackupsPanel'
+import { MarketsPanel } from '../system/MarketsPanel'
 import { Alert, Button, Field, Input, Select } from '../components/ui'
 
 export function System() {
@@ -16,6 +17,7 @@ export function System() {
       <h1 className="text-2xl font-semibold">{t('system.title')}</h1>
       <SystemInfo />
       <Usage />
+      <MarketsPanel />
       <Jobs />
       <BackupsPanel />
       <RunsPanel />

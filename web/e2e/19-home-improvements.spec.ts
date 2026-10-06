@@ -135,3 +135,11 @@ test('each provider has an on/off switch', async ({ page }) => {
   await fred.getByLabel('FRED is on').check()
   await expect(fred.getByLabel('FRED is on')).toBeChecked()
 })
+
+test('the System page shows when the markets of your holdings are open', async ({ page }) => {
+  await login(page)
+  await page.getByRole('link', { name: 'System' }).click()
+  await expect(page.getByRole('heading', { name: 'Market hours' })).toBeVisible()
+  const markets = page.getByRole('table', { name: 'Opening hours of the markets of your holdings' })
+  await expect(markets.getByRole('row')).not.toHaveCount(1) // at least one market besides the header
+})

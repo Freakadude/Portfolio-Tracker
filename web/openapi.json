@@ -5191,6 +5191,89 @@
         "title": "MappingIn",
         "type": "object"
       },
+      "MarketOut": {
+        "properties": {
+          "closes": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Closes"
+          },
+          "holdings": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Holdings",
+            "type": "array"
+          },
+          "mic": {
+            "title": "Mic",
+            "type": "string"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "next_open": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Next Open"
+          },
+          "open_now": {
+            "title": "Open Now",
+            "type": "boolean"
+          },
+          "opens": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Opens"
+          },
+          "timezone": {
+            "title": "Timezone",
+            "type": "string"
+          },
+          "watching": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Watching",
+            "type": "array"
+          }
+        },
+        "required": [
+          "mic",
+          "name",
+          "timezone",
+          "open_now",
+          "opens",
+          "closes",
+          "next_open",
+          "holdings",
+          "watching"
+        ],
+        "title": "MarketOut",
+        "type": "object"
+      },
       "MatrixOut": {
         "properties": {
           "instruments": {
@@ -20201,6 +20284,32 @@
           }
         },
         "summary": "Run Job",
+        "tags": [
+          "system"
+        ]
+      }
+    },
+    "/api/v1/system/markets": {
+      "get": {
+        "description": "Opening hours of the exchanges your holdings (and watchlist) trade on.",
+        "operationId": "markets_api_v1_system_markets_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/MarketOut"
+                  },
+                  "title": "Response Markets Api V1 System Markets Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Markets",
         "tags": [
           "system"
         ]

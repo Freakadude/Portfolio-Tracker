@@ -2503,6 +2503,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/system/markets": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Markets
+         * @description Opening hours of the exchanges your holdings (and watchlist) trade on.
+         */
+        get: operations["markets_api_v1_system_markets_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/system/restore": {
         parameters: {
             query?: never;
@@ -4497,6 +4517,27 @@ export interface components {
             mapping: components["schemas"]["ImportMapping"];
             /** Save As Preset */
             save_as_preset?: string | null;
+        };
+        /** MarketOut */
+        MarketOut: {
+            /** Closes */
+            closes: string | null;
+            /** Holdings */
+            holdings: string[];
+            /** Mic */
+            mic: string;
+            /** Name */
+            name: string;
+            /** Next Open */
+            next_open: string | null;
+            /** Open Now */
+            open_now: boolean;
+            /** Opens */
+            opens: string | null;
+            /** Timezone */
+            timezone: string;
+            /** Watching */
+            watching: string[];
         };
         /** MatrixOut */
         MatrixOut: {
@@ -11512,6 +11553,26 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    markets_api_v1_system_markets_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MarketOut"][];
                 };
             };
         };

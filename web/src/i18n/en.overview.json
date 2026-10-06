@@ -73,6 +73,25 @@
     }
   },
   "system": {
+    "markets": {
+      "title": "Market hours",
+      "intro": "When the markets your holdings trade on are open, in your time zone ({{zone}}). A price only changes while its market is open, which is why the delayed quotes pause outside these hours and the closing prices are fetched about two hours after the close.",
+      "yourZone": "your time zone",
+      "none": "Nothing you hold or watch trades on a market Folio knows the hours of yet.",
+      "caption": "Opening hours of the markets of your holdings",
+      "columns": {
+        "market": "Market",
+        "status": "Now",
+        "hours": "Open today (your time)",
+        "holdings": "Your holdings"
+      },
+      "open": "Open",
+      "closed": "Closed",
+      "closesAt": "closes {{time}}",
+      "opensAt": "opens {{time}}",
+      "noSession": "closed today (weekend or holiday)",
+      "watching": "Watching: {{names}}"
+    },
     "title": "System",
     "usage": {
       "title": "Price provider calls today",

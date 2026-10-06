@@ -18,6 +18,10 @@ export function useFormat() {
     timezone,
     /** A moment in the owner's own time zone (Settings > General), for example "6 Oct 2026, 15:20". */
     when: (iso: string | null | undefined) => formatMoment(iso, timezone),
+    /** A clock time (09:00) in the owner's time zone. */
+    clock: (iso: string | null | undefined) => formatClock(iso, timezone),
+    /** A weekday and clock time (Tue 09:00) in the owner's time zone. */
+    dayClock: (iso: string | null | undefined) => formatClock(iso, timezone, true),
     eur: (v: string | number | null | undefined, decimals = 2) => formatEur(v, format, decimals),
     num: (v: string | number | null | undefined, decimals = 2) => formatNumber(v, format, decimals),
     qty: (v: string | number | null | undefined) => formatQuantity(v, format),
@@ -38,5 +42,26 @@ export function formatMoment(iso: string | null | undefined, timeZone?: string):
     }).format(date)
   } catch {
     return date.toLocaleString()
+  }
+}
+
+export function formatClock(
+  iso: string | null | undefined,
+  timeZone?: string,
+  withDay = false,
+): string {
+  if (!iso) return ''
+  const date = new Date(iso)
+  if (Number.isNaN(date.getTime())) return ''
+  try {
+    return new Intl.DateTimeFormat('en-GB', {
+      weekday: withDay ? 'short' : undefined,
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: false,
+      timeZone,
+    }).format(date)
+  } catch {
+    return date.toLocaleTimeString()
   }
 }

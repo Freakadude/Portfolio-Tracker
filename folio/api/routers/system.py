@@ -20,11 +20,20 @@ from folio.api.errors import ApiError
 from folio.config import Settings
 from folio.db.base import utcnow
 from folio.db.models import AuditLog
+from folio.db.models_analytics import Watchlist, WatchlistItem
 from folio.db.models_insight import NewsSource
-from folio.db.models_ledger import JobRequest, JobRun, ProviderCall
+from folio.db.models_ledger import (
+    Instrument,
+    JobRequest,
+    JobRun,
+    Listing,
+    Position,
+    ProviderCall,
+)
 from folio.diagnostics import build_report
 from folio.jobs.requests import enqueue
 from folio.jobs.scheduler import JOB_PARAMS
+from folio.marketdata import exchanges
 from folio.security.secrets import SecretStore
 from folio.settings_store import load_section
 
@@ -347,3 +356,63 @@ def audit(
         ],
         next_cursor=rows[-1].id if more and rows else None,
     )
+
+
+class MarketOut(BaseModel):
+    mic: str
+    name: str
+    timezone: str  # the exchange's own
+    open_now: bool
+    opens: dt.datetime | None  # today's session (UTC); None on a holiday or weekend
+    closes: dt.datetime | None
+    next_open: dt.datetime | None  # the next time it opens (UTC)
+    holdings: list[str]  # what you hold that trades there
+    watching: list[str]  # what is only on a watchlist
+
+
+@router.get("/system/markets", response_model=list[MarketOut])
+def markets(_user: UserDep, db: DbDep) -> list[MarketOut]:
+    """Opening hours of the exchanges your holdings (and watchlist) trade on."""
+    held = {i for (i,) in db.execute(select(Position.instrument_id).where(Position.quantity > 0))}
+    watched = {
+        i
+        for (i,) in db.execute(
+            select(WatchlistItem.instrument_id)
+            .join(Watchlist, Watchlist.id == WatchlistItem.watchlist_id)
+            .where(Watchlist.deleted_at.is_(None))
+        )
+    }
+    rows = db.execute(
+        select(Listing.exchange_mic, Instrument.id, Instrument.name)
+        .join(Instrument, Instrument.id == Listing.instrument_id)
+        .where(
+            Listing.pricing_primary.is_(True),
+            Instrument.id.in_(held | watched),
+            Instrument.deleted_at.is_(None),
+        )
+        .order_by(Instrument.name)
+    )
+    by_market: dict[str, tuple[list[str], list[str]]] = {}
+    for mic, instrument_id, name in rows:
+        if not exchanges.has_calendar(mic):
+            continue
+        mine, only_watched = by_market.setdefault(mic, ([], []))
+        (mine if instrument_id in held else only_watched).append(name)
+    now = dt.datetime.now(dt.UTC)
+    out = []
+    for mic, (mine, only_watched) in sorted(by_market.items()):
+        hours = exchanges.market_hours(mic, now)
+        out.append(
+            MarketOut(
+                mic=mic,
+                name=exchanges.EXCHANGES[mic].name,
+                timezone=hours.timezone,
+                open_now=hours.open_now,
+                opens=hours.opens,
+                closes=hours.closes,
+                next_open=hours.next_open,
+                holdings=mine,
+                watching=only_watched,
+            )
+        )
+    return out
