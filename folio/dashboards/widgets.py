@@ -5,6 +5,7 @@ imported can always be drawn."""
 from __future__ import annotations
 
 from dataclasses import dataclass
+from decimal import Decimal
 from typing import Any, Literal
 
 from pydantic import BaseModel, ConfigDict, Field
@@ -157,6 +158,13 @@ class SignalsConfig(BaseConfig):
     severity: Literal["all", "low", "medium", "high", "critical"] = "all"  # at least this
 
 
+class ProjectionConfig(BaseConfig):
+    years: int = Field(default=20, ge=1, le=40)
+    monthly_contribution: Decimal = Field(default=Decimal(0), ge=0, le=1_000_000)
+    return_pct: Decimal = Field(default=Decimal(5), ge=-50, le=50)
+    volatility_pct: Decimal = Field(default=Decimal(15), ge=0, le=100)
+
+
 class AskConfig(BaseConfig):
     show_last: int = Field(default=3, ge=1, le=10)  # how many earlier answers stay on the widget
 
@@ -195,6 +203,7 @@ WIDGET_TYPES: dict[str, WidgetType] = {
         WidgetType("macro_overlay", MacroConfig, 8, 5, "widgets.macro_overlay"),
         WidgetType("news_feed", NewsConfig, 6, 6, "widgets.news_feed"),
         WidgetType("signals", SignalsConfig, 6, 6, "widgets.signals"),
+        WidgetType("projection", ProjectionConfig, 8, 6, "widgets.projection"),
         WidgetType("ask", AskConfig, 6, 7, "widgets.ask"),
         WidgetType("note", NoteConfig, 4, 3, "widgets.note"),
     )

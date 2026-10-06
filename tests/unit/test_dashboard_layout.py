@@ -111,7 +111,7 @@ def test_options_that_do_not_exist_are_refused() -> None:
 
 
 def test_every_widget_type_has_valid_defaults_and_a_sane_size() -> None:
-    assert len(WIDGET_TYPES) == 20  # the spec's library plus attribution and Ask the portfolio
+    assert len(WIDGET_TYPES) == 21  # the spec's library plus attribution, Ask and projection
     for widget in WIDGET_TYPES.values():
         assert normalize_config(widget.key, {})
         assert 1 <= widget.width <= 12 and 1 <= widget.height <= 12

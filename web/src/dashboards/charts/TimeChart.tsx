@@ -22,7 +22,9 @@ export interface TimeSeries {
   label: string
   color: string // a CSS variable, resolved when drawn
   points: { time: string; value: number }[]
-  kind?: 'line' | 'area'
+  // band: a tinted area down to the axis; mask: an area in the card colour drawn over it, so
+  // that what is left is the band between the two (a 10th to 90th percentile range)
+  kind?: 'line' | 'area' | 'band' | 'mask'
 }
 
 export interface Candle {
@@ -108,23 +110,32 @@ export function TimeChart({
     for (const s of series) {
       const color = resolve(s.color)
       const api =
-        s.kind === 'area'
+        s.kind === 'band' || s.kind === 'mask'
           ? chart.addSeries(AreaSeries, {
               lineColor: color,
-              topColor: withAlpha(color, 0.12),
-              bottomColor: withAlpha(color, 0),
-              lineWidth: 2,
+              topColor: s.kind === 'band' ? withAlpha(color, 0.22) : surface,
+              bottomColor: s.kind === 'band' ? withAlpha(color, 0.22) : surface,
+              lineWidth: 1,
               priceLineVisible: false,
               lastValueVisible: false,
             })
-          : chart.addSeries(LineSeries, {
-              color,
-              lineWidth: 2,
-              priceLineVisible: false,
-              lastValueVisible: false,
-              crosshairMarkerRadius: 4,
-              crosshairMarkerBorderColor: surface,
-            })
+          : s.kind === 'area'
+            ? chart.addSeries(AreaSeries, {
+                lineColor: color,
+                topColor: withAlpha(color, 0.12),
+                bottomColor: withAlpha(color, 0),
+                lineWidth: 2,
+                priceLineVisible: false,
+                lastValueVisible: false,
+              })
+            : chart.addSeries(LineSeries, {
+                color,
+                lineWidth: 2,
+                priceLineVisible: false,
+                lastValueVisible: false,
+                crosshairMarkerRadius: 4,
+                crosshairMarkerBorderColor: surface,
+              })
       api.setData(s.points.map((p) => ({ time: p.time as Time, value: p.value })))
       drawn.push({ api, label: s.label, color })
     }

@@ -1365,6 +1365,28 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/portfolio/projection": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Projection
+         * @description A Monte Carlo projection of the portfolio's value with the contribution, expected return
+         *     and volatility you give (FR-PF-12): the median and the 10th to 90th percentile band, per
+         *     month, next to what you would simply have paid in. A seed makes it repeatable.
+         */
+        get: operations["projection_api_v1_portfolio_projection_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/portfolio/returns": {
         parameters: {
             query?: never;
@@ -4099,6 +4121,26 @@ export interface components {
             /** Username */
             username: string;
         };
+        /**
+         * MeasuredOut
+         * @description What the portfolio actually did over the last year, to help choose the assumptions.
+         */
+        MeasuredOut: {
+            /** Annual Return Pct */
+            annual_return_pct: string | null;
+            /** Annual Volatility Pct */
+            annual_volatility_pct: string | null;
+            /**
+             * End
+             * Format: date
+             */
+            end: string;
+            /**
+             * Start
+             * Format: date
+             */
+            start: string;
+        };
         /** MissingOut */
         MissingOut: {
             /** Currency */
@@ -4568,6 +4610,55 @@ export interface components {
             message: string;
             /** Path */
             path: string;
+        };
+        /** ProjectionAssumptionsOut */
+        ProjectionAssumptionsOut: {
+            /** Annual Return Pct */
+            annual_return_pct: string;
+            /** Annual Volatility Pct */
+            annual_volatility_pct: string;
+            /** Monthly Contribution Eur */
+            monthly_contribution_eur: string;
+            /** Paths */
+            paths: number;
+            /** Seed */
+            seed: number;
+            /** Start Value Eur */
+            start_value_eur: string;
+            /** Years */
+            years: number;
+        };
+        /** ProjectionOut */
+        ProjectionOut: {
+            /**
+             * As Of
+             * Format: date
+             */
+            as_of: string;
+            assumptions: components["schemas"]["ProjectionAssumptionsOut"];
+            measured: components["schemas"]["MeasuredOut"] | null;
+            /** Note */
+            note: string;
+            /** Points */
+            points: components["schemas"]["ProjectionPointOut"][];
+        };
+        /** ProjectionPointOut */
+        ProjectionPointOut: {
+            /**
+             * Date
+             * Format: date
+             */
+            date: string;
+            /** Invested Eur */
+            invested_eur: string;
+            /** Median Eur */
+            median_eur: string;
+            /** Month */
+            month: number;
+            /** P10 Eur */
+            p10_eur: string;
+            /** P90 Eur */
+            p90_eur: string;
         };
         /** ReadIn */
         ReadIn: {
@@ -8870,6 +8961,44 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["LookThroughOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    projection_api_v1_portfolio_projection_get: {
+        parameters: {
+            query?: {
+                years?: number;
+                monthly_contribution?: number | string;
+                return_pct?: number | string;
+                volatility_pct?: number | string;
+                paths?: number;
+                seed?: number;
+                account?: number | null;
+                as_of?: string | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProjectionOut"];
                 };
             };
             /** @description Validation Error */

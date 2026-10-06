@@ -25,6 +25,7 @@ from sqlalchemy.orm import Session
 from folio.analytics.allocation import UNCLASSIFIED, Allocation, allocate
 from folio.analytics.attribution import Attribution, PositionPeriod, attribute
 from folio.analytics.lookthrough import Exposure, Holdings, Wrapper, aggregate, expand
+from folio.analytics.projection import Assumptions, Projection, project
 from folio.analytics.returns import DailyPoint, ReturnFigures, return_figures, twr_index
 from folio.analytics.risk import (
     Drawdown,
@@ -680,3 +681,62 @@ def benchmark_ids(db: Session, limit: int = 3) -> list[int]:
             .limit(limit)
         )
     )
+
+
+# --- projection (FR-PF-12) ---------------------------------------------------------------------
+
+
+@dataclass(frozen=True)
+class Measured:
+    start: date
+    end: date
+    annual_return_pct: Decimal | None
+    annual_volatility_pct: Decimal | None
+
+
+@dataclass(frozen=True)
+class PortfolioProjection:
+    projection: Projection
+    measured: Measured | None
+
+
+def project_portfolio(
+    db: Session,
+    ctx: AnalyticsContext,
+    today: date,
+    *,
+    years: int,
+    monthly_contribution: Decimal,
+    return_pct: Decimal,
+    volatility_pct: Decimal,
+    paths: int,
+    seed: int,
+) -> PortfolioProjection:
+    """Simulate the portfolio's future value from what it is worth today with the owner's
+    assumptions, and measure what it did over the last year to help choose them. Raises
+    `ProjectionError` for assumptions that cannot be simulated."""
+    start_value = ZERO if ctx.empty else ctx.points[ctx.index(today)].value_eur
+    measured = None
+    if not ctx.empty:
+        risk = risk_for(db, ctx, today - timedelta(days=365), today)
+        if risk is not None:
+            hundred = Decimal(100)
+            figures = risk.figures
+            measured = Measured(
+                risk.start,
+                risk.end,
+                None if figures.annual_return is None else figures.annual_return * hundred,
+                None if figures.volatility is None else figures.volatility * hundred,
+            )
+    result = project(
+        Assumptions(
+            start_value_eur=start_value,
+            monthly_contribution_eur=monthly_contribution,
+            annual_return_pct=return_pct,
+            annual_volatility_pct=volatility_pct,
+            years=years,
+            paths=paths,
+            seed=seed,
+        )
+    )
+    return PortfolioProjection(result, measured)

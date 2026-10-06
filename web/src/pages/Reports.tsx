@@ -8,9 +8,10 @@ import { Delta, EmptyState } from '../components/display'
 import { Alert, Field, Select } from '../components/ui'
 import { useFormat } from '../lib/useFormat'
 import { ExportTab } from '../reports/ExportTab'
+import { ProjectionTab } from '../reports/ProjectionTab'
 import { TaxSupport } from '../reports/TaxSupport'
 
-const TABS = ['realized', 'tax', 'export'] as const
+const TABS = ['realized', 'tax', 'projection', 'export'] as const
 type Tab = (typeof TABS)[number]
 
 /** Reports: realized result and income (FR-TX-12), the annual tax-support report (FR-PF-11) and
@@ -51,6 +52,7 @@ export function Reports() {
       </div>
       {tab === 'realized' && <RealizedTab />}
       {tab === 'tax' && <TaxSupport />}
+      {tab === 'projection' && <ProjectionTab />}
       {tab === 'export' && <ExportTab />}
     </div>
   )

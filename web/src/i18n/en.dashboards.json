@@ -78,6 +78,7 @@
     "news_feed": "News",
     "signals": "Signals and recommendations",
     "ask": "Ask the portfolio",
+    "projection": "Projection",
     "note": "Note",
     "noFigure": "No figure yet.",
     "resultInPeriod": "Result",
@@ -204,6 +205,7 @@
     "news_feed": "Stories linked to what you hold, with their impact.",
     "signals": "Recommendations and strategy signals waiting for you.",
     "ask": "Ask the agent a question about your portfolio; it answers from your data and shows what it used.",
+    "projection": "What the portfolio could be worth later, with a band, for assumptions you set.",
     "note": "Your own text."
   },
   "widgetOptions": {

@@ -63,6 +63,7 @@
     "tabs": {
       "realized": "Sales and income",
       "tax": "Tax support",
+      "projection": "Projection",
       "export": "Export"
     },
     "year": "Year",
@@ -148,6 +149,27 @@
     "positions": {
       "title": "Positions",
       "help": "The open positions with their cost basis, market value and last close."
+    }
+  },
+  "projection": {
+    "intro": "A simulation of what your portfolio could be worth if returns were random with the expected return and volatility you choose, and you add the monthly amount you choose. It is an illustration of your assumptions, not a forecast.",
+    "form": "Projection assumptions",
+    "years": "Years ahead (1 to 40)",
+    "contribution": "Added each month (€)",
+    "return": "Expected return a year (%)",
+    "volatility": "Volatility a year (%)",
+    "invalid": "Fill in every assumption with a number; the horizon is 1 to 40 whole years.",
+    "measured": "For reference, from {{start}} to {{end}} your portfolio returned {{ret}} a year with a volatility of {{vol}}.",
+    "chart": "Projected value of the portfolio",
+    "table": "Projected value of the portfolio by month",
+    "p90": "90th percentile",
+    "p10": "10th percentile",
+    "median": "Median",
+    "invested": "Paid in, without growth",
+    "assumptions": "Assumptions: start {{start}}, {{contribution}} a month, {{ret}} % expected return and {{vol}} % volatility a year, {{years}} years, {{paths}} simulated paths.",
+    "summary": "On {{date}} the median is {{median}}, and 8 times in 10 the value would be between {{low}} and {{high}}.",
+    "columns": {
+      "date": "Date"
     }
   }
 }

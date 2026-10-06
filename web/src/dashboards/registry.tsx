@@ -9,6 +9,7 @@ import {
 } from './widgets/History'
 import { KpiWidget } from './widgets/Kpi'
 import { AskWidget, NewsFeedWidget, SignalsWidget } from './widgets/Feeds'
+import { ProjectionWidget } from './widgets/Projection'
 import { LookThroughWidget } from './widgets/LookThrough'
 import { MacroWidget } from './widgets/Macro'
 import {
@@ -268,6 +269,18 @@ const DEFS: Record<string, Omit<WidgetDef, 'type'>> = {
         options: ['all', 'low', 'medium', 'high', 'critical'],
         labels: 'recs.severity',
       },
+    ],
+  }),
+  projection: def(ProjectionWidget, {
+    chart: true,
+    drillsTo: 'the projection on the Reports page',
+    scopes: PORTFOLIO_ACCOUNT,
+    period: false,
+    fields: [
+      { key: 'years', kind: 'number', min: 1, max: 40 },
+      { key: 'monthly_contribution', kind: 'number', min: 0, max: 1000000 },
+      { key: 'return_pct', kind: 'number', min: -50, max: 50 },
+      { key: 'volatility_pct', kind: 'number', min: 0, max: 100 },
     ],
   }),
   ask: def(AskWidget, {

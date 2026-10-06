@@ -106,3 +106,30 @@ def test_the_ask_widget_says_whether_the_agent_is_on_and_keeps_its_option(
         },
     ).json()["results"]["w"]
     assert bad["error"]
+
+
+def test_the_projection_widget_shows_its_assumptions_and_a_band(
+    api: TestClient, db: Session, world
+) -> None:
+    out = widget(
+        api,
+        "projection",
+        {"years": 2, "monthly_contribution": "100", "return_pct": "0", "volatility_pct": "0"},
+    )
+    assert out["assumptions"]["years"] == 2 and out["assumptions"]["annual_return_pct"] == "0"
+    assert out["assumptions"]["start_value_eur"].startswith("2500")
+    first, last = out["points"][0], out["points"][-1]
+    assert first["median"].startswith("2500") and last["invested"].startswith("4900")
+    assert last["p10"] == last["median"] == last["p90"]  # no volatility: no band
+    assert len(out["points"]) == 25  # a point a month for a short horizon
+    long = widget(api, "projection", {"years": 30})
+    assert len(long["points"]) == 121  # every third month for a long one, and the last
+    bad = api.post(
+        "/api/v1/widgets/data",
+        json={
+            "as_of": NOW.date().isoformat(),
+            "filters": {},
+            "requests": [{"key": "w", "type": "projection", "config": {"years": 99}}],
+        },
+    ).json()["results"]["w"]
+    assert bad["error"]

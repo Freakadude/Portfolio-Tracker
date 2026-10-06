@@ -1,6 +1,7 @@
 """Analytics endpoints under /portfolio: returns, allocation, risk, attribution, benchmarks and
 the what-if simulator (FR-PF-03, 04, 06, 07, 08, 09; FR-MD-12)."""
 
+import calendar
 import datetime as dt
 from collections.abc import Sequence
 from datetime import date
@@ -15,6 +16,7 @@ from sqlalchemy.orm import Session
 from folio import analytics_service as svc
 from folio.analytics.allocation import GROUPINGS, Allocation, allocate
 from folio.analytics.lookthrough import DIMENSIONS, Exposure, Part, aggregate, expand
+from folio.analytics.projection import ProjectionError
 from folio.analytics.returns import DailyPoint
 from folio.analytics.simulate import SimulationError, Trade, simulate
 from folio.api.deps import DbDep, UserDep
@@ -708,4 +710,129 @@ def simulate_trades(body: SimulateIn, _user: UserDep, db: DbDep) -> SimulationOu
             )
             for p in result.positions
         ],
+    )
+
+
+# --- projection (FR-PF-12) ---------------------------------------------------------------------
+
+
+class ProjectionPointOut(BaseModel):
+    month: int
+    date: dt.date
+    invested_eur: Decimal  # the start value plus every contribution, without any growth
+    p10_eur: Decimal
+    median_eur: Decimal
+    p90_eur: Decimal
+
+
+class ProjectionAssumptionsOut(BaseModel):
+    start_value_eur: Decimal
+    monthly_contribution_eur: Decimal
+    annual_return_pct: Decimal
+    annual_volatility_pct: Decimal
+    years: int
+    paths: int
+    seed: int
+
+
+class MeasuredOut(BaseModel):
+    """What the portfolio actually did over the last year, to help choose the assumptions."""
+
+    start: dt.date
+    end: dt.date
+    annual_return_pct: Decimal | None
+    annual_volatility_pct: Decimal | None
+
+
+class ProjectionOut(BaseModel):
+    assumptions: ProjectionAssumptionsOut
+    as_of: dt.date
+    points: list[ProjectionPointOut]
+    measured: MeasuredOut | None
+    note: str
+
+
+PROJECTION_NOTE = (
+    "What the assumptions on this chart could lead to if returns were random with that expected "
+    "return and volatility (a simulation of {paths} paths: the line is the median, the band the "
+    "10th to 90th percentile). It is an illustration, not a forecast: the future return and "
+    "volatility are not known, and the assumptions are yours to change."
+)
+
+
+def _add_months(day: date, months: int) -> date:
+    index = day.year * 12 + (day.month - 1) + months
+    year, month0 = divmod(index, 12)
+    last = calendar.monthrange(year, month0 + 1)[1]
+    return date(year, month0 + 1, min(day.day, last))
+
+
+@router.get("/projection", response_model=ProjectionOut)
+def projection(
+    _user: UserDep,
+    db: DbDep,
+    years: Annotated[int, Query(ge=1, le=40)] = 20,
+    monthly_contribution: Annotated[Decimal, Query(ge=0, le=1_000_000)] = Decimal(0),
+    return_pct: Annotated[Decimal, Query(ge=-50, le=50)] = Decimal(5),
+    volatility_pct: Annotated[Decimal, Query(ge=0, le=100)] = Decimal(15),
+    paths: Annotated[int, Query(ge=100, le=5000)] = 2000,
+    seed: Annotated[int, Query(ge=0, le=2**31)] = 1,
+    account: int | None = None,
+    as_of: date | None = None,
+) -> ProjectionOut:
+    """A Monte Carlo projection of the portfolio's value with the contribution, expected return
+    and volatility you give (FR-PF-12): the median and the 10th to 90th percentile band, per
+    month, next to what you would simply have paid in. A seed makes it repeatable."""
+    today = as_of or date.today()
+    ctx = _context(db, today, account)
+    try:
+        result = svc.project_portfolio(
+            db,
+            ctx,
+            today,
+            years=years,
+            monthly_contribution=monthly_contribution,
+            return_pct=return_pct,
+            volatility_pct=volatility_pct,
+            paths=paths,
+            seed=seed,
+        )
+    except ProjectionError as exc:
+        raise ApiError(422, "Cannot project", str(exc)) from exc
+    a = result.projection.assumptions
+    m = result.measured
+    measured = (
+        None
+        if m is None
+        else MeasuredOut(
+            start=m.start,
+            end=m.end,
+            annual_return_pct=m.annual_return_pct,
+            annual_volatility_pct=m.annual_volatility_pct,
+        )
+    )
+    return ProjectionOut(
+        assumptions=ProjectionAssumptionsOut(
+            start_value_eur=a.start_value_eur,
+            monthly_contribution_eur=a.monthly_contribution_eur,
+            annual_return_pct=a.annual_return_pct,
+            annual_volatility_pct=a.annual_volatility_pct,
+            years=a.years,
+            paths=a.paths,
+            seed=a.seed,
+        ),
+        as_of=today,
+        points=[
+            ProjectionPointOut(
+                month=p.month,
+                date=_add_months(today, p.month),
+                invested_eur=p.invested_eur,
+                p10_eur=p.p10_eur,
+                median_eur=p.median_eur,
+                p90_eur=p.p90_eur,
+            )
+            for p in result.projection.points
+        ],
+        measured=measured,
+        note=PROJECTION_NOTE.format(paths=paths),
     )

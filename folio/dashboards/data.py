@@ -5,6 +5,7 @@ heavy work once."""
 
 from __future__ import annotations
 
+import calendar
 from collections import defaultdict
 from collections.abc import Callable, Sequence
 from dataclasses import dataclass
@@ -801,6 +802,7 @@ SEVERITY_ORDER = ("info", "low", "medium", "high", "critical")
 NEWS_DAYS = 7
 SIGNAL_DAYS = 14
 FEED_ROWS = 8
+PROJECTION_PATHS = 1000  # enough for a smooth band on a dashboard
 
 
 def _end_of(day: date) -> datetime:
@@ -961,6 +963,55 @@ def note(env: Env, cfg: Any) -> dict[str, Any]:
     return {"text": cfg.text}
 
 
+def projection(env: Env, cfg: Any) -> dict[str, Any]:
+    """The median and the 10th to 90th percentile band of the portfolio's future value with the
+    widget's own assumptions, shown with the assumptions on the chart (FR-PF-12)."""
+    ctx = context(env, account_of(cfg, env))
+    if ctx.empty:
+        return _empty("There is nothing to project yet: no transactions.")
+    result = svc.project_portfolio(
+        env.db,
+        ctx,
+        env.today,
+        years=cfg.years,
+        monthly_contribution=cfg.monthly_contribution,
+        return_pct=cfg.return_pct,
+        volatility_pct=cfg.volatility_pct,
+        paths=PROJECTION_PATHS,
+        seed=1,
+    )
+    a = result.projection.assumptions
+    step = 1 if cfg.years <= 10 else 3  # fewer points for a long horizon
+    months = result.projection.points
+    return {
+        "assumptions": {
+            "start_value_eur": str(a.start_value_eur),
+            "monthly_contribution_eur": str(a.monthly_contribution_eur),
+            "annual_return_pct": str(a.annual_return_pct),
+            "annual_volatility_pct": str(a.annual_volatility_pct),
+            "years": a.years,
+            "paths": a.paths,
+        },
+        "points": [
+            {
+                "date": _months_on(env.today, p.month).isoformat(),
+                "invested": str(p.invested_eur),
+                "p10": str(p.p10_eur),
+                "median": str(p.median_eur),
+                "p90": str(p.p90_eur),
+            }
+            for p in months
+            if p.month % step == 0 or p.month == months[-1].month
+        ],
+    }
+
+
+def _months_on(day: date, months: int) -> date:
+    index = day.year * 12 + (day.month - 1) + months
+    year, month0 = divmod(index, 12)
+    return date(year, month0 + 1, min(day.day, calendar.monthrange(year, month0 + 1)[1]))
+
+
 def ask(env: Env, cfg: Any) -> dict[str, Any]:
     """The question box needs only to know whether the agent is on; the questions and answers go
     through the agent endpoints (FR-DB-09)."""
@@ -991,6 +1042,7 @@ COMPUTE: dict[str, Callable[[Env, Any], dict[str, Any]]] = {
     "macro_overlay": macro_overlay,
     "news_feed": news_feed,
     "signals": signals,
+    "projection": projection,
     "ask": ask,
     "note": note,
 }
