@@ -1,10 +1,11 @@
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { useTranslation } from 'react-i18next'
 import { Navigate, useNavigate } from 'react-router-dom'
 import { z } from 'zod'
-import { api, errorMessage, unwrap } from '../api/client'
+import { ApiProblem, api, errorMessage, unwrap } from '../api/client'
 import { STATUS_KEY, useSetupStatus } from '../api/hooks'
 import { Loading } from '../components/Gate'
 import { Alert, Button, Card, Checkbox, Field, Input } from '../components/ui'
@@ -13,6 +14,7 @@ const schema = z.object({
   username: z.string().min(1),
   password: z.string().min(1),
   remember: z.boolean(),
+  code: z.string().optional(),
 })
 type Values = z.infer<typeof schema>
 
@@ -23,11 +25,18 @@ export function Login() {
   const status = useSetupStatus()
   const { register, handleSubmit } = useForm<Values>({
     resolver: zodResolver(schema),
-    defaultValues: { username: '', password: '', remember: false },
+    defaultValues: { username: '', password: '', remember: false, code: '' },
   })
+  const [needCode, setNeedCode] = useState(false)
 
   const login = useMutation({
-    mutationFn: (body: Values) => unwrap(api.POST('/api/v1/auth/login', { body })),
+    mutationFn: (body: Values) =>
+      unwrap(
+        api.POST('/api/v1/auth/login', { body: { ...body, code: body.code?.trim() || null } }),
+      ),
+    onError: (err) => {
+      if (err instanceof ApiProblem && err.extra.code === 'totp_required') setNeedCode(true)
+    },
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: STATUS_KEY })
       navigate('/')
@@ -56,8 +65,29 @@ export function Login() {
               />
             )}
           </Field>
+          {needCode && (
+            <Field label={t('login.code')}>
+              {(p) => (
+                <Input
+                  autoComplete="one-time-code"
+                  autoFocus
+                  inputMode="text"
+                  {...p}
+                  {...register('code')}
+                />
+              )}
+            </Field>
+          )}
           <Checkbox label={t('login.remember')} {...register('remember')} />
-          {login.isError && <Alert>{errorMessage(login.error)}</Alert>}
+          {login.isError && (
+            <Alert>
+              {login.error instanceof ApiProblem &&
+              login.error.extra.code === 'totp_required' &&
+              login.error.title === 'Code needed'
+                ? t('login.codeNeeded')
+                : errorMessage(login.error)}
+            </Alert>
+          )}
           <Button type="submit" className="w-full" disabled={login.isPending}>
             {t('login.submit')}
           </Button>

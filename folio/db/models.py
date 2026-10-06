@@ -1,7 +1,7 @@
 from datetime import datetime
 from typing import Any
 
-from sqlalchemy import JSON, Boolean, ForeignKey, Index, String, Text
+from sqlalchemy import JSON, Boolean, ForeignKey, Index, Integer, String, Text
 from sqlalchemy.orm import Mapped, mapped_column
 
 from folio.db.base import Base, SoftDeleteMixin, utcnow
@@ -14,6 +14,21 @@ class User(Base):
     username: Mapped[str] = mapped_column(String(100), unique=True)
     password_hash: Mapped[str] = mapped_column(String(255))
     totp_secret_enc: Mapped[str | None] = mapped_column(Text, default=None)
+    totp_enabled: Mapped[bool] = mapped_column(Boolean, default=False)
+    totp_last_step: Mapped[int | None] = mapped_column(
+        Integer, default=None
+    )  # no code is used twice
+
+
+class RecoveryCode(Base):
+    """One of the owner's one-time codes for when the authenticator is lost (FR-SY-03). Only a
+    hash is kept; a code that was used stays on record with the time."""
+
+    __tablename__ = "recovery_code"
+
+    user_id: Mapped[int] = mapped_column(ForeignKey("app_user.id", ondelete="CASCADE"), index=True)
+    code_hash: Mapped[str] = mapped_column(String(255))
+    used_at: Mapped[datetime | None] = mapped_column(UTCDateTime, default=None)
 
 
 class UserSession(Base):

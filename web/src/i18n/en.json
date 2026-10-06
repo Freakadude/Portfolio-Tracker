@@ -80,7 +80,33 @@
     "password": "Password",
     "remember": "Remember this device for 30 days",
     "submit": "Sign in",
-    "failed": "Could not sign in."
+    "failed": "Could not sign in.",
+    "code": "Code from your authenticator app, or a recovery code",
+    "codeNeeded": "Enter the code from your authenticator app, or one of your recovery codes."
+  },
+  "twofactor": {
+    "title": "Two-factor sign-in",
+    "intro": "With this on, signing in needs your password and a six-digit code from an authenticator app on your phone (Aegis, 2FAS, Google Authenticator, 1Password). Recovery codes let you in if you lose the phone.",
+    "on": "On. {{count}} recovery code(s) left.",
+    "off": "Off.",
+    "setUp": "Set up two-factor sign-in",
+    "scan": "Scan this with your authenticator app",
+    "qrAlt": "QR code for your authenticator app",
+    "orType": "Or type this key into the app:",
+    "confirm": "Confirm the code",
+    "codeFromApp": "The six-digit code the app now shows",
+    "turnOn": "Turn on",
+    "manage": "Manage two-factor sign-in",
+    "manageHelp": "To turn it off, or to make new recovery codes, enter your password and a current code (or a recovery code).",
+    "codeOrRecovery": "A code from the app, or a recovery code",
+    "newCodes": "Make new recovery codes",
+    "turnOff": "Turn off",
+    "codesTitle": "Your recovery codes",
+    "codesHelp": "Keep these somewhere safe and apart from your phone, such as a password manager or a printout. Each works once. They are shown only now.",
+    "download": "Download as a text file",
+    "fileHeader": "Folio recovery codes. Each works once.",
+    "saved": "I have saved these codes",
+    "done": "Done"
   },
   "setup": {
     "title": "Set up Folio",
@@ -138,7 +164,8 @@
       "sleeves": "Sleeves",
       "analytics": "Analytics",
       "macro": "Macro",
-      "news": "News"
+      "news": "News",
+      "security": "Security"
     },
     "secretSet": "A value is saved. Type a new one to replace it.",
     "secretUnset": "Not set",

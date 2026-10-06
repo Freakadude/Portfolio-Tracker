@@ -7,6 +7,7 @@ import { AgentTab } from '../agent/AgentTab'
 import { MacroTab } from '../notify/MacroTab'
 import { NewsTab } from '../news/NewsTab'
 import { NotificationsTab } from '../notify/NotificationsTab'
+import { SecurityTab } from '../security/SecurityTab'
 import { cn } from '../lib/cn'
 
 const SECTIONS = [
@@ -23,6 +24,7 @@ const SECTIONS = [
   'analytics',
   'macro',
   'news',
+  'security',
 ] as const
 
 export function Settings() {
@@ -54,7 +56,9 @@ export function Settings() {
         id="settings-panel"
         aria-labelledby={`tab-${section}`}
         className={
-          ['accounts', 'sleeves', 'notifications', 'macro', 'news', 'agent'].includes(section)
+          ['accounts', 'sleeves', 'notifications', 'macro', 'news', 'agent', 'security'].includes(
+            section,
+          )
             ? 'max-w-4xl'
             : 'max-w-xl'
         }
@@ -71,6 +75,8 @@ export function Settings() {
           <NewsTab />
         ) : section === 'agent' ? (
           <AgentTab />
+        ) : section === 'security' ? (
+          <SecurityTab />
         ) : (
           <SectionForm key={section} section={section} />
         )}
