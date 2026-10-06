@@ -27,8 +27,19 @@ export type ScopeKind = 'portfolio' | 'account' | 'sleeve' | 'instrument'
 /** One option the side panel can edit, beyond the common ones (title, scope, period). */
 export interface OptionField {
   key: string
-  kind: 'select' | 'boolean' | 'number' | 'longtext' | 'instrument' | 'multi' | 'macro'
+  kind:
+    | 'select'
+    | 'boolean'
+    | 'number'
+    | 'longtext'
+    | 'instrument'
+    | 'multi'
+    | 'ordered'
+    | 'sortby'
+    | 'macro'
   options?: readonly string[]
+  /** What a widget shows until the owner chooses (the server has the same default). */
+  fallback?: readonly string[]
   /** i18n prefix for the option labels: `${labels}.${option}` */
   labels?: string
   min?: number
@@ -158,19 +169,30 @@ const DEFS: Record<string, Omit<WidgetDef, 'type'>> = {
       },
       {
         key: 'columns',
-        kind: 'multi',
+        kind: 'ordered',
+        fallback: ['name', 'quantity', 'value', 'weight', 'unrealized', 'day'],
         options: [
           'name',
           'quantity',
           'close',
+          'latest',
           'value',
           'weight',
+          'target_weight',
+          'weight_diff',
           'unrealized',
           'day',
           'income',
           'total_return',
         ],
         labels: 'widgets.columns',
+      },
+      { key: 'sort_by', kind: 'sortby', labels: 'widgets.columns' },
+      {
+        key: 'sort_dir',
+        kind: 'select',
+        options: ['desc', 'asc'],
+        labels: 'widgets.sortDirs',
       },
     ],
   }),

@@ -110,6 +110,7 @@
     }
   },
   "widgets": {
+    "latestIsClose": "No newer quote than the last close, so this is the last close.",
     "historyRange": "{{start}} to {{end}} ({{period}}).",
     "historyUnpricedBefore": "The line starts on {{date}}, the first day every holding had a price; before that the value would have been too low.",
     "historyUnpricedDays_one": "{{count}} day in between is missing a price for one holding, so its value is understated.",
@@ -208,13 +209,20 @@
       "name": "Instrument",
       "account": "Account",
       "quantity": "Units",
-      "close": "Price",
+      "close": "Last close",
+      "latest": "Latest price",
       "value": "Value",
       "weight": "Weight",
+      "target_weight": "Target weight",
+      "weight_diff": "Weight vs target",
       "unrealized": "Unrealized",
       "day": "Today",
       "income": "Income",
       "total_return": "Total return"
+    },
+    "sortDirs": {
+      "desc": "Highest first",
+      "asc": "Lowest first"
     },
     "bridge": {
       "start": "Start value",
@@ -264,6 +272,14 @@
     "note": "Your own text."
   },
   "widgetOptions": {
+    "sort_by": "Sort by",
+    "sort_dir": "Order",
+    "orderedHint": "The columns are shown in this order. Use the arrows to move one.",
+    "moveUp": "Move {{name}} up",
+    "moveDown": "Move {{name}} down",
+    "removeItem": "Remove {{name}}",
+    "addItem": "Add a column",
+    "listOrder": "The order of the list",
     "title": "Title",
     "scope": "Look at",
     "which": "Which one",

@@ -140,6 +140,10 @@
   "position": {
     "back": "Back to holdings",
     "price": "Latest close",
+    "latestPrice": "Latest refreshed price",
+    "latestPriceAt": "quoted {{when}}",
+    "latestPriceNone": "No quote since the last close",
+    "latestPriceHint": "A delayed quote (about 15 minutes behind) is fetched every 15 minutes while the fund's market is open. Outside opening hours the latest close above is the newest price.",
     "holding": "Your holding",
     "units": "Units",
     "avgCost": "Average cost",

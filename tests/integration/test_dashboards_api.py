@@ -654,3 +654,25 @@ def test_value_history_starts_where_every_holding_has_a_price(api, book, db) -> 
     short = one(api, "value_history", {"period": "1W"})
     assert short["period"] == "1W" and short["start"] >= "2024-01-09"
     assert len(short["points"]) <= len(h["points"]) + 1
+
+
+def test_the_holdings_table_has_target_weights_and_the_latest_quote(api, book, db) -> None:
+    from datetime import UTC, datetime
+
+    from folio.db.models_analytics import Quote
+
+    # no sleeve target yet: nothing to compare with
+    row = one(api, "holdings_table")["rows"][0]
+    assert row["target_weight"] is None and row["weight_diff"] is None and row["latest"] is None
+    sleeve = api.post("/api/v1/sleeves", json={"name": "Core", "target_pct": "60"}).json()
+    api.patch(f"/api/v1/instruments/{book['fund']}", json={"sleeve_id": sleeve["id"]})
+    clear_cache()
+    row = one(api, "holdings_table")["rows"][0]
+    # the whole portfolio is this one fund: 100 % held against a sleeve target of 60 %
+    assert D(row["weight"]) == 1 and D(row["target_weight"]) == D("0.6")
+    assert D(row["weight_diff"]) == D("0.4")
+    db.add(Quote(listing_id=book["listing"], ts=datetime(2024, 1, 15, 10, 0, tzinfo=UTC),
+                 price=D("109.5"), source="x"))  # fmt: skip
+    db.commit()
+    row = one(api, "holdings_table")["rows"][0]
+    assert D(row["latest"]) == D("109.5") and row["latest_at"].startswith("2024-01-15T10:00")

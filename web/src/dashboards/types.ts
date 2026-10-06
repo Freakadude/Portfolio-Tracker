@@ -124,6 +124,8 @@ export interface DriftData extends Empty {
 export interface HoldingsData extends Empty {
   columns?: string[]
   group_by?: 'none' | 'account' | 'sleeve' | 'asset_class'
+  sort_by?: string | null
+  sort_dir?: 'asc' | 'desc'
   rows?: {
     instrument_id: number
     name: string
@@ -133,6 +135,10 @@ export interface HoldingsData extends Empty {
     quantity: string
     close: string | null
     close_date: string | null
+    latest: string | null
+    latest_at: string | null
+    target_weight: string | null
+    weight_diff: string | null
     stale: boolean
     value: string | null
     weight: string | null

@@ -495,6 +495,25 @@ def drift_bars(env: Env, cfg: Any) -> dict[str, Any]:
     return {"bars": bars}
 
 
+def _target_weights(db: Session, rows: list[Any], meta: dict[int, Any]) -> dict[int, Decimal]:
+    """The target share of the portfolio of each holding in a sleeve that has a target: the
+    sleeve's target split between its holdings in proportion to what they are worth now. The
+    sleeves' targets come from the active strategy (or Settings, Sleeves), so a holding is
+    "over" its target exactly when its sleeve is."""
+    targets = svc.sleeve_targets(db)
+    in_sleeve: dict[str, Decimal] = defaultdict(lambda: ZERO)
+    for r in rows:
+        name = meta[r.instrument.id].sleeve if r.instrument.id in meta else None
+        if name in targets and r.weight is not None:
+            in_sleeve[name] += r.weight
+    out: dict[int, Decimal] = {}
+    for r in rows:
+        name = meta[r.instrument.id].sleeve if r.instrument.id in meta else None
+        if name in targets and r.weight is not None and in_sleeve[name] != 0:
+            out[r.instrument.id] = targets[name][0] * r.weight / in_sleeve[name]
+    return out
+
+
 def holdings_table(env: Env, cfg: Any) -> dict[str, Any]:
     # one line per instrument: the accounts it is split over are an administrative detail here
     rows, totals = load_positions(
@@ -503,9 +522,12 @@ def holdings_table(env: Env, cfg: Any) -> dict[str, Any]:
     if not rows:
         return _empty("Add your first instrument and a transaction to see positions here.")
     meta = svc.load_meta(env.db, {r.instrument.id for r in rows})
+    targets = _target_weights(env.db, rows, meta)
     out = []
     for r in rows:
         m = r.metrics
+        target = targets.get(r.instrument.id)
+        latest = r.price.delayed_price if r.price and r.price.delayed_price else None
         out.append(
             {
                 "instrument_id": r.instrument.id,
@@ -518,6 +540,12 @@ def holdings_table(env: Env, cfg: Any) -> dict[str, Any]:
                 "cost_basis_eur": str(r.state.cost_basis_eur),
                 "close": s(r.price.close if r.price else None),
                 "close_date": None if r.price is None else r.price.date.isoformat(),
+                "latest": s(latest),
+                "latest_at": (
+                    r.price.delayed_at.isoformat() if r.price and r.price.delayed_at else None
+                ),
+                "target_weight": s(target),
+                "weight_diff": s(None if target is None or r.weight is None else r.weight - target),
                 "stale": bool(r.price and r.price.stale),
                 "value": s(getattr(m, "market_value_eur", None)),
                 "weight": s(r.weight),
@@ -532,6 +560,8 @@ def holdings_table(env: Env, cfg: Any) -> dict[str, Any]:
     return {
         "columns": cfg.columns,
         "group_by": cfg.group_by,
+        "sort_by": cfg.sort_by,
+        "sort_dir": cfg.sort_dir,
         "rows": out,
         "totals": {
             "value": str(totals.market_value_eur),

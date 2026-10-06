@@ -106,6 +106,8 @@ class HoldingsTableConfig(BaseConfig):
         default_factory=lambda: ["name", "quantity", "value", "weight", "unrealized", "day"]
     )
     group_by: Literal["none", "account", "sleeve", "asset_class"] = "none"
+    sort_by: str | None = None  # a column key; None keeps the order of the list
+    sort_dir: Literal["asc", "desc"] = "desc"
 
 
 class HeatmapConfig(BaseConfig):

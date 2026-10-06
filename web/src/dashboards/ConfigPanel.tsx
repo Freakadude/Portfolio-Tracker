@@ -139,6 +139,101 @@ export function ConfigPanel({
           </fieldset>
         )
       }
+      case 'ordered': {
+        const chosen = (value as string[] | undefined) ?? [...(f.fallback ?? [])]
+        const rest = (f.options ?? []).filter((o) => !chosen.includes(o))
+        const move = (i: number, by: number) => {
+          const next = [...chosen]
+          ;[next[i], next[i + by]] = [next[i + by], next[i]]
+          set(f.key, next)
+        }
+        const name = (o: string) => t(`${f.labels}.${o}`, { defaultValue: o })
+        return (
+          <fieldset key={f.key} className="space-y-1">
+            <legend className="text-sm font-medium">{label}</legend>
+            <p className="text-xs text-muted">{t('widgetOptions.orderedHint')}</p>
+            <ol className="space-y-1">
+              {chosen.map((o, i) => (
+                <li key={o} className="flex items-center gap-1 text-sm">
+                  <span className="w-6 text-right text-muted">{i + 1}.</span>
+                  <span className="flex-1">{name(o)}</span>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    className="min-h-8 px-2"
+                    aria-label={t('widgetOptions.moveUp', { name: name(o) })}
+                    disabled={i === 0}
+                    onClick={() => move(i, -1)}
+                  >
+                    ↑
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    className="min-h-8 px-2"
+                    aria-label={t('widgetOptions.moveDown', { name: name(o) })}
+                    disabled={i === chosen.length - 1}
+                    onClick={() => move(i, 1)}
+                  >
+                    ↓
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    className="min-h-8 px-2"
+                    aria-label={t('widgetOptions.removeItem', { name: name(o) })}
+                    disabled={chosen.length <= 1}
+                    onClick={() =>
+                      set(
+                        f.key,
+                        chosen.filter((c) => c !== o),
+                      )
+                    }
+                  >
+                    ✕
+                  </Button>
+                </li>
+              ))}
+            </ol>
+            {rest.length > 0 && (
+              <Select
+                aria-label={t('widgetOptions.addItem')}
+                value=""
+                onChange={(e) => e.target.value && set(f.key, [...chosen, e.target.value])}
+              >
+                <option value="">{t('widgetOptions.addItem')}</option>
+                {rest.map((o) => (
+                  <option key={o} value={o}>
+                    {name(o)}
+                  </option>
+                ))}
+              </Select>
+            )}
+          </fieldset>
+        )
+      }
+      case 'sortby': {
+        const columns = widgetDef(widget.type)?.fields.find((x) => x.key === 'columns')
+        const chosen = (draft.columns as string[] | undefined) ?? [...(columns?.fallback ?? [])]
+        return (
+          <Field key={f.key} label={label}>
+            {(p) => (
+              <Select
+                value={String(value ?? '')}
+                onChange={(e) => set(f.key, e.target.value || null)}
+                {...p}
+              >
+                <option value="">{t('widgetOptions.listOrder')}</option>
+                {chosen.map((o) => (
+                  <option key={o} value={o}>
+                    {t(`${f.labels}.${o}`, { defaultValue: o })}
+                  </option>
+                ))}
+              </Select>
+            )}
+          </Field>
+        )
+      }
       case 'number':
         return (
           <Field key={f.key} label={label}>

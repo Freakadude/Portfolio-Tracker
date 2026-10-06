@@ -276,6 +276,29 @@ describe('position detail', () => {
     expect(await screen.findByText(/In USD: 700/)).toHaveTextContent('Cost basis 600')
   })
 
+  it('shows the latest refreshed price next to the latest close, or says there is none', async () => {
+    const d = detail()
+    const quoted = {
+      ...d,
+      summary: {
+        ...d.summary,
+        price: {
+          ...d.summary.price,
+          delayed_price: '141.5',
+          delayed_at: '2024-04-11T13:20:00Z',
+          delayed_source: 'yahoo',
+        },
+      },
+    }
+    const first = show(quoted)
+    expect(await screen.findByText('Latest refreshed price')).toBeInTheDocument()
+    expect(screen.getByText(/141\.5/)).toBeInTheDocument()
+    expect(screen.getByText(/quoted 11 Apr 2024, 15:20/)).toBeInTheDocument()
+    first.unmount()
+    show()
+    expect(await screen.findByText('No quote since the last close')).toBeInTheDocument()
+  })
+
   it('says so when there are no prices yet', async () => {
     show(detail(), [])
     expect(await screen.findByText(/No prices stored yet/)).toBeInTheDocument()

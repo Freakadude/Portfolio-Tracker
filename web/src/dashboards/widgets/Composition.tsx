@@ -207,8 +207,11 @@ const COLUMN_KEYS = [
   'name',
   'quantity',
   'close',
+  'latest',
   'value',
   'weight',
+  'target_weight',
+  'weight_diff',
   'unrealized',
   'day',
   'income',
@@ -217,8 +220,44 @@ const COLUMN_KEYS = [
 
 export function HoldingsTableWidget({ data, config }: WidgetProps<HoldingsData>) {
   const { t } = useTranslation()
-  const { eur, qty, pct } = useFormat()
-  const rows = useMemo(() => data.rows ?? [], [data.rows])
+  const { eur, num, qty, pct, when } = useFormat()
+  const sortBy = (config.sort_by as string | null | undefined) ?? data.sort_by ?? null
+  const sortDir = (config.sort_dir as string | undefined) ?? data.sort_dir ?? 'desc'
+  const rows = useMemo(() => {
+    const list = data.rows ?? []
+    if (!sortBy) return list
+    const key = (r: (typeof list)[number]): number | string | null => {
+      switch (sortBy) {
+        case 'name':
+          return r.name.toLowerCase()
+        case 'latest':
+          return toNumber(r.latest ?? r.close)
+        case 'quantity':
+        case 'close':
+        case 'value':
+        case 'weight':
+        case 'target_weight':
+        case 'weight_diff':
+        case 'unrealized':
+        case 'day':
+        case 'income':
+        case 'total_return':
+          return toNumber(r[sortBy] as string | null)
+        default:
+          return null
+      }
+    }
+    const sign = sortDir === 'asc' ? 1 : -1
+    // rows without a value for the column go last, whichever way it is sorted
+    return [...list].sort((a, b) => {
+      const x = key(a)
+      const y = key(b)
+      if (x === null && y === null) return 0
+      if (x === null) return 1
+      if (y === null) return -1
+      return x < y ? -sign : x > y ? sign : 0
+    })
+  }, [data.rows, sortBy, sortDir])
   // one line per instrument: the account a holding sits in is not shown here, so an older
   // dashboard that grouped by account or showed the account column is shown without them
   const asked = (config.group_by as string | undefined) ?? data.group_by ?? 'none'
@@ -248,11 +287,29 @@ export function HoldingsTableWidget({ data, config }: WidgetProps<HoldingsData>)
       case 'quantity':
         return qty(r.quantity)
       case 'close':
-        return r.close === null ? '–' : eur(r.close)
+        return r.close === null ? (
+          '–'
+        ) : (
+          <span title={r.close_date ?? undefined}>{eur(r.close)}</span>
+        )
+      case 'latest':
+        return r.latest !== null ? (
+          <span title={r.latest_at ? when(r.latest_at) : undefined}>{num(r.latest)}</span>
+        ) : r.close === null ? (
+          '–'
+        ) : (
+          <span className="text-muted" title={t('widgets.latestIsClose')}>
+            {eur(r.close)}
+          </span>
+        )
       case 'value':
         return r.value === null ? '–' : eur(r.value)
       case 'weight':
         return r.weight === null ? '–' : pct(r.weight, 1)
+      case 'target_weight':
+        return r.target_weight === null ? '–' : pct(r.target_weight, 1)
+      case 'weight_diff':
+        return r.weight_diff === null ? '–' : <Delta value={r.weight_diff} kind="pct" />
       case 'unrealized':
         return <Delta value={r.unrealized} />
       case 'day':

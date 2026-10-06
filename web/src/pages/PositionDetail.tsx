@@ -24,7 +24,7 @@ function Stat({ label, children }: { label: string; children: ReactNode }) {
 
 export function PositionDetail() {
   const { t } = useTranslation()
-  const { eur, qty, pct } = useFormat()
+  const { eur, qty, pct, when } = useFormat()
   const id = Number(useParams().instrumentId)
   const detail = usePositionDetail(id)
   const prices = usePrices(id)
@@ -117,6 +117,7 @@ export function PositionDetail() {
             {s.price ? (
               <AsOf date={s.price.date} source={s.price.source}>
                 {eur(s.price.close)}
+                <div className="text-xs font-normal text-muted">{s.price.date}</div>
                 {s.price.stale && (
                   <>
                     {' '}
@@ -128,6 +129,23 @@ export function PositionDetail() {
               </AsOf>
             ) : (
               <span className="text-muted">{t('holdings.noPrice')}</span>
+            )}
+          </Stat>
+          <Stat label={t('position.latestPrice')}>
+            {s.price?.delayed_price && s.price.delayed_at ? (
+              <AsOf date={s.price.delayed_at.slice(0, 10)} source={s.price.delayed_source}>
+                {s.price.delayed_price} {d.instrument.currency}
+                <div className="text-xs font-normal text-muted">
+                  {t('position.latestPriceAt', { when: when(s.price.delayed_at) })}
+                </div>
+              </AsOf>
+            ) : (
+              <span
+                className="text-sm font-normal text-muted"
+                title={t('position.latestPriceHint')}
+              >
+                {t('position.latestPriceNone')}
+              </span>
             )}
           </Stat>
           <Stat label={t('position.units')}>{qty(s.quantity)}</Stat>
