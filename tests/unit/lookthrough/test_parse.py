@@ -66,7 +66,7 @@ def test_weights_far_above_one_hundred_are_refused_with_a_hint() -> None:
 
 
 def test_a_file_without_a_weight_column_is_explained() -> None:
-    with pytest.raises(ParseError, match="name column and a weight column"):
+    with pytest.raises(ParseError, match="column of weights that adds up to 100"):
         suggest(b"Name,Amount\nAlpha,1\n")
 
 

@@ -127,7 +127,7 @@ def test_an_excel_workbook_is_previewed_with_its_sheets_then_stored(api: TestCli
 
     # the owner can pick the other sheet: it has no holdings, and the preview says so
     cover = upload_to(api, f"{base}/preview", data, sheet="Cover")
-    assert cover.status_code == 422 and "No header row" in cover.json()["detail"]
+    assert cover.status_code == 422 and "No column of weights" in cover.json()["detail"]
     again = upload_to(api, f"{base}/preview", data, sheet="Holdings").json()
     assert again["mapping"]["sheet"] == "Holdings" and again["holdings"] == 2
 
@@ -188,7 +188,7 @@ def test_a_file_that_is_not_a_holdings_table_is_explained(api: TestClient, db) -
     base = f"/api/v1/instruments/{etf(db)}/holdings"
     refused = upload_to(api, base, b"Date,Amount\n2026-01-01,5\n")
     assert refused.status_code == 422
-    assert "name column and a weight column" in refused.json()["detail"]
+    assert "column of weights that adds up to 100" in refused.json()["detail"]
     unreadable = upload_to(api, base, b"Name,Weight\nAlpha,80\nBeta,70\n")
     assert unreadable.status_code == 422 and "150.0 %" in unreadable.json()["detail"]
     other = upload_to(api, "/api/v1/instruments/9999/holdings", b"Name,Weight\nA,100\n")

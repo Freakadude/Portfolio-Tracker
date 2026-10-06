@@ -250,3 +250,76 @@ def test_a_workbook_with_a_title_line_date_fraction_weights_and_float_noise() ->
     assert (read.constituents[0].isin, read.constituents[0].country, read.constituents[0].currency) == (
         "US69608A1088", "United States", "USD",
     )  # fmt: skip
+
+
+# --- layouts the reader has never seen: found from the content ---------------------------------
+
+
+def test_columns_with_unknown_names_are_found_from_the_numbers_that_add_up_to_100() -> None:
+    rows = [
+        ["Some fund", None, None, None],
+        ["Stand der Daten", "02.10.2026"],
+        ["Position", "Anteil am Fonds", "Wert", "Kennung", "Handel"],
+        ["ALPHA TECHNOLOGIES INTERNATIONAL", "50,5", "1.200.000", "US0000000001", "USD"],
+        ["BETA BANK", "30,25", "800.000", "GB0000000002", "GBP"],
+        ["CHIP MAKER", "19,25", "300.000", "NL0000000003", "EUR"],
+    ]
+    file = suggest(workbook({"S": rows}))
+    m = file.mapping
+    assert (m.weight, m.name, m.isin, m.currency) == (1, 0, 3, 4)  # none of these names is known
+    assert file.as_of == date(2026, 10, 2)
+    read = read_holdings(file)
+    assert [(c.name, c.weight_pct, c.isin, c.currency) for c in read.constituents] == [
+        ("ALPHA TECHNOLOGIES INTERNATIONAL", D("50.5"), "US0000000001", "USD"),
+        ("BETA BANK", D("30.25"), "GB0000000002", "GBP"),
+        ("CHIP MAKER", D("19.25"), "NL0000000003", "EUR"),
+    ]
+    assert read.covered_pct == D(100)
+
+
+def test_a_table_with_no_header_row_at_all_gets_one_made_up() -> None:
+    rows = [
+        ["ALPHA TECHNOLOGIES INTERNATIONAL", 0.6, "USD"],
+        ["BETA BANK PLC", 0.3, "GBP"],
+        ["CHIP MAKER NV", 0.1, "EUR"],
+    ]
+    file = suggest(workbook({"S": rows}))
+    assert file.headers == ["(column 1)", "(column 2)", "(column 3)"]
+    read = read_holdings(file)
+    assert [(c.name, c.weight_pct) for c in read.constituents] == [
+        ("ALPHA TECHNOLOGIES INTERNATIONAL", D(60)),
+        ("BETA BANK PLC", D(30)),
+        ("CHIP MAKER NV", D(10)),
+    ]
+
+
+def test_the_weights_are_the_column_that_adds_up_not_the_amounts_beside_them() -> None:
+    rows = [
+        ["Security", "Market value", "Shares", "Pct"],
+        ["ALPHA", 1_234_567, 400, 55],
+        ["BETA", 2_345_678, 300, 30],
+        ["CHIP", 345_678, 200, 15],
+    ]
+    assert suggest(workbook({"S": rows})).mapping.weight == 3
+
+
+def test_a_header_is_recognised_by_a_keyword_inside_it() -> None:
+    rows = [
+        ["Constituent description", "Portfolio weighting in %", "Exposure Country", "GICS Sector name"],
+        ["ALPHA", 60, "United States", "Technology"],
+        ["BETA", 40, "France", "Industrials"],
+    ]  # fmt: skip
+    m = suggest(workbook({"S": rows})).mapping
+    assert (m.name, m.weight, m.country, m.sector) == (0, 1, 2, 3)
+
+
+def test_a_list_of_only_the_top_ten_is_not_guessed_at() -> None:
+    rows = [["Name", "Share"], ["A", 8], ["B", 7], ["C", 6], ["D", 5]]
+    with pytest.raises(ParseError, match="adds up to 100"):
+        suggest(workbook({"S": rows}))
+
+
+def test_a_sheet_with_other_numbers_is_not_taken_for_holdings() -> None:
+    nav = [["Date", "NAV"], ["02.10.2026", 102.52], ["01.10.2026", 101.73], ["30.09.2026", 102.98]]
+    with pytest.raises(ParseError, match="adds up to 100"):
+        suggest(workbook({"Historical NAVs": nav}))

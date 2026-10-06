@@ -28,6 +28,7 @@ from folio.lookthrough.formats import (
     read_pdf,
     read_workbook,
 )
+from folio.lookthrough.infer import infer_layout, loose_index
 
 _NAME = (
     "name",
@@ -272,44 +273,114 @@ def _stated_date(preamble: list[list[str]]) -> date | None:
     return None
 
 
-def _holdings_below(table: Table, header_row: int) -> int:
+@dataclass(frozen=True)
+class _Layout:
+    table: Table  # with a made-up header row when the file had none
+    header_row: int
+    columns: dict[str, int | None]
+    guessed: bool  # found from the content, not from the header names
+
+
+_EXACT = {
+    "name": _NAME,
+    "weight": _WEIGHT,
+    "isin": _ISIN,
+    "ticker": _TICKER,
+    "sector": _SECTOR,
+    "country": _COUNTRY,
+    "currency": _CURRENCY,
+    "kind": _KIND,
+}
+
+
+def _columns(headers: list[str]) -> dict[str, int | None]:
+    """Each column by its exact name, and where that finds none, by a keyword in its header."""
+    found: dict[str, int | None] = {f: _index(headers, names) for f, names in _EXACT.items()}
+    taken = {i for i in found.values() if i is not None}
+    for key in _EXACT:
+        if found[key] is None:
+            index = loose_index(headers, key, taken)
+            found[key] = index
+            if index is not None:
+                taken.add(index)
+    return found
+
+
+def _numeric_below(table: Table, row: int, col: int) -> int:
+    return sum(
+        1
+        for r in table[row + 1 : row + 6]
+        if col < len(r) and re.fullmatch(r"-?[\d.,\s]+%?", r[col].replace(" ", ""))
+    )
+
+
+def _loose_header(table: Table) -> int | None:
+    """A row whose cells name a weight and a name by keyword, with numbers under the weight."""
+    for n, row in enumerate(table[:HEADER_SEARCH_ROWS]):
+        weight = loose_index(row, "weight")
+        name = loose_index(row, "name", {weight} if weight is not None else set())
+        if weight is not None and name is not None and _numeric_below(table, n, weight) >= 2:
+            return n
+    return None
+
+
+def _layout(table: Table) -> _Layout | None:
+    header = find_header(table)
+    if header is None:
+        header = _loose_header(table)
+    if header is not None:
+        return _Layout(table, header, _columns(table[header]), False)
+    guess = infer_layout(table)
+    if guess is None:
+        return None
+    columns = _columns(guess.table[guess.header_row])
+    columns["weight"] = guess.weight  # the content is what says which column adds up to 100
+    for key in ("name", "isin", "currency"):
+        used = {c for f, c in columns.items() if f != key and c is not None}
+        if columns[key] is None or columns[key] in used:
+            columns[key] = getattr(guess, key)
+    return _Layout(guess.table, guess.header_row, columns, True)
+
+
+def _holdings_below(layout: _Layout) -> int:
     """How many rows under the header look like holdings: a weight that is a number."""
-    headers = table[header_row]
-    weight = _index(headers, _WEIGHT)
+    weight = layout.columns["weight"]
     if weight is None:
         return 0
-    count = 0
-    for row in table[header_row + 1 :]:
-        if weight < len(row) and re.fullmatch(r"-?[\d.,\s]+%?", row[weight].replace(" ", "")):
-            count += 1
-    return count
+    return sum(
+        1
+        for row in layout.table[layout.header_row + 1 :]
+        if weight < len(row) and re.fullmatch(r"-?[\d.,\s]+%?", row[weight].replace(" ", ""))
+    )
 
 
 def suggest(data: bytes, sheet: str | None = None) -> HoldingsFile:
-    """Find the header and match the columns by name. For a workbook the sheet with the most
-    holdings is taken unless `sheet` names one. Raises ParseError, in words for the owner, when
-    the file does not look like a holdings table."""
+    """Find the header and match the columns: by exact name, then by a keyword in the header,
+    then from the content (the column of numbers adding up to a whole is the weight). For a
+    workbook the sheet with the most holdings is taken unless `sheet` names one. Raises
+    ParseError, in words for the owner, when the file does not look like a holdings table."""
     tables = _read_tables(data)
     info: list[SheetInfo] = []
-    headers_at: dict[str, int | None] = {}
+    layouts: dict[str, _Layout | None] = {}
     for name, table in tables.items():
-        found = find_header(table)
-        headers_at[name] = found
-        info.append(SheetInfo(name, 0 if found is None else _holdings_below(table, found)))
+        found = _layout(table)
+        layouts[name] = found
+        info.append(SheetInfo(name, 0 if found is None else _holdings_below(found)))
     if sheet is not None and sheet not in tables:
         raise ParseError(f"The workbook has no sheet called {sheet!r}.")
     chosen = sheet or max(info, key=lambda i: i.holdings).name
-    table, header_row = tables[chosen], headers_at[chosen]
-    if header_row is None:
+    layout = layouts[chosen]
+    if layout is None:
         raise ParseError(
-            "No header row with a name column and a weight column was found"
+            "No column of weights that adds up to 100 % was found"
             + (" on any sheet" if len(tables) > 1 and sheet is None else "")
             + ". Open the file in a spreadsheet and check it lists the fund's holdings with "
             "their weight."
         )
+    table, header_row, cols = layout.table, layout.header_row, layout.columns
     headers = table[header_row]
     body = table[header_row + 1 :]
-    weight = _index(headers, _WEIGHT)
+    weight = cols["weight"]
     samples = [r[weight] for r in body[:50] if weight is not None and weight < len(r) and r[weight]]
     cleaned = [re.sub(r"[%\s]", "", s) for s in samples]
     decimal, thousands = detect_separators(cleaned)
@@ -322,14 +393,14 @@ def suggest(data: bytes, sheet: str | None = None) -> HoldingsFile:
     mapping = HoldingsMapping(
         header_row=header_row,
         sheet=chosen or None,
-        name=_index(headers, _NAME),
+        name=cols["name"],
         weight=weight,
-        isin=_index(headers, _ISIN),
-        ticker=_index(headers, _TICKER),
-        sector=_index(headers, _SECTOR),
-        country=_index(headers, _COUNTRY),
-        currency=_index(headers, _CURRENCY),
-        kind=_index(headers, _KIND),
+        isin=cols["isin"],
+        ticker=cols["ticker"],
+        sector=cols["sector"],
+        country=cols["country"],
+        currency=cols["currency"],
+        kind=cols["kind"],
         weight_is_fraction=bool(values) and Decimal("0.9") <= sum(values) <= Decimal("1.1"),
         decimal_separator=decimal,
         thousands_separator=thousands,

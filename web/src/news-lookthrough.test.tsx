@@ -212,14 +212,14 @@ describe('what a fund holds (FR-MD-09)', () => {
       [`POST ${HOLDINGS}/preview`]: problem(
         422,
         'Holdings problem',
-        'No header row with a name column and a weight column was found.',
+        'No column of weights that adds up to 100 % was found.',
       ),
     })
     renderAt(<HoldingsPanel instrumentId={7} />)
     await screen.findByText('No holdings yet. Upload a file below.')
     await pick()
     await userEvent.click(screen.getByRole('button', { name: 'Preview' }))
-    expect(await screen.findByText(/No header row with a name column/)).toBeInTheDocument()
+    expect(await screen.findByText(/No column of weights/)).toBeInTheDocument()
     expect(screen.queryByRole('button', { name: 'Save these holdings' })).not.toBeInTheDocument()
   })
 
