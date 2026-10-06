@@ -75,7 +75,7 @@
     },
     "source": {
       "title": "Refresh automatically",
-      "intro": "Folio can fetch the holdings again every month from the issuer's download address, or from EODHD (needs its Fundamentals plan).",
+      "intro": "Folio can fetch the holdings again every month from the issuer's download address, or from EODHD. EODHD's free plan does not include fund holdings (its Fundamentals data), and one request uses 10 of the 20 calls a free plan allows a day, so with a free key leave EODHD off and upload the issuer's file above.",
       "url": "Issuer's download address (CSV)",
       "eodhd": "Use EODHD fundamentals",
       "save": "Save",

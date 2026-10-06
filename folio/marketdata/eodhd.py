@@ -31,6 +31,13 @@ NEWS_WEIGHT = 5  # and one news request as five
 EARNINGS_WEIGHT = 1  # an earnings calendar request, per the documentation: check on a real key
 
 
+NO_FUNDAMENTALS = (
+    "Fund holdings are part of EODHD's Fundamentals data, which its free plan does not include "
+    "(the key itself may be fine: check that prices load). Upload the issuer's holdings file "
+    'instead (the fund\'s page, Add a holdings file) and switch off "Use EODHD fundamentals".'
+)
+
+
 def _dec(value: Any) -> Decimal | None:
     return None if value is None else Decimal(str(value))
 
@@ -45,7 +52,15 @@ class EodhdProvider:
     def _get(self, path: str, symbol: str | None = None, **params: Any) -> Any:
         return self._call(path, symbol, params, 1)
 
-    def _call(self, path: str, symbol: str | None, params: dict[str, Any], weight: int) -> Any:
+    def _call(
+        self,
+        path: str,
+        symbol: str | None,
+        params: dict[str, Any],
+        weight: int,
+        refused: str | None = None,
+    ) -> Any:
+        """`refused` explains a 402 or 403 for data that only some plans include."""
         response = self._http.request(
             "GET",
             f"{BASE}/{path}",
@@ -54,6 +69,10 @@ class EodhdProvider:
         )
         if response.status_code == 404:
             raise SymbolNotFound(f"EODHD does not know the symbol {symbol or path}.")
+        if refused is not None and response.status_code in (402, 403):
+            raise ProviderError(
+                f"EODHD refused the request (HTTP {response.status_code}). {refused}"
+            )
         check_status(self.name, response)
         try:
             return response.json(parse_float=Decimal)
@@ -124,7 +143,9 @@ class EodhdProvider:
         """The fundamentals document of an ETF listing; its `ETF_Data.Holdings` are the
         constituents. Needs EODHD's Fundamentals plan, and costs ten calls of the budget."""
         symbol = listing.symbol_for(self.name)
-        return self._call(f"fundamentals/{symbol}", symbol, {}, FUNDAMENTALS_WEIGHT)
+        return self._call(
+            f"fundamentals/{symbol}", symbol, {}, FUNDAMENTALS_WEIGHT, refused=NO_FUNDAMENTALS
+        )
 
     def get_news(self, listing: ListingRef, limit: int = 20) -> Any:
         """The latest news tagged with a listing's ticker: rows of date, title, content, link and

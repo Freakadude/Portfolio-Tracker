@@ -198,6 +198,19 @@ def test_eodhd_fundamentals_are_read_and_cost_ten_calls(settings: Settings, db) 
     )
 
 
+def test_a_refusal_for_fundamentals_names_the_plan_not_just_the_key(settings: Settings, db) -> None:  # type: ignore[no-untyped-def]
+    """A free EODHD key is refused (HTTP 403) for fund holdings: the message says why and what to
+    do instead, and it is not the generic "check the API key"."""
+    instrument_id = etf(db)
+    set_source(db, settings, instrument_id, HoldingsSource(eodhd=True))
+    refused = Scripted(lambda r: httpx.Response(403, json={"message": "Forbidden"}))
+    result = lookthrough_job(job_ctx(settings, eodhd=refused))
+    assert result.status == "failed"
+    assert "HTTP 403" in result.log and "Fundamentals data" in result.log
+    assert "free plan does not include" in result.log and "Add a holdings file" in result.log
+    assert "Check the API key" not in result.log
+
+
 def test_eodhd_without_a_key_says_what_to_do(settings: Settings, db) -> None:  # type: ignore[no-untyped-def]
     set_source(db, settings, etf(db), HoldingsSource(eodhd=True))
     result = lookthrough_job(job_ctx(settings, eodhd=None))
