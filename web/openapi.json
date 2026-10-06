@@ -4069,6 +4069,17 @@
             ],
             "title": "Name"
           },
+          "product_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Product Url"
+          },
           "rating": {
             "anyOf": [
               {
@@ -4273,6 +4284,17 @@
             "title": "Name",
             "type": "string"
           },
+          "product_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Product Url"
+          },
           "rating": {
             "anyOf": [
               {
@@ -4351,6 +4373,7 @@
           "name",
           "asset_class",
           "issuer",
+          "product_url",
           "domicile",
           "ter_pct",
           "distribution",
@@ -4403,9 +4426,31 @@
             ],
             "title": "Isin"
           },
+          "issuer": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Issuer"
+          },
           "name": {
             "title": "Name",
             "type": "string"
+          },
+          "product_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Product Url"
           },
           "ticker": {
             "anyOf": [
@@ -4425,7 +4470,9 @@
           "name",
           "asset_class",
           "ticker",
-          "currency"
+          "currency",
+          "issuer",
+          "product_url"
         ],
         "title": "InstrumentRef",
         "type": "object"

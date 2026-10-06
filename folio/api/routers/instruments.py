@@ -72,6 +72,7 @@ class InstrumentOut(BaseModel):
     name: str
     asset_class: str
     issuer: str | None
+    product_url: str | None
     domicile: str | None
     ter_pct: Decimal | None
     distribution: str | None
@@ -150,6 +151,7 @@ def _view(db: Session, instrument: Instrument) -> InstrumentOut:
         name=instrument.name,
         asset_class=instrument.asset_class,
         issuer=instrument.issuer,
+        product_url=instrument.product_url,
         domicile=instrument.domicile,
         ter_pct=instrument.ter_pct,
         distribution=instrument.distribution,

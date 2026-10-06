@@ -215,6 +215,7 @@ function EditDialog({ instrument, onClose }: { instrument: Instrument; onClose: 
   const [name, setName] = useState(instrument.name)
   const [assetClass, setAssetClass] = useState(instrument.asset_class)
   const [issuer, setIssuer] = useState(instrument.issuer ?? '')
+  const [productUrl, setProductUrl] = useState(instrument.product_url ?? '')
   const [ter, setTer] = useState(instrument.ter_pct ?? '')
   const [distribution, setDistribution] = useState(instrument.distribution ?? '')
   const [tags, setTags] = useState(instrument.tags.join(', '))
@@ -232,6 +233,7 @@ function EditDialog({ instrument, onClose }: { instrument: Instrument; onClose: 
             name,
             asset_class: assetClass as (typeof ASSET_CLASSES)[number],
             issuer: issuer || null,
+            product_url: productUrl.trim() || null,
             ter_pct: ter === '' ? null : String(ter),
             distribution: (distribution || null) as 'ACC' | 'DIST' | null,
             tags: tags
@@ -273,6 +275,18 @@ function EditDialog({ instrument, onClose }: { instrument: Instrument; onClose: 
         </Field>
         <Field label={t('addInstrument.issuer')}>
           {(p) => <Input value={issuer} onChange={(e) => setIssuer(e.target.value)} {...p} />}
+        </Field>
+        <Field label={t('editInstrument.productUrl')} hint={t('editInstrument.productUrlHint')}>
+          {(p) => (
+            <Input
+              type="url"
+              inputMode="url"
+              placeholder="https://"
+              value={productUrl}
+              onChange={(e) => setProductUrl(e.target.value)}
+              {...p}
+            />
+          )}
         </Field>
         <Field label={t('editInstrument.ter')}>
           {(p) => (

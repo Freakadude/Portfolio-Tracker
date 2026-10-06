@@ -154,6 +154,29 @@ describe('classifying an instrument (FR-INS-04, FR-MD-12)', () => {
   })
 })
 
+describe('the issuer page of a fund', () => {
+  it('is saved from the edit window, trimmed, and cleared when emptied', async () => {
+    const { calls } = mockApi({
+      '/api/v1/settings/general': GENERAL_US,
+      '/api/v1/instruments': [{ ...instrument(), product_url: 'https://old.example/page' }],
+      '/api/v1/sleeves': [sleeve()],
+      'PATCH /api/v1/instruments/1': instrument(),
+    })
+    renderAt(<InstrumentsTab onAdd={() => undefined} />)
+    await userEvent.click(await screen.findByRole('button', { name: 'Edit' }))
+    const dialog = await screen.findByRole('dialog')
+    const field = within(dialog).getByLabelText("Issuer's page for this fund (web address)")
+    expect(field).toHaveValue('https://old.example/page')
+    await userEvent.clear(field)
+    await userEvent.type(field, '  https://www.ishares.com/nl/producten/253743  ')
+    await userEvent.click(within(dialog).getByRole('button', { name: 'Save' }))
+    await waitFor(() => expect(calls.some((c) => c.method === 'PATCH')).toBe(true))
+    expect(calls.find((c) => c.method === 'PATCH')?.body).toMatchObject({
+      product_url: 'https://www.ishares.com/nl/producten/253743',
+    })
+  })
+})
+
 describe('watchlist (FR-INS-05)', () => {
   const list = (items: unknown[]) => [{ id: 1, name: 'Watchlist', items }]
   const item = (over: Record<string, unknown> = {}) => ({

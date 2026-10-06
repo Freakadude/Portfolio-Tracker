@@ -84,6 +84,7 @@ export function PositionDetail() {
                 .filter(Boolean)
                 .join(' · ')}
             </p>
+            <FundLinks instrument={d.instrument} />
           </div>
           <div className="flex gap-2">
             <Link
@@ -370,6 +371,69 @@ export function PositionDetail() {
       >
         <TransactionForm editing={editing} onDone={() => setEditing(undefined)} />
       </Dialog>
+    </div>
+  )
+}
+
+const LINK =
+  'inline-flex min-h-10 items-center rounded-md border border-border px-3 text-sm hover:bg-border/40'
+
+/** Where else to read about a fund: its justETF page, found by the ISIN, and the issuer's own
+ * product page. An issuer's page cannot be worked out from an ISIN (each uses its own product
+ * numbers), so the address is one the owner saves once; until then the button searches. */
+function FundLinks({
+  instrument,
+}: {
+  instrument: {
+    isin: string | null
+    asset_class: string
+    name: string
+    issuer?: string | null
+    product_url?: string | null
+  }
+}) {
+  const { t } = useTranslation()
+  const isin = instrument.isin
+  const listedFund = ['ETF', 'ETC'].includes(instrument.asset_class)
+  const anyFund = listedFund || instrument.asset_class === 'FUND'
+  if (!anyFund) return null
+  const search = `https://duckduckgo.com/?q=${encodeURIComponent(
+    [isin, instrument.issuer, instrument.name, 'ETF'].filter(Boolean).join(' '),
+  )}`
+  return (
+    <div role="group" aria-label={t('position.links')} className="mt-3 flex flex-wrap gap-2">
+      {listedFund && isin && (
+        <a
+          href={`https://www.justetf.com/en/etf-profile.html?isin=${encodeURIComponent(isin)}`}
+          target="_blank"
+          rel="noopener noreferrer"
+          title={t('position.justEtfHint')}
+          className={LINK}
+        >
+          {t('position.justEtf')} ↗
+        </a>
+      )}
+      {instrument.product_url ? (
+        <a
+          href={instrument.product_url}
+          target="_blank"
+          rel="noopener noreferrer"
+          title={t('position.issuerPageHint')}
+          className={LINK}
+        >
+          {t('position.issuerPage')} ↗
+        </a>
+      ) : (
+        <a
+          href={search}
+          target="_blank"
+          rel="noopener noreferrer"
+          title={t('position.findIssuerPageHint')}
+          className={LINK}
+        >
+          {t('position.findIssuerPage')} ↗
+        </a>
+      )}
     </div>
   )
 }

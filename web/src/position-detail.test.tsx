@@ -34,6 +34,8 @@ const detail = (over: Record<string, unknown> = {}) => ({
     asset_class: 'ETF',
     ticker: 'SXR8',
     currency: 'EUR',
+    issuer: 'iShares',
+    product_url: null,
   },
   account_id: null,
   as_of: null,
@@ -389,5 +391,55 @@ describe('editing a transaction from the position (FR-TX-14)', () => {
     )
     expect(confirm).toHaveBeenCalledWith(expect.stringContaining('2024-02-01'))
     confirm.mockRestore()
+  })
+})
+
+describe('looking the fund up elsewhere', () => {
+  const instrument = (over: Record<string, unknown>) =>
+    detail({ instrument: { ...detail().instrument, ...over } })
+
+  it('links to the justETF page of the ISIN, in a new tab', async () => {
+    show()
+    const group = await screen.findByRole('group', { name: 'Look this fund up elsewhere' })
+    const link = within(group).getByRole('link', { name: /justETF page/ })
+    expect(link).toHaveAttribute(
+      'href',
+      'https://www.justetf.com/en/etf-profile.html?isin=IE00B5BMR087',
+    )
+    expect(link).toHaveAttribute('target', '_blank')
+    expect(link).toHaveAttribute('rel', 'noopener noreferrer')
+  })
+
+  it('searches for the issuer page until the owner has saved its address', async () => {
+    show()
+    const group = await screen.findByRole('group', { name: 'Look this fund up elsewhere' })
+    const find = within(group).getByRole('link', { name: /Find the issuer's page/ })
+    const href = new URL(find.getAttribute('href') ?? '')
+    expect(href.hostname).toBe('duckduckgo.com')
+    expect(href.searchParams.get('q')).toBe('IE00B5BMR087 iShares iShares Core S&P 500 ETF')
+    expect(within(group).queryByRole('link', { name: /Issuer's product page/ })).toBeNull()
+  })
+
+  it('goes straight to the saved issuer page', async () => {
+    show(instrument({ product_url: 'https://www.ishares.com/nl/producten/253743' }))
+    const group = await screen.findByRole('group', { name: 'Look this fund up elsewhere' })
+    expect(within(group).getByRole('link', { name: /Issuer's product page/ })).toHaveAttribute(
+      'href',
+      'https://www.ishares.com/nl/producten/253743',
+    )
+    expect(within(group).queryByRole('link', { name: /Find the issuer's page/ })).toBeNull()
+  })
+
+  it('offers nothing for a share, and no justETF page for a fund it does not list', async () => {
+    show(instrument({ asset_class: 'EQUITY', isin: 'US0378331005' }))
+    await screen.findByRole('heading', { name: 'iShares Core S&P 500' })
+    expect(screen.queryByRole('group', { name: 'Look this fund up elsewhere' })).toBeNull()
+  })
+
+  it('shows no justETF page for a mutual fund, only the issuer search', async () => {
+    show(instrument({ asset_class: 'FUND' }))
+    const group = await screen.findByRole('group', { name: 'Look this fund up elsewhere' })
+    expect(within(group).queryByRole('link', { name: /justETF page/ })).toBeNull()
+    expect(within(group).getByRole('link', { name: /Find the issuer's page/ })).toBeInTheDocument()
   })
 })

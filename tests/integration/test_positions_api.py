@@ -210,6 +210,13 @@ def test_position_detail_lists_lots_matches_and_history(
     assert r.status_code == 200
     d = r.json()
     assert d["instrument"]["ticker"] == "SXR8" and d["instrument"]["isin"] == "IE00B5BMR087"
+    assert d["instrument"]["product_url"] is None  # the owner has not saved the issuer's page
+    saved = api.patch(
+        f"/api/v1/instruments/{book['sxr8']}", json={"product_url": "https://example.org/fund"}
+    )
+    assert saved.status_code == 200
+    again = api.get(f"/api/v1/positions/{book['sxr8']}?as_of={VALUATION}").json()
+    assert again["instrument"]["product_url"] == "https://example.org/fund"
     s = d["summary"]
     assert Decimal(s["quantity"]) == 5 and Decimal(s["market_value_eur"]) == 700
 

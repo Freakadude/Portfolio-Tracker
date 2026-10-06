@@ -125,6 +125,8 @@
     "noSleeve": "No sleeve",
     "benchmark": "Use as a benchmark",
     "benchmarkHint": "Benchmarks appear in comparison charts, and beta is measured against the first one.",
+    "productUrl": "Issuer's page for this fund (web address)",
+    "productUrlHint": "The fund's own page on the issuer's website, for example the iShares or Vanguard page. The button on the position page then goes straight there.",
     "save": "Save"
   },
   "priceEntry": {
@@ -187,6 +189,13 @@
     "tableCaption": "Closing prices",
     "noPrices": "No prices stored yet. They are fetched after the instrument is added; you can also refresh from the System page.",
     "buy": "Buy",
-    "sell": "Sell"
+    "sell": "Sell",
+    "links": "Look this fund up elsewhere",
+    "justEtf": "justETF page",
+    "justEtfHint": "Opens this fund's page on justetf.com, found by its ISIN, in a new tab.",
+    "issuerPage": "Issuer's product page",
+    "issuerPageHint": "Opens the fund's page on the issuer's website, in a new tab.",
+    "findIssuerPage": "Find the issuer's page",
+    "findIssuerPageHint": "Searches the web for this fund. Found the issuer's page? Save its address under Holdings, Instruments, Edit, and this button will go straight there."
   }
 }

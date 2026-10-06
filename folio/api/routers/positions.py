@@ -122,6 +122,8 @@ class InstrumentRef(BaseModel):
     asset_class: str
     ticker: str | None
     currency: str | None
+    issuer: str | None
+    product_url: str | None  # the issuer's page for this fund, saved by the owner
 
 
 class PositionDetailOut(BaseModel):
@@ -343,6 +345,8 @@ def position_detail(
             asset_class=instrument.asset_class,
             ticker=listing.ticker if listing else None,
             currency=listing.currency if listing else None,
+            issuer=instrument.issuer,
+            product_url=instrument.product_url,
         ),
         account_id=account,
         as_of=as_of,

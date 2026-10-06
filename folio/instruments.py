@@ -7,6 +7,7 @@ import re
 from datetime import date
 from decimal import Decimal
 from typing import Any, Literal
+from urllib.parse import urlparse
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 from sqlalchemy import delete, func, select
@@ -104,12 +105,24 @@ class NewInstrument(InstrumentFields):
         return self
 
 
+def _web_address(value: str | None) -> str | None:
+    """A saved link must be a plain web address; empty clears it."""
+    if value is None or not value.strip():
+        return None
+    value = value.strip()
+    parsed = urlparse(value)
+    if parsed.scheme not in ("http", "https") or not parsed.netloc or len(value) > 500:
+        raise ValueError("Enter a web address that starts with http:// or https://.")
+    return value
+
+
 class InstrumentChanges(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     name: str | None = Field(default=None, min_length=1, max_length=200)
     asset_class: AssetClass | None = None
     issuer: str | None = None
+    product_url: str | None = None  # the issuer's page for this fund
     domicile: str | None = Field(default=None, min_length=2, max_length=2)
     ter_pct: Decimal | None = Field(default=None, ge=0, le=100)
     distribution: Literal["ACC", "DIST"] | None = None
@@ -123,11 +136,17 @@ class InstrumentChanges(BaseModel):
     sleeve_id: int | None = None
     is_benchmark: bool | None = None
 
+    @field_validator("product_url")
+    @classmethod
+    def _address(cls, value: str | None) -> str | None:
+        return _web_address(value)
+
 
 _FIELDS = (
     "name",
     "asset_class",
     "issuer",
+    "product_url",
     "domicile",
     "ter_pct",
     "distribution",

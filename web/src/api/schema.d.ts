@@ -4111,6 +4111,8 @@ export interface components {
             maturity_date?: string | null;
             /** Name */
             name?: string | null;
+            /** Product Url */
+            product_url?: string | null;
             /** Rating */
             rating?: string | null;
             /** Region */
@@ -4153,6 +4155,8 @@ export interface components {
             maturity_date: string | null;
             /** Name */
             name: string;
+            /** Product Url */
+            product_url: string | null;
             /** Rating */
             rating: string | null;
             /** Region */
@@ -4180,8 +4184,12 @@ export interface components {
             id: number;
             /** Isin */
             isin: string | null;
+            /** Issuer */
+            issuer: string | null;
             /** Name */
             name: string;
+            /** Product Url */
+            product_url: string | null;
             /** Ticker */
             ticker: string | null;
         };

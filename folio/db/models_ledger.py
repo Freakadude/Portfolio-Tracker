@@ -35,6 +35,7 @@ class Instrument(Base, SoftDeleteMixin):
     name: Mapped[str] = mapped_column(String(200))
     asset_class: Mapped[str] = mapped_column(String(10))  # ETF ETC EQUITY BOND FUND CASH OTHER
     issuer: Mapped[str | None] = mapped_column(String(100), default=None)
+    product_url: Mapped[str | None] = mapped_column(String(500), default=None)  # issuer's page
     domicile: Mapped[str | None] = mapped_column(String(2), default=None)
     ter_pct: Mapped[Decimal | None] = mapped_column(DecimalText, default=None)
     distribution: Mapped[str | None] = mapped_column(String(4), default=None)  # ACC | DIST

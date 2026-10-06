@@ -19,6 +19,8 @@ All data stays local. The app only contacts what you configure, and only these:
 - The Anthropic API (news triage, the agent's reviews, event briefs and your questions, including web search limited to the sites you list); news text only ever leaves as a short title and summary inside a block marked untrusted, and in privacy mode (default) no euro amounts are sent
 - Notification channels: Home Assistant, ntfy
 
+Links on a fund's page (justETF, the issuer's site, a web search) open in your browser when you click them; Folio itself makes no call there.
+
 Nothing is sent anywhere by the backups, the exports, the reports or the sign-in; they stay on the server and in your browser.
 
 ## Local development

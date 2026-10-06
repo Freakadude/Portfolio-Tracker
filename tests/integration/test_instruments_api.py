@@ -219,6 +219,24 @@ def test_a_manual_instrument_values_from_a_hand_entered_price(api: TestClient, d
     )
 
 
+def test_the_issuers_product_page_is_saved_checked_audited_and_cleared(api: TestClient, db) -> None:  # type: ignore[no-untyped-def]
+    created = api.post("/api/v1/instruments", json=sxr8_body()).json()
+    path = f"/api/v1/instruments/{created['id']}"
+    assert created["product_url"] is None
+    page = "https://www.ishares.com/nl/particuliere-belegger/nl/producten/253743/"
+    r = api.patch(path, json={"product_url": f"  {page}  "})
+    assert r.status_code == 200 and r.json()["product_url"] == page  # trimmed
+    assert api.get(path).json()["product_url"] == page
+    audit = db.scalars(select(AuditLog).where(AuditLog.action == "update")).all()[-1]
+    assert audit.diff["product_url"] == {"old": None, "new": page}
+    # only plain web addresses: a script or a bare word is refused and nothing changes
+    for bad in ("javascript:alert(1)", "ishares.com/page", "ftp://x.org/a", "https://"):
+        assert api.patch(path, json={"product_url": bad}).status_code == 422, bad
+    assert api.get(path).json()["product_url"] == page
+    assert api.patch(path, json={"name": "Other"}).json()["product_url"] == page  # untouched
+    assert api.patch(path, json={"product_url": "  "}).json()["product_url"] is None  # cleared
+
+
 def test_manual_instruments_need_a_currency(api: TestClient) -> None:
     r = api.post("/api/v1/instruments", json={"name": "X", "asset_class": "FUND", "manual": True})
     assert r.status_code == 422
