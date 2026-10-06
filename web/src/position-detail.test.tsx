@@ -299,6 +299,26 @@ describe('position detail', () => {
     expect(await screen.findByText('No quote since the last close')).toBeInTheDocument()
   })
 
+  it('explains its sections on hover and folds them away by their headings', async () => {
+    window.localStorage.clear()
+    show()
+    const lots = await screen.findByRole('button', { name: 'Open lots' })
+    expect(lots).toHaveAttribute('aria-expanded', 'true')
+    expect(screen.getByRole('table', { name: 'Open lots with cost and result' })).toBeVisible()
+    // the explanation is in the page for hover and focus (and for screen readers)
+    expect(screen.getByRole('button', { name: /one buy \(a lot\)/ })).toBeInTheDocument()
+    expect(
+      screen.getByRole('button', { name: /which purchase lots it used up/ }),
+    ).toBeInTheDocument()
+    await userEvent.click(lots)
+    expect(lots).toHaveAttribute('aria-expanded', 'false')
+    expect(screen.queryByRole('table', { name: 'Open lots with cost and result' })).toBeNull()
+    expect(window.localStorage.getItem('folio.collapsed.lots')).toBe('1') // remembered
+    await userEvent.click(lots)
+    expect(screen.getByRole('table', { name: 'Open lots with cost and result' })).toBeVisible()
+    window.localStorage.clear()
+  })
+
   it('says so when there are no prices yet', async () => {
     show(detail(), [])
     expect(await screen.findByText(/No prices stored yet/)).toBeInTheDocument()

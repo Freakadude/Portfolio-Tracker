@@ -12,6 +12,7 @@ import { PriceChart } from '../components/PriceChart'
 import { TransactionForm } from '../components/TransactionForm'
 import { Alert, Button, Card } from '../components/ui'
 import { TypeIcon } from '../components/AssetType'
+import { Collapsible } from '../components/Collapsible'
 import { useFormat } from '../lib/useFormat'
 
 function Stat({ label, children }: { label: string; children: ReactNode }) {
@@ -208,10 +209,7 @@ export function PositionDetail() {
       )}
 
       {d.lots.length > 0 && (
-        <section aria-labelledby="lots-h" className="space-y-2">
-          <h2 id="lots-h" className="text-lg font-medium">
-            {t('position.lots')}
-          </h2>
+        <Collapsible id="lots" title={t('position.lots')} tip={t('position.lotsTip')}>
           <div className="overflow-x-auto">
             <table className="w-full min-w-[40rem] text-sm">
               <caption className="sr-only">{t('position.lotsCaption')}</caption>
@@ -258,14 +256,11 @@ export function PositionDetail() {
               </tbody>
             </table>
           </div>
-        </section>
+        </Collapsible>
       )}
 
       {d.matches.length > 0 && (
-        <section aria-labelledby="matches-h" className="space-y-2">
-          <h2 id="matches-h" className="text-lg font-medium">
-            {t('position.matches')}
-          </h2>
+        <Collapsible id="matches" title={t('position.matches')} tip={t('position.matchesTip')}>
           <div className="overflow-x-auto">
             <table className="w-full min-w-[36rem] text-sm">
               <thead>
@@ -305,14 +300,11 @@ export function PositionDetail() {
               </tbody>
             </table>
           </div>
-        </section>
+        </Collapsible>
       )}
 
       {d.transactions.length > 0 && (
-        <section aria-labelledby="history-h" className="space-y-2">
-          <h2 id="history-h" className="text-lg font-medium">
-            {t('position.history')}
-          </h2>
+        <Collapsible id="history" title={t('position.history')} tip={t('position.historyTip')}>
           <div className="overflow-x-auto">
             <table className="w-full min-w-[36rem] text-sm">
               <thead>
@@ -378,7 +370,7 @@ export function PositionDetail() {
               </tbody>
             </table>
           </div>
-        </section>
+        </Collapsible>
       )}
 
       <section aria-labelledby="ask-h" className="space-y-3">

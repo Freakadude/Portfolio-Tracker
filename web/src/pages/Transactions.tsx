@@ -100,7 +100,11 @@ export function Transactions() {
           >
             {t('transactions.import')}
           </Link>
-          <Button variant="secondary" onClick={() => setReconciling(true)}>
+          <Button
+            variant="secondary"
+            onClick={() => setReconciling(true)}
+            title={t('reconcile.hover')}
+          >
             {t('reconcile.open')}
           </Button>
           <Button variant="secondary" onClick={() => setQuick(true)}>

@@ -31,6 +31,7 @@
   "reconcile": {
     "title": "Reconcile with your broker",
     "open": "Reconcile",
+    "hover": "Checks that Folio agrees with your broker. Paste the holdings your broker shows for a date (an ISIN and the units on each line). Folio works out your units on that date from your transactions and lists, for every holding, whether they match. Nothing is changed or saved; a difference usually means a transaction is missing, duplicated or on the wrong date.",
     "intro": "Paste the holdings your broker shows for a date, one per line with the ISIN and the number of units. Folio lists the differences with its own records. Nothing is changed.",
     "account": "Account",
     "date": "Date",

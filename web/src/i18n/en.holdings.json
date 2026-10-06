@@ -158,6 +158,7 @@
     "firstPurchase": "First purchase",
     "native": "In {{currency}}",
     "lots": "Open lots",
+    "lotsTip": "The purchases you still hold, at least in part. Each line is one buy (a lot) with what it cost, what it is worth now and the gain or loss on it. When you sell, Folio takes lots in the order your account's cost method says: oldest first (FIFO) or at the average cost.",
     "lotsCaption": "Open lots with cost and result",
     "lotColumns": {
       "date": "Bought",
@@ -168,6 +169,7 @@
       "result": "Result"
     },
     "matches": "How realized results arose",
+    "matchesTip": "For each sale: which purchase lots it used up, what those lots cost and what the sale brought in. The realized result of a sale is the proceeds minus that cost, fees included. This is where the realized gain or loss of this position comes from.",
     "matchColumns": {
       "sold": "Sold",
       "units": "Units",
@@ -176,6 +178,7 @@
       "result": "Result"
     },
     "history": "Transactions",
+    "historyTip": "Every transaction recorded for this instrument: buys, sells, dividends and so on. Edit or delete one here and every figure on this page is worked out again.",
     "historyColumns": {
       "date": "Date",
       "type": "Type",

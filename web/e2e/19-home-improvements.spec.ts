@@ -83,3 +83,21 @@ test('instrument types are told apart in lists and on the instrument page', asyn
   await expect(page.getByRole('heading', { level: 1, name: 'E2E Stock' })).toBeVisible()
   await expect(page.locator('span[data-asset-class][title]').first()).toBeVisible()
 })
+
+test('the Reconcile button says what it does, and the position sections fold away', async ({
+  page,
+}) => {
+  await login(page)
+  await page.getByRole('link', { name: 'Transactions' }).first().click()
+  await expect(page.getByRole('button', { name: 'Reconcile', exact: true })).toHaveAttribute(
+    'title',
+    /Checks that Folio agrees with your broker/,
+  )
+  await page.getByRole('link', { name: 'Holdings' }).click()
+  await page.getByRole('link', { name: 'E2E Stock' }).first().click()
+  const history = page.getByRole('button', { name: 'Transactions', exact: true })
+  await expect(history).toHaveAttribute('aria-expanded', 'true')
+  await history.click()
+  await expect(history).toHaveAttribute('aria-expanded', 'false')
+  await history.click()
+})
