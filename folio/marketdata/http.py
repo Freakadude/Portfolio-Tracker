@@ -42,8 +42,10 @@ class HttpClient:
         timeout: float = 20.0,
         attempts: int = 3,
         wait: wait_base | None = None,
+        switched_off: bool = False,
     ) -> None:
         self.provider = provider
+        self._switched_off = switched_off  # the owner turned this provider off (Settings)
         self._usage = usage
         self._breaker = breaker
         self._attempts = attempts
@@ -70,6 +72,10 @@ class HttpClient:
     ) -> httpx.Response:
         """Send a request. Returns any non-retryable response (the adapter reads 404 and so
         on); raises ProviderError when the provider cannot be reached after all attempts."""
+        if self._switched_off:
+            raise ProviderError(
+                f"{self.provider} is switched off in Settings, Providers. Switch it on to use it."
+            )
         if self._breaker is not None and not self._breaker.allow():
             raise ProviderUnavailable(
                 f"{self.provider} failed repeatedly and is paused for a few minutes."

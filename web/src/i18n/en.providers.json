@@ -1,0 +1,30 @@
+{
+  "providers": {
+    "intro": "Folio gets its data from these sources. Switch a source off and Folio stops asking it, whatever the reason: you do not trust it, you want to save its daily calls, or you are testing. A source that needs a key (see below) is skipped until you save one.",
+    "names": {
+      "eodhd": "EODHD",
+      "yahoo": "Yahoo Finance",
+      "twelvedata": "Twelve Data",
+      "openfigi": "OpenFIGI",
+      "ecb": "ECB exchange rates",
+      "fred": "FRED"
+    },
+    "what": {
+      "eodhd": "Closing prices, delayed quotes and news, and fund holdings on paid plans. Needs a key. The free plan allows 20 calls a day.",
+      "yahoo": "Free closing prices and quotes without a key. It is an unofficial source, used as the main or backup price source.",
+      "twelvedata": "A backup source for prices. Needs a key (a free plan exists).",
+      "openfigi": "Finds the fund and its exchanges from an ISIN when you add an instrument. Works without a key; a free key allows more lookups.",
+      "ecb": "The euro exchange rates and the deposit rate. Switching it off means holdings priced in other currencies cannot be turned into euro.",
+      "fred": "US economic series for the Macro page and strategy rules. Needs a free key."
+    },
+    "on": "{{name}} is on",
+    "off": "Off",
+    "noKey": "No key saved",
+    "callsToday": "Calls today: {{calls}}",
+    "callsTodayOf": "Calls today: {{calls}} of {{budget}}",
+    "keys": "Keys",
+    "keysHint": "Keys are stored encrypted and never shown again in full. {{names}} need one to be used.",
+    "advanced": "Advanced: priority and daily call limit",
+    "advancedHint": "For each source: priority (1 is asked first; the next one is tried when it fails) and the daily call limit (0 uses the usual limit). The on/off switches above write the same setting."
+  }
+}

@@ -120,3 +120,18 @@ test('the Schedules settings explain themselves and move a job', async ({ page }
   await page.getByRole('button', { name: 'Put Value snapshots back to its normal time' }).click()
   await expect(row).toContainText('as normal')
 })
+
+test('each provider has an on/off switch', async ({ page }) => {
+  await login(page)
+  await page.getByRole('link', { name: 'Settings' }).click()
+  await page.getByRole('tab', { name: 'Providers' }).click()
+  const fred = page.getByRole('listitem').filter({ hasText: 'US economic series' })
+  await expect(fred.getByLabel('FRED is on')).toBeChecked()
+  await fred.getByLabel('FRED is on').uncheck()
+  await expect(fred.getByText('Off', { exact: true })).toBeVisible()
+  await page.reload()
+  await page.getByRole('tab', { name: 'Providers' }).click()
+  await expect(fred.getByLabel('FRED is on')).not.toBeChecked()
+  await fred.getByLabel('FRED is on').check()
+  await expect(fred.getByLabel('FRED is on')).toBeChecked()
+})

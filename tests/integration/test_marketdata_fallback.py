@@ -3,6 +3,7 @@
 from datetime import date
 from decimal import Decimal
 
+import httpx
 import pytest
 
 from folio.marketdata.base import (
@@ -125,3 +126,33 @@ def test_registry_respects_priority_and_enabled_settings() -> None:
     assert names == ["yahoo", "eodhd"]  # twelvedata is disabled even though it has a key
     yahoo_off = ProvidersSettings(providers={"yahoo": ProviderConfig(enabled=False)})
     assert _factory(yahoo_off, {}).price_providers() == []
+
+
+def _switched_off(name: str) -> tuple[ProviderFactory, list[str]]:
+    calls: list[str] = []
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        calls.append(str(request.url))
+        return httpx.Response(200, json={})
+
+    config = ProvidersSettings(providers={name: ProviderConfig(enabled=False)})
+    secrets = {"providers.fred_api_key": "k", "providers.eodhd_api_key": "k"}
+    return ProviderFactory(config, secrets.get, transport=httpx.MockTransport(handler)), calls
+
+
+def test_a_provider_switched_off_in_settings_is_never_called() -> None:
+    """Settings, Providers has an on/off switch per provider: a switched-off one makes no request
+    and says why, whichever part of Folio asks."""
+    factory, calls = _switched_off("ecb")
+    with pytest.raises(ProviderError, match="ecb is switched off in Settings"):
+        factory.ecb().deposit_rate(date(2024, 1, 2))
+    factory, calls_figi = _switched_off("openfigi")
+    with pytest.raises(ProviderError, match="openfigi is switched off in Settings"):
+        factory.figi().map_isin("IE00B5BMR087")
+    assert calls == [] and calls_figi == []
+
+
+@pytest.mark.parametrize("name", ["fred", "eodhd"])
+def test_keyed_providers_switched_off_are_left_out(name: str) -> None:
+    factory, _ = _switched_off(name)
+    assert (factory.fred() if name == "fred" else factory.eodhd()) is None

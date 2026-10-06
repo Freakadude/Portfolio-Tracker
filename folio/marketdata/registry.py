@@ -50,6 +50,7 @@ class ProviderFactory:
             usage=self._usage,
             breaker=breaker,
             transport=self._transport,
+            switched_off=not self._cfg(provider).enabled,
             **self._http_options,  # type: ignore[arg-type]
         )
 

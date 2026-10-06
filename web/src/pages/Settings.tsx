@@ -8,6 +8,7 @@ import { MacroTab } from '../notify/MacroTab'
 import { NewsTab } from '../news/NewsTab'
 import { NotificationsTab } from '../notify/NotificationsTab'
 import { SecurityTab } from '../security/SecurityTab'
+import { ProvidersTab } from '../system/ProvidersTab'
 import { SchedulesTab } from '../system/SchedulesTab'
 import { cn } from '../lib/cn'
 
@@ -66,6 +67,7 @@ export function Settings() {
             'agent',
             'security',
             'schedules',
+            'providers',
           ].includes(section)
             ? 'max-w-4xl'
             : 'max-w-xl'
@@ -87,6 +89,8 @@ export function Settings() {
           <SecurityTab />
         ) : section === 'schedules' ? (
           <SchedulesTab />
+        ) : section === 'providers' ? (
+          <ProvidersTab />
         ) : (
           <SectionForm key={section} section={section} />
         )}

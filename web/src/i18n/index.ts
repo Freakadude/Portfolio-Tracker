@@ -6,6 +6,7 @@ import dashboards from './en.dashboards.json'
 import lookthrough from './en.lookthrough.json'
 import news from './en.news.json'
 import notify from './en.notify.json'
+import providers from './en.providers.json'
 import schedules from './en.schedules.json'
 import sleeves from './en.sleeves.json'
 import strategies from './en.strategies.json'
@@ -26,6 +27,7 @@ export const resources = {
   ...dashboards,
   ...sleeves,
   ...schedules,
+  ...providers,
   ...watchlist,
   ...whatIf,
   ...tools,
