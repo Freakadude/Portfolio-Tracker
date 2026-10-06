@@ -22,11 +22,12 @@ import {
   type Problem,
   type Strategy,
 } from '../strategies/api'
+import { Backtest } from '../strategies/Backtest'
 import { FormEditor } from '../strategies/FormEditor'
 import { YamlEditor } from '../strategies/YamlEditor'
 
-type Tab = 'editor' | 'rules' | 'calculators' | 'history'
-const TABS: Tab[] = ['editor', 'rules', 'calculators', 'history']
+type Tab = 'editor' | 'rules' | 'calculators' | 'backtest' | 'history'
+const TABS: Tab[] = ['editor', 'rules', 'calculators', 'backtest', 'history']
 
 const MODE_TONE = { active: 'good', shadow: 'warn', off: 'neutral' } as const
 
@@ -175,6 +176,15 @@ function StrategyView({ id }: { id: number }) {
         {tab === 'editor' && <Editor key={s.current.version} strategy={s} />}
         {tab === 'rules' && <RulesPanel id={id} />}
         {tab === 'calculators' && <Calculators strategy={s} />}
+        {tab === 'backtest' && (
+          <Backtest
+            key={s.current.version}
+            id={id}
+            ruleIds={((s.current.definition.rules as { id: string }[] | undefined) ?? []).map(
+              (r) => r.id,
+            )}
+          />
+        )}
         {tab === 'history' && <History strategy={s} />}
       </div>
     </section>

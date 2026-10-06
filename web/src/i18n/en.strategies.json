@@ -25,6 +25,7 @@
       "editor": "Editor",
       "rules": "Rules and signals",
       "calculators": "Calculators",
+      "backtest": "Backtest",
       "history": "History"
     },
     "empty": {
@@ -235,5 +236,31 @@
     "madeNone": "The agent made no recommendations.",
     "made": "{{count}} made: {{detail}}",
     "daysWithData": "{{count}} day(s) of portfolio history in this quarter."
+  },
+  "backtest": {
+    "intro": "Try the rules on the past: for each trading day in the range, Folio checks them against the portfolio as it was that day and lists when they would have fired, with the value that made them fire (for a drift rule, how far from target in percentage points). Nothing is saved or sent.",
+    "form": "Backtest the rules",
+    "rule": "Rule",
+    "allRules": "All rules",
+    "from": "From",
+    "to": "To",
+    "run": "Run the backtest",
+    "running": "Running...",
+    "summary": "{{days}} trading days checked against version {{version}}; the rules would have fired {{count}} time(s).",
+    "rules": "Rules",
+    "rulesCaption": "What each rule did in the range",
+    "firings": "When they would have fired",
+    "firingsCaption": "The days the rules would have fired",
+    "none": "Nothing would have fired in this range.",
+    "notBacktestable": "Not backtestable:",
+    "columns": {
+      "rule": "Rule",
+      "daysTrue": "Days it held",
+      "fired": "Fired",
+      "note": "Note",
+      "date": "Date",
+      "what": "What",
+      "value": "Value"
+    }
   }
 }

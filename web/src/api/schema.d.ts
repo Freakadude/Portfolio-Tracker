@@ -1961,6 +1961,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/strategies/{strategy_id}/backtest": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Backtest Rules
+         * @description When would the rules have fired over a range of past days (FR-ST-06)?
+         */
+        post: operations["backtest_rules_api_v1_strategies__strategy_id__backtest_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/strategies/{strategy_id}/calculate": {
         parameters: {
             query?: never;
@@ -2956,6 +2976,77 @@ export interface components {
             items: components["schemas"]["AuditOut"][];
             /** Next Cursor */
             next_cursor: number | null;
+        };
+        /** BacktestFiringOut */
+        BacktestFiringOut: {
+            /**
+             * Date
+             * Format: date
+             */
+            date: string;
+            /** Message */
+            message: string;
+            /** Rule Id */
+            rule_id: string;
+            /** Rule Type */
+            rule_type: string;
+            /** Severity */
+            severity: string;
+            /** Subject */
+            subject: string;
+            /** Value */
+            value: string | null;
+        };
+        /** BacktestIn */
+        BacktestIn: {
+            /** End */
+            end?: string | null;
+            /** Rule Ids */
+            rule_ids?: string[] | null;
+            /** Start */
+            start?: string | null;
+        };
+        /** BacktestOut */
+        BacktestOut: {
+            /** Days Checked */
+            days_checked: number;
+            /**
+             * End
+             * Format: date
+             */
+            end: string;
+            /** Firings */
+            firings: components["schemas"]["BacktestFiringOut"][];
+            /** Note */
+            note: string;
+            /** Notes */
+            notes: string[];
+            /** Rules */
+            rules: components["schemas"]["BacktestRuleOut"][];
+            /**
+             * Start
+             * Format: date
+             */
+            start: string;
+            /** Strategy */
+            strategy: string;
+            /** Version */
+            version: number;
+        };
+        /** BacktestRuleOut */
+        BacktestRuleOut: {
+            /** Backtestable */
+            backtestable: boolean;
+            /** Days True */
+            days_true: number;
+            /** Fired */
+            fired: number;
+            /** Reason */
+            reason: string | null;
+            /** Rule Id */
+            rule_id: string;
+            /** Rule Type */
+            rule_type: string;
         };
         /** BatchOut */
         BatchOut: {
@@ -9954,6 +10045,41 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    backtest_rules_api_v1_strategies__strategy_id__backtest_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                strategy_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["BacktestIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BacktestOut"];
+                };
             };
             /** @description Validation Error */
             422: {

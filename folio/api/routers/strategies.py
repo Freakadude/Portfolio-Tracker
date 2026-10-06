@@ -16,6 +16,7 @@ from folio.db.models_ledger import Instrument
 from folio.db.models_strategy import Signal, Strategy, StrategyVersion
 from folio.jobs.requests import request_rules
 from folio.ledger_service import TransactionError
+from folio.strategies import backtest as bt
 from folio.strategies import service
 from folio.strategies.diff import side_by_side
 from folio.strategies.inputs import build
@@ -500,4 +501,100 @@ def calculate_orders(strategy_id: int, body: CalculateIn, _user: UserDep, db: Db
         notes=result.plan.notes,
         before=result.before,
         after=result.after,
+    )
+
+
+# --- backtest (FR-ST-06) ------------------------------------------------------------------------
+
+
+class BacktestIn(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    rule_ids: list[str] | None = None  # none: every rule of the latest version
+    start: dt.date | None = None  # default: a year before the end
+    end: dt.date | None = None  # default: today
+
+
+class BacktestFiringOut(BaseModel):
+    date: dt.date
+    rule_id: str
+    rule_type: str
+    subject: str
+    severity: str
+    value: Decimal | None  # what worsening is measured on, e.g. the drift in percentage points
+    message: str
+
+
+class BacktestRuleOut(BaseModel):
+    rule_id: str
+    rule_type: str
+    backtestable: bool
+    reason: str | None  # why it could not be tested, or what it was waiting for
+    days_true: int  # days the condition held, before the repeat filter
+    fired: int
+
+
+class BacktestOut(BaseModel):
+    strategy: str
+    version: int
+    start: dt.date
+    end: dt.date
+    days_checked: int
+    firings: list[BacktestFiringOut]
+    rules: list[BacktestRuleOut]
+    notes: list[str]
+    note: str
+
+
+BACKTEST_NOTE = (
+    "Each past trading day is judged with the rules as they are in this version, on the "
+    "portfolio as it was that day, and repeats are filtered the way live signals are. Sleeve "
+    "members and targets are the ones in this version, not those of the time. Nothing is saved "
+    "or sent."
+)
+
+
+@router.post("/{strategy_id}/backtest", response_model=BacktestOut)
+def backtest_rules(strategy_id: int, body: BacktestIn, _user: UserDep, db: DbDep) -> BacktestOut:
+    """When would the rules have fired over a range of past days (FR-ST-06)?"""
+    strategy = _load(db, strategy_id)
+    version = service.latest(db, strategy)
+    definition = StrategyDef.model_validate(version.definition)
+    end = body.end or dt.date.today()
+    start = body.start or end - dt.timedelta(days=365)
+    try:
+        result = bt.backtest(db, definition, start, end, body.rule_ids)
+    except bt.BacktestError as exc:
+        raise ApiError(422, "Cannot run the backtest", str(exc)) from exc
+    return BacktestOut(
+        strategy=strategy.name,
+        version=version.version,
+        start=result.start,
+        end=result.end,
+        days_checked=result.days_checked,
+        firings=[
+            BacktestFiringOut(
+                date=f.day,
+                rule_id=f.rule_id,
+                rule_type=f.rule_type,
+                subject=f.subject,
+                severity=f.severity,
+                value=f.value,
+                message=f.message,
+            )
+            for f in result.firings
+        ],
+        rules=[
+            BacktestRuleOut(
+                rule_id=r.rule_id,
+                rule_type=r.rule_type,
+                backtestable=r.backtestable,
+                reason=r.reason,
+                days_true=r.days_true,
+                fired=r.fired,
+            )
+            for r in result.rules
+        ],
+        notes=result.notes,
+        note=BACKTEST_NOTE,
     )
