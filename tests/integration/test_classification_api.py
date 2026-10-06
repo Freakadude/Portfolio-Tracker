@@ -178,6 +178,7 @@ def test_a_watched_instrument_shows_its_latest_price_and_a_note(api: TestClient,
     assert r.status_code == 201, r.text
     [item] = r.json()["items"]
     assert (item["name"], item["note"], item["ticker"]) == (instrument.name, "wait", "W")
+    assert item["asset_class"] == "ETF"  # the page colours and labels it by type
     assert (item["close"], item["close_date"], item["previous_close"]) == (
         "103",
         "2024-01-03",

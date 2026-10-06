@@ -4632,6 +4632,10 @@
       },
       "ItemOut": {
         "properties": {
+          "asset_class": {
+            "title": "Asset Class",
+            "type": "string"
+          },
           "close": {
             "anyOf": [
               {
@@ -4738,6 +4742,7 @@
           "instrument_id",
           "name",
           "isin",
+          "asset_class",
           "ticker",
           "currency",
           "note",

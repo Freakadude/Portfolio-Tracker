@@ -1,6 +1,7 @@
 import { useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link, useNavigate } from 'react-router-dom'
+import { TypeBadge } from '../../components/AssetType'
 import { Delta } from '../../components/display'
 import { ARROWS, SIGNS, direction, toNumber } from '../../lib/format'
 import { useFormat } from '../../lib/useFormat'
@@ -280,9 +281,15 @@ export function HoldingsTableWidget({ data, config }: WidgetProps<HoldingsData>)
     switch (c) {
       case 'name':
         return (
-          <Link to={`/holdings/${r.instrument_id}`} className="underline-offset-2 hover:underline">
-            {r.name}
-          </Link>
+          <span className="flex flex-wrap items-center gap-x-2 gap-y-0.5">
+            <Link
+              to={`/holdings/${r.instrument_id}`}
+              className="underline-offset-2 hover:underline"
+            >
+              {r.name}
+            </Link>
+            <TypeBadge assetClass={r.asset_class} />
+          </span>
         )
       case 'quantity':
         return qty(r.quantity)

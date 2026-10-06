@@ -30,6 +30,7 @@ class ItemOut(BaseModel):
     instrument_id: int
     name: str
     isin: str | None
+    asset_class: str
     ticker: str | None
     currency: str | None
     note: str | None
@@ -96,6 +97,7 @@ def _item_out(
         instrument_id=instrument.id,
         name=instrument.name,
         isin=instrument.isin,
+        asset_class=instrument.asset_class,
         ticker=None if listing is None else listing.ticker,
         currency=None if listing is None else listing.currency,
         note=item.note,

@@ -74,3 +74,12 @@ test('Home can look at one instrument type or some holdings, and remembers the c
   await expect(row.getByText('1 holding')).toBeVisible()
   await everything.click()
 })
+
+test('instrument types are told apart in lists and on the instrument page', async ({ page }) => {
+  await login(page)
+  await page.getByRole('link', { name: 'Holdings' }).click()
+  await expect(page.locator('table [data-asset-class]').first()).toBeVisible()
+  await page.getByRole('link', { name: 'E2E Stock' }).first().click()
+  await expect(page.getByRole('heading', { level: 1, name: 'E2E Stock' })).toBeVisible()
+  await expect(page.locator('span[data-asset-class][title]').first()).toBeVisible()
+})

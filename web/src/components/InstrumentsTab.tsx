@@ -1,3 +1,4 @@
+import { TypeBadge } from './AssetType'
 import { useMutation } from '@tanstack/react-query'
 import { useState, type FormEvent } from 'react'
 import { useTranslation } from 'react-i18next'
@@ -119,7 +120,9 @@ export function InstrumentsTab({ onAdd }: { onAdd: () => void }) {
                       </Link>
                     </td>
                     <td className="px-3 py-2">{i.isin ?? '–'}</td>
-                    <td className="px-3 py-2">{t(`assetClass.${i.asset_class}`)}</td>
+                    <td className="px-3 py-2">
+                      <TypeBadge assetClass={i.asset_class} />
+                    </td>
                     <td className="px-3 py-2">
                       {i.manual ? (
                         <Badge>{t('instruments.manual')}</Badge>

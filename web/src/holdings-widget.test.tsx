@@ -48,7 +48,7 @@ const names = () =>
   screen
     .getAllByRole('row')
     .slice(1)
-    .map((r) => within(r).getAllByRole('cell')[0].textContent)
+    .map((r) => within(r).getByRole('link').textContent)
 
 describe('the holdings widget (FR-DB-03)', () => {
   it('shows the columns in the order they were chosen', () => {
@@ -99,5 +99,27 @@ describe('the holdings widget (FR-DB-03)', () => {
     expect(within(core).getByText(/10[.,]00\s?%/)).toBeInTheDocument()
     const plain = screen.getByRole('row', { name: /Plain/ })
     expect(within(plain).getAllByText('–').length).toBeGreaterThanOrEqual(2) // no target, no diff
+  })
+})
+
+describe('instrument types look different (FR-INS-02)', () => {
+  it('marks each holding with its type, in words and in a colour of its own', () => {
+    show(
+      data(
+        [
+          row(1, 'World ETF'),
+          row(2, 'Chip Maker', { asset_class: 'EQUITY' }),
+          row(3, 'Gold', { asset_class: 'ETC' }),
+        ],
+        { columns: ['name'] },
+      ),
+    )
+    const badge = (name: RegExp) =>
+      screen.getByRole('row', { name }).querySelector<HTMLElement>('[data-asset-class]')
+    expect(badge(/World ETF/)).toHaveAttribute('data-asset-class', 'ETF')
+    expect(badge(/Chip Maker/)).toHaveAttribute('data-asset-class', 'EQUITY')
+    expect(badge(/Chip Maker/)).toHaveTextContent('Equity')
+    const classes = [/World ETF/, /Chip Maker/, /Gold/].map((n) => badge(n)?.className)
+    expect(new Set(classes).size).toBe(3) // three types, three different looks
   })
 })

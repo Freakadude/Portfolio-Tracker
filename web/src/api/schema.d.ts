@@ -4279,6 +4279,8 @@ export interface components {
         };
         /** ItemOut */
         ItemOut: {
+            /** Asset Class */
+            asset_class: string;
             /** Close */
             close: string | null;
             /** Close Date */

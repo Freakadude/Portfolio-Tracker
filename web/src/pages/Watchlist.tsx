@@ -5,6 +5,7 @@ import { Link } from 'react-router-dom'
 import { api, errorMessage, unwrap } from '../api/client'
 import { useInstruments, usePrices } from '../api/queries'
 import { AddInstrumentDialog } from '../components/AddInstrumentDialog'
+import { TypeBadge } from '../components/AssetType'
 import { Delta, EmptyState } from '../components/display'
 import { PriceChart } from '../components/PriceChart'
 import { PriceAlerts } from '../notify/PriceAlerts'
@@ -40,6 +41,7 @@ type List = {
     instrument_id: number
     name: string
     isin: string | null
+    asset_class: string
     ticker: string | null
     currency: string | null
     note: string | null
@@ -205,7 +207,10 @@ function WatchlistBody({ list }: { list: List }) {
                     <Link to={`/holdings/${item.instrument_id}`} className="hover:underline">
                       {item.name}
                     </Link>
-                    <div className="text-xs text-muted">{item.ticker ?? item.isin ?? ''}</div>
+                    <div className="mt-0.5 flex flex-wrap items-center gap-2 text-xs text-muted">
+                      <TypeBadge assetClass={item.asset_class} />
+                      {item.ticker ?? item.isin ?? ''}
+                    </div>
                   </td>
                   <td className="py-2 pr-3 text-right tabular-nums">
                     {item.close === null ? (

@@ -13,6 +13,7 @@ import {
 import { AddInstrumentDialog } from '../components/AddInstrumentDialog'
 import { AsOf, Badge, EmptyState, Gain, SortHeader, useSort } from '../components/display'
 import { InstrumentsTab } from '../components/InstrumentsTab'
+import { TypeBadge } from '../components/AssetType'
 import { Alert, Button, Checkbox, Select } from '../components/ui'
 import { cn } from '../lib/cn'
 import { toNumber } from '../lib/format'
@@ -390,7 +391,8 @@ function PositionsTab({ onAdd }: { onAdd: () => void }) {
                     >
                       {p.name}
                     </Link>
-                    <div className="text-xs text-muted">
+                    <div className="mt-0.5 flex flex-wrap items-center gap-2 text-xs text-muted">
+                      <TypeBadge assetClass={p.asset_class} />
                       {[p.ticker, p.isin].filter(Boolean).join(' · ')}
                     </div>
                   </td>

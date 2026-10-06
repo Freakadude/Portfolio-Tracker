@@ -11,6 +11,7 @@ import { PriceAlerts } from '../notify/PriceAlerts'
 import { PriceChart } from '../components/PriceChart'
 import { TransactionForm } from '../components/TransactionForm'
 import { Alert, Button, Card } from '../components/ui'
+import { TypeIcon } from '../components/AssetType'
 import { useFormat } from '../lib/useFormat'
 
 function Stat({ label, children }: { label: string; children: ReactNode }) {
@@ -77,14 +78,21 @@ export function PositionDetail() {
           ← {t('position.back')}
         </Link>
         <div className="mt-2 flex flex-wrap items-start justify-between gap-3">
-          <div>
-            <h1 className="text-2xl font-semibold">{d.instrument.name}</h1>
-            <p className="text-sm text-muted">
-              {[d.instrument.ticker, d.instrument.isin, t(`assetClass.${d.instrument.asset_class}`)]
-                .filter(Boolean)
-                .join(' · ')}
-            </p>
-            <FundLinks instrument={d.instrument} />
+          <div className="flex items-start gap-3">
+            <TypeIcon assetClass={d.instrument.asset_class} />
+            <div>
+              <h1 className="text-2xl font-semibold">{d.instrument.name}</h1>
+              <p className="text-sm text-muted">
+                {[
+                  d.instrument.ticker,
+                  d.instrument.isin,
+                  t(`assetClass.${d.instrument.asset_class}`),
+                ]
+                  .filter(Boolean)
+                  .join(' · ')}
+              </p>
+              <FundLinks instrument={d.instrument} />
+            </div>
           </div>
           <div className="flex gap-2">
             <Link
