@@ -135,7 +135,8 @@
     "map": {
       "intro": "{{count}} rows found ({{encoding}}, separator {{delimiter}}). Tell Folio which column holds what; the first guess is filled in.",
       "recognised": {
-        "degiro": "Recognised as a Degiro transactions export. The columns are filled in, including the AutoFX fee; check them and continue."
+        "degiro": "Recognised as a Degiro transactions export. The columns are filled in, including the AutoFX fee; check them and continue.",
+        "folio": "Recognised as a Folio export. Nothing needs choosing; check the rows and continue."
       },
       "recognisedOther": "Recognised as a known broker export. The columns are filled in; check them and continue.",
       "extraFees": "Also add these columns to the fees",

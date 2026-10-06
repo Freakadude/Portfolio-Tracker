@@ -623,6 +623,47 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/export/positions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Export Positions
+         * @description The open positions with their cost basis and value on the last prices.
+         */
+        get: operations["export_positions_api_v1_export_positions_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/export/transactions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Export Transactions
+         * @description Every posted transaction, in the columns the CSV import wizard recognises, so the file
+         *     reads back into Folio without any choices to make.
+         */
+        get: operations["export_transactions_api_v1_export_transactions_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/import-presets": {
         parameters: {
             query?: never;
@@ -1552,6 +1593,48 @@ export interface paths {
          *     and instrument. `format=csv` downloads the same figures as a spreadsheet file.
          */
         get: operations["realized_api_v1_reports_realized_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/reports/tax-support": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Tax Support
+         * @description The annual tax-support report (FR-PF-11): value on 1 January and 31 December, money in and
+         *     out, income, costs, realized gains and the change in unrealized result. `format=csv`
+         *     downloads it as a spreadsheet; the web page prints to PDF.
+         */
+        get: operations["tax_support_api_v1_reports_tax_support_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/reports/tax-years": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Tax Years
+         * @description The calendar years the tax-support report can be made for, newest first.
+         */
+        get: operations["tax_years_api_v1_reports_tax_years_get"];
         put?: never;
         post?: never;
         delete?: never;
@@ -3554,6 +3637,8 @@ export interface components {
             reference_col?: number | null;
             /** Skip Types */
             skip_types?: string[];
+            /** Taxes Col */
+            taxes_col?: number | null;
             /**
              * Thousands Separator
              * @default
@@ -5255,6 +5340,80 @@ export interface components {
             unvalued_positions: number;
             /** Value Eur */
             value_eur: string;
+        };
+        /** TaxHoldingOut */
+        TaxHoldingOut: {
+            /** Account */
+            account: string;
+            /** Cost Basis Eur */
+            cost_basis_eur: string;
+            /** Instrument */
+            instrument: string;
+            /** Isin */
+            isin: string | null;
+            /** Quantity */
+            quantity: string;
+            /** Value Eur */
+            value_eur: string | null;
+        };
+        /** TaxSupportOut */
+        TaxSupportOut: {
+            /**
+             * End
+             * Format: date
+             */
+            end: string;
+            /** Holdings End */
+            holdings_end: components["schemas"]["TaxHoldingOut"][];
+            /** Holdings Start */
+            holdings_start: components["schemas"]["TaxHoldingOut"][];
+            /** Income Gross Eur */
+            income_gross_eur: string;
+            /** Income Net Eur */
+            income_net_eur: string;
+            /** Money In Eur */
+            money_in_eur: string;
+            /** Money Out Eur */
+            money_out_eur: string;
+            /** Net Contributions Eur */
+            net_contributions_eur: string;
+            /** Note */
+            note: string;
+            /** Other Costs Eur */
+            other_costs_eur: string;
+            /** Partial */
+            partial: boolean;
+            /** Realized Cost Eur */
+            realized_cost_eur: string;
+            /** Realized Proceeds Eur */
+            realized_proceeds_eur: string;
+            /** Realized Result Eur */
+            realized_result_eur: string;
+            /**
+             * Start
+             * Format: date
+             */
+            start: string;
+            /** Trade Costs Eur */
+            trade_costs_eur: string;
+            /** Unrealized Change Eur */
+            unrealized_change_eur: string;
+            /** Unrealized End Eur */
+            unrealized_end_eur: string;
+            /** Unrealized Start Eur */
+            unrealized_start_eur: string;
+            /** Unvalued End */
+            unvalued_end: number;
+            /** Unvalued Start */
+            unvalued_start: number;
+            /** Value End Eur */
+            value_end_eur: string;
+            /** Value Start Eur */
+            value_start_eur: string;
+            /** Withholding Eur */
+            withholding_eur: string;
+            /** Year */
+            year: number;
         };
         /** TemplateOut */
         TemplateOut: {
@@ -7097,6 +7256,70 @@ export interface operations {
             query?: {
                 last_event_id?: number | null;
                 seconds?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    export_positions_api_v1_export_positions_get: {
+        parameters: {
+            query?: {
+                format?: "csv" | "json";
+                account?: number | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    export_transactions_api_v1_export_transactions_get: {
+        parameters: {
+            query?: {
+                format?: "csv" | "json";
+                account?: number | null;
             };
             header?: never;
             path?: never;
@@ -9064,6 +9287,59 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    tax_support_api_v1_reports_tax_support_get: {
+        parameters: {
+            query?: {
+                year?: number | null;
+                account?: number | null;
+                format?: "json" | "csv";
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TaxSupportOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    tax_years_api_v1_reports_tax_years_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": number[];
                 };
             };
         };

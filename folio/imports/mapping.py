@@ -43,6 +43,7 @@ _ALIASES: dict[str, tuple[str, ...]] = {
         "transactiekosten",
     ),  # fmt: skip
     "amount_col": ("amount", "net amount", "total", "totaal", "mutatie", "value"),
+    "taxes_col": ("taxes",),
     "reference_col": ("order id", "order-id", "orderid", "reference", "id", "order number"),
     "note_col": ("note", "notes", "description", "omschrijving", "product", "name"),
 }
@@ -68,6 +69,7 @@ class ImportMapping(BaseModel):
     # More columns added to the fees, in the fees' currency (for example Degiro's AutoFX fee)
     extra_fee_cols: list[int] = Field(default_factory=list)
     fees_currency_col: int | None = None
+    taxes_col: int | None = None  # taxes paid on the trade, or withheld on income, in euro
     amount_col: int | None = None
     reference_col: int | None = None
     note_col: int | None = None
@@ -162,6 +164,8 @@ def detect_preset(headers: list[str]) -> str | None:
     """The broker an export comes from, when its header row says so (FR-TX-08). Only the
     column names are looked at, in English or Dutch."""
     lowered = {h.strip().lower() for h in headers}
+    if tuple(h.strip().lower() for h in headers) == FOLIO_HEADERS:
+        return "folio"
     if (
         "isin" in lowered
         and lowered.intersection(_DEGIRO_EXCHANGE)
@@ -172,6 +176,41 @@ def detect_preset(headers: list[str]) -> str | None:
     return None
 
 
+# The columns Folio's own export writes (folio/exports.py). An export is recognised by exactly
+# these headers, so it reads back without any choices to make (FR-TX-13).
+FOLIO_HEADERS = (
+    "date", "type", "isin", "name", "ticker", "account", "quantity", "price", "currency",
+    "fx_rate_to_eur", "fees", "fees_currency", "taxes", "amount", "reference", "note",
+)  # fmt: skip
+
+
+def folio_mapping(headers: list[str]) -> ImportMapping:
+    """The mapping for a file Folio exported: ISO dates, a dot as decimal separator, the type
+    spelled as Folio spells it, and the exchange rate as a multiplier to euro (exact)."""
+    col = {h.strip().lower(): i for i, h in enumerate(headers)}
+    return ImportMapping(
+        date_format="%Y-%m-%d",
+        decimal_separator=".",
+        thousands_separator="",
+        date_col=col["date"],
+        isin_col=col["isin"],
+        type_col=col["type"],
+        quantity_col=col["quantity"],
+        price_col=col["price"],
+        currency_col=col["currency"],
+        fx_col=col["fx_rate_to_eur"],
+        fees_col=col["fees"],
+        fees_currency_col=col["fees_currency"],
+        taxes_col=col["taxes"],
+        amount_col=col["amount"],
+        reference_col=col["reference"],
+        note_col=col["note"],
+        type_mode="column",
+        type_map={t: t for t in sorted(VALID_TYPES)},
+        fx_semantics="to_eur",
+    )
+
+
 def _is_fee_header(header: str) -> bool:
     """Degiro's fee column: "Transaction and/or third party fees EUR" and its Dutch form."""
     return header.startswith(("transaction and/or third party fees", "transactiekosten"))
@@ -179,6 +218,8 @@ def _is_fee_header(header: str) -> bool:
 
 def suggest_mapping(parsed: ParsedFile) -> ImportMapping:
     """A first guess from the header names and the data; the owner confirms or corrects it."""
+    if detect_preset(parsed.headers) == "folio":
+        return folio_mapping(parsed.headers)
     lowered = [h.strip().lower() for h in parsed.headers]
     found: dict[str, int] = {}
     for field, names in _ALIASES.items():
@@ -322,6 +363,9 @@ def convert_row(
             if _cell(cells, extra):
                 fees += abs(parse_decimal(_cell(cells, extra), dec, thou))
 
+        taxes = Decimal(0)
+        if _cell(cells, mapping.taxes_col):
+            taxes = abs(parse_decimal(_cell(cells, mapping.taxes_col), dec, thou))
         currency = _cell(cells, mapping.currency_col).upper() or (mapping.default_currency or "")
         if currency and not _CURRENCY.match(currency):
             return _error(number, f"{currency!r} is not a three-letter currency code.", isin)
@@ -339,6 +383,7 @@ def convert_row(
             "trade_date": trade_date,
             "fees": fees,
             "fees_currency": fees_currency,
+            "taxes": taxes,
             "note": _cell(cells, mapping.note_col) or None,
         }
         if kind in ("buy", "sell", "transfer_in", "transfer_out"):

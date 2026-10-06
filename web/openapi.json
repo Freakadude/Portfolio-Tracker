@@ -3490,6 +3490,17 @@
             "title": "Skip Types",
             "type": "array"
           },
+          "taxes_col": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Taxes Col"
+          },
           "thousands_separator": {
             "default": "",
             "enum": [
@@ -9184,6 +9195,218 @@
         "title": "SummaryOut",
         "type": "object"
       },
+      "TaxHoldingOut": {
+        "properties": {
+          "account": {
+            "title": "Account",
+            "type": "string"
+          },
+          "cost_basis_eur": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Cost Basis Eur",
+            "type": "string"
+          },
+          "instrument": {
+            "title": "Instrument",
+            "type": "string"
+          },
+          "isin": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Isin"
+          },
+          "quantity": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Quantity",
+            "type": "string"
+          },
+          "value_eur": {
+            "anyOf": [
+              {
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Value Eur"
+          }
+        },
+        "required": [
+          "account",
+          "instrument",
+          "isin",
+          "quantity",
+          "value_eur",
+          "cost_basis_eur"
+        ],
+        "title": "TaxHoldingOut",
+        "type": "object"
+      },
+      "TaxSupportOut": {
+        "properties": {
+          "end": {
+            "format": "date",
+            "title": "End",
+            "type": "string"
+          },
+          "holdings_end": {
+            "items": {
+              "$ref": "#/components/schemas/TaxHoldingOut"
+            },
+            "title": "Holdings End",
+            "type": "array"
+          },
+          "holdings_start": {
+            "items": {
+              "$ref": "#/components/schemas/TaxHoldingOut"
+            },
+            "title": "Holdings Start",
+            "type": "array"
+          },
+          "income_gross_eur": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Income Gross Eur",
+            "type": "string"
+          },
+          "income_net_eur": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Income Net Eur",
+            "type": "string"
+          },
+          "money_in_eur": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Money In Eur",
+            "type": "string"
+          },
+          "money_out_eur": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Money Out Eur",
+            "type": "string"
+          },
+          "net_contributions_eur": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Net Contributions Eur",
+            "type": "string"
+          },
+          "note": {
+            "title": "Note",
+            "type": "string"
+          },
+          "other_costs_eur": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Other Costs Eur",
+            "type": "string"
+          },
+          "partial": {
+            "title": "Partial",
+            "type": "boolean"
+          },
+          "realized_cost_eur": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Realized Cost Eur",
+            "type": "string"
+          },
+          "realized_proceeds_eur": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Realized Proceeds Eur",
+            "type": "string"
+          },
+          "realized_result_eur": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Realized Result Eur",
+            "type": "string"
+          },
+          "start": {
+            "format": "date",
+            "title": "Start",
+            "type": "string"
+          },
+          "trade_costs_eur": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Trade Costs Eur",
+            "type": "string"
+          },
+          "unrealized_change_eur": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Unrealized Change Eur",
+            "type": "string"
+          },
+          "unrealized_end_eur": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Unrealized End Eur",
+            "type": "string"
+          },
+          "unrealized_start_eur": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Unrealized Start Eur",
+            "type": "string"
+          },
+          "unvalued_end": {
+            "title": "Unvalued End",
+            "type": "integer"
+          },
+          "unvalued_start": {
+            "title": "Unvalued Start",
+            "type": "integer"
+          },
+          "value_end_eur": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Value End Eur",
+            "type": "string"
+          },
+          "value_start_eur": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Value Start Eur",
+            "type": "string"
+          },
+          "withholding_eur": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Withholding Eur",
+            "type": "string"
+          },
+          "year": {
+            "title": "Year",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "year",
+          "start",
+          "end",
+          "partial",
+          "value_start_eur",
+          "value_end_eur",
+          "unvalued_start",
+          "unvalued_end",
+          "money_in_eur",
+          "money_out_eur",
+          "net_contributions_eur",
+          "income_gross_eur",
+          "withholding_eur",
+          "income_net_eur",
+          "trade_costs_eur",
+          "other_costs_eur",
+          "realized_proceeds_eur",
+          "realized_cost_eur",
+          "realized_result_eur",
+          "unrealized_start_eur",
+          "unrealized_end_eur",
+          "unrealized_change_eur",
+          "holdings_start",
+          "holdings_end",
+          "note"
+        ],
+        "title": "TaxSupportOut",
+        "type": "object"
+      },
       "TemplateOut": {
         "properties": {
           "description": {
@@ -13096,6 +13319,130 @@
         ]
       }
     },
+    "/api/v1/export/positions": {
+      "get": {
+        "description": "The open positions with their cost basis and value on the last prices.",
+        "operationId": "export_positions_api_v1_export_positions_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "format",
+            "required": false,
+            "schema": {
+              "default": "csv",
+              "enum": [
+                "csv",
+                "json"
+              ],
+              "title": "Format",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "account",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Account"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Export Positions",
+        "tags": [
+          "export"
+        ]
+      }
+    },
+    "/api/v1/export/transactions": {
+      "get": {
+        "description": "Every posted transaction, in the columns the CSV import wizard recognises, so the file\nreads back into Folio without any choices to make.",
+        "operationId": "export_transactions_api_v1_export_transactions_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "format",
+            "required": false,
+            "schema": {
+              "default": "csv",
+              "enum": [
+                "csv",
+                "json"
+              ],
+              "title": "Format",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "account",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Account"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Export Transactions",
+        "tags": [
+          "export"
+        ]
+      }
+    },
     "/api/v1/import-presets": {
       "get": {
         "operationId": "list_presets_api_v1_import_presets_get",
@@ -16648,6 +16995,112 @@
           }
         },
         "summary": "Realized",
+        "tags": [
+          "reports"
+        ]
+      }
+    },
+    "/api/v1/reports/tax-support": {
+      "get": {
+        "description": "The annual tax-support report (FR-PF-11): value on 1 January and 31 December, money in and\nout, income, costs, realized gains and the change in unrealized result. `format=csv`\ndownloads it as a spreadsheet; the web page prints to PDF.",
+        "operationId": "tax_support_api_v1_reports_tax_support_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "year",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Year"
+            }
+          },
+          {
+            "in": "query",
+            "name": "account",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Account"
+            }
+          },
+          {
+            "in": "query",
+            "name": "format",
+            "required": false,
+            "schema": {
+              "default": "json",
+              "enum": [
+                "json",
+                "csv"
+              ],
+              "title": "Format",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TaxSupportOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Tax Support",
+        "tags": [
+          "reports"
+        ]
+      }
+    },
+    "/api/v1/reports/tax-years": {
+      "get": {
+        "description": "The calendar years the tax-support report can be made for, newest first.",
+        "operationId": "tax_years_api_v1_reports_tax_years_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "type": "integer"
+                  },
+                  "title": "Response Tax Years Api V1 Reports Tax Years Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Tax Years",
         "tags": [
           "reports"
         ]

@@ -58,7 +58,7 @@ export function Layout() {
 
   return (
     <div className="flex min-h-screen flex-col md:flex-row">
-      <aside className="border-b border-border bg-card md:w-56 md:border-b-0 md:border-r">
+      <aside className="border-b border-border bg-card md:w-56 md:border-b-0 md:border-r print:hidden">
         <div className="flex items-center justify-between gap-2 px-4 py-3">
           <span className="text-lg font-semibold">{t('app.name')}</span>
           <Bell />

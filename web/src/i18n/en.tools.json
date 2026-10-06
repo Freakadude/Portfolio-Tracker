@@ -60,6 +60,11 @@
     "showTransactions": "Show transactions"
   },
   "reports": {
+    "tabs": {
+      "realized": "Realized result",
+      "tax": "Tax support",
+      "export": "Export"
+    },
     "year": "Year",
     "account": "Account",
     "download": "Download CSV",
@@ -96,6 +101,53 @@
     "empty": {
       "title": "No reports yet",
       "body": "Reports appear once you have recorded a sale, a dividend or interest."
+    }
+  },
+  "tax": {
+    "title": "Tax support for {{year}}",
+    "caption": "Figures for {{year}} for a tax return",
+    "print": "Print or save as PDF",
+    "partial": "The year is not over: the figures run to {{end}}.",
+    "unvalued": "{{count}} holding(s) had no price on one of the dates, so they are missing from the values.",
+    "valueOn": "Value on {{date}}",
+    "moneyIn": "Money put in (purchases and deposits)",
+    "flowHint": "As the returns count external flows: purchases and deposits in, sales and withdrawals out.",
+    "moneyOut": "Money taken out (sales and withdrawals)",
+    "netContributions": "Net money put in",
+    "incomeGross": "Income received, before tax",
+    "withholding": "Tax and fees withheld on income",
+    "incomeNet": "Income received, after tax",
+    "tradeCosts": "Costs of buying and selling",
+    "otherCosts": "Other fees and taxes",
+    "proceeds": "Proceeds of sales",
+    "cost": "Cost of what was sold",
+    "realized": "Realized result",
+    "unrealizedOn": "Unrealized result on {{date}}",
+    "unrealizedChange": "Change in unrealized result",
+    "holdingsOn": "Holdings on {{date}}",
+    "noHoldings": "Nothing held.",
+    "columns": {
+      "instrument": "Instrument",
+      "account": "Account",
+      "units": "Units",
+      "value": "Value",
+      "cost": "Cost basis"
+    },
+    "empty": {
+      "title": "No transactions yet",
+      "body": "The tax-support report needs at least one transaction."
+    }
+  },
+  "exportData": {
+    "csv": "Download CSV",
+    "json": "Download JSON",
+    "transactions": {
+      "title": "Transactions",
+      "help": "Every posted transaction, one row each, in the layout the import wizard recognises: import the file again (into a new account, for example) and the positions come out the same."
+    },
+    "positions": {
+      "title": "Positions",
+      "help": "The open positions with their cost basis, market value and last close."
     }
   }
 }

@@ -1,15 +1,62 @@
 import { useQuery } from '@tanstack/react-query'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
+import { useSearchParams } from 'react-router-dom'
 import { api, errorMessage, unwrap } from '../api/client'
 import { useAccounts } from '../api/queries'
 import { Delta, EmptyState } from '../components/display'
 import { Alert, Field, Select } from '../components/ui'
 import { useFormat } from '../lib/useFormat'
+import { ExportTab } from '../reports/ExportTab'
+import { TaxSupport } from '../reports/TaxSupport'
 
-/** Realized result and income per calendar year, account and instrument, as the lots matched
- * them (FR-TX-12). Support for a tax return, not tax advice. */
+const TABS = ['realized', 'tax', 'export'] as const
+type Tab = (typeof TABS)[number]
+
+/** Reports: realized result and income (FR-TX-12), the annual tax-support report (FR-PF-11) and
+ * the export of your data (FR-TX-13). Support for a tax return, not tax advice. */
 export function Reports() {
+  const { t } = useTranslation()
+  const [params, setParams] = useSearchParams()
+  const raw = params.get('tab')
+  const tab: Tab = (TABS as readonly string[]).includes(raw ?? '') ? (raw as Tab) : 'realized'
+  const choose = (next: Tab) => {
+    const copy = new URLSearchParams(params)
+    if (next === 'realized') copy.delete('tab')
+    else copy.set('tab', next)
+    setParams(copy)
+  }
+  return (
+    <div className="space-y-4">
+      <h1 className="text-2xl font-semibold print:hidden">{t('nav.reports')}</h1>
+      <div
+        role="tablist"
+        aria-label={t('nav.reports')}
+        className="flex gap-2 border-b border-border print:hidden"
+      >
+        {TABS.map((id) => (
+          <button
+            key={id}
+            role="tab"
+            type="button"
+            aria-selected={tab === id}
+            onClick={() => choose(id)}
+            className={`min-h-10 px-3 text-sm ${
+              tab === id ? 'border-b-2 border-primary font-medium' : 'text-muted hover:underline'
+            }`}
+          >
+            {t(`reports.tabs.${id}`)}
+          </button>
+        ))}
+      </div>
+      {tab === 'realized' && <RealizedTab />}
+      {tab === 'tax' && <TaxSupport />}
+      {tab === 'export' && <ExportTab />}
+    </div>
+  )
+}
+
+function RealizedTab() {
   const { t } = useTranslation()
   const years = useQuery({
     queryKey: ['reports', 'years'],
@@ -19,7 +66,6 @@ export function Reports() {
   if (years.isError) return <Alert>{errorMessage(years.error)}</Alert>
   return (
     <div className="space-y-4">
-      <h1 className="text-2xl font-semibold">{t('nav.reports')}</h1>
       {years.data.length === 0 ? (
         <EmptyState title={t('reports.empty.title')} body={t('reports.empty.body')} />
       ) : (

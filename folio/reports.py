@@ -14,7 +14,7 @@ from dataclasses import dataclass
 from datetime import date
 from decimal import Decimal
 
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from folio.db.models import Account
@@ -84,6 +84,16 @@ def report_years(db: Session) -> list[int]:
     for day, _ in rows:
         years.add(day.year)
     return sorted(years, reverse=True)
+
+
+def history_years(db: Session, today: date) -> list[int]:
+    """Every calendar year from the first transaction to this one, newest first."""
+    first = db.scalar(
+        select(func.min(LedgerTransaction.trade_date)).where(
+            LedgerTransaction.deleted_at.is_(None), LedgerTransaction.status == "posted"
+        )
+    )
+    return [] if first is None else list(range(today.year, first.year - 1, -1))
 
 
 def year_report(db: Session, year: int, account_id: int | None = None) -> YearReport:
