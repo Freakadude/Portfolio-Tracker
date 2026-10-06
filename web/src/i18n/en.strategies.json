@@ -30,7 +30,7 @@
     },
     "empty": {
       "title": "No strategy yet",
-      "body": "Start from your sleeves: New strategy writes one with every target empty, so nothing fires until you set the numbers."
+      "body": "Start with the guided setup, which asks a few plain questions, or use New strategy for the full form with every target empty, so nothing fires until you set the numbers."
     },
     "editor": {
       "views": "Edit as",
@@ -209,6 +209,99 @@
       "confirmFor": "Confirm the order for {{name}}",
       "drop": "Drop",
       "dropFor": "Drop the order for {{name}}"
+    },
+    "wizard": {
+      "title": "Guided setup",
+      "step": "Step {{n}} of {{of}}",
+      "next": "Next",
+      "skip": "Skip",
+      "back": "Back",
+      "cancel": "Cancel",
+      "save": "Save this strategy",
+      "name": {
+        "title": "Name your plan",
+        "intro": "A strategy is your plan written down: how your money should be split and when Folio should warn you. This guide asks a few plain questions and writes it for you. You can change everything afterwards.",
+        "label": "What do you call this plan?"
+      },
+      "groups": {
+        "title": "Put your holdings into groups",
+        "intro": "A group (Folio calls it a sleeve) is a part of your portfolio with one job, for example 'World shares', 'Bonds' or 'Themes'. Make a few groups and choose one for each holding.",
+        "groupName": "Name of group {{n}}",
+        "newName": "Group {{n}}",
+        "add": "Add a group",
+        "remove": "Remove",
+        "caption": "Your holdings and their groups",
+        "holding": "Holding",
+        "share": "Share today",
+        "group": "Group",
+        "groupOf": "Group of {{name}}",
+        "none": "(no group)",
+        "noHoldings": "You have no holdings with an ISIN yet, so there is nothing to group. You can still make groups and add holdings later in the full form.",
+        "noIsin": "{{count}} holding without an ISIN is left out; add the ISIN on its page to include it.",
+        "unassigned": "Not in any group yet, so left out of the targets: {{names}}."
+      },
+      "targets": {
+        "title": "Set a target for each group",
+        "intro": "How much of your portfolio, in percent, should each group be? The targets must add up to 100. If you are unsure, start from today's mix and adjust later.",
+        "group": "Group",
+        "today": "Share today",
+        "target": "Target (%)",
+        "targetOf": "Target of {{name}}",
+        "useToday": "Use today's mix",
+        "total": "Total: {{total}} of 100 %"
+      },
+      "strictness": {
+        "title": "How strictly should Folio watch the targets?",
+        "intro": "A group is 'off target' when its share moves away from its target. Choose how many percentage points away Folio warns you (first the soft limit, then the firm one).",
+        "relaxed": "Relaxed",
+        "balanced": "Balanced (recommended)",
+        "tight": "Tight",
+        "detail": "Warn at {{soft}} points off target, firmly at {{hard}} points."
+      },
+      "alerts": {
+        "title": "Which alerts do you want?",
+        "intro": "Alerts appear in your inbox. Folio never trades for you; it only tells you.",
+        "drift": "A group has moved away from its target",
+        "trim": "A group has grown far above its target (time to consider taking profit)",
+        "trimOver": "How far above (points)",
+        "drawdown": "A holding has fallen from its highest price",
+        "drawdownPct": "Fall (%)",
+        "stale": "Prices have stopped updating",
+        "concentration": "One company is too large across all my funds (needs the funds' holdings uploaded)",
+        "concentrationPct": "Largest share (%)",
+        "more": "Rules about interest rates, correlations and price levels are in the full form."
+      },
+      "plan": {
+        "title": "Regular investing (optional)",
+        "intro": "If you put in a fixed amount on a schedule, Folio can remind you before it is due and suggest which group should get it. If you invest when you like, skip this.",
+        "use": "I invest a fixed amount regularly",
+        "amount": "Amount (EUR)",
+        "cadence": "How often",
+        "next": "Next date"
+      },
+      "principles": {
+        "title": "Your rules of thumb",
+        "intro": "Principles are short sentences about how you invest. The AI agent reads them when it reviews your portfolio.",
+        "own": "Your own principles",
+        "ownHint": "One per line. Optional."
+      },
+      "review": {
+        "title": "Check and save",
+        "intro": "This is what the guide will create. Nothing is saved until you press the button, and every part can be changed afterwards.",
+        "group_one": "{{name}}: target {{target}} %, {{count}} holding, warning at {{soft}} points off.",
+        "group_other": "{{name}}: target {{target}} %, {{count}} holdings, warning at {{soft}} points off.",
+        "drift": "Firm warning when a group is off target by the hard limit ({{hard}} points).",
+        "trim": "Take-profit alert when a group is {{over}} points above its target.",
+        "drawdown": "Alert when a holding falls {{pct}} % from its peak.",
+        "stale": "Alert when prices stop updating.",
+        "concentration": "Alert when one company is over {{pct}} % of the portfolio.",
+        "plan": "Reminder for your {{cadence}} investment of {{amount}} EUR.",
+        "saveAs": "Save as",
+        "off": "Save it switched off, so I can look at it first (recommended).",
+        "active": "Save it and make it the active strategy. It then sets the targets of your groups, and any other active strategy becomes a shadow."
+      },
+      "madeWith": "Made with the guided setup. Everything can be changed here.",
+      "start": "Guided setup"
     }
   },
   "strategyReview": {

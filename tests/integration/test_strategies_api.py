@@ -179,3 +179,88 @@ def test_a_deleted_strategy_is_gone_and_releases_the_sleeves(api: TestClient) ->
 def test_the_json_schema_is_served_for_the_form(api: TestClient) -> None:
     schema = api.get("/api/v1/strategies/schema").json()
     assert "strategy" in schema["properties"] and "StrategyDef" in schema["$defs"]
+
+
+# The definition the guided setup sends with every option on (web/src/strategies/wizardLogic.ts,
+# buildDefinition): kept here so the front end's shape and the schema cannot drift apart.
+WIZARD_DEFINITION: dict[str, Any] = {
+    "name": "My plan",
+    "base_currency": "EUR",
+    "principles": ["Rebalance by directing new contributions to underweight sleeves first."],
+    "prefer_buys": True,
+    "macro_series": {},
+    "sleeves": [
+        {
+            "id": "World",
+            "members": ["IE00B5BMR087"],
+            "target_pct": "70",
+            "soft_band_pp": "3",
+            "hard_band_pp": "6",
+            "trim_threshold_pct": "80",
+        },
+        {
+            "id": "Bonds",
+            "members": [],
+            "target_pct": "30",
+            "soft_band_pp": "3",
+            "hard_band_pp": "6",
+            "trim_threshold_pct": "40",
+        },
+    ],
+    "risk_limits": {"max_single_company_lookthrough_pct": "10", "max_thematic_total_pct": None},
+    "rules": [
+        {
+            "id": "drift",
+            "type": "drift_band",
+            "severity": "medium",
+            "cooldown_days": 7,
+            "applies_to": "all",
+        },
+        {
+            "id": "trims",
+            "type": "trim_threshold",
+            "severity": "high",
+            "cooldown_days": 14,
+            "applies_to": "all",
+        },
+        {
+            "id": "drawdown",
+            "type": "drawdown",
+            "severity": "medium",
+            "cooldown_days": 14,
+            "scope": "position",
+            "threshold_pct": "20",
+        },
+        {"id": "stale", "type": "stale_data", "severity": "high", "cooldown_days": 1},
+        {
+            "id": "concentration",
+            "type": "concentration_limit",
+            "severity": "medium",
+            "cooldown_days": 7,
+            "dimension": "company",
+            "limit_pct": "10",
+        },
+        {
+            "id": "contribution",
+            "type": "contribution_due",
+            "severity": "low",
+            "cooldown_days": 7,
+            "days_before": 3,
+        },
+    ],
+    "theses": [],
+    "contribution_plan": {"amount_eur": "250", "cadence": "monthly", "next_date": "2026-11-01"},
+}
+
+
+def test_a_definition_shaped_like_the_guided_setup_is_accepted_and_sets_the_targets(
+    api: TestClient,
+) -> None:
+    created = api.post(
+        "/api/v1/strategies", json={"definition": WIZARD_DEFINITION, "note": "guided setup"}
+    )
+    assert created.status_code == 201, created.text
+    assert api.post(f"/api/v1/strategies/{created.json()['id']}/mode", json={"mode": "active"})
+    sleeves = {x["name"]: x for x in api.get("/api/v1/sleeves").json()}
+    assert (D(sleeves["World"]["target_pct"]), D(sleeves["World"]["band_pct"])) == (70, 3)
+    assert D(sleeves["Bonds"]["target_pct"]) == 30

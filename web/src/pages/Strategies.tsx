@@ -24,6 +24,7 @@ import {
 } from '../strategies/api'
 import { Backtest } from '../strategies/Backtest'
 import { FormEditor } from '../strategies/FormEditor'
+import { Wizard } from '../strategies/Wizard'
 import { YamlEditor } from '../strategies/YamlEditor'
 
 type Tab = 'editor' | 'rules' | 'calculators' | 'backtest' | 'history'
@@ -38,6 +39,7 @@ export function Strategies() {
   const [params, setParams] = useSearchParams()
   const list = useStrategies()
   const invalidate = useInvalidateStrategies()
+  const guided = params.get('guided') === '1'
   const selected = params.get('id') ? Number(params.get('id')) : (list.data?.[0]?.id ?? null)
   const create = useMutation({
     mutationFn: async () => {
@@ -63,13 +65,26 @@ export function Strategies() {
           <Link to="/strategies/review" className="text-sm hover:underline">
             {t('strategyReview.link')}
           </Link>
+          <Button variant="secondary" onClick={() => setParams({ guided: '1' })} disabled={guided}>
+            {t('strategies.wizard.start')}
+          </Button>
           <Button onClick={() => create.mutate()} disabled={create.isPending}>
             {t('strategies.new')}
           </Button>
         </div>
       </div>
       {create.isError && <Alert>{errorMessage(create.error)}</Alert>}
-      {list.data.length === 0 ? (
+      {params.get('made') === '1' && (
+        <p role="status" className="text-sm text-muted">
+          {t('strategies.wizard.madeWith')}
+        </p>
+      )}
+      {guided ? (
+        <Wizard
+          onDone={(id) => setParams({ id: String(id), made: '1' })}
+          onCancel={() => setParams({})}
+        />
+      ) : list.data.length === 0 ? (
         <EmptyState title={t('strategies.empty.title')} body={t('strategies.empty.body')} />
       ) : (
         <>
