@@ -1,4 +1,4 @@
-import { useMemo } from 'react'
+import { useCallback, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link, useNavigate } from 'react-router-dom'
 import { toNumber } from '../../lib/format'
@@ -19,7 +19,8 @@ const n = (v: string | null | undefined) => toNumber(v) ?? 0
 /** Clicking a point on a chart over time opens the transactions up to that date. */
 export function useDateDrill() {
   const navigate = useNavigate()
-  return (date: string) => navigate(`/transactions?to=${date}`)
+  // stable, so a chart is not redrawn (and its zoom lost) every time its widget renders
+  return useCallback((date: string) => navigate(`/transactions?to=${date}`), [navigate])
 }
 
 export function ValueHistoryWidget({ data }: WidgetProps<ValueHistoryData>) {
@@ -48,24 +49,37 @@ export function ValueHistoryWidget({ data }: WidgetProps<ValueHistoryData>) {
   )
   if (data.empty) return <p className="text-sm text-muted">{data.reason}</p>
   return (
-    <ChartFrame
-      chart={
-        <TimeChart
-          series={series}
-          label={t('widgets.value_history')}
-          format={format}
-          logScale={data.log_scale}
-          onTimeClick={drill}
-        />
-      }
-      table={
-        <DataTable
-          caption={t('widgets.value_history')}
-          head={[t('charts.date'), t('widgets.value'), t('widgets.contributions')]}
-          rows={[...points].reverse().map((p) => [p.date, eur(p.value), eur(p.net_contributions)])}
-        />
-      }
-    />
+    <div className="flex h-full flex-col gap-1">
+      <p className="text-xs text-muted">
+        {t('widgets.historyRange', { start: data.start, end: data.end, period: data.period })}
+        {data.unpriced_before && (
+          <> {t('widgets.historyUnpricedBefore', { date: data.unpriced_before })}</>
+        )}
+        {!!data.unpriced_days && (
+          <> {t('widgets.historyUnpricedDays', { count: data.unpriced_days })}</>
+        )}
+      </p>
+      <ChartFrame
+        chart={
+          <TimeChart
+            series={series}
+            label={t('widgets.value_history')}
+            format={format}
+            logScale={data.log_scale}
+            onTimeClick={drill}
+          />
+        }
+        table={
+          <DataTable
+            caption={t('widgets.value_history')}
+            head={[t('charts.date'), t('widgets.value'), t('widgets.contributions')]}
+            rows={[...points]
+              .reverse()
+              .map((p) => [p.date, eur(p.value), eur(p.net_contributions)])}
+          />
+        }
+      />
+    </div>
   )
 }
 

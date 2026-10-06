@@ -262,9 +262,20 @@ def value_history(env: Env, cfg: Any) -> dict[str, Any]:
     ctx = context(env, account)
     if ctx.empty:
         return _empty("Add a transaction to see how your value develops.")
-    start, end = window_of(ctx, period_of(cfg, env, "MAX"), env)
+    period = period_of(cfg, env, "MAX")
+    start, end = window_of(ctx, period, env)
+    # Days on which a holding had no price (its price history starts later than the first
+    # transaction) leave that holding out of the value, so the line would sit far below what was
+    # paid in. The line starts on the first day after the last such day, so every point is a
+    # full valuation. If the newest day is itself short of a price, nothing is cut and the days
+    # without a price are counted, so the widget can say so.
     if cfg.scope.kind in ("portfolio", "account"):
         rows = svc.history(ctx, start + timedelta(days=1), end)
+        last_short = max((n for n, r in enumerate(rows) if r.unvalued), default=None)
+        cut = 0 if last_short is None or last_short == len(rows) - 1 else last_short + 1
+        skipped = rows[cut].day if cut else None  # where the line starts instead
+        rows = rows[cut:]
+        gaps = sum(1 for r in rows if r.unvalued)
         points = [
             {
                 "date": r.day.isoformat(),
@@ -275,14 +286,43 @@ def value_history(env: Env, cfg: Any) -> dict[str, Any]:
         ]
     else:
         series = series_for(env, ctx, cfg, start, end)
-        put_in = ZERO
+        ids = (
+            svc.instruments_in_sleeve(env.db, cfg.scope.id)
+            if cfg.scope.kind == "sleeve" and cfg.scope.id is not None
+            else [cfg.scope.id]
+        )
+        held = [i for i in ids if i in ctx.instruments]
+        offset = ctx.index(start)
+        short = [
+            any(ctx.instruments[i][offset + k].value is None for i in held)
+            for k in range(len(series))
+        ]
+        last_short = max((k for k in range(1, len(series)) if short[k]), default=None)
+        begin = 1 if last_short is None or last_short == len(series) - 1 else last_short + 1
+        skipped = series[begin].day if begin > 1 else None
+        gaps = sum(1 for k in range(begin, len(series)) if short[k])
+        put_in = sum((p.flow for p in series[1:begin]), ZERO)
         points = []
-        for p in series[1:]:
-            put_in += p.flow
+        for k in range(begin, len(series)):
+            put_in += series[k].flow
             points.append(
-                {"date": p.day.isoformat(), "value": str(p.value), "net_contributions": str(put_in)}
+                {
+                    "date": series[k].day.isoformat(),
+                    "value": str(series[k].value),
+                    "net_contributions": str(put_in),
+                }
             )
-    return {"points": thin(points, CHART_POINTS), "log_scale": cfg.log_scale}
+    if not points:
+        return _empty("There is no history to show for this period yet.")
+    return {
+        "points": thin(points, CHART_POINTS),
+        "log_scale": cfg.log_scale,
+        "period": period,
+        "start": points[0]["date"],
+        "end": points[-1]["date"],
+        "unpriced_before": None if skipped is None else skipped.isoformat(),
+        "unpriced_days": gaps,
+    }
 
 
 def drawdown_chart(env: Env, cfg: Any) -> dict[str, Any]:

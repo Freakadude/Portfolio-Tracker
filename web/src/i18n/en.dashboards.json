@@ -104,6 +104,10 @@
     }
   },
   "widgets": {
+    "historyRange": "{{start}} to {{end}} ({{period}}).",
+    "historyUnpricedBefore": "The line starts on {{date}}, the first day every holding had a price; before that the value would have been too low.",
+    "historyUnpricedDays_one": "{{count}} day in between is missing a price for one holding, so its value is understated.",
+    "historyUnpricedDays_other": "{{count}} days in between are missing a price for a holding, so their value is understated.",
     "kpi": "Key figure",
     "value_history": "Value history",
     "price_chart": "Price chart",

@@ -46,6 +46,11 @@ export interface KpiData extends Empty {
 export interface ValueHistoryData extends Empty {
   points?: { date: string; value: string; net_contributions: string }[]
   log_scale?: boolean
+  period?: string
+  start?: string
+  end?: string
+  unpriced_before?: string | null
+  unpriced_days?: number
 }
 
 export interface DrawdownData extends Empty {

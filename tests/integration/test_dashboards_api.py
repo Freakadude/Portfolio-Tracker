@@ -19,7 +19,7 @@ from folio.db.models_analytics import AppEvent
 from folio.db.models_ledger import PriceBar
 from folio.events import publish_event
 from folio.marketdata.fake import FakeProvider
-from tests.integration.test_portfolio import api, book, db, tx  # noqa: F401
+from tests.integration.test_portfolio import add_bars, api, book, db, tx  # noqa: F401
 from tests.marketdata_helpers import bars_for, make_ctx, make_listing
 
 D = Decimal
@@ -633,3 +633,24 @@ def test_a_portfolio_without_any_price_says_so_in_the_allocation(api, db) -> Non
     out = one(api, "allocation")
     assert out["empty"] is True and out["unvalued"] == 1
     assert "None of your holdings has a price yet" in out["reason"]
+
+
+def test_value_history_starts_where_every_holding_has_a_price(api, book, db) -> None:
+    """A second fund bought on 3 Jan whose price history only begins on 9 Jan: before that its
+    value is unknown, so the line must not start with the portfolio looking far smaller than
+    what was paid in."""
+    other, listing = make_listing(db, ticker="G", isin="IE00B4L5Y983")
+    add_bars(db, listing.id, {"2024-01-09": "50", "2024-01-10": "51", "2024-01-11": "52",
+                              "2024-01-12": "53"})  # fmt: skip
+    tx(api, account_id=book["account"], instrument_id=other.id, type="buy",
+       trade_date="2024-01-03", quantity="10", price="50")  # fmt: skip
+    clear_cache()
+    h = one(api, "value_history", {"period": "MAX"})
+    assert h["start"] == "2024-01-09" and h["unpriced_before"] == "2024-01-09"
+    assert h["points"][0]["date"] == "2024-01-09"
+    # the value then includes both funds: F's 15 units at the 9 Jan close plus G's 10 at 50
+    assert D(h["points"][0]["value"]) > D(h["points"][0]["net_contributions"]) - 400
+    assert h["unpriced_days"] == 0
+    short = one(api, "value_history", {"period": "1W"})
+    assert short["period"] == "1W" and short["start"] >= "2024-01-09"
+    assert len(short["points"]) <= len(h["points"]) + 1
