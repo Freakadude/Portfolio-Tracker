@@ -3879,10 +3879,14 @@ export interface components {
             account?: number | null;
             /** End */
             end?: string | null;
+            /** Instruments */
+            instruments?: number[];
             /** Period */
             period?: string | null;
             /** Start */
             start?: string | null;
+            /** Types */
+            types?: string[];
         };
         /** FxPrefillOut */
         FxPrefillOut: {

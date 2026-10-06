@@ -18,6 +18,8 @@ export interface Filters {
   account?: number | null
   start?: string | null // for the custom period
   end?: string | null
+  types?: string[] // instrument types to look at (asset classes)
+  instruments?: number[] // or these holdings; nothing chosen means everything
 }
 
 export interface WidgetRequest {
@@ -90,6 +92,8 @@ export function useWidgetData(requests: WidgetRequest[], filters: Filters) {
               account: filters.account ?? null,
               start: filters.period === 'CUSTOM' ? (filters.start ?? null) : null,
               end: filters.period === 'CUSTOM' ? (filters.end ?? null) : null,
+              types: filters.types ?? [],
+              instruments: filters.instruments ?? [],
             },
           },
         }),

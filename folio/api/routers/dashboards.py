@@ -316,6 +316,8 @@ class FiltersIn(BaseModel):
     account: int | None = None
     start: date | None = None
     end: date | None = None
+    types: list[str] = Field(default_factory=list, max_length=20)  # asset classes
+    instruments: list[int] = Field(default_factory=list, max_length=200)  # or these holdings
 
 
 class WidgetRequest(BaseModel):
@@ -348,7 +350,11 @@ def widgets_data(body: WidgetsDataIn, _user: UserDep, db: DbDep) -> WidgetsDataO
     """The data of many widgets in one request, so a dashboard shares one analytics context.
     A widget that cannot be drawn reports its own error without failing the others."""
     f = body.filters
-    env = Env(db, body.as_of or date.today(), Filters(f.period, f.account, f.start, f.end))
+    env = Env(
+        db,
+        body.as_of or date.today(),
+        Filters(f.period, f.account, f.start, f.end, tuple(f.types), tuple(f.instruments)),
+    )
     results: dict[str, WidgetResult] = {}
     for request in body.requests:
         try:

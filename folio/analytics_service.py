@@ -99,9 +99,12 @@ def build_context(
     today: date,
     account_id: int | None = None,
     extra_instrument_ids: Iterable[int] = (),
+    only_instruments: Iterable[int] | None = None,
 ) -> AnalyticsContext:
     extras = set(extra_instrument_ids)
-    valuation = Valuation.load(db, account_id=account_id, extra_instrument_ids=extras)
+    valuation = Valuation.load(
+        db, account_id=account_id, extra_instrument_ids=extras, only_instruments=only_instruments
+    )
     first = valuation.first_date()
     if first is None or first > today:
         return EMPTY
@@ -155,15 +158,17 @@ def get_context(
     today: date,
     account_id: int | None = None,
     extra_instrument_ids: Iterable[int] = (),
+    only_instruments: Iterable[int] | None = None,
 ) -> AnalyticsContext:
     extras = tuple(sorted(set(extra_instrument_ids)))
-    key = (data_fingerprint(db), account_id, extras, today)
+    only = None if only_instruments is None else tuple(sorted(set(only_instruments)))
+    key = (data_fingerprint(db), account_id, extras, today, only)
     with _lock:
         found = _cache.get(key)
         if found is not None:
             _cache.move_to_end(key)
             return found
-    context = build_context(db, today, account_id, extras)
+    context = build_context(db, today, account_id, extras, only)
     with _lock:
         _cache[key] = context
         while len(_cache) > CACHE_SIZE:

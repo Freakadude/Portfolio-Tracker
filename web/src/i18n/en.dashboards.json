@@ -7,6 +7,15 @@
     "year": "Year"
   },
   "dashboard": {
+    "scopeFilter": {
+      "label": "Which holdings the figures are about",
+      "show": "Show",
+      "everything": "Everything",
+      "types": "Instrument types",
+      "holdings": "Pick holdings",
+      "holdingsChosen_one": "{{count}} holding",
+      "holdingsChosen_other": "{{count}} holdings"
+    },
     "pricesChecked": "Prices last checked: {{when}}.",
     "pricesNeverChecked": "Prices have not been fetched yet by the worker.",
     "pricesNewestClose": "Newest closing price: {{date}}.",

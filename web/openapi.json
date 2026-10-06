@@ -3192,6 +3192,14 @@
             ],
             "title": "End"
           },
+          "instruments": {
+            "items": {
+              "type": "integer"
+            },
+            "maxItems": 200,
+            "title": "Instruments",
+            "type": "array"
+          },
           "period": {
             "anyOf": [
               {
@@ -3214,6 +3222,14 @@
               }
             ],
             "title": "Start"
+          },
+          "types": {
+            "items": {
+              "type": "string"
+            },
+            "maxItems": 20,
+            "title": "Types",
+            "type": "array"
           }
         },
         "title": "FiltersIn",

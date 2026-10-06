@@ -11,6 +11,7 @@ import { useFormat } from '../lib/useFormat'
 import { AddWidgetDialog } from './AddWidgetDialog'
 import { ConfigPanel } from './ConfigPanel'
 import { DashboardView, type Breakpoint } from './DashboardView'
+import { ScopeFilter } from './ScopeFilter'
 import {
   useDashboardActions,
   useDashboards,
@@ -46,6 +47,8 @@ export function DashboardHost({ dashboard }: { dashboard: Dashboard }) {
     account: saved.account ?? null,
     start: saved.start ?? null,
     end: saved.end ?? null,
+    types: saved.types ?? [],
+    instruments: saved.instruments ?? [],
   })
 
   // the filters belong to the dashboard: saved a moment after they stop changing
@@ -216,6 +219,11 @@ export function DashboardHost({ dashboard }: { dashboard: Dashboard }) {
           </Select>
         )}
       </div>
+
+      <ScopeFilter
+        filters={filters}
+        onChange={(patch) => setFilters((f) => ({ ...f, ...patch }))}
+      />
 
       {error !== undefined && error !== null && <Alert>{errorMessage(error)}</Alert>}
       {dashboard.widgets.length === 0 ? (

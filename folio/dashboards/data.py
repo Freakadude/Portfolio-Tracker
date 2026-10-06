@@ -27,7 +27,7 @@ from folio.db.models_analytics import MacroPoint, MacroSeries
 from folio.db.models_insight import NewsAssessment, NewsCluster, NewsLink, Recommendation
 from folio.db.models_ledger import Instrument, LedgerTransaction, Listing, PriceBar
 from folio.db.models_strategy import Signal
-from folio.positions import load_positions
+from folio.positions import load_positions, totals_for
 
 ZERO = Decimal(0)
 SPARK_POINTS = 60
@@ -44,6 +44,8 @@ class Filters:
     account: int | None = None
     start: date | None = None  # for a CUSTOM period
     end: date | None = None
+    types: tuple[str, ...] = ()  # asset classes to look at (ETF, STOCK, ...)
+    instruments: tuple[int, ...] = ()  # or these holdings; with both, either one counts
 
 
 @dataclass
@@ -83,8 +85,45 @@ def account_of(cfg: BaseConfig, env: Env) -> int | None:
     return env.filters.account if cfg.follow_filters else None
 
 
-def context(env: Env, account: int | None, extras: Sequence[int] = ()) -> svc.AnalyticsContext:
-    return svc.get_context(env.db, env.today, account, extras)
+def context(
+    env: Env,
+    account: int | None,
+    extras: Sequence[int] = (),
+    only: Sequence[int] | None = None,
+) -> svc.AnalyticsContext:
+    return svc.get_context(env.db, env.today, account, extras, only)
+
+
+def only_of(cfg: BaseConfig, env: Env) -> list[int] | None:
+    """The instruments the dashboard's type and holding filter lets through, or None when it is
+    not set (or this widget ignores the dashboard's filters or looks at one thing)."""
+    f = env.filters
+    if not (f.types or f.instruments) or not cfg.follow_filters:
+        return None
+    if cfg.scope.kind in ("sleeve", "instrument"):
+        return None
+    ids = set(f.instruments)
+    if f.types:
+        ids.update(
+            env.db.scalars(
+                select(Instrument.id).where(
+                    Instrument.asset_class.in_(f.types), Instrument.deleted_at.is_(None)
+                )
+            )
+        )
+    return sorted(ids)
+
+
+def context_for(env: Env, cfg: BaseConfig, extras: Sequence[int] = ()) -> svc.AnalyticsContext:
+    """The analytics context of a widget: its account and the dashboard's type or holding
+    filter. A filter that matches nothing you hold says so, instead of "add a transaction"."""
+    only = only_of(cfg, env)
+    ctx = context(env, account_of(cfg, env), extras, only)
+    if only is not None and ctx.empty:
+        raise WidgetDataError(
+            "Nothing you hold matches the type or holding filter. Change it above the widgets."
+        )
+    return ctx
 
 
 def window_of(ctx: svc.AnalyticsContext, period: str, env: Env) -> tuple[date, date]:
@@ -166,9 +205,8 @@ def kpi(env: Env, cfg: Any) -> dict[str, Any]:
     metric: str = cfg.metric
     kind = _KINDS[metric]
     base: dict[str, Any] = {"metric": metric, "kind": kind, "value": None, "sparkline": []}
-    account = account_of(cfg, env)
     extras = svc.benchmark_ids(env.db, 1) if metric == "beta" else []
-    ctx = context(env, account, extras)
+    ctx = context_for(env, cfg, extras)
     if ctx.empty:
         return {**base, **_empty("Add a transaction to see this figure.")}
     period = period_of(cfg, env)
@@ -258,8 +296,7 @@ def kpi(env: Env, cfg: Any) -> dict[str, Any]:
 
 
 def value_history(env: Env, cfg: Any) -> dict[str, Any]:
-    account = account_of(cfg, env)
-    ctx = context(env, account)
+    ctx = context_for(env, cfg)
     if ctx.empty:
         return _empty("Add a transaction to see how your value develops.")
     period = period_of(cfg, env, "MAX")
@@ -326,7 +363,7 @@ def value_history(env: Env, cfg: Any) -> dict[str, Any]:
 
 
 def drawdown_chart(env: Env, cfg: Any) -> dict[str, Any]:
-    ctx = context(env, account_of(cfg, env))
+    ctx = context_for(env, cfg)
     if ctx.empty:
         return _empty("Add a transaction to see drawdowns.")
     start, end = window_of(ctx, period_of(cfg, env, "MAX"), env)
@@ -346,7 +383,7 @@ def drawdown_chart(env: Env, cfg: Any) -> dict[str, Any]:
 
 
 def monthly(env: Env, cfg: Any) -> dict[str, Any]:
-    ctx = context(env, account_of(cfg, env))
+    ctx = context_for(env, cfg)
     if ctx.empty:
         return _empty("Add a transaction to see monthly returns.")
     series = series_for(env, ctx, cfg, ctx.days[0], env.today)
@@ -402,7 +439,7 @@ def allocation(env: Env, cfg: Any) -> dict[str, Any]:
             raise WidgetDataError(
                 "Look-through groups by company, sector, country or currency. Change the grouping."
             )
-        ctx = context(env, account_of(cfg, env))
+        ctx = context_for(env, cfg)
         opened = svc.look_through_at(env.db, ctx, env.today, cfg.group_by)
         if not opened.exposures:
             return _empty("Add a holding to see how your portfolio is divided.")
@@ -421,7 +458,7 @@ def allocation(env: Env, cfg: Any) -> dict[str, Any]:
         }
     if cfg.group_by in ("company", "country"):
         raise WidgetDataError(f"Grouping by {cfg.group_by} needs look-through switched on.")
-    ctx = context(env, account_of(cfg, env))
+    ctx = context_for(env, cfg)
     result, unvalued = svc.allocation_at(env.db, ctx, env.today, cfg.group_by)
     if result.total_eur == 0 and not result.slices:
         reason = (
@@ -453,7 +490,7 @@ def allocation(env: Env, cfg: Any) -> dict[str, Any]:
 
 def look_through(env: Env, cfg: Any) -> dict[str, Any]:
     """The largest underlying exposures across direct holdings and ETFs (FR-PF-05)."""
-    ctx = context(env, account_of(cfg, env))
+    ctx = context_for(env, cfg)
     opened = svc.look_through_at(env.db, ctx, env.today, cfg.dimension)
     if not opened.exposures:
         return _empty("Add a holding to see what you hold underneath.")
@@ -475,7 +512,7 @@ def look_through(env: Env, cfg: Any) -> dict[str, Any]:
 
 
 def drift_bars(env: Env, cfg: Any) -> dict[str, Any]:
-    ctx = context(env, account_of(cfg, env))
+    ctx = context_for(env, cfg)
     result, _ = svc.allocation_at(env.db, ctx, env.today, "sleeve")
     targets = svc.sleeve_targets(env.db)
     bars = [
@@ -519,6 +556,12 @@ def holdings_table(env: Env, cfg: Any) -> dict[str, Any]:
     rows, totals = load_positions(
         env.db, account_id=account_of(cfg, env), group_by_isin=True, today=env.today
     )
+    only = only_of(cfg, env)
+    if only is not None:
+        rows = [r for r in rows if r.instrument.id in set(only)]
+        totals = totals_for(rows)
+        if not rows:
+            return _empty("Nothing you hold matches the type or holding filter.")
     if not rows:
         return _empty("Add your first instrument and a transaction to see positions here.")
     meta = svc.load_meta(env.db, {r.instrument.id for r in rows})
@@ -574,8 +617,7 @@ def holdings_table(env: Env, cfg: Any) -> dict[str, Any]:
 
 
 def heatmap(env: Env, cfg: Any) -> dict[str, Any]:
-    account = account_of(cfg, env)
-    ctx = context(env, account)
+    ctx = context_for(env, cfg)
     if ctx.empty:
         return _empty("Add a holding to see how each position performed.")
     start, end = window_of(ctx, period_of(cfg, env, "1M"), env)
@@ -604,7 +646,7 @@ def heatmap(env: Env, cfg: Any) -> dict[str, Any]:
 
 
 def correlation(env: Env, cfg: Any) -> dict[str, Any]:
-    ctx = context(env, account_of(cfg, env))
+    ctx = context_for(env, cfg)
     held = svc.held_instruments(ctx, env.today)
     if len(held) < 2:
         return _empty("Hold at least two priced instruments to see how they move together.")
@@ -620,7 +662,7 @@ def correlation(env: Env, cfg: Any) -> dict[str, Any]:
 
 
 def return_bridge(env: Env, cfg: Any) -> dict[str, Any]:
-    ctx = context(env, account_of(cfg, env))
+    ctx = context_for(env, cfg)
     if ctx.empty:
         return _empty("Add a transaction to see where your result comes from.")
     start, end = window_of(ctx, period_of(cfg, env), env)
@@ -649,7 +691,7 @@ def return_bridge(env: Env, cfg: Any) -> dict[str, Any]:
 def attribution(env: Env, cfg: Any) -> dict[str, Any]:
     """What each position contributed to the period's result, in euro and in points of the return;
     the euro figures add up to the portfolio's result (FR-PF-07)."""
-    ctx = context(env, account_of(cfg, env))
+    ctx = context_for(env, cfg)
     if ctx.empty:
         return _empty("Add a transaction to see what each position contributed.")
     start, end = window_of(ctx, period_of(cfg, env, "1Y"), env)
@@ -683,7 +725,7 @@ def attribution(env: Env, cfg: Any) -> dict[str, Any]:
 
 def income(env: Env, cfg: Any) -> dict[str, Any]:
     account = account_of(cfg, env)
-    ctx = context(env, account)
+    ctx = context_for(env, cfg)
     if ctx.empty:
         return _empty("Dividends and interest will show here once you record them.")
     start, end = window_of(ctx, period_of(cfg, env, "1Y"), env)
@@ -831,7 +873,7 @@ def performance(env: Env, cfg: Any) -> dict[str, Any]:
     price_ids = [
         r["id"] for r in refs if r["kind"] in ("benchmark", "instrument") and r["id"] is not None
     ]
-    ctx = context(env, account_of(cfg, env), price_ids)
+    ctx = context_for(env, cfg, price_ids)
     if ctx.empty:
         return _empty("Add a transaction to compare your portfolio with benchmarks.")
     start, end = window_of(ctx, period_of(cfg, env), env)
@@ -1072,7 +1114,7 @@ def note(env: Env, cfg: Any) -> dict[str, Any]:
 def projection(env: Env, cfg: Any) -> dict[str, Any]:
     """The median and the 10th to 90th percentile band of the portfolio's future value with the
     widget's own assumptions, shown with the assumptions on the chart (FR-PF-12)."""
-    ctx = context(env, account_of(cfg, env))
+    ctx = context_for(env, cfg)
     if ctx.empty:
         return _empty("There is nothing to project yet: no transactions.")
     result = svc.project_portfolio(

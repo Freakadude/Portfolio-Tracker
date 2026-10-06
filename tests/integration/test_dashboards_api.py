@@ -676,3 +676,33 @@ def test_the_holdings_table_has_target_weights_and_the_latest_quote(api, book, d
     db.commit()
     row = one(api, "holdings_table")["rows"][0]
     assert D(row["latest"]) == D("109.5") and row["latest_at"].startswith("2024-01-15T10:00")
+
+
+def test_the_dashboard_can_look_at_one_type_or_some_holdings(api, book, db) -> None:
+    """The type and holding filters change the figures of every widget that follows the
+    dashboard: the book's fund F (1188 EUR) plus a stock G bought for 400 and worth 500."""
+    from folio.db.models_ledger import Instrument
+
+    stock, listing = make_listing(db, ticker="G", isin="US0378331005")
+    db.get(Instrument, stock.id).asset_class = "STOCK"  # type: ignore[union-attr]
+    add_bars(db, listing.id, {"2024-01-02": "40", "2024-01-12": "50"})
+    tx(api, account_id=book["account"], instrument_id=stock.id, type="buy",
+       trade_date="2024-01-02", quantity="10", price="40")  # fmt: skip
+    clear_cache()
+
+    def value(**filters: Any) -> Decimal:
+        return D(data(api, {"w": ("kpi", {"metric": "value"})}, **filters)["w"]["data"]["value"])
+
+    assert value() == 1688
+    assert value(types=["STOCK"]) == 500 and value(types=["ETF"]) == 1188
+    assert value(instruments=[stock.id]) == 500
+    assert value(types=["ETF"], instruments=[stock.id]) == 1688  # either one counts
+    table = data(api, {"w": ("holdings_table", {})}, types=["STOCK"])["w"]["data"]
+    assert [r["name"] for r in table["rows"]] == [stock.name]
+    assert D(table["totals"]["value"]) == 500
+    # a widget that does not follow the dashboard's filters is not narrowed
+    unfollowed = data(api, {"w": ("kpi", {"metric": "value", "follow_filters": False})},
+                      types=["STOCK"])["w"]["data"]  # fmt: skip
+    assert D(unfollowed["value"]) == 1688
+    nothing = data(api, {"w": ("kpi", {"metric": "value"})}, types=["BOND"])["w"]
+    assert nothing["error"] and "type or holding filter" in nothing["error"]

@@ -68,9 +68,13 @@ class Valuation:
         *,
         account_id: int | None = None,
         extra_instrument_ids: Iterable[int] = (),
+        only_instruments: Iterable[int] | None = None,
     ) -> Valuation:
         """Load the ledger and prices. `extra_instrument_ids` are priced too although no account
-        holds them (benchmarks, and anything else a chart compares against)."""
+        holds them (benchmarks, and anything else a chart compares against). With
+        `only_instruments` the portfolio is just those instruments: a view of part of it (a type
+        or some holdings), not a change to the ledger."""
+        only = None if only_instruments is None else set(only_instruments)
         query = select(Account).where(Account.deleted_at.is_(None))
         if account_id is not None:
             query = query.where(Account.id == account_id)
@@ -81,6 +85,8 @@ class Valuation:
             if account.track_cash:
                 track_cash.add(account.id)
             txs = account_transactions(db, account.id)
+            if only is not None:
+                txs = [t for t in txs if t.instrument_id in only]
             accounts[account.id] = build_timeline(
                 (to_txin(t) for t in txs), CostBasisMethod(account.cost_basis_method)
             )

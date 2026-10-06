@@ -37,7 +37,40 @@ test('the holdings widget columns are chosen, ordered and sorted in its settings
   await dialog.getByRole('button', { name: 'Save' }).click()
   await expect(dialog).toBeHidden()
   const table = page.getByRole('region', { name: 'Holdings', exact: true }).getByRole('table')
-  const headers = await table.getByRole('columnheader').allTextContents()
-  expect(headers.indexOf('Weight')).toBeLessThan(headers.indexOf('Value'))
-  expect(headers).toEqual(expect.arrayContaining(['Target weight', 'Latest price']))
+  await expect(table.getByRole('columnheader')).toHaveText([
+    'Instrument',
+    'Units',
+    'Weight',
+    'Value',
+    'Unrealized',
+    'Today',
+    'Target weight',
+    'Latest price',
+  ])
+})
+
+test('Home can look at one instrument type or some holdings, and remembers the choice', async ({
+  page,
+}) => {
+  await login(page)
+  await page.getByRole('link', { name: 'Home' }).click()
+  const row = page.getByRole('group', { name: 'Which holdings the figures are about' })
+  const everything = row.getByRole('button', { name: 'Everything' })
+  await expect(everything).toHaveAttribute('aria-pressed', 'true')
+  const types = row.getByRole('group', { name: 'Instrument types' }).getByRole('button')
+  const saved = page.waitForResponse(
+    (r) => r.request().method() === 'PATCH' && r.url().includes('/api/v1/dashboards/'),
+  )
+  await types.first().click()
+  await expect(types.first()).toHaveAttribute('aria-pressed', 'true')
+  await expect(everything).toHaveAttribute('aria-pressed', 'false')
+  await saved
+  await page.reload() // saved with the dashboard
+  await expect(types.first()).toHaveAttribute('aria-pressed', 'true')
+  await everything.click()
+  await expect(everything).toHaveAttribute('aria-pressed', 'true')
+  await row.locator('summary').click()
+  await row.getByRole('checkbox').first().check()
+  await expect(row.getByText('1 holding')).toBeVisible()
+  await everything.click()
 })
