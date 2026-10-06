@@ -191,7 +191,11 @@ def kpi(env: Env, cfg: Any) -> dict[str, Any]:
                 change_ratio=s(result.figures.twr if result.figures else None),
             )
     elif metric == "day_change":
-        day = series_for(env, ctx, cfg, env.today - timedelta(days=1), env.today)
+        # the last price day against the one before it, not "yesterday": on a weekend or before
+        # the close the calendar yesterday has the same price as today, which showed 0
+        priced = [d for d in ctx.trading_days if d <= env.today]
+        latest = max(priced) if priced else env.today
+        day = series_for(env, ctx, cfg, min(latest, env.today) - timedelta(days=1), env.today)
         one = svc.returns_for(day)
         if one is not None:
             base.update(value=s(one.pnl), change_ratio=s(one.figures.twr if one.figures else None))

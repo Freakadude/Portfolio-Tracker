@@ -294,9 +294,9 @@ def test_kpi_tiles_match_a_hand_computation(api, book) -> None:
     assert D(one(api, "kpi", {"metric": "net_contributions"})["value"]) == 1098
     assert D(one(api, "kpi", {"metric": "period_return", "period": "YTD"})["value"]) == 93
     assert D(one(api, "kpi", {"metric": "income", "period": "YTD"})["value"]) == 3
-    assert (
-        D(one(api, "kpi", {"metric": "day_change"})["value"]) == 0
-    )  # the last close is from 12 Jan
+    # 15 Jan is a Monday with no close yet: the change is the last close (108, 12 Jan) against
+    # the one before (107), on 11 units, not 0 from comparing 14 Jan with 15 Jan
+    assert D(one(api, "kpi", {"metric": "day_change"})["value"]) == 11
     assert one(api, "kpi", {"metric": "xirr", "period": "YTD"})["value"] is not None
     assert D(one(api, "kpi", {"metric": "twr", "period": "YTD"})["value"]) > 0
     cash = one(api, "kpi", {"metric": "cash"})

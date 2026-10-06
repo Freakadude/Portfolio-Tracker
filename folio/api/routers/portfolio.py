@@ -105,8 +105,11 @@ def summary(
         raise ApiError(422, "Invalid period", str(exc)) from exc
     now = valuation.point(end if period.upper() == "CUSTOM" else today)
     over_period = period_figures(valuation.point(start), now)
-    day = period_figures(valuation.point(now.day - dt.timedelta(days=1)), now)
     price_dates = [h.price.date for h in now.holdings if h.price is not None]
+    # the last price day against the one before it, not the calendar yesterday: on a weekend or
+    # before the close that day has the same price as today and the change showed 0
+    latest = min(now.day, max(price_dates)) if price_dates else now.day
+    day = period_figures(valuation.point(latest - dt.timedelta(days=1)), now)
     return SummaryOut(
         as_of=now.day,
         price_date=max(price_dates) if price_dates else None,
