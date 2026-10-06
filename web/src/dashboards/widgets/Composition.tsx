@@ -205,7 +205,6 @@ export function DriftBarsWidget({ data }: WidgetProps<DriftData>) {
 
 const COLUMN_KEYS = [
   'name',
-  'account',
   'quantity',
   'close',
   'value',
@@ -220,27 +219,24 @@ export function HoldingsTableWidget({ data, config }: WidgetProps<HoldingsData>)
   const { t } = useTranslation()
   const { eur, qty, pct } = useFormat()
   const rows = useMemo(() => data.rows ?? [], [data.rows])
-  const groupBy = (config.group_by as string | undefined) ?? data.group_by ?? 'none'
+  // one line per instrument: the account a holding sits in is not shown here, so an older
+  // dashboard that grouped by account or showed the account column is shown without them
+  const asked = (config.group_by as string | undefined) ?? data.group_by ?? 'none'
+  const groupBy = asked === 'account' ? 'none' : asked
   const columns = (
     (data.columns ?? ['name', 'quantity', 'value', 'weight', 'unrealized', 'day']) as string[]
-  ).filter((c) => (COLUMN_KEYS as readonly string[]).includes(c))
+  ).filter((c) => c !== 'account' && (COLUMN_KEYS as readonly string[]).includes(c))
   const groups = useMemo(() => {
     const out = new Map<string, typeof rows>()
     for (const r of rows) {
       const key =
-        groupBy === 'account'
-          ? r.account
-          : groupBy === 'sleeve'
-            ? (r.sleeve ?? '–')
-            : groupBy === 'asset_class'
-              ? r.asset_class
-              : ''
+        groupBy === 'sleeve' ? (r.sleeve ?? '–') : groupBy === 'asset_class' ? r.asset_class : ''
       out.set(key, [...(out.get(key) ?? []), r])
     }
     return [...out.entries()]
   }, [rows, groupBy])
   if (data.empty) return <p className="text-sm text-muted">{data.reason}</p>
-  const numeric = (c: string) => c !== 'name' && c !== 'account'
+  const numeric = (c: string) => c !== 'name'
   const cell = (r: (typeof rows)[number], c: string) => {
     switch (c) {
       case 'name':
@@ -249,8 +245,6 @@ export function HoldingsTableWidget({ data, config }: WidgetProps<HoldingsData>)
             {r.name}
           </Link>
         )
-      case 'account':
-        return r.account
       case 'quantity':
         return qty(r.quantity)
       case 'close':
@@ -300,7 +294,7 @@ export function HoldingsTableWidget({ data, config }: WidgetProps<HoldingsData>)
               </tr>
             )}
             {list.map((r) => (
-              <tr key={`${r.instrument_id}-${r.account}`} className="border-b border-border">
+              <tr key={r.instrument_id} className="border-b border-border">
                 {columns.map((c) => (
                   <td
                     key={c}

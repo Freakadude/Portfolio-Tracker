@@ -6496,9 +6496,20 @@
       },
       "PositionOut": {
         "properties": {
-          "account_id": {
-            "title": "Account Id",
+          "account_count": {
+            "title": "Account Count",
             "type": "integer"
+          },
+          "account_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Account Id"
           },
           "account_name": {
             "title": "Account Name",
@@ -6762,6 +6773,7 @@
           "note",
           "account_id",
           "account_name",
+          "account_count",
           "instrument_id",
           "isin",
           "name",
@@ -17537,6 +17549,7 @@
     },
     "/api/v1/positions": {
       "get": {
+        "description": "The positions, per account; with `group_by_isin` one line per instrument.",
         "operationId": "list_positions_api_v1_positions_get",
         "parameters": [
           {
@@ -17579,6 +17592,16 @@
             "schema": {
               "default": false,
               "title": "Include Closed",
+              "type": "boolean"
+            }
+          },
+          {
+            "in": "query",
+            "name": "group_by_isin",
+            "required": false,
+            "schema": {
+              "default": false,
+              "title": "Group By Isin",
               "type": "boolean"
             }
           }

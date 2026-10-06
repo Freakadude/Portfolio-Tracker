@@ -122,17 +122,44 @@ export function Holdings() {
   )
 }
 
+const GROUP_BY_ISIN_KEY = 'folio.holdings.groupByIsin'
+
+/** The "group by ISIN" choice, kept in this browser between visits. */
+function useGroupByIsin(): [boolean, (on: boolean) => void] {
+  const [on, setOn] = useState(() => {
+    try {
+      return localStorage.getItem(GROUP_BY_ISIN_KEY) === '1'
+    } catch {
+      return false
+    }
+  })
+  const set = (value: boolean) => {
+    setOn(value)
+    try {
+      localStorage.setItem(GROUP_BY_ISIN_KEY, value ? '1' : '0')
+    } catch {
+      /* the choice just is not remembered */
+    }
+  }
+  return [on, set]
+}
+
 function PositionsTab({ onAdd }: { onAdd: () => void }) {
   const { t } = useTranslation()
   const { eur, qty, pct } = useFormat()
   const [account, setAccount] = useState<number | undefined>()
   const [includeClosed, setIncludeClosed] = useState(false)
   const [groupMode, setGroupMode] = useState<GroupMode>('none')
+  const [byIsin, setByIsin] = useGroupByIsin()
   const [params, setParams] = useSearchParams()
   const accounts = useAccounts()
   const instruments = useInstruments('all')
   const sleeves = useSleeves()
-  const { data, isPending, isError, error } = usePositions({ account, includeClosed })
+  const { data, isPending, isError, error } = usePositions({
+    account,
+    includeClosed,
+    groupByIsin: byIsin,
+  })
   const filterBy = params.get('group_by')
   const filterValue = params.get('value')
   const sleeveName = useMemo(
@@ -185,6 +212,14 @@ function PositionsTab({ onAdd }: { onAdd: () => void }) {
         </Select>
       </label>
       <Checkbox
+        label={t('holdings.groupByIsin')}
+        checked={byIsin}
+        onChange={(e) => {
+          setByIsin(e.target.checked)
+          if (e.target.checked && groupMode === 'account') setGroupMode('none')
+        }}
+      />
+      <Checkbox
         label={t('holdings.showClosed')}
         checked={includeClosed}
         onChange={(e) => setIncludeClosed(e.target.checked)}
@@ -196,7 +231,7 @@ function PositionsTab({ onAdd }: { onAdd: () => void }) {
           value={groupMode}
           onChange={(e) => setGroupMode(e.target.value as GroupMode)}
         >
-          {GROUP_MODES.map((m) => (
+          {GROUP_MODES.filter((m) => !(byIsin && m === 'account')).map((m) => (
             <option key={m} value={m}>
               {t(`holdings.groupModes.${m}`)}
             </option>
@@ -345,7 +380,7 @@ function PositionsTab({ onAdd }: { onAdd: () => void }) {
               )}
               {g.rows.map((p) => (
                 <tr
-                  key={`${p.account_id}-${p.instrument_id}`}
+                  key={`${p.account_id ?? 'all'}-${p.instrument_id}`}
                   className="border-b border-border align-top"
                 >
                   <td className="px-3 py-2">

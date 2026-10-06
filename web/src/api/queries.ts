@@ -59,6 +59,7 @@ export function useInstruments(status: 'active' | 'archived' | 'all' = 'active')
 export interface PositionParams {
   account?: number
   includeClosed?: boolean
+  groupByIsin?: boolean
   asOf?: string
 }
 
@@ -68,7 +69,14 @@ export function usePositions(p: PositionParams = {}) {
     queryFn: () =>
       unwrap(
         api.GET('/api/v1/positions', {
-          params: { query: { account: p.account, include_closed: p.includeClosed, as_of: p.asOf } },
+          params: {
+            query: {
+              account: p.account,
+              include_closed: p.includeClosed,
+              group_by_isin: p.groupByIsin,
+              as_of: p.asOf,
+            },
+          },
         }),
       ),
   })

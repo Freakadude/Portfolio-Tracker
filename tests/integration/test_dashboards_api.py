@@ -420,6 +420,25 @@ def test_allocation_drift_and_holdings(api, book) -> None:
     assert row["sleeve"] == "core" and D(table["totals"]["value"]) == 1188
 
 
+def test_the_holdings_table_shows_one_line_per_instrument_whatever_the_accounts(api, book) -> None:
+    """Accounts are an administrative detail: a fund split over two accounts is one line, with
+    the units, cost and value of both, and the whole is the same as before."""
+    before = one(api, "holdings_table")
+    second = api.post("/api/v1/accounts", json={"name": "Savings"}).json()["id"]
+    tx(
+        api, account_id=second, instrument_id=book["fund"], type="buy",
+        trade_date="2024-01-09", quantity="5", price="105",
+    )  # fmt: skip
+    after = one(api, "holdings_table")
+    [row] = after["rows"]  # still one line
+    assert D(row["quantity"]) == 16 and D(row["value"]) == 16 * 108
+    assert row["account"] == "Degiro, Savings"
+    assert D(after["totals"]["value"]) == D(before["totals"]["value"]) + 5 * 108
+    assert D(row["cost_basis_eur"]) == D(before["rows"][0]["cost_basis_eur"]) + 525
+    only = one(api, "holdings_table", {"scope": {"kind": "account", "id": second}})
+    assert [(r["account"], D(r["quantity"])) for r in only["rows"]] == [("Savings", 5)]
+
+
 def test_returns_widgets(api, book) -> None:
     heat = one(api, "returns_heatmap", {"period": "YTD"})
     assert [c["name"] for c in heat["cells"]] == ["F fund"] and D(heat["cells"][0]["pnl_eur"]) == 93

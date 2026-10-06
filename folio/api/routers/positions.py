@@ -65,8 +65,9 @@ class PositionMetricsOut(BaseModel):
 
 
 class PositionOut(PositionMetricsOut):
-    account_id: int
-    account_name: str
+    account_id: int | None  # None for a line that groups several accounts
+    account_name: str  # the account, or the names of the grouped accounts
+    account_count: int
     instrument_id: int
     isin: str | None
     name: str
@@ -189,8 +190,9 @@ def _row_out(row: PositionRow) -> PositionOut:
     base = _metrics_out(row.state, row.metrics, row.price, row.weight, row.note)
     return PositionOut(
         **base.model_dump(),
-        account_id=row.account.id,
-        account_name=row.account.name,
+        account_id=row.account.id if len(row.accounts) == 1 else None,
+        account_name=", ".join(a.name for a in row.accounts),
+        account_count=len(row.accounts),
         instrument_id=row.instrument.id,
         isin=row.instrument.isin,
         name=row.instrument.name,
@@ -221,9 +223,15 @@ def list_positions(
     account: int | None = None,
     as_of: date | None = None,
     include_closed: Annotated[bool, Query()] = False,
+    group_by_isin: Annotated[bool, Query()] = False,
 ) -> PositionsOut:
+    """The positions, per account; with `group_by_isin` one line per instrument."""
     rows, totals = load_positions(
-        db, account_id=account, as_of=as_of, include_closed=include_closed
+        db,
+        account_id=account,
+        as_of=as_of,
+        include_closed=include_closed,
+        group_by_isin=group_by_isin,
     )
     return PositionsOut(positions=[_row_out(r) for r in rows], totals=_totals_out(totals))
 

@@ -108,6 +108,7 @@ const accounts = [
 ]
 
 beforeEach(() => {
+  localStorage.clear()
   vi.stubGlobal(
     'confirm',
     vi.fn(() => true),
@@ -252,6 +253,71 @@ describe('the positions table', () => {
       'Pension',
       'Total',
     ])
+  })
+})
+
+describe('grouping holdings with the same ISIN', () => {
+  const asml = (over: Record<string, unknown>) =>
+    position({
+      instrument_id: 7,
+      name: 'ASML Holding',
+      ticker: 'ASML',
+      isin: 'NL0010273215',
+      asset_class: 'EQUITY',
+      ...over,
+    })
+  const split = [
+    asml({ account_id: 1, account_name: 'Degiro', quantity: '4' }),
+    asml({ account_id: 2, account_name: 'Pension', quantity: '6' }),
+  ]
+  const together = [
+    asml({ account_id: null, account_name: 'Degiro, Pension', account_count: 2, quantity: '10' }),
+  ]
+  const two = [...accounts, { ...accounts[0], id: 2, name: 'Pension' }]
+
+  function listing() {
+    const asked: (string | null)[] = []
+    api({
+      '/api/v1/accounts': two,
+      '/api/v1/positions': (request: Request) => {
+        const grouped = new URL(request.url).searchParams.get('group_by_isin')
+        asked.push(grouped)
+        return { positions: grouped === 'true' ? together : split, totals }
+      },
+    })
+    return asked
+  }
+
+  it('lists a holding once per account until the box is ticked', async () => {
+    const asked = listing()
+    renderAt(<Holdings />)
+    await screen.findByRole('table')
+    expect(screen.getAllByRole('link', { name: 'ASML Holding' })).toHaveLength(2)
+    expect(screen.getByRole('cell', { name: 'Degiro' })).toBeInTheDocument()
+    expect(asked.at(-1)).toBe('false') // not asked for grouping
+
+    await userEvent.click(screen.getByLabelText('Group holdings with the same ISIN'))
+    await waitFor(() =>
+      expect(screen.getAllByRole('link', { name: 'ASML Holding' })).toHaveLength(1),
+    )
+    expect(asked.at(-1)).toBe('true')
+    expect(screen.getByRole('cell', { name: 'Degiro, Pension' })).toBeInTheDocument()
+    expect(screen.getByRole('cell', { name: '10' })).toBeInTheDocument() // 4 + 6 in one line
+  })
+
+  it('takes away the grouping by account, which no longer makes sense, and remembers the choice', async () => {
+    listing()
+    const first = renderAt(<Holdings />)
+    await screen.findByRole('table')
+    expect(screen.getByRole('option', { name: 'Account' })).toBeInTheDocument()
+    await userEvent.click(screen.getByLabelText('Group holdings with the same ISIN'))
+    await waitFor(() => expect(screen.queryByRole('option', { name: 'Account' })).toBeNull())
+    expect(localStorage.getItem('folio.holdings.groupByIsin')).toBe('1')
+    first.unmount()
+
+    renderAt(<Holdings />) // another visit: still ticked
+    await screen.findByRole('table')
+    expect(screen.getByLabelText('Group holdings with the same ISIN')).toBeChecked()
   })
 })
 

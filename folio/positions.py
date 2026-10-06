@@ -49,6 +49,13 @@ class PositionRow:
     metrics: PositionMetrics | None = None
     weight: Decimal | None = None
     note: str | None = None
+    # Every account behind this row: one for an ordinary row, several once the accounts holding
+    # the same instrument have been grouped into one line.
+    accounts: list[Account] = field(default_factory=list)
+
+    def __post_init__(self) -> None:
+        if not self.accounts:
+            self.accounts = [self.account]
 
 
 @dataclass
@@ -106,6 +113,7 @@ def merge_states(instrument_id: int, states: list[PositionState]) -> PositionSta
         merged.income_eur += state.income_eur
         merged.invested_eur += state.invested_eur
         merged.proceeds_eur += state.proceeds_eur
+        merged.net_invested_eur += state.net_invested_eur
         if state.first_trade_date and (
             merged.first_trade_date is None or state.first_trade_date < merged.first_trade_date
         ):
@@ -186,8 +194,12 @@ def load_positions(
     account_id: int | None = None,
     as_of: date | None = None,
     include_closed: bool = False,
+    group_by_isin: bool = False,
     today: date | None = None,
 ) -> tuple[list[PositionRow], Totals]:
+    """The positions, one row per account and instrument. With `group_by_isin` the accounts that
+    hold the same instrument (the same ISIN) are one row, as the portfolio sees them: the figures
+    are those of the merged lots, valued once. Weights are always shares of the whole portfolio."""
     today = today or date.today()
     valuation = as_of or today
     accounts = list(
@@ -225,7 +237,44 @@ def load_positions(
                 row.weight = row.metrics.market_value_eur / portfolio_value
 
     shown = [r for r in rows if account_id is None or r.account.id == account_id]
+    if group_by_isin:
+        shown = _grouped(shown, quotes)
     return shown, totals_for(shown)
+
+
+def _grouped(
+    rows: list[PositionRow],
+    quotes: dict[int, tuple[Quote | None, PriceInfo | None, str | None]],
+) -> list[PositionRow]:
+    """One row per instrument, in the order the instruments first appear."""
+    by_instrument: dict[int, list[PositionRow]] = {}
+    for row in rows:
+        by_instrument.setdefault(row.instrument.id, []).append(row)
+    out: list[PositionRow] = []
+    for instrument_id, group in by_instrument.items():
+        first = group[0]
+        if len(group) == 1:
+            out.append(first)
+            continue
+        state = merge_states(instrument_id, [r.state for r in group])
+        quote = quotes[instrument_id][0]
+        weights = [r.weight for r in group if r.weight is not None]
+        with precise():
+            weight = sum(weights, ZERO) if weights else None
+        out.append(
+            PositionRow(
+                account=first.account,
+                instrument=first.instrument,
+                listing=first.listing,
+                state=state,
+                price=first.price,
+                metrics=None if quote is None else position_metrics(state, quote),
+                weight=weight,
+                note=first.note,
+                accounts=[r.account for r in group],
+            )
+        )
+    return out
 
 
 def totals_for(rows: list[PositionRow]) -> Totals:

@@ -452,7 +452,10 @@ def drift_bars(env: Env, cfg: Any) -> dict[str, Any]:
 
 
 def holdings_table(env: Env, cfg: Any) -> dict[str, Any]:
-    rows, totals = load_positions(env.db, account_id=account_of(cfg, env), today=env.today)
+    # one line per instrument: the accounts it is split over are an administrative detail here
+    rows, totals = load_positions(
+        env.db, account_id=account_of(cfg, env), group_by_isin=True, today=env.today
+    )
     if not rows:
         return _empty("Add your first instrument and a transaction to see positions here.")
     meta = svc.load_meta(env.db, {r.instrument.id for r in rows})
@@ -463,7 +466,7 @@ def holdings_table(env: Env, cfg: Any) -> dict[str, Any]:
             {
                 "instrument_id": r.instrument.id,
                 "name": r.instrument.name,
-                "account": r.account.name,
+                "account": ", ".join(a.name for a in r.accounts),
                 "asset_class": r.instrument.asset_class,
                 "sleeve": meta[r.instrument.id].sleeve if r.instrument.id in meta else None,
                 "quantity": str(r.state.quantity),

@@ -15,6 +15,7 @@
     "tabs": { "positions": "Positions", "instruments": "Instruments" },
     "add": "Add instrument",
     "showClosed": "Show closed positions",
+    "groupByIsin": "Group holdings with the same ISIN",
     "account": "Account",
     "allAccounts": "All accounts",
     "groupBy": "Group by",

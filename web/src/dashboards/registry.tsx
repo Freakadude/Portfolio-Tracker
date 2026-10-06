@@ -153,7 +153,7 @@ const DEFS: Record<string, Omit<WidgetDef, 'type'>> = {
       {
         key: 'group_by',
         kind: 'select',
-        options: ['none', 'account', 'sleeve', 'asset_class'],
+        options: ['none', 'sleeve', 'asset_class'],
         labels: 'widgets.tableGroups',
       },
       {
@@ -161,7 +161,6 @@ const DEFS: Record<string, Omit<WidgetDef, 'type'>> = {
         kind: 'multi',
         options: [
           'name',
-          'account',
           'quantity',
           'close',
           'value',

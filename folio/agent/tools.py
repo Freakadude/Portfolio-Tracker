@@ -306,7 +306,7 @@ class ToolBox:
     def _positions(self, args: Mapping[str, Any]) -> dict[str, Any]:
         day = self._today()
         wanted = str(args.get("filter", "all"))
-        rows, _totals = load_positions(self.db, today=day)
+        rows, _totals = load_positions(self.db, group_by_isin=True, today=day)  # one per fund
         mapping = sleeve_of_instruments(self.db, self.strategy) if self.strategy else {}
         out_rows: list[dict[str, Any]] = []
         for r in rows:

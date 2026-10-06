@@ -203,6 +203,46 @@ def test_a_missing_ecb_rate_leaves_the_market_value_empty_with_an_explanation(
     assert aaa["market_value_eur"] is None and "No ECB rate for USD" in aaa["note"]
 
 
+def test_accounts_holding_the_same_instrument_can_be_grouped_into_one_line(
+    api: TestClient, book: dict[str, Any]
+) -> None:
+    """The list is per account for the administration; grouped by ISIN it is one line per
+    instrument with the merged figures, valued once, and the totals do not change."""
+    other = api.post("/api/v1/accounts", json={"name": "Broker B"}).json()["id"]
+    post(api, account_id=other, instrument_id=book["sxr8"], type="buy", trade_date="2024-03-10",
+         quantity="5", price="110", fees="1")  # fmt: skip  # 5 units, cost 551
+    plain = api.get(f"/api/v1/positions?as_of={VALUATION}").json()
+    grouped = api.get(f"/api/v1/positions?as_of={VALUATION}&group_by_isin=true").json()
+    assert [p["ticker"] for p in plain["positions"] if p["ticker"] == "SXR8"] == ["SXR8", "SXR8"]
+    assert {p["account_name"] for p in plain["positions"] if p["ticker"] == "SXR8"} == {
+        "Degiro",
+        "Broker B",
+    }
+    assert all(p["account_count"] == 1 and p["account_id"] for p in plain["positions"])
+
+    [line] = [p for p in grouped["positions"] if p["ticker"] == "SXR8"]
+    assert D(line["quantity"]) == 10  # 5 + 5
+    assert D(line["cost_basis_eur"]) == D("600.5") + 551
+    assert close(line["avg_cost_eur"], (D("600.5") + 551) / 10)
+    assert D(line["market_value_eur"]) == 1400  # 10 x 140, valued once
+    assert close(line["unrealized_pnl_eur"], 1400 - (D("600.5") + 551))
+    assert D(line["realized_pnl_eur"]) == D("346.5")  # the realized result of the first account
+    assert (line["account_id"], line["account_count"]) == (None, 2)
+    assert line["account_name"] == "Broker B, Degiro"
+    plain_weight = sum(
+        D(p["weight"]) for p in plain["positions"] if p["ticker"] == "SXR8" and p["weight"]
+    )
+    assert abs(D(line["weight"]) - plain_weight) < D("1E-12")
+
+    assert len(grouped["positions"]) == len(plain["positions"]) - 1
+    for key in ("market_value_eur", "cost_basis_eur", "unrealized_pnl_eur", "realized_pnl_eur"):
+        assert abs(D(grouped["totals"][key]) - D(plain["totals"][key])) < D("1E-9"), key
+    # a filter to one account still lists that account's own units
+    one = api.get(f"/api/v1/positions?as_of={VALUATION}&group_by_isin=true&account={other}").json()
+    [mine] = one["positions"]
+    assert (D(mine["quantity"]), mine["account_id"]) == (5, other)
+
+
 def test_position_detail_lists_lots_matches_and_history(
     api: TestClient, book: dict[str, Any]
 ) -> None:

@@ -1633,7 +1633,10 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** List Positions */
+        /**
+         * List Positions
+         * @description The positions, per account; with `group_by_isin` one line per instrument.
+         */
         get: operations["list_positions_api_v1_positions_get"];
         put?: never;
         post?: never;
@@ -4802,8 +4805,10 @@ export interface components {
         };
         /** PositionOut */
         PositionOut: {
+            /** Account Count */
+            account_count: number;
             /** Account Id */
-            account_id: number;
+            account_id: number | null;
             /** Account Name */
             account_name: string;
             /** Asset Class */
@@ -9732,6 +9737,7 @@ export interface operations {
                 account?: number | null;
                 as_of?: string | null;
                 include_closed?: boolean;
+                group_by_isin?: boolean;
             };
             header?: never;
             path?: never;

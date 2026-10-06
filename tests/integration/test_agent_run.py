@@ -407,6 +407,30 @@ def test_in_privacy_mode_no_euro_amount_of_the_owners_money_is_returned(db: Sess
     )
 
 
+def test_a_holding_split_over_two_accounts_is_one_position_to_the_agent(db: Session, world) -> None:
+    from datetime import date
+
+    from folio.db.models import Account
+    from folio.ledger_service import TransactionIn, create_transaction
+
+    second = Account(name="Savings")
+    db.add(second)
+    db.flush()
+    create_transaction(
+        db,
+        TransactionIn(
+            account_id=second.id, instrument_id=world["asml"], type="buy",
+            trade_date=date(2024, 1, 3), quantity=D(5), price=D(100),
+        ),
+    )  # fmt: skip
+    db.commit()
+    box, _ = tools(db, privacy=False)
+    positions, _ = box.run("get_positions", {"filter": "all"})
+    asml = [p for p in positions["positions"] if p["isin"] == "NL0010273215"]
+    assert len(asml) == 1 and D(asml[0]["quantity"]) == 10  # 5 + 5, one line
+    assert abs(sum(D(p["weight"]) for p in positions["positions"]) - 1) < D("1E-20")
+
+
 def test_the_calculator_stores_what_it_computed_so_a_recommendation_can_point_at_it(
     db: Session, world
 ) -> None:

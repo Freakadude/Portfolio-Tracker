@@ -8,7 +8,11 @@ import { OTHER, colorOf, divergeFill, foldTail } from './dashboards/charts/palet
 import { squarify } from './dashboards/charts/Treemap'
 import { REGISTRY, WIDGET_TYPES } from './dashboards/registry'
 import { useLiveUpdates } from './dashboards/useLiveUpdates'
-import { AllocationWidget, DriftBarsWidget } from './dashboards/widgets/Composition'
+import {
+  AllocationWidget,
+  DriftBarsWidget,
+  HoldingsTableWidget,
+} from './dashboards/widgets/Composition'
 import { PerformanceWidget } from './dashboards/widgets/History'
 import {
   AttributionWidget,
@@ -242,6 +246,51 @@ describe('the donut', () => {
     slice.focus()
     await userEvent.keyboard('{Enter}')
     expect(onSelect).toHaveBeenCalledWith('A')
+  })
+})
+
+describe('the holdings table', () => {
+  it('shows one line per instrument and never the account, even for an older dashboard', () => {
+    const row = {
+      instrument_id: 7,
+      name: 'ASML Holding',
+      account: 'Degiro, Pension',
+      asset_class: 'EQUITY',
+      sleeve: null,
+      quantity: '10',
+      avg_cost_eur: '100',
+      cost_basis_eur: '1000',
+      close: '110',
+      close_date: '2024-04-10',
+      stale: false,
+      value: '1100',
+      weight: '0.5',
+      unrealized: '100',
+      unrealized_ratio: '0.1',
+      day: '5',
+      day_ratio: '0.004',
+      total_return: '100',
+      income: '0',
+    }
+    page(
+      <HoldingsTableWidget
+        data={
+          {
+            columns: ['name', 'account', 'quantity'],
+            group_by: 'account',
+            rows: [row],
+            totals: {},
+          } as never
+        }
+        config={{ group_by: 'account' }}
+        filters={{}}
+      />,
+    )
+    expect(screen.getByRole('columnheader', { name: 'Instrument' })).toBeInTheDocument()
+    expect(screen.queryByRole('columnheader', { name: 'Account' })).toBeNull()
+    expect(screen.queryByRole('rowheader')).toBeNull() // no group heading
+    expect(screen.getAllByRole('link', { name: 'ASML Holding' })).toHaveLength(1)
+    expect(screen.queryByText('Degiro, Pension')).toBeNull()
   })
 })
 
