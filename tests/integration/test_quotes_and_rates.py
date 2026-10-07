@@ -1,6 +1,7 @@
 """Delayed quotes within the budget (FR-MD-05), retention (FR-SY-09) and the ECB deposit rate
 used as the risk-free rate (FR-PF-06)."""
 
+from dataclasses import replace
 from datetime import UTC, date, datetime, timedelta
 from decimal import Decimal
 from typing import Any
@@ -181,7 +182,7 @@ def test_the_nightly_closes_still_run_when_quotes_are_paused(api, db, settings) 
     )
     ctx = budget_ctx(settings, provider, limit=10, used=5)
     quotes_job(ctx)  # paused
-    result = eod_job(ctx, "XETR", day=day)
+    result = eod_job(replace(ctx, now=lambda: NIGHT), "XETR", day=day)  # after the close
     assert result.status == "ok"
     db.expire_all()
     assert db.scalar(select(PriceBar).where(PriceBar.date == day)) is not None  # FR-MD-05
@@ -211,7 +212,10 @@ def test_a_position_carries_a_newer_delayed_quote_with_its_time(api, db, setting
     assert D(price["delayed_price"]) == D("109.5") and price["delayed_source"] == "fake"
     assert price["delayed_at"].startswith("2024-01-09T10:00")
     assert price["date"] == "2024-01-08"  # the close it is newer than
-    assert D(rows[0]["market_value_eur"]) == 10 * D(price["close"])  # values stay end-of-day
+    # while the market is open the holding is worth its newest quote; the close stays the close
+    assert D(price["close"]) == D("104")
+    assert D(rows[0]["market_value_eur"]) == 10 * D("109.5")
+    assert D(rows[0]["day_change_eur"]) == 10 * (D("109.5") - D("104"))  # against the last close
 
     older = api.get("/api/v1/positions", params={"as_of": "2024-01-08"}).json()["positions"]
     assert older[0]["price"]["delayed_price"] is None  # a past date never shows today's quote

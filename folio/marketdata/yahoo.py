@@ -103,7 +103,10 @@ class YahooProvider:
     def get_quotes(self, listings: Sequence[ListingRef]) -> dict[int, Quote]:
         quotes: dict[int, Quote] = {}
         for listing in listings:
-            result = self._chart(listing.symbol_for(self.name), range="1d")
+            try:
+                result = self._chart(listing.symbol_for(self.name), range="1d")
+            except SymbolNotFound:  # one unknown symbol must not cost the others their quotes
+                continue
             meta = result.get("meta", {})
             price, ts = meta.get("regularMarketPrice"), meta.get("regularMarketTime")
             if price is not None and ts is not None:

@@ -60,7 +60,7 @@ def eod_job(
         if not exchanges.is_trading_day(mic, local_day):
             log.info(f"{mic} is closed on {local_day.isoformat()}; no prices requested.")
             return
-        prices = PriceService(db, ctx.chain_for(db))
+        prices = PriceService(db, ctx.chain_for(db), ctx.now())
         stored = 0
         for listing, instrument in tracked_listings(db, mic):
             try:
@@ -107,7 +107,7 @@ def gap_job(ctx: JobContext, days: int = GAP_WINDOW_DAYS) -> JobResult:
 
     def body(db: Session, log: JobLog) -> None:
         today = ctx.today()
-        prices = PriceService(db, ctx.chain_for(db))
+        prices = PriceService(db, ctx.chain_for(db), ctx.now())
         for listing, instrument in tracked_listings(db):
             ref = listing_ref(listing, instrument.isin)
             start = today - timedelta(days=days)
@@ -130,7 +130,7 @@ def refresh_job(ctx: JobContext) -> JobResult:
 
     def body(db: Session, log: JobLog) -> None:
         today = ctx.today()
-        prices = PriceService(db, ctx.chain_for(db))
+        prices = PriceService(db, ctx.chain_for(db), ctx.now())
         tracked = tracked_listings(db)
         if not tracked:
             log.info("Nothing is tracked yet.")
@@ -186,6 +186,10 @@ def quotes_job(ctx: JobContext, only_if_open: bool = False) -> JobResult:
             log.info(f"No quotes fetched ({why or 'no provider is enabled'}).")
             return
         log.info(f"{summary.stored} new quote(s) for {len(listings)} listing(s) ({summary.source})")
+        if summary.missing:  # not an error: a wrong symbol must not mark every run as failed
+            log.info(
+                f"No quote for {', '.join(summary.missing)} ({summary.source} does not know it)."
+            )
         if summary.stored:
             publish_event(db, PRICE_UPDATE, {"source": "quotes"})
         for provider, reason in summary.skipped.items():
@@ -241,7 +245,7 @@ def backfill_job(ctx: JobContext, listing_id: int) -> JobResult:
             if first
             else today - timedelta(days=BACKFILL_DEFAULT_DAYS)
         )
-        prices = PriceService(db, ctx.chain_for(db))
+        prices = PriceService(db, ctx.chain_for(db), ctx.now())
         summary = prices.backfill(listing_ref(listing, instrument.isin), start, today)
         log.info(
             f"{listing.ticker}: {summary.stored} closes from {start.isoformat()} ({summary.source})"

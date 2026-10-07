@@ -5,7 +5,7 @@ from __future__ import annotations
 
 from collections.abc import Iterable
 from dataclasses import dataclass
-from datetime import date, timedelta
+from datetime import date, datetime, timedelta
 from decimal import Decimal
 
 from sqlalchemy import func, select
@@ -19,6 +19,7 @@ from folio.marketdata.fallback import ProviderChain
 
 STALE_AFTER_TRADING_DAYS = 3
 RECENT_WINDOW_DAYS = 10  # how far back a nightly update looks when it has no stored bars
+RECHECK_DAYS = 5  # a nightly update also asks again for this many days before its newest bar
 MANUAL = "manual"
 
 
@@ -42,9 +43,14 @@ class FetchSummary:
 
 
 class PriceService:
-    def __init__(self, db: Session, chain: ProviderChain | None = None) -> None:
+    def __init__(
+        self, db: Session, chain: ProviderChain | None = None, now: datetime | None = None
+    ) -> None:
+        """`now`: when given, a bar of a session that has not finished by then is not stored: a
+        provider reports the price so far as that day's close, and it would stay wrong."""
         self._db = db
         self._chain = chain
+        self._now = now
 
     # --- reading --------------------------------------------------------------------------------
 
@@ -151,7 +157,13 @@ class PriceService:
         else:
             expect_data = True
         result = self._chain.get_eod(ref, start, end, require_bars=expect_data)
-        stored = self.store_bars(ref.listing_id, result.data, result.source)
+        bars = result.data
+        if self._now is not None and exchanges.has_calendar(ref.exchange_mic):
+            mic, today = ref.exchange_mic, exchanges.local_date(ref.exchange_mic, self._now)
+            bars = [
+                b for b in bars if b.date != today or exchanges.session_over(mic, b.date, self._now)
+            ]
+        stored = self.store_bars(ref.listing_id, bars, result.source)
         return FetchSummary(ref.listing_id, result.source, stored, (start, end))
 
     def backfill(self, ref: ListingRef, start: date, end: date) -> FetchSummary:
@@ -159,13 +171,15 @@ class PriceService:
         return self._fetch(ref, start, end)
 
     def update_latest(self, ref: ListingRef, today: date) -> FetchSummary:
-        """Fetch everything after the newest stored close (or the recent past if none)."""
+        """Fetch the newest closes: everything after the newest stored close, starting a few days
+        earlier so a close stored too early (or corrected by the provider since) is repaired in
+        the same call. With nothing stored, the recent past."""
         last = self.last_bar(ref.listing_id)
         start = (
-            last.date + timedelta(days=1) if last else today - timedelta(days=RECENT_WINDOW_DAYS)
+            last.date - timedelta(days=RECHECK_DAYS)
+            if last
+            else today - timedelta(days=RECENT_WINDOW_DAYS)
         )
-        if start > today:
-            return FetchSummary(ref.listing_id, None, 0, None)
         return self._fetch(ref, start, today)
 
     # --- gaps and staleness ---------------------------------------------------------------------

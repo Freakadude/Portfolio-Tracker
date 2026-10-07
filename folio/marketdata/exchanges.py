@@ -112,6 +112,23 @@ def is_open(mic: str, at: datetime) -> bool:
     return bool(cal.is_open_on_minute(stamp, ignore_breaks=True))
 
 
+def session_over(mic: str, day: date, now: datetime) -> bool:
+    """Whether the session of exchange-local `day` has finished at `now` (a day without a session
+    counts as over). A close fetched before this is the price so far, not a close."""
+    cal = calendar(mic)
+    stamp = pd.Timestamp(day)
+    if not cal.is_session(stamp):
+        return True
+    return bool(now >= cal.session_close(stamp).to_pydatetime())
+
+
+def local_date(mic: str, at: datetime) -> date:
+    """The exchange-local calendar date of a moment (UTC for a listing without a calendar)."""
+    if not has_calendar(mic):
+        return at.astimezone(UTC).date()
+    return at.astimezone(ZoneInfo(str(calendar(mic).tz))).date()
+
+
 def previous_trading_day(mic: str, day: date) -> date | None:
     """The latest session on or before `day`."""
     days = trading_days(mic, day - timedelta(days=14), day)

@@ -101,7 +101,8 @@ class ProviderChain:
                 raise ProviderError("kept in reserve for the nightly closes")
             return provider.get_quotes(listings)
 
-        return self._first("quotes", ask)
+        # a provider that knows none of the symbols has nothing to offer: ask the next one
+        return self._first("quotes", ask, lambda quotes: bool(quotes) or not listings)
 
     def probe(self, symbol: str) -> FetchResult[SymbolMeta] | None:
         """Ask the providers, in order, to confirm what they know about a symbol."""

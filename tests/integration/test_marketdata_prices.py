@@ -82,11 +82,12 @@ def test_update_latest_only_asks_for_what_is_new(db) -> None:  # type: ignore[no
     service.backfill(ref, JAN_2, JAN_12)
     provider.ranges.clear()
     summary = service.update_latest(ref, today=date(2024, 1, 17))
-    assert provider.ranges == [(date(2024, 1, 13), date(2024, 1, 17))]
-    assert summary.stored == 3  # 15, 16 and 17 January
+    # the newest stored close was 12 January: ask again from five days before it, in one call
+    assert provider.ranges == [(date(2024, 1, 7), date(2024, 1, 17))]
+    assert summary.stored == 3  # 15, 16 and 17 January; the days asked again are unchanged
     provider.ranges.clear()
-    service.update_latest(ref, today=date(2024, 1, 17))  # already up to date
-    assert provider.ranges == []
+    again = service.update_latest(ref, today=date(2024, 1, 17))  # already up to date
+    assert provider.ranges == [(date(2024, 1, 12), date(2024, 1, 17))] and again.stored == 0
 
 
 def test_update_latest_on_an_empty_listing_looks_at_the_recent_past(db) -> None:  # type: ignore[no-untyped-def]

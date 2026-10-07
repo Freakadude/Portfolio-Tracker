@@ -28,7 +28,9 @@ from folio.db.models import Account
 from folio.db.models_ledger import FxRate, LedgerTransaction, Listing, PortfolioSnapshot, PriceBar
 from folio.domain import CostBasisMethod
 from folio.ledger_service import account_transactions, to_txin
+from folio.marketdata import exchanges
 from folio.marketdata.fx import to_eur_multiplier
+from folio.marketdata.quotes import newer_quote
 
 ZERO = Decimal(0)
 
@@ -69,11 +71,14 @@ class Valuation:
         account_id: int | None = None,
         extra_instrument_ids: Iterable[int] = (),
         only_instruments: Iterable[int] | None = None,
+        live: bool = False,
     ) -> Valuation:
         """Load the ledger and prices. `extra_instrument_ids` are priced too although no account
         holds them (benchmarks, and anything else a chart compares against). With
         `only_instruments` the portfolio is just those instruments: a view of part of it (a type
-        or some holdings), not a change to the ledger."""
+        or some holdings), not a change to the ledger. With `live` a holding whose newest delayed
+        quote is newer than its newest close is also priced at that quote on the quote's day: for
+        showing today's figures while a market is open (never for saved or reported ones)."""
         only = None if only_instruments is None else set(only_instruments)
         query = select(Account).where(Account.deleted_at.is_(None))
         if account_id is not None:
@@ -94,6 +99,7 @@ class Valuation:
 
         listing_currency: dict[int, str] = {}
         instrument_listing: dict[int, int] = {}
+        listing_rows: dict[int, Listing] = {}
         if instrument_ids:
             rows = db.scalars(
                 select(Listing)
@@ -104,6 +110,7 @@ class Valuation:
                 if listing.instrument_id not in instrument_listing:  # the primary listing
                     instrument_listing[listing.instrument_id] = listing.id
                     listing_currency[listing.id] = listing.currency
+                    listing_rows[listing.id] = listing
 
         bars: dict[int, _Series] = {}
         for listing_id in instrument_listing.values():
@@ -112,7 +119,15 @@ class Valuation:
                 .where(PriceBar.listing_id == listing_id)
                 .order_by(PriceBar.date)
             ).all()
-            bars[listing_id] = _Series([r.date for r in found], [r.close for r in found])
+            series = _Series([r.date for r in found], [r.close for r in found])
+            if live and series.dates:
+                newer = newer_quote(db, listing_rows[listing_id], series.dates[-1])
+                if newer is not None:
+                    series.dates.append(
+                        exchanges.local_date(listing_rows[listing_id].exchange_mic, newer[1])
+                    )
+                    series.values.append(newer[0])
+            bars[listing_id] = series
 
         rates: dict[str, _Series] = {}
         for currency in {c for c in listing_currency.values() if c != "EUR"}:

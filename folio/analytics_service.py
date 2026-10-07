@@ -38,7 +38,7 @@ from folio.analytics.risk import (
 from folio.analytics.series import rebase
 from folio.analytics.valuation import DayPoint, resolve_period
 from folio.db.models import Account
-from folio.db.models_analytics import Sleeve
+from folio.db.models_analytics import Quote, Sleeve
 from folio.db.models_ledger import (
     FxRate,
     Instrument,
@@ -100,10 +100,15 @@ def build_context(
     account_id: int | None = None,
     extra_instrument_ids: Iterable[int] = (),
     only_instruments: Iterable[int] | None = None,
+    live: bool = False,
 ) -> AnalyticsContext:
     extras = set(extra_instrument_ids)
     valuation = Valuation.load(
-        db, account_id=account_id, extra_instrument_ids=extras, only_instruments=only_instruments
+        db,
+        account_id=account_id,
+        extra_instrument_ids=extras,
+        only_instruments=only_instruments,
+        live=live,
     )
     first = valuation.first_date()
     if first is None or first > today:
@@ -159,16 +164,19 @@ def get_context(
     account_id: int | None = None,
     extra_instrument_ids: Iterable[int] = (),
     only_instruments: Iterable[int] | None = None,
+    live: bool = False,
 ) -> AnalyticsContext:
+    """`live`: today's figures at the newest delayed quotes (for showing, not for reports)."""
     extras = tuple(sorted(set(extra_instrument_ids)))
     only = None if only_instruments is None else tuple(sorted(set(only_instruments)))
-    key = (data_fingerprint(db), account_id, extras, today, only)
+    quotes = tuple(db.execute(select(func.count(), func.max(Quote.id))).one()) if live else None
+    key = (data_fingerprint(db), account_id, extras, today, only, live, quotes)
     with _lock:
         found = _cache.get(key)
         if found is not None:
             _cache.move_to_end(key)
             return found
-    context = build_context(db, today, account_id, extras, only)
+    context = build_context(db, today, account_id, extras, only, live)
     with _lock:
         _cache[key] = context
         while len(_cache) > CACHE_SIZE:

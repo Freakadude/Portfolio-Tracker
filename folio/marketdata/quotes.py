@@ -10,7 +10,7 @@ from __future__ import annotations
 
 from collections.abc import Sequence
 from dataclasses import dataclass
-from datetime import datetime, timedelta
+from datetime import date, datetime, timedelta
 from decimal import Decimal
 
 from sqlalchemy import delete, select
@@ -73,6 +73,7 @@ class QuoteSummary:
     stored: int
     source: str | None
     skipped: dict[str, str]  # provider -> why it was not used
+    missing: tuple[str, ...] = ()  # tickers the provider that answered had no quote for
 
 
 class QuoteService:
@@ -119,13 +120,28 @@ class QuoteService:
                 )
                 stored += 1
         self._db.flush()
-        return QuoteSummary(stored, result.source, skipped)
+        missing = tuple(ref.ticker for ref in listings if ref.listing_id not in result.data)
+        return QuoteSummary(stored, result.source, skipped, missing)
 
     def latest(self, listing_id: int) -> tuple[Decimal, datetime, str] | None:
         row = self._db.scalars(
             select(Quote).where(Quote.listing_id == listing_id).order_by(Quote.ts.desc()).limit(1)
         ).first()
         return None if row is None else (row.price, row.ts, row.source)
+
+
+def newer_quote(
+    db: Session, listing: Listing, close_date: date
+) -> tuple[Decimal, datetime, str] | None:
+    """The newest quote (price, time, source) when it was made on a later exchange-local day than
+    the newest close. Between the close and the nightly fetch that is the last traded price of the
+    day; once the close is stored the close wins."""
+    row = db.scalars(
+        select(Quote).where(Quote.listing_id == listing.id).order_by(Quote.ts.desc()).limit(1)
+    ).first()
+    if row is None or exchanges.local_date(listing.exchange_mic, row.ts) <= close_date:
+        return None
+    return row.price, row.ts, row.source
 
 
 def prune_quotes(db: Session, now: datetime, keep_days: int) -> int:

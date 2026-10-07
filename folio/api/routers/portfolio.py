@@ -101,7 +101,7 @@ def summary(
         if found is None or found.deleted_at is not None:
             raise ApiError(404, "Not found", "That account does not exist.")
     today = as_of or date.today()
-    valuation = Valuation.load(db, account_id=account)
+    valuation = Valuation.load(db, account_id=account, live=True)
     try:
         start, end = resolve_period(period, today, valuation.first_date(), from_, to)
     except ValueError as exc:
@@ -146,7 +146,7 @@ def history(
         found = db.get(Account, account)
         if found is None or found.deleted_at is not None:
             raise ApiError(404, "Not found", "That account does not exist.")
-    ctx = svc.get_context(db, as_of or date.today(), account)
+    ctx = svc.get_context(db, as_of or date.today(), account, live=True)
     return [
         HistoryPoint(
             date=r.day,

@@ -91,7 +91,7 @@ def context(
     extras: Sequence[int] = (),
     only: Sequence[int] | None = None,
 ) -> svc.AnalyticsContext:
-    return svc.get_context(env.db, env.today, account, extras, only)
+    return svc.get_context(env.db, env.today, account, extras, only, live=True)
 
 
 def only_of(cfg: BaseConfig, env: Env) -> list[int] | None:

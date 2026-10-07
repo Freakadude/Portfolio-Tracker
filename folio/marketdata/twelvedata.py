@@ -84,7 +84,10 @@ class TwelveDataProvider:
     def get_quotes(self, listings: Sequence[ListingRef]) -> dict[int, Quote]:
         quotes: dict[int, Quote] = {}
         for listing in listings:
-            body = self._get("quote", symbol=listing.symbol_for(self.name))
+            try:
+                body = self._get("quote", symbol=listing.symbol_for(self.name))
+            except SymbolNotFound:  # one unknown symbol must not cost the others their quotes
+                continue
             close, stamp = _dec(body.get("close")), body.get("timestamp")
             if close is not None and stamp is not None:
                 quotes[listing.listing_id] = Quote(close, datetime.fromtimestamp(int(stamp), UTC))

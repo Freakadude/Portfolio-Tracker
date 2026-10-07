@@ -105,7 +105,10 @@ class EodhdProvider:
         quotes: dict[int, Quote] = {}
         for listing in listings:
             symbol = listing.symbol_for(self.name)
-            row = self._get(f"real-time/{symbol}", symbol)
+            try:
+                row = self._get(f"real-time/{symbol}", symbol)
+            except SymbolNotFound:  # one unknown symbol must not cost the others their quotes
+                continue
             close, stamp = _dec(row.get("close")), row.get("timestamp")
             if close is not None and stamp is not None:
                 quotes[listing.listing_id] = Quote(close, datetime.fromtimestamp(int(stamp), UTC))

@@ -16,7 +16,6 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from folio.db.models import Account
-from folio.db.models_analytics import Quote as QuoteRow
 from folio.db.models_ledger import Instrument, Listing, Lot, Position, PriceBar
 from folio.domain import Lot as DomainLot
 from folio.domain import PositionMetrics, PositionState, Quote, position_metrics
@@ -24,6 +23,7 @@ from folio.domain.ledger import ZERO, precise
 from folio.ledger_service import compute_state
 from folio.marketdata.fx import FxService, FxUnavailable, to_eur_multiplier
 from folio.marketdata.prices import PriceService, listing_ref
+from folio.marketdata.quotes import newer_quote
 
 
 @dataclass(frozen=True)
@@ -130,21 +130,6 @@ def primary_listing(db: Session, instrument_id: int) -> Listing | None:
     ).first()
 
 
-def _newer_quote(
-    db: Session, listing_id: int, close_date: date
-) -> tuple[Decimal, datetime, str] | None:
-    """The newest intraday quote, when it is from a later day than the last close."""
-    row = db.scalars(
-        select(QuoteRow)
-        .where(QuoteRow.listing_id == listing_id)
-        .order_by(QuoteRow.ts.desc())
-        .limit(1)
-    ).first()
-    if row is None or row.ts.date() <= close_date:
-        return None
-    return row.price, row.ts, row.source
-
-
 def quote_for(
     db: Session, instrument: Instrument, listing: Listing | None, valuation: date, today: date
 ) -> tuple[Quote | None, PriceInfo | None, str | None]:
@@ -161,6 +146,7 @@ def quote_for(
         .order_by(PriceBar.date.desc())
         .limit(1)
     ).first()
+    delayed = newer_quote(db, listing, bar.date) if valuation >= today else None
     fx = FxService(db)
     try:
         rate = to_eur_multiplier(fx.rate_per_eur(listing.currency, bar.date).rate_per_eur)
@@ -168,6 +154,11 @@ def quote_for(
             to_eur_multiplier(fx.rate_per_eur(listing.currency, previous.date).rate_per_eur)
             if previous
             else None
+        )
+        quote_rate = (
+            to_eur_multiplier(fx.rate_per_eur(listing.currency, delayed[1].date()).rate_per_eur)
+            if delayed
+            else rate
         )
     except FxUnavailable as exc:
         return None, None, str(exc)
@@ -179,11 +170,13 @@ def quote_for(
         stale=prices.is_stale(listing_ref(listing, instrument.isin), today),
         previous_close=previous.close if previous else None,
     )
-    delayed = _newer_quote(db, listing.id, bar.date) if valuation >= today else None
     if delayed is not None:
         info = replace(
             info, delayed_price=delayed[0], delayed_at=delayed[1], delayed_source=delayed[2]
         )
+        # while the market is open the position is worth its newest quote, and the day's change
+        # is that against the last close
+        return Quote(delayed[0], quote_rate, bar.close, rate), info, None
     quote = Quote(bar.close, rate, previous.close if previous else None, prev_rate)
     return quote, info, None
 
