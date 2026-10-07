@@ -126,7 +126,8 @@ def gap_job(ctx: JobContext, days: int = GAP_WINDOW_DAYS) -> JobResult:
 
 
 def refresh_job(ctx: JobContext) -> JobResult:
-    """ "Refresh prices now": the newest closes for everything tracked, then the ECB rates."""
+    """ "Refresh prices now": the newest closes for everything tracked, the quotes of what trades
+    right now, then the ECB rates."""
 
     def body(db: Session, log: JobLog) -> None:
         today = ctx.today()
@@ -148,6 +149,12 @@ def refresh_job(ctx: JobContext) -> JobResult:
                 log.error(f"{listing.ticker}: {exc}")
         if stored:
             publish_event(db, PRICE_UPDATE, {"source": "refresh"})
+        db.commit()
+        try:  # the latest price of what trades right now, so it is there at once
+            fetch_quotes(ctx, db, log)
+        except ProviderError as exc:
+            db.rollback()
+            log.error(f"Quotes: {exc}")
         currencies = needed_currencies(db)
         if currencies:
             floor = first_transaction_date(db) or today - timedelta(days=365 * FX_FLOOR_YEARS)
@@ -163,6 +170,30 @@ def refresh_job(ctx: JobContext) -> JobResult:
 QUOTE_RETENTION_FLOOR_DAYS = 1
 
 
+def fetch_quotes(ctx: JobContext, db: Session, log: JobLog) -> None:
+    """The delayed quotes of what is held or watched on a market that is open now, within the
+    call budget (FR-MD-05)."""
+    now = ctx.now()
+    listings = open_now(held_listings(db), now)
+    if not listings:
+        log.info("No held listing is on an open market.")
+        return
+    reserve = len(tracked_listings(db)) + EOD_MARGIN
+    service = QuoteService(db, ctx.chain_for(db), ctx.usage)
+    summary = service.refresh(listing_refs(listings), now, reserve)
+    if summary.source is None:
+        why = "; ".join(f"{p}: {r}" for p, r in summary.skipped.items())
+        log.info(f"No quotes fetched ({why or 'no provider is enabled'}).")
+        return
+    log.info(f"{summary.stored} new quote(s) for {len(listings)} listing(s) ({summary.source})")
+    if summary.missing:  # not an error: a wrong symbol must not mark every run as failed
+        log.info(f"No quote for {', '.join(summary.missing)} ({summary.source} does not know it).")
+    if summary.stored:
+        publish_event(db, PRICE_UPDATE, {"source": "quotes"})
+    for provider, reason in summary.skipped.items():
+        log.info(f"{provider} not used: {reason}")
+
+
 def quotes_job(ctx: JobContext, only_if_open: bool = False) -> JobResult:
     """Delayed quotes for held listings on exchanges that are open now (FR-MD-05), within the
     call budget and never at the expense of the nightly closes. The scheduler passes
@@ -173,27 +204,7 @@ def quotes_job(ctx: JobContext, only_if_open: bool = False) -> JobResult:
                 return JobResult(0, "quotes", "skipped", "No held listing is on an open market.")
 
     def body(db: Session, log: JobLog) -> None:
-        now = ctx.now()
-        listings = open_now(held_listings(db), now)
-        if not listings:
-            log.info("No held listing is on an open market.")
-            return
-        reserve = len(tracked_listings(db)) + EOD_MARGIN
-        service = QuoteService(db, ctx.chain_for(db), ctx.usage)
-        summary = service.refresh(listing_refs(listings), now, reserve)
-        if summary.source is None:
-            why = "; ".join(f"{p}: {r}" for p, r in summary.skipped.items())
-            log.info(f"No quotes fetched ({why or 'no provider is enabled'}).")
-            return
-        log.info(f"{summary.stored} new quote(s) for {len(listings)} listing(s) ({summary.source})")
-        if summary.missing:  # not an error: a wrong symbol must not mark every run as failed
-            log.info(
-                f"No quote for {', '.join(summary.missing)} ({summary.source} does not know it)."
-            )
-        if summary.stored:
-            publish_event(db, PRICE_UPDATE, {"source": "quotes"})
-        for provider, reason in summary.skipped.items():
-            log.info(f"{provider} not used: {reason}")
+        fetch_quotes(ctx, db, log)
 
     return run_job(ctx, "quotes", body)
 

@@ -17,3 +17,6 @@ The owner saw "Last close" equal to "Latest price" in the holdings widget, and p
 
 ## Consequences
 During the session the Home figures move every 15 minutes (as far as the quote providers and the call budget allow) and settle on the true close afterwards. The live context is cached separately and also keyed on the stored quotes. A listing without a calendar (priced by hand) has no quotes and is unchanged.
+
+## Addendum (2026-10-07)
+A close of a session that is still running, stored earlier, is removed whenever the prices are updated (a hand-entered or overridden close is kept), and "Refresh prices now" also fetches the quotes of the open markets, so "Last close" and "Latest price" differ at once. After the close both are the same number.

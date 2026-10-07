@@ -8,7 +8,7 @@ from dataclasses import dataclass
 from datetime import date, datetime, timedelta
 from decimal import Decimal
 
-from sqlalchemy import func, select
+from sqlalchemy import delete, func, select
 from sqlalchemy.orm import Session
 
 from folio.audit import write_audit
@@ -156,6 +156,7 @@ class PriceService:
                 return FetchSummary(ref.listing_id, None, 0, None)
         else:
             expect_data = True
+        self._drop_unfinished_close(ref)
         result = self._chain.get_eod(ref, start, end, require_bars=expect_data)
         bars = result.data
         if self._now is not None and exchanges.has_calendar(ref.exchange_mic):
@@ -165,6 +166,24 @@ class PriceService:
             ]
         stored = self.store_bars(ref.listing_id, bars, result.source)
         return FetchSummary(ref.listing_id, result.source, stored, (start, end))
+
+    def _drop_unfinished_close(self, ref: ListingRef) -> None:
+        """A close stored for a session that is still running (by an earlier version, or before
+        the exchange's clock said so) is the price of that moment, not a close: remove it, so the
+        last close is the finished session before it. A close entered by hand stays."""
+        if self._now is None or not exchanges.has_calendar(ref.exchange_mic):
+            return
+        mic, today = ref.exchange_mic, exchanges.local_date(ref.exchange_mic, self._now)
+        if exchanges.session_over(mic, today, self._now):
+            return
+        self._db.execute(
+            delete(PriceBar).where(
+                PriceBar.listing_id == ref.listing_id,
+                PriceBar.date == today,
+                PriceBar.overridden.is_(False),
+                PriceBar.source != MANUAL,
+            )
+        )
 
     def backfill(self, ref: ListingRef, start: date, end: date) -> FetchSummary:
         """History from `start` (the first transaction date) to `end` (FR-MD-03)."""

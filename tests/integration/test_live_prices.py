@@ -10,7 +10,7 @@ from sqlalchemy import select
 
 from folio.db.models_analytics import Quote
 from folio.db.models_ledger import PriceBar
-from folio.jobs.market import quotes_job
+from folio.jobs.market import quotes_job, refresh_job
 from folio.marketdata import exchanges
 from folio.marketdata.base import ListingRef
 from folio.marketdata.base import Quote as ProviderQuote
@@ -156,3 +156,36 @@ def test_the_summary_follows_the_newest_quote_but_a_report_valuation_does_not(
     db.expire_all()
     assert Valuation.load(db).point(JAN_9).value_eur == D("1040")  # saved figures stay on closes
     assert Valuation.load(db, live=True).point(JAN_9).value_eur == D("1095")
+
+
+# --- "Refresh prices now" during the session -----------------------------------------------------
+
+
+def test_refresh_during_the_session_removes_the_close_stored_too_early_and_fetches_the_quote(
+    api, db, settings
+) -> None:  # type: ignore[no-untyped-def]
+    held, listing = make_listing(db, ticker="HELD")
+    window = bars_for("XETR", date(2024, 1, 2), JAN_9)
+    for bar in window[:-1]:
+        db.add(PriceBar(listing_id=listing.id, date=bar.date, close=bar.close, source="x"))
+    # what an earlier refresh stored at 11:00: the price so far, filed as the close of 9 January
+    db.add(PriceBar(listing_id=listing.id, date=JAN_9, close=D("109.5"), source="yahoo"))
+    hold(api, db, held.id)
+    provider = FakeProvider(
+        bars={listing.id: window}, quotes={listing.id: ProviderQuote(D("109.5"), OPEN)}
+    )
+    result = refresh_job(make_ctx(settings, [provider], now=OPEN))
+    assert result.status == "ok" and "1 new quote(s)" in result.log
+
+    price = api.get("/api/v1/positions").json()["positions"][0]["price"]
+    assert price["date"] == "2024-01-08" and D(price["close"]) == window[-2].close  # yesterday's
+    assert D(price["delayed_price"]) == D("109.5")  # the latest price, a different number
+
+
+def test_a_close_entered_by_hand_survives_the_removal_of_unfinished_closes(db) -> None:  # type: ignore[no-untyped-def]
+    _, listing = make_listing(db)
+    PriceService(db).set_manual_price(listing.id, JAN_9, D("42"))
+    provider = FakeProvider(name="primary", bars={listing.id: bars_for("XETR", JAN_9, JAN_9)})
+    PriceService(db, ProviderChain([provider]), OPEN).update_latest(listing_ref(listing), JAN_9)
+    kept = db.scalar(select(PriceBar).where(PriceBar.date == JAN_9))
+    assert kept is not None and kept.close == D("42")
