@@ -30,7 +30,8 @@
       "add": "Add note",
       "ways": {
         "write": "Write it myself",
-        "claude": "Ask Claude to write it (free)"
+        "claude": "Ask Claude to write it (free)",
+        "import": "From my chat export"
       },
       "writeForm": "Write a note",
       "writeHint": "A few sentences are plenty: what the money is for, when you may need it, how a big fall would feel, rules you want to keep.",
@@ -46,6 +47,33 @@
       "pasteForm": "Save what Claude wrote",
       "pasteHere": "What Claude wrote",
       "saveAsNote": "Save as note"
+    },
+    "import": {
+      "step1": "On claude.ai open Settings, Privacy, and choose Export data. Claude emails you a link; download the zip.",
+      "step2": "Choose that zip (or the conversations.json inside it) below. Folio reads it on the server and does not keep it. Pick up to 8 chats that are about your investing.",
+      "step3": "Folio shows what it can cost, then has the cheapest Claude model write a short summary of each chat. You read and edit them, and keep the ones you want as notes.",
+      "file": "Export file from claude.ai",
+      "reading": "Reading the file…",
+      "found": "{{total}} chats found; {{relevant}} look like talks about investing.",
+      "list": "Chats in the export",
+      "aboutInvesting": "About investing",
+      "messages": "{{n}} messages",
+      "check": "Check the cost of {{n}} chat(s)",
+      "max": "At most {{n}} at a time.",
+      "cost": "Summarising can cost up to {{cost}}. This month you have {{left}} left of your AI budget.",
+      "privacy": "This sends the text of the chosen chats to Anthropic's API with your own key. Nothing is sent before you press the button below.",
+      "noFit": "That does not fit what is left of this month's AI budget. Choose fewer chats, raise the budget in Settings, Agent, or use the free way: ask Claude to write the profile.",
+      "summarise": "Summarise {{n}} chat(s)",
+      "working": "Summarising, one chat at a time. This takes a few seconds per chat…",
+      "failed": "“{{title}}” could not be summarised: {{reason}}",
+      "review": "Read each summary and correct it. Keep only what is true and what you want the helper to know.",
+      "noSummaries": "Nothing came back.",
+      "nothing": "Nothing about your own investing in this chat.",
+      "keep": "Keep as note",
+      "summaryOf": "Summary of {{title}}",
+      "spent": "This cost {{cost}} of your AI budget.",
+      "save": "Save {{n}} note(s)",
+      "saved": "Saved {{n}} note(s). You can find them above."
     }
   }
 }

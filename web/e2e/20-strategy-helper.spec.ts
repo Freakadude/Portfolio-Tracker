@@ -27,3 +27,32 @@ test('background notes are written, switched off for the helper and deleted', as
   await row.getByRole('button', { name: 'Delete' }).click()
   await expect(page.getByText('Goals and horizon')).toHaveCount(0)
 })
+
+test('a claude.ai export is read and its chats about investing are offered', async ({ page }) => {
+  await login(page)
+  await page.goto('/strategies/assistant')
+  await page.getByRole('tab', { name: 'From my chat export' }).click()
+  const chat = (id: string, name: string, lines: string[]) => ({
+    uuid: id,
+    name,
+    created_at: '2026-03-01T10:00:00Z',
+    chat_messages: lines.map((text, i) => ({ sender: i % 2 ? 'assistant' : 'human', text })),
+  })
+  const conversations = [
+    chat('a', 'World ETF and bonds', [
+      'I want to invest in a world ETF for my retirement',
+      'A broad index fund fits a long horizon',
+      'Keep some bonds so a drawdown stays bearable',
+    ]),
+    chat('b', 'Pasta', ['How long do I boil spaghetti?', 'Nine minutes']),
+  ]
+  await page.getByLabel('Export file from claude.ai').setInputFiles({
+    name: 'conversations.json',
+    mimeType: 'application/json',
+    buffer: Buffer.from(JSON.stringify(conversations)),
+  })
+  await expect(page.getByText(/2 chats found; 1 look like talks about investing/)).toBeVisible()
+  await expect(page.getByLabel('World ETF and bonds')).toBeChecked()
+  await expect(page.getByLabel('Pasta')).not.toBeChecked()
+  await expect(page.getByRole('button', { name: 'Check the cost of 1 chat(s)' })).toBeVisible()
+})

@@ -187,6 +187,67 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/assistant/chats/estimate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Estimate Chats
+         * @description What summarising the chosen chats can cost at most, before anything is sent.
+         */
+        post: operations["estimate_chats_api_v1_assistant_chats_estimate_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/assistant/chats/scan": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Scan Chats
+         * @description The chats in a claude.ai export, those about investing first. Nothing is stored.
+         */
+        post: operations["scan_chats_api_v1_assistant_chats_scan_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/assistant/chats/summarise": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Summarise Chats
+         * @description Summarise the chosen chats about the owner's own investing, one cheap call per chat within
+         *     the monthly budget. The summaries are returned to be read and edited; they are not saved.
+         */
+        post: operations["summarise_chats_api_v1_assistant_chats_summarise_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/assistant/notes": {
         parameters: {
             query?: never;
@@ -3549,6 +3610,13 @@ export interface components {
              */
             start: string;
         };
+        /** Body_estimate_chats_api_v1_assistant_chats_estimate_post */
+        Body_estimate_chats_api_v1_assistant_chats_estimate_post: {
+            /** File */
+            file: string;
+            /** Ids */
+            ids: string;
+        };
         /** Body_preview_api_v1_instruments__instrument_id__holdings_preview_post */
         Body_preview_api_v1_instruments__instrument_id__holdings_preview_post: {
             /** File */
@@ -3557,6 +3625,18 @@ export interface components {
             mapping?: string | null;
             /** Sheet */
             sheet?: string | null;
+        };
+        /** Body_scan_chats_api_v1_assistant_chats_scan_post */
+        Body_scan_chats_api_v1_assistant_chats_scan_post: {
+            /** File */
+            file: string;
+        };
+        /** Body_summarise_chats_api_v1_assistant_chats_summarise_post */
+        Body_summarise_chats_api_v1_assistant_chats_summarise_post: {
+            /** File */
+            file: string;
+            /** Ids */
+            ids: string;
         };
         /** Body_upload_api_v1_imports_post */
         Body_upload_api_v1_imports_post: {
@@ -3684,6 +3764,82 @@ export interface components {
             pnl_eur: string;
             /** Pnl Ratio */
             pnl_ratio: string | null;
+        };
+        /** ChatEstimateOut */
+        ChatEstimateOut: {
+            /** Chats */
+            chats: number;
+            /** Cost Eur */
+            cost_eur: string;
+            /** Fits */
+            fits: boolean;
+            /** Max Chats */
+            max_chats: number;
+            /** Model */
+            model: string;
+            /** Remaining Eur */
+            remaining_eur: string;
+            /** Tokens */
+            tokens: number;
+        };
+        /** ChatFailureOut */
+        ChatFailureOut: {
+            /** Id */
+            id: string;
+            /** Reason */
+            reason: string;
+            /** Title */
+            title: string;
+        };
+        /** ChatInfoOut */
+        ChatInfoOut: {
+            /** Characters */
+            characters: number;
+            /** Created At */
+            created_at: string | null;
+            /** Hits */
+            hits: number;
+            /** Id */
+            id: string;
+            /** Messages */
+            messages: number;
+            /** Opening */
+            opening: string;
+            /** Relevant */
+            relevant: boolean;
+            /** Title */
+            title: string;
+        };
+        /** ChatScanOut */
+        ChatScanOut: {
+            /** Chats */
+            chats: components["schemas"]["ChatInfoOut"][];
+            /** Relevant */
+            relevant: number;
+            /** Total */
+            total: number;
+        };
+        /** ChatSummariesOut */
+        ChatSummariesOut: {
+            /** Cost Eur */
+            cost_eur: string;
+            /** Failed */
+            failed: components["schemas"]["ChatFailureOut"][];
+            /** Stopped */
+            stopped: string | null;
+            /** Summaries */
+            summaries: components["schemas"]["ChatSummaryOut"][];
+        };
+        /** ChatSummaryOut */
+        ChatSummaryOut: {
+            /** Cost Eur */
+            cost_eur: string;
+            /** Id */
+            id: string;
+            /** Text */
+            text: string | null;
+            /** Title */
+            title: string;
         };
         /** CheckOut */
         CheckOut: {
@@ -7260,6 +7416,105 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["AgentBudgetOut"];
+                };
+            };
+        };
+    };
+    estimate_chats_api_v1_assistant_chats_estimate_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "multipart/form-data": components["schemas"]["Body_estimate_chats_api_v1_assistant_chats_estimate_post"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ChatEstimateOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    scan_chats_api_v1_assistant_chats_scan_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "multipart/form-data": components["schemas"]["Body_scan_chats_api_v1_assistant_chats_scan_post"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ChatScanOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    summarise_chats_api_v1_assistant_chats_summarise_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "multipart/form-data": components["schemas"]["Body_summarise_chats_api_v1_assistant_chats_summarise_post"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ChatSummariesOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
                 };
             };
         };

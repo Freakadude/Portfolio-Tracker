@@ -1778,6 +1778,25 @@
         "title": "BenchmarksOut",
         "type": "object"
       },
+      "Body_estimate_chats_api_v1_assistant_chats_estimate_post": {
+        "properties": {
+          "file": {
+            "contentMediaType": "application/octet-stream",
+            "title": "File",
+            "type": "string"
+          },
+          "ids": {
+            "title": "Ids",
+            "type": "string"
+          }
+        },
+        "required": [
+          "file",
+          "ids"
+        ],
+        "title": "Body_estimate_chats_api_v1_assistant_chats_estimate_post",
+        "type": "object"
+      },
       "Body_preview_api_v1_instruments__instrument_id__holdings_preview_post": {
         "properties": {
           "file": {
@@ -1812,6 +1831,39 @@
           "file"
         ],
         "title": "Body_preview_api_v1_instruments__instrument_id__holdings_preview_post",
+        "type": "object"
+      },
+      "Body_scan_chats_api_v1_assistant_chats_scan_post": {
+        "properties": {
+          "file": {
+            "contentMediaType": "application/octet-stream",
+            "title": "File",
+            "type": "string"
+          }
+        },
+        "required": [
+          "file"
+        ],
+        "title": "Body_scan_chats_api_v1_assistant_chats_scan_post",
+        "type": "object"
+      },
+      "Body_summarise_chats_api_v1_assistant_chats_summarise_post": {
+        "properties": {
+          "file": {
+            "contentMediaType": "application/octet-stream",
+            "title": "File",
+            "type": "string"
+          },
+          "ids": {
+            "title": "Ids",
+            "type": "string"
+          }
+        },
+        "required": [
+          "file",
+          "ids"
+        ],
+        "title": "Body_summarise_chats_api_v1_assistant_chats_summarise_post",
         "type": "object"
       },
       "Body_upload_api_v1_imports_post": {
@@ -2215,6 +2267,233 @@
           "pnl_ratio"
         ],
         "title": "ChangeOut",
+        "type": "object"
+      },
+      "ChatEstimateOut": {
+        "properties": {
+          "chats": {
+            "title": "Chats",
+            "type": "integer"
+          },
+          "cost_eur": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Cost Eur",
+            "type": "string"
+          },
+          "fits": {
+            "title": "Fits",
+            "type": "boolean"
+          },
+          "max_chats": {
+            "title": "Max Chats",
+            "type": "integer"
+          },
+          "model": {
+            "title": "Model",
+            "type": "string"
+          },
+          "remaining_eur": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Remaining Eur",
+            "type": "string"
+          },
+          "tokens": {
+            "title": "Tokens",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "chats",
+          "tokens",
+          "cost_eur",
+          "remaining_eur",
+          "fits",
+          "model",
+          "max_chats"
+        ],
+        "title": "ChatEstimateOut",
+        "type": "object"
+      },
+      "ChatFailureOut": {
+        "properties": {
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "reason": {
+            "title": "Reason",
+            "type": "string"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "title",
+          "reason"
+        ],
+        "title": "ChatFailureOut",
+        "type": "object"
+      },
+      "ChatInfoOut": {
+        "properties": {
+          "characters": {
+            "title": "Characters",
+            "type": "integer"
+          },
+          "created_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Created At"
+          },
+          "hits": {
+            "title": "Hits",
+            "type": "integer"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "messages": {
+            "title": "Messages",
+            "type": "integer"
+          },
+          "opening": {
+            "title": "Opening",
+            "type": "string"
+          },
+          "relevant": {
+            "title": "Relevant",
+            "type": "boolean"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "title",
+          "created_at",
+          "messages",
+          "characters",
+          "hits",
+          "relevant",
+          "opening"
+        ],
+        "title": "ChatInfoOut",
+        "type": "object"
+      },
+      "ChatScanOut": {
+        "properties": {
+          "chats": {
+            "items": {
+              "$ref": "#/components/schemas/ChatInfoOut"
+            },
+            "title": "Chats",
+            "type": "array"
+          },
+          "relevant": {
+            "title": "Relevant",
+            "type": "integer"
+          },
+          "total": {
+            "title": "Total",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "chats",
+          "total",
+          "relevant"
+        ],
+        "title": "ChatScanOut",
+        "type": "object"
+      },
+      "ChatSummariesOut": {
+        "properties": {
+          "cost_eur": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Cost Eur",
+            "type": "string"
+          },
+          "failed": {
+            "items": {
+              "$ref": "#/components/schemas/ChatFailureOut"
+            },
+            "title": "Failed",
+            "type": "array"
+          },
+          "stopped": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Stopped"
+          },
+          "summaries": {
+            "items": {
+              "$ref": "#/components/schemas/ChatSummaryOut"
+            },
+            "title": "Summaries",
+            "type": "array"
+          }
+        },
+        "required": [
+          "summaries",
+          "failed",
+          "stopped",
+          "cost_eur"
+        ],
+        "title": "ChatSummariesOut",
+        "type": "object"
+      },
+      "ChatSummaryOut": {
+        "properties": {
+          "cost_eur": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Cost Eur",
+            "type": "string"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "text": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Text"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "title",
+          "text",
+          "cost_eur"
+        ],
+        "title": "ChatSummaryOut",
         "type": "object"
       },
       "CheckOut": {
@@ -13255,6 +13534,132 @@
         "summary": "Usage",
         "tags": [
           "agent"
+        ]
+      }
+    },
+    "/api/v1/assistant/chats/estimate": {
+      "post": {
+        "description": "What summarising the chosen chats can cost at most, before anything is sent.",
+        "operationId": "estimate_chats_api_v1_assistant_chats_estimate_post",
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/Body_estimate_chats_api_v1_assistant_chats_estimate_post"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ChatEstimateOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Estimate Chats",
+        "tags": [
+          "assistant"
+        ]
+      }
+    },
+    "/api/v1/assistant/chats/scan": {
+      "post": {
+        "description": "The chats in a claude.ai export, those about investing first. Nothing is stored.",
+        "operationId": "scan_chats_api_v1_assistant_chats_scan_post",
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/Body_scan_chats_api_v1_assistant_chats_scan_post"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ChatScanOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Scan Chats",
+        "tags": [
+          "assistant"
+        ]
+      }
+    },
+    "/api/v1/assistant/chats/summarise": {
+      "post": {
+        "description": "Summarise the chosen chats about the owner's own investing, one cheap call per chat within\nthe monthly budget. The summaries are returned to be read and edited; they are not saved.",
+        "operationId": "summarise_chats_api_v1_assistant_chats_summarise_post",
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/Body_summarise_chats_api_v1_assistant_chats_summarise_post"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ChatSummariesOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Summarise Chats",
+        "tags": [
+          "assistant"
         ]
       }
     },

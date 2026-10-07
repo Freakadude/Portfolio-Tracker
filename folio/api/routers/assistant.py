@@ -5,18 +5,23 @@ backups, and are given to nothing but the strategy helper.
 """
 
 import datetime as dt
-from typing import Literal
+from decimal import Decimal
+from typing import Annotated, Literal
 
-from fastapi import APIRouter
+from fastapi import APIRouter, File, Form, Request, UploadFile
 from pydantic import BaseModel, ConfigDict, Field
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
+from folio.agent import budget, chat_summary
 from folio.agent.background import NOTE_LIMIT, SOURCES, TOTAL_LIMIT, helper_notes
+from folio.agent.chat_export import MAX_UPLOAD, Chat, ExportError, read_export
 from folio.agent.prompt_files import load_prompt
+from folio.agent.runtime import make_llm
 from folio.api.deps import DbDep, UserDep
 from folio.api.errors import ApiError
 from folio.audit import write_audit
+from folio.db.base import utcnow
 from folio.db.models_insight import BackgroundNote
 
 router = APIRouter(prefix="/assistant", tags=["assistant"])
@@ -173,3 +178,163 @@ def background_request(_user: UserDep) -> PromptOut:
     """The text to paste into a chat with Claude, to get a profile back that can be saved as a
     note (the free way, on the Claude subscription)."""
     return PromptOut(text=load_prompt("background_request").text)
+
+
+# --- chats exported from claude.ai ---------------------------------------------------------
+
+
+class ChatInfoOut(BaseModel):
+    id: str
+    title: str
+    created_at: str | None
+    messages: int
+    characters: int
+    hits: int  # messages that mention investing
+    relevant: bool
+    opening: str
+
+
+class ChatScanOut(BaseModel):
+    chats: list[ChatInfoOut]
+    total: int
+    relevant: int
+
+
+class ChatEstimateOut(BaseModel):
+    chats: int
+    tokens: int
+    cost_eur: Decimal  # the most it can cost
+    remaining_eur: Decimal
+    fits: bool
+    model: str
+    max_chats: int
+
+
+class ChatSummaryOut(BaseModel):
+    id: str
+    title: str
+    text: str | None  # None: nothing about the owner's own investing in that chat
+    cost_eur: Decimal
+
+
+class ChatFailureOut(BaseModel):
+    id: str
+    title: str
+    reason: str
+
+
+class ChatSummariesOut(BaseModel):
+    summaries: list[ChatSummaryOut]
+    failed: list[ChatFailureOut]
+    stopped: str | None  # why the work stopped before the last chat (the budget)
+    cost_eur: Decimal
+
+
+SCAN_SHOWN = 200
+
+
+async def _chats(file: UploadFile) -> list[Chat]:
+    data = await file.read(MAX_UPLOAD + 1)
+    try:
+        return read_export(data)
+    except ExportError as exc:
+        raise ApiError(422, "Not an export of chats", str(exc)) from exc
+
+
+def _chosen(chats: list[Chat], ids: str) -> list[Chat]:
+    wanted = [i for i in (p.strip() for p in ids.split(",")) if i]
+    if not wanted:
+        raise ApiError(422, "Nothing chosen", "Tick the chats you want summarised.")
+    if len(wanted) > chat_summary.MAX_CHATS:
+        raise ApiError(
+            422,
+            "Too many chats at once",
+            f"Summarise up to {chat_summary.MAX_CHATS} chats at a time; do the rest afterwards.",
+        )
+    by_id = {c.id: c for c in chats}
+    missing = [i for i in wanted if i not in by_id]
+    if missing:
+        raise ApiError(422, "Chat not found", "A chosen chat is not in that file.")
+    return [by_id[i] for i in wanted]
+
+
+@router.post("/chats/scan", response_model=ChatScanOut)
+async def scan_chats(_user: UserDep, file: Annotated[UploadFile, File()]) -> ChatScanOut:
+    """The chats in a claude.ai export, those about investing first. Nothing is stored."""
+    chats = await _chats(file)
+    return ChatScanOut(
+        chats=[
+            ChatInfoOut(
+                id=c.id,
+                title=c.title,
+                created_at=c.created_at,
+                messages=c.messages,
+                characters=c.characters,
+                hits=c.hits,
+                relevant=c.relevant,
+                opening=c.opening,
+            )
+            for c in chats[:SCAN_SHOWN]
+        ],
+        total=len(chats),
+        relevant=sum(c.relevant for c in chats),
+    )
+
+
+@router.post("/chats/estimate", response_model=ChatEstimateOut)
+async def estimate_chats(
+    _user: UserDep,
+    db: DbDep,
+    file: Annotated[UploadFile, File()],
+    ids: Annotated[str, Form()],
+) -> ChatEstimateOut:
+    """What summarising the chosen chats can cost at most, before anything is sent."""
+    chosen = _chosen(await _chats(file), ids)
+    cfg = budget.agent_settings(db)
+    try:
+        est = chat_summary.estimate(db, cfg, budget.timezone_of(db), utcnow(), chosen)
+    except budget.BudgetExceeded as exc:
+        raise ApiError(409, "No price", str(exc)) from exc
+    return ChatEstimateOut(
+        chats=est.chats,
+        tokens=est.tokens,
+        cost_eur=est.cost_eur,
+        remaining_eur=est.remaining_eur,
+        fits=est.fits,
+        model=est.model,
+        max_chats=chat_summary.MAX_CHATS,
+    )
+
+
+@router.post("/chats/summarise", response_model=ChatSummariesOut)
+async def summarise_chats(
+    request: Request,
+    _user: UserDep,
+    db: DbDep,
+    file: Annotated[UploadFile, File()],
+    ids: Annotated[str, Form()],
+) -> ChatSummariesOut:
+    """Summarise the chosen chats about the owner's own investing, one cheap call per chat within
+    the monthly budget. The summaries are returned to be read and edited; they are not saved."""
+    chosen = _chosen(await _chats(file), ids)
+    cfg = budget.agent_settings(db)
+    state = request.app.state
+    llm = make_llm(db, state.settings, getattr(state, "llm_transport", None))
+    if llm is None:
+        raise ApiError(
+            409,
+            "The AI agent is off",
+            "Turn the agent on and save your Anthropic API key in Settings, Agent first. "
+            "Or use the free way: ask Claude to write the profile itself.",
+        )
+    done, failed, stopped = chat_summary.summarise(
+        db, llm, cfg, budget.timezone_of(db), utcnow(), chosen
+    )
+    return ChatSummariesOut(
+        summaries=[
+            ChatSummaryOut(id=d.id, title=d.title, text=d.text, cost_eur=d.cost_eur) for d in done
+        ],
+        failed=[ChatFailureOut(id=f.id, title=f.title, reason=f.reason) for f in failed],
+        stopped=stopped,
+        cost_eur=sum((d.cost_eur for d in done), Decimal(0)),
+    )

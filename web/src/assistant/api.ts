@@ -72,3 +72,51 @@ export function useDeleteNote() {
     onSuccess: () => queryClient.invalidateQueries({ queryKey: NOTES_KEY }),
   })
 }
+
+export type ChatScan = S['ChatScanOut']
+export type ChatInfo = S['ChatInfoOut']
+export type ChatEstimate = S['ChatEstimateOut']
+export type ChatSummaries = S['ChatSummariesOut']
+
+function upload(file: File, ids?: string[]) {
+  const form = new FormData()
+  form.append('file', file)
+  if (ids) form.append('ids', ids.join(','))
+  return form
+}
+
+export function useScanChats() {
+  return useMutation({
+    mutationFn: (file: File) =>
+      unwrap(
+        api.POST('/api/v1/assistant/chats/scan', {
+          body: {} as never,
+          bodySerializer: () => upload(file),
+        }),
+      ),
+  })
+}
+
+export function useEstimateChats() {
+  return useMutation({
+    mutationFn: ({ file, ids }: { file: File; ids: string[] }) =>
+      unwrap(
+        api.POST('/api/v1/assistant/chats/estimate', {
+          body: {} as never,
+          bodySerializer: () => upload(file, ids),
+        }),
+      ),
+  })
+}
+
+export function useSummariseChats() {
+  return useMutation({
+    mutationFn: ({ file, ids }: { file: File; ids: string[] }) =>
+      unwrap(
+        api.POST('/api/v1/assistant/chats/summarise', {
+          body: {} as never,
+          bodySerializer: () => upload(file, ids),
+        }),
+      ),
+  })
+}

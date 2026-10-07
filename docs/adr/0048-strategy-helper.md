@@ -15,3 +15,6 @@ The owner wants a helper that interviews them with guided questions and then set
 
 ## Consequences
 One new table and one router; no change to how strategies are stored, checked or run. The free mode needs nothing from Anthropic's API, so it works with the agent switched off or without a key.
+
+## Addendum: importing the chat export
+The export is sent to the server for each step (scan, estimate, summarise) and read in memory; it is never stored, so no staging area is needed. Chats are scored by how many messages mention investing, and the owner picks at most 8 per request. Each summary is its own call with the cheapest model (`news_triage` in the model settings) and its own `agent_run` row of type `chat_summary`. That type is neither a news step nor an agent run, so it counts toward the monthly budget but not toward the daily run cap or the news share. The estimate is the worst case (all input at the full price, the whole output allowance), so the real cost is lower. A chat is cut in the middle above 40,000 characters. The summaries are returned to the owner and become notes only when the owner keeps them.

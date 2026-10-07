@@ -4,6 +4,7 @@ import { errorMessage } from '../api/client'
 import { Badge } from '../components/display'
 import { Alert, Button, Checkbox, Field, Help, Input, Textarea } from '../components/ui'
 import { useFormat } from '../lib/useFormat'
+import { ImportChats } from './ImportChats'
 import {
   useAddNote,
   useBackgroundRequest,
@@ -131,7 +132,7 @@ function NoteRow({ note }: { note: Note }) {
 const PREVIEW = 280
 const preview = (text: string) => (text.length > PREVIEW ? `${text.slice(0, PREVIEW)}…` : text)
 
-type Way = 'write' | 'claude'
+type Way = 'write' | 'claude' | 'import'
 
 function AddNote({ limit }: { limit: number }) {
   const { t } = useTranslation()
@@ -139,7 +140,7 @@ function AddNote({ limit }: { limit: number }) {
   return (
     <div className="space-y-3 rounded-md border border-border p-3">
       <div role="tablist" aria-label={t('assistant.notes.add')} className="flex flex-wrap gap-1">
-        {(['write', 'claude'] as const).map((w) => (
+        {(['write', 'claude', 'import'] as const).map((w) => (
           <button
             key={w}
             type="button"
@@ -157,7 +158,9 @@ function AddNote({ limit }: { limit: number }) {
         ))}
       </div>
       <div role="tabpanel">
-        {way === 'write' ? <WriteNote limit={limit} /> : <FromClaude limit={limit} />}
+        {way === 'write' && <WriteNote limit={limit} />}
+        {way === 'claude' && <FromClaude limit={limit} />}
+        {way === 'import' && <ImportChats />}
       </div>
     </div>
   )
