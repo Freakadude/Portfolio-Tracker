@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router-dom'
 import { errorMessage } from '../api/client'
-import { Alert, Button, Field, Select, Textarea } from '../components/ui'
+import { Alert, Button, Checkbox, Field, Select, Textarea } from '../components/ui'
 import { useCheck, useStrategies } from '../strategies/api'
 import { useHelperPrompt } from './api'
 import { Proposal } from './Proposal'
@@ -18,7 +18,8 @@ export function PasteMode() {
   const strategies = useStrategies()
   const [mode, setMode] = useState<Mode>('new')
   const [strategy, setStrategy] = useState<number | null>(null)
-  const prompt = useHelperPrompt(mode, strategy)
+  const [draftNow, setDraftNow] = useState(false)
+  const prompt = useHelperPrompt(mode, strategy, draftNow)
   const check = useCheck()
   const [copied, setCopied] = useState<'prompt' | 'problems' | null>(null)
   const [answer, setAnswer] = useState('')
@@ -80,6 +81,11 @@ export function PasteMode() {
         </Field>
       )}
 
+      <Checkbox
+        label={t('assistant.paste.draftNow')}
+        checked={draftNow}
+        onChange={(e) => setDraftNow(e.target.checked)}
+      />
       {prompt.isError && <Alert>{errorMessage(prompt.error)}</Alert>}
       {prompt.data && (
         <div className="space-y-2">

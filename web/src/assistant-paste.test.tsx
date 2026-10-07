@@ -156,4 +156,19 @@ describe('the strategy helper on the Claude subscription (ADR 0048)', () => {
       expect(calls.some((c) => c.path === '/api/v1/strategies/1/versions')).toBe(true),
     )
   })
+  it('can ask Claude to draft straight from the notes, without an interview', async () => {
+    const { fetchMock } = mockApi(base())
+    renderAt(<PasteMode />)
+    const user = userEvent.setup()
+    await user.click(
+      await screen.findByLabelText(
+        /draft a strategy straight away from my notes, without an interview/,
+      ),
+    )
+    await vi.waitFor(() =>
+      expect(
+        fetchMock.mock.calls.some(([r]) => String((r as Request).url).includes('draft_now=true')),
+      ).toBe(true),
+    )
+  })
 })

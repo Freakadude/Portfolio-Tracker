@@ -182,3 +182,59 @@ def test_a_talk_stops_at_its_limit_of_answers(api, db) -> None:  # type: ignore[
     full = c.post(f"{SESSIONS}/{sid}/messages", json={"text": "More?"})
     assert full.status_code == 409 and "25 answers" in full.json()["detail"]
     assert c.get(f"{SESSIONS}/999").status_code == 404
+
+
+# --- drafting straight from the notes -----------------------------------------------------------
+
+
+def add_note(c, body: str = "Retire in twenty years; a 30 percent fall would be hard."):  # type: ignore[no-untyped-def]
+    r = c.post("/api/v1/assistant/notes", json={"title": "Goals", "body": body})
+    assert r.status_code == 201
+
+
+def test_a_draft_can_be_made_straight_from_the_notes_without_questions(api, db) -> None:  # type: ignore[no-untyped-def]
+    scripted = ScriptedLlm(turn("I assumed a 70/30 split; check the bands.", draft=GOOD))
+    c = api(scripted)
+    save_key(db)
+    add_note(c)
+    out = start(c, from_notes=True).json()
+    assert out["draft"] is not None and out["answers"] == 1
+    assert "assumed" in out["messages"][0]["text"]
+    first = scripted.requests[0]["messages"][0]["content"]
+    assert "Do not interview me first" in first and "draft the whole strategy now" in first
+    assert "Retire in twenty years" in json.dumps(scripted.requests[0]["system"])  # the notes
+
+
+def test_to_revise_from_the_notes_the_opening_asks_for_a_revision(api, db) -> None:  # type: ignore[no-untyped-def]
+    scripted = ScriptedLlm(turn("Changed the drawdown level.", draft=GOOD))
+    c = api(scripted)
+    save_key(db)
+    add_note(c)
+    created = c.post("/api/v1/strategies", json={"yaml": GOOD}).json()
+    out = start(c, "revise", strategy_id=created["id"], from_notes=True).json()
+    assert out["draft"] is not None
+    assert "propose a revised version" in scripted.requests[0]["messages"][0]["content"]
+
+
+def test_without_notes_there_is_nothing_to_draft_from_and_nothing_is_sent(api, db) -> None:  # type: ignore[no-untyped-def]
+    scripted = ScriptedLlm(turn("never"))
+    c = api(scripted)
+    save_key(db)
+    refused = start(c, from_notes=True)
+    assert refused.status_code == 422 and "Add a note" in refused.json()["detail"]
+    add_note(c)
+    c.patch("/api/v1/assistant/notes/1", json={"use_in_helper": False})
+    assert start(c, from_notes=True).status_code == 422  # a switched-off note does not count
+    assert scripted.requests == [] and db.scalars(select(AssistantSession)).all() == []
+
+
+def test_the_prompt_for_claude_can_ask_for_a_draft_straight_away(api, db) -> None:  # type: ignore[no-untyped-def]
+    c = api()
+    plain = c.get("/api/v1/assistant/prompt").json()["text"]
+    assert "Do not interview me first" not in plain
+    refused = c.get("/api/v1/assistant/prompt", params={"draft_now": "true"})
+    assert refused.status_code == 422
+    add_note(c)
+    text = c.get("/api/v1/assistant/prompt", params={"draft_now": "true"}).json()["text"]
+    assert "Do not interview me first" in text and "Retire in twenty years" in text
+    assert text.index("Do not interview me first") < text.index("## The format of a strategy")

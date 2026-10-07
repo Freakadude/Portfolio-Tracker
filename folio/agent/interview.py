@@ -33,6 +33,17 @@ MAX_REPAIRS = 1
 MAX_TOKENS = 4000
 MAX_CHOICES = 4
 OPENING = "Please begin: greet me in one sentence and ask your first question."
+DRAFT_NEW = (
+    "Do not interview me first. Using only my background notes and my holdings, draft the whole "
+    "strategy now. Where something is missing, make a sensible, cautious assumption, or leave the "
+    "number empty (null) when it is mine to decide. In your reply say in plain sentences what you "
+    "assumed and what I should check; I will correct you afterwards."
+)
+DRAFT_REVISE = (
+    "Do not interview me first. Using my background notes and my holdings, propose a revised "
+    "version of the strategy now, as the whole document. Change only what my notes support. "
+    "In your reply say in plain sentences what you changed and why, and what I should check."
+)
 
 TURN_SCHEMA: dict[str, Any] = {
     "type": "object",
@@ -137,6 +148,7 @@ def take_turn(
     now: dt.datetime,
     session: AssistantSession,
     user_text: str | None,
+    opening: str = OPENING,
 ) -> None:
     """Answer the owner (or, with no text, open the talk). Raises BudgetExceeded or LlmError
     before anything about the talk is changed; on success the talk, its draft and its cost are
@@ -148,7 +160,7 @@ def take_turn(
     model = cfg.models[RUN_TYPE]
     system = _system(db, session, now.date())
     working: list[dict[str, Any]] = list(session.messages)
-    working.append(_user_message(user_text) if user_text else _user_message(OPENING, hidden=True))
+    working.append(_user_message(user_text) if user_text else _user_message(opening, hidden=True))
     spent = Decimal(0)
     draft = session.draft_yaml
     problems_left: str | None = None

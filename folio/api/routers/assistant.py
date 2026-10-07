@@ -372,6 +372,7 @@ def helper_prompt(
     db: DbDep,
     mode: Literal["new", "revise"] = "new",
     strategy: int | None = None,
+    draft_now: bool = False,
 ) -> HelperPromptOut:
     """One prompt to paste into a chat with Claude on the subscription: the rules of the
     interview, the format of a strategy, the holdings as shares (no euro amounts), the background
@@ -379,9 +380,11 @@ def helper_prompt(
     and checked like any other."""
     if mode == "revise" and strategy is None:
         raise ApiError(422, "Which strategy?", "Choose the strategy to revise.")
+    if draft_now:
+        _need_notes(db)
     today = dt.date.today()
     try:
-        text = strategist.paste_prompt(db, today, strategy if mode == "revise" else None)
+        text = strategist.paste_prompt(db, today, strategy if mode == "revise" else None, draft_now)
     except strategy_service.StrategyNotFound:
         raise ApiError(404, "Not found", "That strategy does not exist.") from None
     return HelperPromptOut(text=text, characters=len(text), notes_used=helper_notes(db).used)
@@ -442,6 +445,7 @@ class SessionIn(BaseModel):
 
     mode: Literal["new", "revise"] = "new"
     strategy_id: int | None = None
+    from_notes: bool = False  # draft straight from the background notes, without questions
 
 
 class SayIn(BaseModel):
@@ -490,8 +494,22 @@ def _session_out(db: Session, found: AssistantSession) -> AssistantSessionOut:
     )
 
 
+def _need_notes(db: Session) -> None:
+    if helper_notes(db).used == 0:
+        raise ApiError(
+            422,
+            "No notes to draft from",
+            "Add a note about yourself first (or switch one on): the draft is made from your "
+            "notes and your holdings.",
+        )
+
+
 def _answer(
-    request: Request, db: Session, found: AssistantSession, text: str | None
+    request: Request,
+    db: Session,
+    found: AssistantSession,
+    text: str | None,
+    opening: str = interview.OPENING,
 ) -> AssistantSessionOut:
     cfg = budget.agent_settings(db)
     state = request.app.state
@@ -504,7 +522,7 @@ def _answer(
             'Or use the free way: the tab "Use my subscription".',
         )
     try:
-        interview.take_turn(db, llm, cfg, budget.timezone_of(db), utcnow(), found, text)
+        interview.take_turn(db, llm, cfg, budget.timezone_of(db), utcnow(), found, text, opening)
     except budget.BudgetExceeded as exc:
         raise ApiError(409, "Budget", str(exc)) from exc
     except LlmError as exc:
@@ -520,14 +538,20 @@ def _answer(
 def start_session(
     body: SessionIn, request: Request, _user: UserDep, db: DbDep
 ) -> AssistantSessionOut:
-    """Open a talk with the helper; it greets the owner and asks the first question."""
+    """Open a talk with the helper; it greets the owner and asks the first question, or with
+    `from_notes` drafts the strategy at once from the notes."""
+    if body.from_notes:
+        _need_notes(db)
     try:
         found = interview.start(db, body.mode, body.strategy_id)
     except interview.InterviewError as exc:
         raise ApiError(422, "Which strategy?", str(exc)) from exc
     except strategy_service.StrategyNotFound:
         raise ApiError(404, "Not found", "That strategy does not exist.") from None
-    return _answer(request, db, found, None)
+    opening = interview.OPENING
+    if body.from_notes:
+        opening = interview.DRAFT_REVISE if body.mode == "revise" else interview.DRAFT_NEW
+    return _answer(request, db, found, None, opening)
 
 
 @router.get("/sessions/{session_id}", response_model=AssistantSessionOut)

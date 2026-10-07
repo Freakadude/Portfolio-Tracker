@@ -6,6 +6,7 @@ import { GENERAL_US, mockApi, problem, renderAt } from './test-utils'
 
 afterEach(() => vi.unstubAllGlobals())
 
+const NOTES = { notes: [], note_limit: 6000, total_limit: 12000, used: 0, left_out: 0 }
 const USAGE = { enabled: true, key_set: true, remaining_eur: '4.50', paused: false }
 const session = (over: Record<string, unknown> = {}) => ({
   id: 3,
@@ -29,6 +30,7 @@ const session = (over: Record<string, unknown> = {}) => ({
 const routes = (more: Record<string, unknown> = {}) => ({
   '/api/v1/settings/general': GENERAL_US,
   '/api/v1/agent/usage': USAGE,
+  'GET /api/v1/assistant/notes': NOTES,
   'GET /api/v1/strategies': [
     { id: 1, name: 'Old plan', mode: 'active', version: 1, updated_at: '2026-10-01T10:00:00Z' },
   ],
@@ -68,6 +70,7 @@ describe('the strategy interview in the app (ADR 0048)', () => {
     expect(calls.find((c) => c.path === '/api/v1/assistant/sessions')?.body).toEqual({
       mode: 'new',
       strategy_id: null,
+      from_notes: false,
     })
 
     await user.click(screen.getByRole('button', { name: 'Retirement' }))
@@ -126,9 +129,38 @@ describe('the strategy interview in the app (ADR 0048)', () => {
     expect(calls.find((c) => c.path === '/api/v1/assistant/sessions')?.body).toEqual({
       mode: 'revise',
       strategy_id: 1,
+      from_notes: false,
     })
     await user.type(screen.getByLabelText('Your answer'), 'Lower the drawdown level.')
     await user.click(screen.getByRole('button', { name: 'Send' }))
     expect(await screen.findByRole('alert')).toHaveTextContent('budget for 2026-10 is used up')
+  })
+  it('drafts straight from the notes only when there are notes to draft from', async () => {
+    mockApi(routes())
+    show()
+    expect(await screen.findByText(/add a note about yourself first/)).toBeVisible()
+    expect(screen.getByRole('button', { name: 'Draft straight from my notes' })).toBeDisabled()
+  })
+
+  it('asks for a draft at once when there are notes', async () => {
+    const { calls } = mockApi(
+      routes({
+        'GET /api/v1/assistant/notes': { ...NOTES, used: 300 },
+        'POST /api/v1/assistant/sessions': session({
+          messages: [{ role: 'assistant', text: 'I assumed a 70/30 split.', choices: [] }],
+        }),
+      }),
+    )
+    show()
+    const user = userEvent.setup()
+    const button = await screen.findByRole('button', { name: 'Draft straight from my notes' })
+    await vi.waitFor(() => expect(button).toBeEnabled())
+    await user.click(button)
+    expect(await screen.findByText('I assumed a 70/30 split.')).toBeVisible()
+    expect(calls.find((c) => c.path === '/api/v1/assistant/sessions')?.body).toEqual({
+      mode: 'new',
+      strategy_id: null,
+      from_notes: true,
+    })
   })
 })

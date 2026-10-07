@@ -124,14 +124,17 @@ export function useSummariseChats() {
 export type HelperPrompt = S['HelperPromptOut']
 export type ProposalDiff = S['ProposalDiffOut']
 
-export function useHelperPrompt(mode: 'new' | 'revise', strategy: number | null) {
+export function useHelperPrompt(mode: 'new' | 'revise', strategy: number | null, draftNow = false) {
   return useQuery({
-    queryKey: ['assistant', 'prompt', mode, strategy],
+    queryKey: ['assistant', 'prompt', mode, strategy, draftNow],
+    retry: false,
     enabled: mode === 'new' || strategy !== null,
     queryFn: () =>
       unwrap(
         api.GET('/api/v1/assistant/prompt', {
-          params: { query: { mode, strategy: mode === 'revise' ? strategy : null } },
+          params: {
+            query: { mode, strategy: mode === 'revise' ? strategy : null, draft_now: draftNow },
+          },
         }),
       ),
   })
@@ -195,8 +198,11 @@ export function useSession(id: number | null) {
 export function useStartSession() {
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: (body: { mode: 'new' | 'revise'; strategy_id: number | null }) =>
-      unwrap(api.POST('/api/v1/assistant/sessions', { body })),
+    mutationFn: (body: {
+      mode: 'new' | 'revise'
+      strategy_id: number | null
+      from_notes?: boolean
+    }) => unwrap(api.POST('/api/v1/assistant/sessions', { body: { from_notes: false, ...body } })),
     onSuccess: (session) => {
       queryClient.setQueryData(sessionKey(session.id), session)
       void queryClient.invalidateQueries({ queryKey: ['agent'] })

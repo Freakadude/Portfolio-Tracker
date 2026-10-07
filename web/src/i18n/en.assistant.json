@@ -71,7 +71,8 @@
       "problems": "Folio found problems in this strategy. Copy them back to Claude so it can fix the document.",
       "line": "line {{n}}",
       "copyProblems": "Copy the problems for Claude",
-      "empty": "Paste Claude's answer first."
+      "empty": "Paste Claude's answer first.",
+      "draftNow": "Let Claude draft a strategy straight away from my notes, without an interview"
     },
     "proposal": {
       "title": "What this strategy does",
@@ -163,7 +164,10 @@
       "send": "Send",
       "full": "This talk has reached its {{n}} answers. Save the draft below, or start a new talk.",
       "cost": "This talk has cost {{spent}} so far (answer {{n}} of {{max}}). You have {{left}} left this month.",
-      "draft": "The helper has drafted a strategy. Read it, keep talking to change it, or save it."
+      "draft": "The helper has drafted a strategy. Read it, keep talking to change it, or save it.",
+      "fromNotes": "Draft straight from my notes",
+      "fromNotesHint": "Or let the helper draft a first version at once from your notes and holdings, without questions. It tells you what it assumed, and you can correct it afterwards.",
+      "fromNotesNone": "To draft straight from your notes, add a note about yourself first (My background)."
     }
   }
 }

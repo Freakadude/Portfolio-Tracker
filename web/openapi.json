@@ -9630,6 +9630,11 @@
       "SessionIn": {
         "additionalProperties": false,
         "properties": {
+          "from_notes": {
+            "default": false,
+            "title": "From Notes",
+            "type": "boolean"
+          },
           "mode": {
             "default": "new",
             "enum": [
@@ -14145,6 +14150,16 @@
               ],
               "title": "Strategy"
             }
+          },
+          {
+            "in": "query",
+            "name": "draft_now",
+            "required": false,
+            "schema": {
+              "default": false,
+              "title": "Draft Now",
+              "type": "boolean"
+            }
           }
         ],
         "responses": {
@@ -14177,7 +14192,7 @@
     },
     "/api/v1/assistant/sessions": {
       "post": {
-        "description": "Open a talk with the helper; it greets the owner and asks the first question.",
+        "description": "Open a talk with the helper; it greets the owner and asks the first question, or with\n`from_notes` drafts the strategy at once from the notes.",
         "operationId": "start_session_api_v1_assistant_sessions_post",
         "requestBody": {
           "content": {

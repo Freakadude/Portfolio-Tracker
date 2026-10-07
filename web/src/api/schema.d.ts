@@ -359,7 +359,8 @@ export interface paths {
         put?: never;
         /**
          * Start Session
-         * @description Open a talk with the helper; it greets the owner and asks the first question.
+         * @description Open a talk with the helper; it greets the owner and asks the first question, or with
+         *     `from_notes` drafts the strategy at once from the notes.
          */
         post: operations["start_session_api_v1_assistant_sessions_post"];
         delete?: never;
@@ -6116,6 +6117,11 @@ export interface components {
         /** SessionIn */
         SessionIn: {
             /**
+             * From Notes
+             * @default false
+             */
+            from_notes: boolean;
+            /**
              * Mode
              * @default new
              * @enum {string}
@@ -7876,6 +7882,7 @@ export interface operations {
             query?: {
                 mode?: "new" | "revise";
                 strategy?: number | null;
+                draft_now?: boolean;
             };
             header?: never;
             path?: never;

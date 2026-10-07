@@ -161,8 +161,15 @@ def context_text(
     return "\n\n".join(parts)
 
 
-def paste_prompt(db: Session, today: date, strategy_id: int | None = None) -> str:
-    """One prompt for a chat on claude.ai (the free mode)."""
+def paste_prompt(
+    db: Session, today: date, strategy_id: int | None = None, draft_now: bool = False
+) -> str:
+    """One prompt for a chat on claude.ai (the free mode). With `draft_now` Claude is asked to
+    draft the strategy from the notes straight away, without an interview first."""
     core: Prompt = load_prompt("strategist")
     wrapper: Prompt = load_prompt("strategist_paste")
-    return "\n\n".join([core.text, wrapper.text, context_text(db, today, strategy_id)])
+    parts = [core.text, wrapper.text]
+    if draft_now:
+        parts.append(load_prompt("strategist_draft_now").text)
+    parts.append(context_text(db, today, strategy_id))
+    return "\n\n".join(parts)

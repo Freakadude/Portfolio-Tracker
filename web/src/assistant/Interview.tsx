@@ -6,7 +6,14 @@ import { Alert, Button, Field, Select, Textarea } from '../components/ui'
 import { cn } from '../lib/cn'
 import { useFormat } from '../lib/useFormat'
 import { useStrategies } from '../strategies/api'
-import { useAgentStanding, useSay, useSession, useStartSession, type HelperSession } from './api'
+import {
+  useAgentStanding,
+  useNotes,
+  useSay,
+  useSession,
+  useStartSession,
+  type HelperSession,
+} from './api'
 import { Proposal } from './Proposal'
 
 /** The interview in the app (ADR 0048): the helper asks guided questions, the owner answers (or
@@ -39,10 +46,17 @@ function Start({ onStarted }: { onStarted: (id: number) => void }) {
   const standing = useAgentStanding()
   const strategies = useStrategies()
   const start = useStartSession()
+  const notes = useNotes()
+  const hasNotes = (notes.data?.used ?? 0) > 0
   const [mode, setMode] = useState<'new' | 'revise'>('new')
   const [strategy, setStrategy] = useState<number | null>(null)
   const ready = standing.data?.enabled && standing.data.key_set
   const paused = standing.data?.paused
+  const begin = (fromNotes: boolean) =>
+    start.mutate(
+      { mode, strategy_id: mode === 'revise' ? strategy : null, from_notes: fromNotes },
+      { onSuccess: (s) => onStarted(s.id) },
+    )
 
   return (
     <section aria-labelledby="interview-h" className="space-y-4">
@@ -96,17 +110,30 @@ function Start({ onStarted }: { onStarted: (id: number) => void }) {
           )}
         </Field>
       )}
-      <Button
-        disabled={!ready || paused || start.isPending || (mode === 'revise' && strategy === null)}
-        onClick={() =>
-          start.mutate(
-            { mode, strategy_id: mode === 'revise' ? strategy : null },
-            { onSuccess: (s) => onStarted(s.id) },
-          )
-        }
-      >
-        {t('assistant.interview.start')}
-      </Button>
+      <div className="flex flex-wrap items-center gap-3">
+        <Button
+          disabled={!ready || paused || start.isPending || (mode === 'revise' && strategy === null)}
+          onClick={() => begin(false)}
+        >
+          {t('assistant.interview.start')}
+        </Button>
+        <Button
+          variant="secondary"
+          disabled={
+            !ready ||
+            paused ||
+            !hasNotes ||
+            start.isPending ||
+            (mode === 'revise' && strategy === null)
+          }
+          onClick={() => begin(true)}
+        >
+          {t('assistant.interview.fromNotes')}
+        </Button>
+      </div>
+      <p className="text-xs text-muted">
+        {t(hasNotes ? 'assistant.interview.fromNotesHint' : 'assistant.interview.fromNotesNone')}
+      </p>
       {start.isPending && (
         <p role="status" className="text-sm text-muted">
           {t('assistant.interview.thinking')}
