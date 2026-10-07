@@ -65,6 +65,7 @@ test('a strategy written with Claude on the subscription is checked, reviewed an
   await login(page)
   await page.getByRole('link', { name: 'Strategies' }).click()
   await page.getByRole('link', { name: 'Strategy helper' }).click()
+  await page.getByRole('tab', { name: 'Use my subscription (free)' }).click()
   const prompt = page.getByLabel('Prompt for Claude')
   await expect(prompt).toContainText('portfolio-tracking app called Folio')
   await expect(prompt).toContainText('## The format of a strategy')
@@ -88,4 +89,16 @@ test('a strategy written with Claude on the subscription is checked, reviewed an
   await page.getByRole('button', { name: 'Save as a new strategy (switched off)' }).click()
   await expect(page.getByText(/Made with the strategy helper/)).toBeVisible()
   await expect(page.getByRole('button', { name: /Made with the helper/ })).toContainText('Off')
+})
+
+test('the interview says what it needs when no API key is saved, and points to the free way', async ({
+  page,
+}) => {
+  await login(page)
+  await page.goto('/strategies/assistant')
+  await expect(page.getByRole('heading', { name: 'Interview in the app' })).toBeVisible()
+  await expect(page.getByRole('alert')).toContainText('off or has no API key')
+  await expect(page.getByRole('button', { name: 'Start the interview' })).toBeDisabled()
+  await page.getByRole('tab', { name: 'Use my subscription (free)' }).click()
+  await expect(page.getByLabel('Prompt for Claude')).toBeVisible()
 })

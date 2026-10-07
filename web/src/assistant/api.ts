@@ -167,3 +167,56 @@ export function useSaveProposal() {
       ]),
   })
 }
+
+export type HelperSession = S['AssistantSessionOut']
+
+export function useAgentStanding() {
+  return useQuery({
+    queryKey: ['agent', 'usage'],
+    queryFn: () => unwrap(api.GET('/api/v1/agent/usage')),
+  })
+}
+
+const sessionKey = (id: number | null) => ['assistant', 'session', id] as const
+
+export function useSession(id: number | null) {
+  return useQuery({
+    queryKey: sessionKey(id),
+    enabled: id !== null,
+    queryFn: () =>
+      unwrap(
+        api.GET('/api/v1/assistant/sessions/{session_id}', {
+          params: { path: { session_id: id ?? 0 } },
+        }),
+      ),
+  })
+}
+
+export function useStartSession() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: (body: { mode: 'new' | 'revise'; strategy_id: number | null }) =>
+      unwrap(api.POST('/api/v1/assistant/sessions', { body })),
+    onSuccess: (session) => {
+      queryClient.setQueryData(sessionKey(session.id), session)
+      void queryClient.invalidateQueries({ queryKey: ['agent'] })
+    },
+  })
+}
+
+export function useSay(id: number) {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: (text: string) =>
+      unwrap(
+        api.POST('/api/v1/assistant/sessions/{session_id}/messages', {
+          params: { path: { session_id: id } },
+          body: { text },
+        }),
+      ),
+    onSuccess: (session) => {
+      queryClient.setQueryData(sessionKey(id), session)
+      void queryClient.invalidateQueries({ queryKey: ['agent'] })
+    },
+  })
+}

@@ -49,8 +49,9 @@
       "saveAsNote": "Save as note"
     },
     "tabs": {
-      "notes": "My background",
-      "paste": "Use my subscription (free)"
+      "interview": "Interview in the app",
+      "paste": "Use my subscription (free)",
+      "notes": "My background"
     },
     "paste": {
       "title": "Use my Claude subscription (free)",
@@ -139,6 +140,30 @@
       "save": "Save {{n}} note(s)",
       "saved": "Saved {{n}} note(s). You can find them above."
     },
-    "madeWith": "Made with the strategy helper. It is switched off until you switch it on; everything can be changed here."
+    "madeWith": "Made with the strategy helper. It is switched off until you switch it on; everything can be changed here.",
+    "interview": {
+      "title": "Interview in the app",
+      "titleNew": "Setting up a strategy",
+      "revising": "Revising {{name}}",
+      "intro": "The helper asks you a few questions, one or two at a time, about what the money is for, how you feel about risk and how you invest. When it has enough it drafts a strategy and shows it to you; nothing is saved until you say so. It uses your Anthropic API key and counts against your monthly AI budget (a talk usually costs a few cents).",
+      "notReady": "The AI agent is off or has no API key, so the interview cannot run. Use the free tab, or set it up in Settings, Agent.",
+      "toSettings": "Open Settings",
+      "budget": "You have {{left}} left of this month's AI budget.",
+      "paused": "This month's AI budget is used up, so the interview cannot run. Use the free tab, or raise the budget in Settings, Agent.",
+      "start": "Start the interview",
+      "thinking": "The helper is thinking…",
+      "loading": "Opening the talk…",
+      "newTalk": "New talk",
+      "log": "The talk with the helper",
+      "you": "You",
+      "helper": "Helper",
+      "suggested": "Suggested answers",
+      "reply": "Reply to the helper",
+      "yourAnswer": "Your answer",
+      "send": "Send",
+      "full": "This talk has reached its {{n}} answers. Save the draft below, or start a new talk.",
+      "cost": "This talk has cost {{spent}} so far (answer {{n}} of {{max}}). You have {{left}} left this month.",
+      "draft": "The helper has drafted a strategy. Read it, keep talking to change it, or save it."
+    }
   }
 }

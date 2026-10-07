@@ -2,17 +2,18 @@ import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
 import { cn } from '../lib/cn'
+import { Interview } from './Interview'
 import { NotesPanel } from './NotesPanel'
 import { PasteMode } from './PasteMode'
 
-type Tab = 'paste' | 'notes'
-const TABS: Tab[] = ['paste', 'notes']
+type Tab = 'interview' | 'paste' | 'notes'
+const TABS: Tab[] = ['interview', 'paste', 'notes']
 
 /** The strategy helper (ADR 0048): help with setting up or revising a strategy, and what it
  * knows about you. */
 export function StrategyHelper() {
   const { t } = useTranslation()
-  const [tab, setTab] = useState<Tab>('paste')
+  const [tab, setTab] = useState<Tab>('interview')
   return (
     <div className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-2">
@@ -40,6 +41,7 @@ export function StrategyHelper() {
         ))}
       </div>
       <div role="tabpanel">
+        {tab === 'interview' && <Interview />}
         {tab === 'paste' && <PasteMode />}
         {tab === 'notes' && <NotesPanel />}
       </div>

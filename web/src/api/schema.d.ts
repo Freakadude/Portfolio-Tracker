@@ -348,6 +348,63 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/assistant/sessions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Start Session
+         * @description Open a talk with the helper; it greets the owner and asks the first question.
+         */
+        post: operations["start_session_api_v1_assistant_sessions_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/assistant/sessions/{session_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Session */
+        get: operations["get_session_api_v1_assistant_sessions__session_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/assistant/sessions/{session_id}/messages": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Say
+         * @description One more turn: the owner says something and the helper answers.
+         */
+        post: operations["say_api_v1_assistant_sessions__session_id__messages_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/audit": {
         parameters: {
             query?: never;
@@ -3457,6 +3514,49 @@ export interface components {
             /** Status */
             status: string;
         };
+        /** AssistantDraftOut */
+        AssistantDraftOut: {
+            /** Definition */
+            definition: {
+                [key: string]: unknown;
+            };
+            /** Yaml */
+            yaml: string;
+        };
+        /** AssistantMessageOut */
+        AssistantMessageOut: {
+            /** Choices */
+            choices: string[];
+            /**
+             * Role
+             * @enum {string}
+             */
+            role: "user" | "assistant";
+            /** Text */
+            text: string;
+        };
+        /** AssistantSessionOut */
+        AssistantSessionOut: {
+            /** Answers */
+            answers: number;
+            draft: components["schemas"]["AssistantDraftOut"] | null;
+            /** Id */
+            id: number;
+            /** Max Answers */
+            max_answers: number;
+            /** Messages */
+            messages: components["schemas"]["AssistantMessageOut"][];
+            /** Mode */
+            mode: string;
+            /** Remaining Eur */
+            remaining_eur: string;
+            /** Spent Eur */
+            spent_eur: string;
+            /** Strategy Id */
+            strategy_id: number | null;
+            /** Strategy Name */
+            strategy_name: string | null;
+        };
         /** AttributionOut */
         AttributionOut: {
             /** Capital Eur */
@@ -5944,6 +6044,11 @@ export interface components {
                 [key: string]: unknown;
             };
         };
+        /** SayIn */
+        SayIn: {
+            /** Text */
+            text: string;
+        };
         /** ScheduleIn */
         ScheduleIn: {
             /** Cron */
@@ -6007,6 +6112,17 @@ export interface components {
             date: string;
             /** Value */
             value: string;
+        };
+        /** SessionIn */
+        SessionIn: {
+            /**
+             * Mode
+             * @default new
+             * @enum {string}
+             */
+            mode: "new" | "revise";
+            /** Strategy Id */
+            strategy_id?: number | null;
         };
         /** SetupStatus */
         SetupStatus: {
@@ -7774,6 +7890,105 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["HelperPromptOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    start_session_api_v1_assistant_sessions_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SessionIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AssistantSessionOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_session_api_v1_assistant_sessions__session_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                session_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AssistantSessionOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    say_api_v1_assistant_sessions__session_id__messages_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                session_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SayIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AssistantSessionOut"];
                 };
             };
             /** @description Validation Error */

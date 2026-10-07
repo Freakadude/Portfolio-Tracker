@@ -6,16 +6,17 @@ backups, and are given to nothing but the strategy helper.
 
 import datetime as dt
 from decimal import Decimal
-from typing import Annotated, Literal
+from typing import Annotated, Any, Literal
 
 from fastapi import APIRouter, File, Form, Request, UploadFile
 from pydantic import BaseModel, ConfigDict, Field
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from folio.agent import budget, chat_summary, strategist
+from folio.agent import budget, chat_summary, interview, strategist
 from folio.agent.background import NOTE_LIMIT, SOURCES, TOTAL_LIMIT, helper_notes
 from folio.agent.chat_export import MAX_UPLOAD, Chat, ExportError, read_export
+from folio.agent.llm import LlmError
 from folio.agent.prompt_files import load_prompt
 from folio.agent.runtime import make_llm
 from folio.api.deps import DbDep, UserDep
@@ -23,9 +24,10 @@ from folio.api.errors import ApiError
 from folio.api.routers.strategies import DiffRowOut
 from folio.audit import write_audit
 from folio.db.base import utcnow
-from folio.db.models_insight import BackgroundNote
+from folio.db.models_insight import AssistantSession, BackgroundNote
 from folio.strategies import service as strategy_service
 from folio.strategies.diff import side_by_side
+from folio.strategies.parse import StrategyError, to_json
 
 router = APIRouter(prefix="/assistant", tags=["assistant"])
 
@@ -406,3 +408,136 @@ def proposal_diff(body: ProposalIn, _user: UserDep, db: DbDep) -> ProposalDiffOu
         ],
         changed=any(r.kind != "same" for r in rows),
     )
+
+
+# --- the interview in the app (uses the API key and the budget) -----------------------------------
+
+
+class AssistantMessageOut(BaseModel):
+    role: Literal["user", "assistant"]
+    text: str
+    choices: list[str]
+
+
+class AssistantDraftOut(BaseModel):
+    yaml: str
+    definition: dict[str, Any]
+
+
+class AssistantSessionOut(BaseModel):
+    id: int
+    mode: str
+    strategy_id: int | None
+    strategy_name: str | None
+    messages: list[AssistantMessageOut]
+    draft: AssistantDraftOut | None
+    answers: int  # answers of the helper so far
+    max_answers: int
+    spent_eur: Decimal  # what this talk has cost
+    remaining_eur: Decimal  # what is left of this month's AI budget
+
+
+class SessionIn(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    mode: Literal["new", "revise"] = "new"
+    strategy_id: int | None = None
+
+
+class SayIn(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    text: str = Field(min_length=1, max_length=2000)
+
+
+def _session(db: Session, session_id: int) -> AssistantSession:
+    found = db.get(AssistantSession, session_id)
+    if found is None:
+        raise ApiError(404, "Not found", "That talk does not exist.")
+    return found
+
+
+def _session_out(db: Session, found: AssistantSession) -> AssistantSessionOut:
+    draft = None
+    if found.draft_yaml:
+        try:
+            parsed = strategy_service.read_input(found.draft_yaml, None)
+            draft = AssistantDraftOut(yaml=parsed.yaml, definition=to_json(parsed.strategy))
+        except StrategyError:  # a draft is only kept once it has been checked
+            draft = None
+    name = None
+    if found.strategy_id is not None:
+        try:
+            name = strategy_service.load(db, found.strategy_id).name
+        except strategy_service.StrategyNotFound:
+            name = None
+    cfg = budget.agent_settings(db)
+    state = budget.standing(db, cfg, utcnow(), budget.timezone_of(db))
+    return AssistantSessionOut(
+        id=found.id,
+        mode=found.mode,
+        strategy_id=found.strategy_id,
+        strategy_name=name,
+        messages=[
+            AssistantMessageOut(role=m["role"], text=m["text"], choices=m.get("choices", []))
+            for m in interview.visible(found)
+        ],
+        draft=draft,
+        answers=interview.turns_made(found),
+        max_answers=interview.MAX_TURNS,
+        spent_eur=found.spent_eur,
+        remaining_eur=state.remaining_eur,
+    )
+
+
+def _answer(
+    request: Request, db: Session, found: AssistantSession, text: str | None
+) -> AssistantSessionOut:
+    cfg = budget.agent_settings(db)
+    state = request.app.state
+    llm = make_llm(db, state.settings, getattr(state, "llm_transport", None))
+    if llm is None:
+        raise ApiError(
+            409,
+            "The AI agent is off",
+            "Turn the agent on and save your Anthropic API key in Settings, Agent first. "
+            'Or use the free way: the tab "Use my subscription".',
+        )
+    try:
+        interview.take_turn(db, llm, cfg, budget.timezone_of(db), utcnow(), found, text)
+    except budget.BudgetExceeded as exc:
+        raise ApiError(409, "Budget", str(exc)) from exc
+    except LlmError as exc:
+        raise ApiError(
+            502 if exc.kind != "auth" else 422, "The helper could not answer", str(exc)
+        ) from exc
+    except interview.InterviewError as exc:
+        raise ApiError(409, "This talk is full", str(exc)) from exc
+    return _session_out(db, found)
+
+
+@router.post("/sessions", response_model=AssistantSessionOut, status_code=201)
+def start_session(
+    body: SessionIn, request: Request, _user: UserDep, db: DbDep
+) -> AssistantSessionOut:
+    """Open a talk with the helper; it greets the owner and asks the first question."""
+    try:
+        found = interview.start(db, body.mode, body.strategy_id)
+    except interview.InterviewError as exc:
+        raise ApiError(422, "Which strategy?", str(exc)) from exc
+    except strategy_service.StrategyNotFound:
+        raise ApiError(404, "Not found", "That strategy does not exist.") from None
+    return _answer(request, db, found, None)
+
+
+@router.get("/sessions/{session_id}", response_model=AssistantSessionOut)
+def get_session(session_id: int, _user: UserDep, db: DbDep) -> AssistantSessionOut:
+    return _session_out(db, _session(db, session_id))
+
+
+@router.post("/sessions/{session_id}/messages", response_model=AssistantSessionOut)
+def say(
+    session_id: int, body: SayIn, request: Request, _user: UserDep, db: DbDep
+) -> AssistantSessionOut:
+    """One more turn: the owner says something and the helper answers."""
+    return _answer(request, db, _session(db, session_id), body.text.strip())

@@ -262,3 +262,18 @@ class BackgroundNote(Base, SoftDeleteMixin):
     body: Mapped[str] = mapped_column(Text)
     source: Mapped[str] = mapped_column(String(12), default="written")  # written|pasted|chat_export
     use_in_helper: Mapped[bool] = mapped_column(Boolean, default=True)
+
+
+class AssistantSession(Base):
+    """One talk with the strategy helper in the app: the messages, the strategy it has drafted so
+    far and what the talk has cost. The talk can be picked up again until the owner is done."""
+
+    __tablename__ = "assistant_session"
+
+    mode: Mapped[str] = mapped_column(String(6))  # new | revise
+    strategy_id: Mapped[int | None] = mapped_column(
+        ForeignKey("strategy.id"), default=None, index=True
+    )
+    messages: Mapped[Any] = mapped_column(JSON, default=list)
+    draft_yaml: Mapped[str | None] = mapped_column(Text, default=None)
+    spent_eur: Mapped[Decimal] = mapped_column(DecimalText, default=Decimal(0))

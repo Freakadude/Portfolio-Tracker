@@ -111,6 +111,7 @@ class AgentSettings(Section):
             "event_brief": "claude-sonnet-5-5",
             "ask": "claude-sonnet-5-5",
             "analyse_position": "claude-sonnet-5-5",
+            "strategist": "claude-sonnet-5-5",
             "contribution_plan": "claude-sonnet-5-5",
             "on_demand": "claude-sonnet-5-5",
             "news_triage": "claude-haiku-4-5-20251001",
