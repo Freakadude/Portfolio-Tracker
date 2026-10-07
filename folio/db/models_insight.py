@@ -246,3 +246,19 @@ class CalendarEvent(Base, SoftDeleteMixin):
     external_id: Mapped[str] = mapped_column(String(80), default="", index=True)
     detail: Mapped[str] = mapped_column(Text, default="")
     brief_sent_at: Mapped[datetime | None] = mapped_column(UTCDateTime, default=None)
+
+
+# --- Strategy helper (ADR 0048) ------------------------------------------------------------------
+
+
+class BackgroundNote(Base, SoftDeleteMixin):
+    """What the owner wants the strategy helper to know about them: goals, horizon, how they feel
+    about risk, what they decided in earlier talks. Written by hand, pasted from a chat with
+    Claude, or summarised from an export of those chats. Only the strategy helper reads it."""
+
+    __tablename__ = "background_note"
+
+    title: Mapped[str] = mapped_column(String(120))
+    body: Mapped[str] = mapped_column(Text)
+    source: Mapped[str] = mapped_column(String(12), default="written")  # written|pasted|chat_export
+    use_in_helper: Mapped[bool] = mapped_column(Boolean, default=True)

@@ -5975,6 +5975,172 @@
         "title": "NewsPageOut",
         "type": "object"
       },
+      "NoteChanges": {
+        "additionalProperties": false,
+        "properties": {
+          "body": {
+            "anyOf": [
+              {
+                "minLength": 1,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Body"
+          },
+          "title": {
+            "anyOf": [
+              {
+                "maxLength": 120,
+                "minLength": 1,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Title"
+          },
+          "use_in_helper": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Use In Helper"
+          }
+        },
+        "title": "NoteChanges",
+        "type": "object"
+      },
+      "NoteIn": {
+        "additionalProperties": false,
+        "properties": {
+          "body": {
+            "minLength": 1,
+            "title": "Body",
+            "type": "string"
+          },
+          "source": {
+            "default": "written",
+            "enum": [
+              "written",
+              "pasted",
+              "chat_export"
+            ],
+            "title": "Source",
+            "type": "string"
+          },
+          "title": {
+            "maxLength": 120,
+            "minLength": 1,
+            "title": "Title",
+            "type": "string"
+          },
+          "use_in_helper": {
+            "default": true,
+            "title": "Use In Helper",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "title",
+          "body"
+        ],
+        "title": "NoteIn",
+        "type": "object"
+      },
+      "NoteOut": {
+        "properties": {
+          "body": {
+            "title": "Body",
+            "type": "string"
+          },
+          "characters": {
+            "title": "Characters",
+            "type": "integer"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "id": {
+            "title": "Id",
+            "type": "integer"
+          },
+          "source": {
+            "title": "Source",
+            "type": "string"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          },
+          "updated_at": {
+            "format": "date-time",
+            "title": "Updated At",
+            "type": "string"
+          },
+          "use_in_helper": {
+            "title": "Use In Helper",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "id",
+          "title",
+          "body",
+          "source",
+          "use_in_helper",
+          "characters",
+          "created_at",
+          "updated_at"
+        ],
+        "title": "NoteOut",
+        "type": "object"
+      },
+      "NotesOut": {
+        "properties": {
+          "left_out": {
+            "title": "Left Out",
+            "type": "integer"
+          },
+          "note_limit": {
+            "title": "Note Limit",
+            "type": "integer"
+          },
+          "notes": {
+            "items": {
+              "$ref": "#/components/schemas/NoteOut"
+            },
+            "title": "Notes",
+            "type": "array"
+          },
+          "total_limit": {
+            "title": "Total Limit",
+            "type": "integer"
+          },
+          "used": {
+            "title": "Used",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "notes",
+          "note_limit",
+          "total_limit",
+          "used",
+          "left_out"
+        ],
+        "title": "NotesOut",
+        "type": "object"
+      },
       "NotificationOut": {
         "properties": {
           "body": {
@@ -7286,6 +7452,19 @@
           "p90_eur"
         ],
         "title": "ProjectionPointOut",
+        "type": "object"
+      },
+      "PromptOut": {
+        "properties": {
+          "text": {
+            "title": "Text",
+            "type": "string"
+          }
+        },
+        "required": [
+          "text"
+        ],
+        "title": "PromptOut",
         "type": "object"
       },
       "ReadIn": {
@@ -13076,6 +13255,173 @@
         "summary": "Usage",
         "tags": [
           "agent"
+        ]
+      }
+    },
+    "/api/v1/assistant/notes": {
+      "get": {
+        "operationId": "list_notes_api_v1_assistant_notes_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NotesOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "List Notes",
+        "tags": [
+          "assistant"
+        ]
+      },
+      "post": {
+        "operationId": "create_note_api_v1_assistant_notes_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/NoteIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NoteOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Create Note",
+        "tags": [
+          "assistant"
+        ]
+      }
+    },
+    "/api/v1/assistant/notes/request": {
+      "get": {
+        "description": "The text to paste into a chat with Claude, to get a profile back that can be saved as a\nnote (the free way, on the Claude subscription).",
+        "operationId": "background_request_api_v1_assistant_notes_request_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PromptOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Background Request",
+        "tags": [
+          "assistant"
+        ]
+      }
+    },
+    "/api/v1/assistant/notes/{note_id}": {
+      "delete": {
+        "operationId": "delete_note_api_v1_assistant_notes__note_id__delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "note_id",
+            "required": true,
+            "schema": {
+              "title": "Note Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Delete Note",
+        "tags": [
+          "assistant"
+        ]
+      },
+      "patch": {
+        "operationId": "change_note_api_v1_assistant_notes__note_id__patch",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "note_id",
+            "required": true,
+            "schema": {
+              "title": "Note Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/NoteChanges"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NoteOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Change Note",
+        "tags": [
+          "assistant"
         ]
       }
     },

@@ -13,6 +13,7 @@ from folio.api.routers import (
     agent,
     alerts,
     analytics,
+    assistant,
     auth,
     backups,
     calendar,
@@ -87,6 +88,7 @@ def create_app(
     app.add_middleware(RequestLogMiddleware)
 
     app.include_router(auth.router, prefix=API_PREFIX)
+    app.include_router(assistant.router, prefix=API_PREFIX)
     app.include_router(setup_router.router, prefix=API_PREFIX)
     app.include_router(settings_router.router, prefix=API_PREFIX)
     app.include_router(schedules.router, prefix=API_PREFIX)

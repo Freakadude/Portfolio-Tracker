@@ -2,6 +2,7 @@ import i18n from 'i18next'
 import { initReactI18next } from 'react-i18next'
 import en from './en.json'
 import agent from './en.agent.json'
+import assistant from './en.assistant.json'
 import dashboards from './en.dashboards.json'
 import lookthrough from './en.lookthrough.json'
 import news from './en.news.json'
@@ -36,6 +37,7 @@ export const resources = {
   ...lookthrough,
   ...news,
   ...agent,
+  ...assistant,
 }
 
 void i18n.use(initReactI18next).init({

@@ -14,6 +14,7 @@ import { Reports } from './pages/Reports'
 import { Settings } from './pages/Settings'
 import { Setup } from './pages/Setup'
 import { Strategies } from './pages/Strategies'
+import { StrategyHelper } from './assistant/StrategyHelper'
 import { StrategyReview } from './strategies/Review'
 import { System } from './pages/System'
 import { Watchlist } from './pages/Watchlist'
@@ -36,6 +37,7 @@ export function App() {
           <Route path="watchlist" element={<Watchlist />} />
           <Route path="strategies" element={<Strategies />} />
           <Route path="strategies/review" element={<StrategyReview />} />
+          <Route path="strategies/assistant" element={<StrategyHelper />} />
           <Route path="reports" element={<Reports />} />
           <Route path="what-if" element={<WhatIf />} />
           <Route path="holdings" element={<Holdings />} />

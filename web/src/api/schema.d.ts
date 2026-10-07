@@ -187,6 +187,63 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/assistant/notes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Notes */
+        get: operations["list_notes_api_v1_assistant_notes_get"];
+        put?: never;
+        /** Create Note */
+        post: operations["create_note_api_v1_assistant_notes_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/assistant/notes/request": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Background Request
+         * @description The text to paste into a chat with Claude, to get a profile back that can be saved as a
+         *     note (the free way, on the Claude subscription).
+         */
+        get: operations["background_request_api_v1_assistant_notes_request_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/assistant/notes/{note_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Delete Note */
+        delete: operations["delete_note_api_v1_assistant_notes__note_id__delete"];
+        options?: never;
+        head?: never;
+        /** Change Note */
+        patch: operations["change_note_api_v1_assistant_notes__note_id__patch"];
+        trace?: never;
+    };
     "/api/v1/audit": {
         parameters: {
             query?: never;
@@ -4748,6 +4805,71 @@ export interface components {
             /** Total */
             total: number;
         };
+        /** NoteChanges */
+        NoteChanges: {
+            /** Body */
+            body?: string | null;
+            /** Title */
+            title?: string | null;
+            /** Use In Helper */
+            use_in_helper?: boolean | null;
+        };
+        /** NoteIn */
+        NoteIn: {
+            /** Body */
+            body: string;
+            /**
+             * Source
+             * @default written
+             * @enum {string}
+             */
+            source: "written" | "pasted" | "chat_export";
+            /** Title */
+            title: string;
+            /**
+             * Use In Helper
+             * @default true
+             */
+            use_in_helper: boolean;
+        };
+        /** NoteOut */
+        NoteOut: {
+            /** Body */
+            body: string;
+            /** Characters */
+            characters: number;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Id */
+            id: number;
+            /** Source */
+            source: string;
+            /** Title */
+            title: string;
+            /**
+             * Updated At
+             * Format: date-time
+             */
+            updated_at: string;
+            /** Use In Helper */
+            use_in_helper: boolean;
+        };
+        /** NotesOut */
+        NotesOut: {
+            /** Left Out */
+            left_out: number;
+            /** Note Limit */
+            note_limit: number;
+            /** Notes */
+            notes: components["schemas"]["NoteOut"][];
+            /** Total Limit */
+            total_limit: number;
+            /** Used */
+            used: number;
+        };
         /** NotificationOut */
         NotificationOut: {
             /** Body */
@@ -5108,6 +5230,11 @@ export interface components {
             p10_eur: string;
             /** P90 Eur */
             p90_eur: string;
+        };
+        /** PromptOut */
+        PromptOut: {
+            /** Text */
+            text: string;
         };
         /** ReadIn */
         ReadIn: {
@@ -7133,6 +7260,143 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["AgentBudgetOut"];
+                };
+            };
+        };
+    };
+    list_notes_api_v1_assistant_notes_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["NotesOut"];
+                };
+            };
+        };
+    };
+    create_note_api_v1_assistant_notes_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["NoteIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["NoteOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    background_request_api_v1_assistant_notes_request_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PromptOut"];
+                };
+            };
+        };
+    };
+    delete_note_api_v1_assistant_notes__note_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                note_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    change_note_api_v1_assistant_notes__note_id__patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                note_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["NoteChanges"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["NoteOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
                 };
             };
         };

@@ -1,0 +1,51 @@
+{
+  "assistant": {
+    "title": "Strategy helper",
+    "link": "Strategy helper",
+    "back": "Back to strategies",
+    "intro": "Tell the helper about yourself once, in your own words, and it can start from there when it helps you set up or revise a strategy.",
+    "notes": {
+      "title": "My investing background",
+      "helpTitle": "What is this, and who reads it?",
+      "help1": "These notes are what the strategy helper knows about you: your goals, how long you invest for, how you feel about risk, rules you want to keep and what you decided in earlier talks. Write them yourself, or let Claude write a profile from the chats you already had with it and paste that in.",
+      "help2": "They are stored only in Folio (and in its backups). Nothing else in Folio reads them, and they leave the app only inside a helper session that you start with your own API key. Leave out account numbers, names of other people and exact amounts.",
+      "none": "No notes yet. Add one below; the helper works without notes too, it just asks more questions.",
+      "budget": "The helper reads {{used}} of at most {{limit}} characters of your notes, newest first.",
+      "leftOut": "{{n}} switched-on note(s) do not fit under that limit and are left out. Switch some off or shorten them.",
+      "characters": "{{n}} characters",
+      "use": "Use in helper",
+      "edit": "Edit",
+      "close": "Close",
+      "delete": "Delete",
+      "confirmDelete": "Delete the note “{{title}}”?",
+      "editing": "Edit note",
+      "save": "Save changes",
+      "noteTitle": "Title",
+      "noteBody": "Note",
+      "sources": {
+        "written": "Written by me",
+        "pasted": "From Claude",
+        "chat_export": "From my chat export"
+      },
+      "add": "Add note",
+      "ways": {
+        "write": "Write it myself",
+        "claude": "Ask Claude to write it (free)"
+      },
+      "writeForm": "Write a note",
+      "writeHint": "A few sentences are plenty: what the money is for, when you may need it, how a big fall would feel, rules you want to keep.",
+      "titlePlaceholder": "For example: Goals and horizon",
+      "counter": "{{n}} of {{limit}} characters",
+      "claudeStep1": "Copy the text below and paste it into a chat with Claude (claude.ai), ideally one where you talked about your investing before. This uses your Claude subscription, not the API.",
+      "claudeStep2": "Read what Claude writes and correct it in the chat. Remove anything private.",
+      "claudeStep3": "Paste the final text in the box under it and save it as a note.",
+      "requestText": "Text to paste into Claude",
+      "copy": "Copy the text",
+      "copied": "Copied",
+      "profileTitle": "My investing profile",
+      "pasteForm": "Save what Claude wrote",
+      "pasteHere": "What Claude wrote",
+      "saveAsNote": "Save as note"
+    }
+  }
+}

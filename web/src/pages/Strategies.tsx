@@ -66,6 +66,9 @@ export function Strategies() {
           <Link to="/strategies/review" className="text-sm hover:underline">
             {t('strategyReview.link')}
           </Link>
+          <Link to="/strategies/assistant" className="text-sm hover:underline">
+            {t('assistant.link')}
+          </Link>
           <Button variant="secondary" onClick={() => setParams({ guided: '1' })} disabled={guided}>
             {t('strategies.wizard.start')}
           </Button>
