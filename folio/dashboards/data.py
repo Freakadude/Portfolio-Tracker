@@ -599,7 +599,13 @@ def holdings_table(env: Env, cfg: Any) -> dict[str, Any]:
     for r in rows:
         m = r.metrics
         target = targets.get(r.instrument.id)
-        latest = r.price.delayed_price if r.price and r.price.delayed_price else None
+        # "last close" is the close before the latest price: while a newer quote exists that is
+        # the newest close, and once the day's own close is the latest price it is the day before
+        price = r.price
+        quoted = price is not None and price.delayed_price is not None
+        before = None if price is None else (price.close if quoted else price.previous_close)
+        before_date = None if price is None else (price.date if quoted else price.previous_date)
+        latest = None if price is None else (price.delayed_price if quoted else price.close)
         out.append(
             {
                 "instrument_id": r.instrument.id,
@@ -610,8 +616,8 @@ def holdings_table(env: Env, cfg: Any) -> dict[str, Any]:
                 "quantity": str(r.state.quantity),
                 "avg_cost_eur": s(r.state.avg_cost_eur),
                 "cost_basis_eur": str(r.state.cost_basis_eur),
-                "close": s(r.price.close if r.price else None),
-                "close_date": None if r.price is None else r.price.date.isoformat(),
+                "close": s(before),
+                "close_date": None if before_date is None else before_date.isoformat(),
                 "latest": s(latest),
                 "latest_at": (
                     r.price.delayed_at.isoformat() if r.price and r.price.delayed_at else None

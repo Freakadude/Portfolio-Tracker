@@ -663,7 +663,12 @@ def test_the_holdings_table_has_target_weights_and_the_latest_quote(api, book, d
 
     # no sleeve target yet: nothing to compare with
     row = one(api, "holdings_table")["rows"][0]
-    assert row["target_weight"] is None and row["weight_diff"] is None and row["latest"] is None
+    assert row["target_weight"] is None and row["weight_diff"] is None
+    # no quote: the latest price is the newest close, and the last close is the one before it
+    price = api.get("/api/v1/positions").json()["positions"][0]["price"]
+    assert row["latest_at"] is None and D(row["latest"]) == D(price["close"])
+    assert D(row["close"]) == D(price["previous_close"]) != D(row["latest"])
+    assert row["close_date"] < price["date"]
     sleeve = api.post("/api/v1/sleeves", json={"name": "Core", "target_pct": "60"}).json()
     api.patch(f"/api/v1/instruments/{book['fund']}", json={"sleeve_id": sleeve["id"]})
     clear_cache()
@@ -676,6 +681,8 @@ def test_the_holdings_table_has_target_weights_and_the_latest_quote(api, book, d
     db.commit()
     row = one(api, "holdings_table")["rows"][0]
     assert D(row["latest"]) == D("109.5") and row["latest_at"].startswith("2024-01-15T10:00")
+    # with a newer quote the newest close is the last close
+    assert D(row["close"]) == D(price["close"]) and row["close_date"] == price["date"]
 
 
 def test_the_dashboard_can_look_at_one_type_or_some_holdings(api, book, db) -> None:

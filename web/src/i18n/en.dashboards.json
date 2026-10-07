@@ -119,7 +119,7 @@
     }
   },
   "widgets": {
-    "latestIsClose": "No newer quote than the last close, so this is the last close.",
+    "latestIsClose": "No quote is newer than the newest close, so this is that close.",
     "historyRange": "{{start}} to {{end}} ({{period}}).",
     "historyUnpricedBefore": "The line starts on {{date}}, the first day every holding had a price; before that the value would have been too low.",
     "historyUnpricedDays_one": "{{count}} day in between is missing a price for one holding, so its value is understated.",

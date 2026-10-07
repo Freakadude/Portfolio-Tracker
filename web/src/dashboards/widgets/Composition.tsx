@@ -232,7 +232,7 @@ export function HoldingsTableWidget({ data, config }: WidgetProps<HoldingsData>)
         case 'name':
           return r.name.toLowerCase()
         case 'latest':
-          return toNumber(r.latest ?? r.close)
+          return toNumber(r.latest)
         case 'quantity':
         case 'close':
         case 'value':
@@ -300,13 +300,13 @@ export function HoldingsTableWidget({ data, config }: WidgetProps<HoldingsData>)
           <span title={r.close_date ?? undefined}>{eur(r.close)}</span>
         )
       case 'latest':
-        return r.latest !== null ? (
-          <span title={r.latest_at ? when(r.latest_at) : undefined}>{num(r.latest)}</span>
-        ) : r.close === null ? (
+        return r.latest === null ? (
           '–'
+        ) : r.latest_at ? (
+          <span title={when(r.latest_at)}>{num(r.latest)}</span>
         ) : (
           <span className="text-muted" title={t('widgets.latestIsClose')}>
-            {eur(r.close)}
+            {num(r.latest)}
           </span>
         )
       case 'value':

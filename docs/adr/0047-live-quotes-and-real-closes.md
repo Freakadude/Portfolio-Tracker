@@ -20,3 +20,6 @@ During the session the Home figures move every 15 minutes (as far as the quote p
 
 ## Addendum (2026-10-07)
 A close of a session that is still running, stored earlier, is removed whenever the prices are updated (a hand-entered or overridden close is kept), and "Refresh prices now" also fetches the quotes of the open markets, so "Last close" and "Latest price" differ at once. After the close both are the same number.
+
+## Addendum 2 (2026-10-07)
+In the holdings widget "Last close" is the close before the latest price, so it stays a different number from "Latest price" after the market has closed: with a newer quote it is the newest close, and once the day's own close is the latest price it is the close of the day before. "Latest price" is the newest quote, or the newest close when no quote is newer (shown muted, with a hover saying so).

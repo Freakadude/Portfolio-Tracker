@@ -102,6 +102,27 @@ describe('the holdings widget (FR-DB-03)', () => {
   })
 })
 
+describe('last close and latest price (FR-MD-05)', () => {
+  it('shows the close before the latest price, and the newest close when no quote is newer', () => {
+    show(
+      data(
+        [
+          row(1, 'Quoted', { close: '100', latest: '101.5', latest_at: '2026-10-06T13:20:00Z' }),
+        ].concat(row(2, 'Closed', { close: '98', latest: '100', latest_at: null })),
+        { columns: ['name', 'close', 'latest'] },
+      ),
+    )
+    const quoted = screen.getByRole('row', { name: /Quoted/ })
+    expect(within(quoted).getByText(/100[.,]00/)).toBeInTheDocument()
+    expect(within(quoted).getByText(/101[.,]50/)).toBeInTheDocument()
+    const closed = screen.getByRole('row', { name: /Closed/ })
+    expect(within(closed).getByText(/98[.,]00/)).toBeInTheDocument()
+    expect(within(closed).getByTitle(/No quote is newer than the newest close/)).toHaveTextContent(
+      /100[.,]00/,
+    )
+  })
+})
+
 describe('instrument types look different (FR-INS-02)', () => {
   it('marks each holding with its type, in words and in a colour of its own', () => {
     show(

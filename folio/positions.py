@@ -8,6 +8,7 @@ listed, with its market figures left empty rather than guessed.
 
 from __future__ import annotations
 
+import datetime as dt
 from dataclasses import dataclass, field, replace
 from datetime import date, datetime
 from decimal import Decimal
@@ -34,6 +35,7 @@ class PriceInfo:
     overridden: bool
     stale: bool
     previous_close: Decimal | None
+    previous_date: dt.date | None = None  # the day of previous_close
     delayed_price: Decimal | None = None  # a newer intraday quote, in the trading currency
     delayed_at: datetime | None = None
     delayed_source: str | None = None
@@ -169,6 +171,7 @@ def quote_for(
         overridden=bar.overridden,
         stale=prices.is_stale(listing_ref(listing, instrument.isin), today),
         previous_close=previous.close if previous else None,
+        previous_date=previous.date if previous else None,
     )
     if delayed is not None:
         info = replace(
