@@ -113,14 +113,16 @@ export function Alert({ children }: { children: ReactNode }) {
   )
 }
 
-export function Checkbox({
-  label,
-  ...props
-}: InputHTMLAttributes<HTMLInputElement> & { label: string }) {
+/** Forwards its ref: react-hook-form's `register` needs the input element to read whether the box
+ * is ticked, and React 18 drops a ref a plain function component receives. */
+export const Checkbox = forwardRef<
+  HTMLInputElement,
+  InputHTMLAttributes<HTMLInputElement> & { label: string }
+>(function Checkbox({ label, ...props }, ref) {
   return (
     <label className="flex min-h-10 items-center gap-2 text-sm">
-      <input type="checkbox" className="size-4 accent-[var(--primary)]" {...props} />
+      <input ref={ref} type="checkbox" className="size-4 accent-[var(--primary)]" {...props} />
       {label}
     </label>
   )
-}
+})

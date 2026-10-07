@@ -7,7 +7,7 @@ Requirement ID → module → test → status (`todo`, `in progress`, `done`).
 | ID | Module | Test | Status |
 | --- | --- | --- | --- |
 | FR-SY-01 | folio/api/routers/setup, web/src/pages/Setup.tsx | tests/integration/test_setup.py, web/e2e/setup-wizard.spec.ts | done |
-| FR-SY-02 | folio/api/routers/auth, folio/security | tests/integration/test_auth.py | done |
+| FR-SY-02 | folio/api/routers/auth, folio/security, web/src/pages/Login | tests/integration/test_auth.py, web/src/login.test.tsx | done |
 | FR-SY-05 | folio/security/secrets, redact (done) | tests/integration/test_secrets.py, test_settings.py, test_logging.py | done |
 | FR-SY-09 (shell) | folio/api/routers/settings, folio/settings_schema.py, web/src/pages/Settings.tsx | tests/integration/test_settings.py, web/src/app.test.tsx, web/e2e/setup-wizard.spec.ts | done |
 | NFR-07 | folio/api/middleware (CSP, CSRF), docker/Dockerfile, docker-compose.yml | tests/integration/test_security_headers.py, test_deploy_config.py; multi-arch image build in CI (passed) | done |
