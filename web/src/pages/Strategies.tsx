@@ -78,9 +78,9 @@ export function Strategies() {
         </div>
       </div>
       {create.isError && <Alert>{errorMessage(create.error)}</Alert>}
-      {params.get('made') === '1' && (
+      {(params.get('made') === '1' || params.get('made') === 'helper') && (
         <p role="status" className="text-sm text-muted">
-          {t('strategies.wizard.madeWith')}
+          {t(params.get('made') === 'helper' ? 'assistant.madeWith' : 'strategies.wizard.madeWith')}
         </p>
       )}
       {guided ? (

@@ -3600,6 +3600,29 @@
         "title": "HeaderOut",
         "type": "object"
       },
+      "HelperPromptOut": {
+        "properties": {
+          "characters": {
+            "title": "Characters",
+            "type": "integer"
+          },
+          "notes_used": {
+            "title": "Notes Used",
+            "type": "integer"
+          },
+          "text": {
+            "title": "Text",
+            "type": "string"
+          }
+        },
+        "required": [
+          "text",
+          "characters",
+          "notes_used"
+        ],
+        "title": "HelperPromptOut",
+        "type": "object"
+      },
       "HistoryPoint": {
         "properties": {
           "date": {
@@ -7744,6 +7767,47 @@
           "text"
         ],
         "title": "PromptOut",
+        "type": "object"
+      },
+      "ProposalDiffOut": {
+        "properties": {
+          "changed": {
+            "title": "Changed",
+            "type": "boolean"
+          },
+          "rows": {
+            "items": {
+              "$ref": "#/components/schemas/DiffRowOut"
+            },
+            "title": "Rows",
+            "type": "array"
+          }
+        },
+        "required": [
+          "rows",
+          "changed"
+        ],
+        "title": "ProposalDiffOut",
+        "type": "object"
+      },
+      "ProposalIn": {
+        "additionalProperties": false,
+        "properties": {
+          "strategy_id": {
+            "title": "Strategy Id",
+            "type": "integer"
+          },
+          "yaml": {
+            "minLength": 1,
+            "title": "Yaml",
+            "type": "string"
+          }
+        },
+        "required": [
+          "strategy_id",
+          "yaml"
+        ],
+        "title": "ProposalIn",
         "type": "object"
       },
       "ReadIn": {
@@ -13663,6 +13727,48 @@
         ]
       }
     },
+    "/api/v1/assistant/diff": {
+      "post": {
+        "description": "What a proposed strategy changes against the strategy it would revise, line by line.",
+        "operationId": "proposal_diff_api_v1_assistant_diff_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProposalIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProposalDiffOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Proposal Diff",
+        "tags": [
+          "assistant"
+        ]
+      }
+    },
     "/api/v1/assistant/notes": {
       "get": {
         "operationId": "list_notes_api_v1_assistant_notes_get",
@@ -13825,6 +13931,70 @@
           }
         },
         "summary": "Change Note",
+        "tags": [
+          "assistant"
+        ]
+      }
+    },
+    "/api/v1/assistant/prompt": {
+      "get": {
+        "description": "One prompt to paste into a chat with Claude on the subscription: the rules of the\ninterview, the format of a strategy, the holdings as shares (no euro amounts), the background\nnotes and, to revise, the current strategy. Claude answers with a strategy that is pasted back\nand checked like any other.",
+        "operationId": "helper_prompt_api_v1_assistant_prompt_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "mode",
+            "required": false,
+            "schema": {
+              "default": "new",
+              "enum": [
+                "new",
+                "revise"
+              ],
+              "title": "Mode",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "strategy",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Strategy"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HelperPromptOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Helper Prompt",
         "tags": [
           "assistant"
         ]

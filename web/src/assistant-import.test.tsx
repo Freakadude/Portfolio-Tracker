@@ -1,7 +1,7 @@
 import { screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { StrategyHelper } from './assistant/StrategyHelper'
+import { NotesPanel } from './assistant/NotesPanel'
 import { GENERAL_US, mockApi, renderAt } from './test-utils'
 
 afterEach(() => vi.unstubAllGlobals())
@@ -70,7 +70,7 @@ describe('importing chats from claude.ai as notes (ADR 0048)', () => {
         updated_at: '2026-10-07T10:00:00Z',
       },
     })
-    renderAt(<StrategyHelper />)
+    renderAt(<NotesPanel />)
     const user = await open()
     await user.upload(screen.getByLabelText('Export file from claude.ai'), file())
     expect(
@@ -120,7 +120,7 @@ describe('importing chats from claude.ai as notes (ADR 0048)', () => {
         max_chats: 8,
       },
     })
-    renderAt(<StrategyHelper />)
+    renderAt(<NotesPanel />)
     const user = await open()
     await user.upload(screen.getByLabelText('Export file from claude.ai'), file())
     await user.click(await screen.findByRole('button', { name: 'Check the cost of 1 chat(s)' }))

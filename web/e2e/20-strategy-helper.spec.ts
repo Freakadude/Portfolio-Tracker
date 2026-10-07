@@ -7,6 +7,7 @@ test('background notes are written, switched off for the helper and deleted', as
   await login(page)
   await page.getByRole('link', { name: 'Strategies' }).click()
   await page.getByRole('link', { name: 'Strategy helper' }).click()
+  await page.getByRole('tab', { name: 'My background' }).click()
   await expect(page.getByRole('heading', { name: 'My investing background' })).toBeVisible()
 
   const form = page.getByRole('form', { name: 'Write a note' })
@@ -31,6 +32,7 @@ test('background notes are written, switched off for the helper and deleted', as
 test('a claude.ai export is read and its chats about investing are offered', async ({ page }) => {
   await login(page)
   await page.goto('/strategies/assistant')
+  await page.getByRole('tab', { name: 'My background' }).click()
   await page.getByRole('tab', { name: 'From my chat export' }).click()
   const chat = (id: string, name: string, lines: string[]) => ({
     uuid: id,
@@ -55,4 +57,35 @@ test('a claude.ai export is read and its chats about investing are offered', asy
   await expect(page.getByLabel('World ETF and bonds')).toBeChecked()
   await expect(page.getByLabel('Pasta')).not.toBeChecked()
   await expect(page.getByRole('button', { name: 'Check the cost of 1 chat(s)' })).toBeVisible()
+})
+
+test('a strategy written with Claude on the subscription is checked, reviewed and saved switched off', async ({
+  page,
+}) => {
+  await login(page)
+  await page.getByRole('link', { name: 'Strategies' }).click()
+  await page.getByRole('link', { name: 'Strategy helper' }).click()
+  const prompt = page.getByLabel('Prompt for Claude')
+  await expect(prompt).toContainText('portfolio-tracking app called Folio')
+  await expect(prompt).toContainText('## The format of a strategy')
+
+  const answer = [
+    'Here you are:',
+    '```yaml',
+    'strategy:',
+    '  name: "Made with the helper"',
+    '  base_currency: EUR',
+    '  principles: ["Keep it simple"]',
+    '  sleeves: []',
+    '  rules:',
+    '    - { id: stale, type: stale_data, severity: high }',
+    '```',
+  ].join('\n')
+  await page.getByLabel(/Claude's answer/).fill(answer)
+  await page.getByRole('button', { name: 'Check it' }).click()
+  await expect(page.getByText('Name: Made with the helper.')).toBeVisible()
+  await expect(page.getByText('Warn when prices stop updating.')).toBeVisible()
+  await page.getByRole('button', { name: 'Save as a new strategy (switched off)' }).click()
+  await expect(page.getByText(/Made with the strategy helper/)).toBeVisible()
+  await expect(page.getByRole('button', { name: /Made with the helper/ })).toContainText('Off')
 })

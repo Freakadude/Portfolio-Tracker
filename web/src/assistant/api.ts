@@ -120,3 +120,50 @@ export function useSummariseChats() {
       ),
   })
 }
+
+export type HelperPrompt = S['HelperPromptOut']
+export type ProposalDiff = S['ProposalDiffOut']
+
+export function useHelperPrompt(mode: 'new' | 'revise', strategy: number | null) {
+  return useQuery({
+    queryKey: ['assistant', 'prompt', mode, strategy],
+    enabled: mode === 'new' || strategy !== null,
+    queryFn: () =>
+      unwrap(
+        api.GET('/api/v1/assistant/prompt', {
+          params: { query: { mode, strategy: mode === 'revise' ? strategy : null } },
+        }),
+      ),
+  })
+}
+
+export function useProposalDiff() {
+  return useMutation({
+    mutationFn: (body: { strategy_id: number; yaml: string }) =>
+      unwrap(api.POST('/api/v1/assistant/diff', { body })),
+  })
+}
+
+/** Save a proposed strategy: as a new strategy (always switched off) or as a new version of the
+ * one it revises. */
+export function useSaveProposal() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: ({ yaml, versionOf }: { yaml: string; versionOf: number | null }) => {
+      const body = { yaml, note: 'strategy helper' }
+      return versionOf === null
+        ? unwrap(api.POST('/api/v1/strategies', { body }))
+        : unwrap(
+            api.POST('/api/v1/strategies/{strategy_id}/versions', {
+              params: { path: { strategy_id: versionOf } },
+              body,
+            }),
+          )
+    },
+    onSuccess: () =>
+      Promise.all([
+        queryClient.invalidateQueries({ queryKey: ['strategies'] }),
+        queryClient.invalidateQueries({ queryKey: ['sleeves'] }),
+      ]),
+  })
+}

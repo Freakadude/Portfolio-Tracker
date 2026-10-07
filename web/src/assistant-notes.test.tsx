@@ -1,7 +1,7 @@
 import { screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { StrategyHelper } from './assistant/StrategyHelper'
+import { NotesPanel } from './assistant/NotesPanel'
 import { GENERAL_US, mockApi, renderAt } from './test-utils'
 
 afterEach(() => vi.unstubAllGlobals())
@@ -35,7 +35,7 @@ describe('the strategy helper background notes (ADR 0048)', () => {
       }),
       '/api/v1/assistant/notes/request': { text: 'Please write my profile' },
     })
-    renderAt(<StrategyHelper />)
+    renderAt(<NotesPanel />)
     expect(await screen.findByText('Goals')).toBeInTheDocument()
     expect(screen.getByText('From Claude')).toBeInTheDocument()
     expect(screen.getByText(/reads 13 of at most 12,000 characters/)).toBeInTheDocument()
@@ -49,7 +49,7 @@ describe('the strategy helper background notes (ADR 0048)', () => {
       'POST /api/v1/assistant/notes': note({ id: 5, title: 'Horizon' }),
       '/api/v1/assistant/notes/request': { text: 'x' },
     })
-    renderAt(<StrategyHelper />)
+    renderAt(<NotesPanel />)
     expect(await screen.findByText(/No notes yet/)).toBeInTheDocument()
     const user = userEvent.setup()
     const form = screen.getByRole('form', { name: 'Write a note' })
@@ -71,7 +71,7 @@ describe('the strategy helper background notes (ADR 0048)', () => {
       'POST /api/v1/assistant/notes': note({ id: 6, source: 'pasted' }),
       '/api/v1/assistant/notes/request': { text: 'Please write my profile' },
     })
-    renderAt(<StrategyHelper />)
+    renderAt(<NotesPanel />)
     const user = userEvent.setup()
     await user.click(await screen.findByRole('tab', { name: /Ask Claude to write it/ }))
     expect(await screen.findByDisplayValue('Please write my profile')).toHaveAttribute('readonly')
@@ -93,7 +93,7 @@ describe('the strategy helper background notes (ADR 0048)', () => {
       'PATCH /api/v1/assistant/notes/1': note({ use_in_helper: false }),
       '/api/v1/assistant/notes/request': { text: 'x' },
     })
-    renderAt(<StrategyHelper />)
+    renderAt(<NotesPanel />)
     const user = userEvent.setup()
     await user.click(await screen.findByLabelText('Use in helper'))
     await vi.waitFor(() => expect(calls.some((c) => c.method === 'PATCH')).toBe(true))

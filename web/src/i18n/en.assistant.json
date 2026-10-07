@@ -48,6 +48,70 @@
       "pasteHere": "What Claude wrote",
       "saveAsNote": "Save as note"
     },
+    "tabs": {
+      "notes": "My background",
+      "paste": "Use my subscription (free)"
+    },
+    "paste": {
+      "title": "Use my Claude subscription (free)",
+      "intro": "Folio gives you one prompt. Paste it into a new chat on claude.ai, talk it through there, and paste Claude's finished strategy back here. Folio checks it and shows you what it means before you save anything. Nothing is sent from Folio; this runs on your own Claude subscription.",
+      "what": "What do you want help with?",
+      "new": "Set up a new strategy",
+      "revise": "Revise a strategy I have",
+      "which": "Strategy to revise",
+      "pick": "Choose a strategy",
+      "includes": "The prompt holds the rules for the interview, the format of a strategy, your holdings as shares of the portfolio (no euro amounts) and {{n}} characters of your background notes.",
+      "promptText": "Prompt for Claude",
+      "copy": "Copy the prompt",
+      "copied": "Copied",
+      "step2": "Talk it through with Claude. When it gives you the strategy, copy its whole answer.",
+      "answer": "Claude's answer (the whole reply is fine)",
+      "check": "Check it",
+      "problems": "Folio found problems in this strategy. Copy them back to Claude so it can fix the document.",
+      "line": "line {{n}}",
+      "copyProblems": "Copy the problems for Claude",
+      "empty": "Paste Claude's answer first."
+    },
+    "proposal": {
+      "title": "What this strategy does",
+      "diffTitle": "What changes against the current version",
+      "noChange": "Nothing changes against the current version.",
+      "yamlTitle": "The strategy document",
+      "saveNew": "Save as a new strategy (switched off)",
+      "saveVersion": "Save as a new version of {{name}}",
+      "activeWarn": "{{name}} is active, so a new version starts working at once. You can go back to an earlier version in its History.",
+      "offNote": "A new strategy is saved switched off. Nothing changes until you switch it on.",
+      "added": "added",
+      "removed": "removed",
+      "changed": "changed"
+    },
+    "describe": {
+      "name": "Name: {{name}}.",
+      "sleeve": "{{name}}: target {{target}}% of the portfolio, {{n}} holding(s) listed.",
+      "sleeveNoTarget": "{{name}}: no target yet, {{n}} holding(s) listed.",
+      "bands": "{{name}}: early warning at {{soft}} points off target, firm warning at {{hard}}.",
+      "trim": "{{name}}: warn above {{trim}}% (time to think about taking profit).",
+      "company": "One company may be at most {{pct}}% of the portfolio across all funds.",
+      "plan": "Regular investing: {{amount}} EUR, {{cadence}}, next on {{next}}.",
+      "principles": "{{n}} principle(s) written down.",
+      "theses": "{{n}} view(s) with a review date.",
+      "rule": {
+        "drift_band": "Warn when a group drifts outside its band.",
+        "trim_threshold": "Warn when a group grows above its trim level.",
+        "concentration_limit": "Warn when one company (or country) is too large across all funds.",
+        "drawdown_position": "Warn when a holding is down {{threshold}}% from its peak.",
+        "drawdown_portfolio": "Warn when the portfolio is down {{threshold}}% from its peak.",
+        "price_move": "Warn about a large price move in a holding.",
+        "price_level": "Warn when a holding crosses a set price.",
+        "macro_threshold": "Watch {{series}} and warn when it passes its level or moves.",
+        "correlation_shift": "Warn when the hedge stops moving against what it protects.",
+        "contribution_due": "Remind {{days}} day(s) before the regular contribution.",
+        "cash_buffer": "Warn when cash is outside the wanted range.",
+        "thesis_review_due": "Remind when a written view is due for review.",
+        "stale_data": "Warn when prices stop updating.",
+        "unknown": "A {{type}} rule."
+      }
+    },
     "import": {
       "step1": "On claude.ai open Settings, Privacy, and choose Export data. Claude emails you a link; download the zip.",
       "step2": "Choose that zip (or the conversations.json inside it) below. Folio reads it on the server and does not keep it. Pick up to 8 chats that are about your investing.",
@@ -74,6 +138,7 @@
       "spent": "This cost {{cost}} of your AI budget.",
       "save": "Save {{n}} note(s)",
       "saved": "Saved {{n}} note(s). You can find them above."
-    }
+    },
+    "madeWith": "Made with the strategy helper. It is switched off until you switch it on; everything can be changed here."
   }
 }

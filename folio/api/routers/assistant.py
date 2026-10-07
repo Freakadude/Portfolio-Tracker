@@ -13,16 +13,19 @@ from pydantic import BaseModel, ConfigDict, Field
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from folio.agent import budget, chat_summary
+from folio.agent import budget, chat_summary, strategist
 from folio.agent.background import NOTE_LIMIT, SOURCES, TOTAL_LIMIT, helper_notes
 from folio.agent.chat_export import MAX_UPLOAD, Chat, ExportError, read_export
 from folio.agent.prompt_files import load_prompt
 from folio.agent.runtime import make_llm
 from folio.api.deps import DbDep, UserDep
 from folio.api.errors import ApiError
+from folio.api.routers.strategies import DiffRowOut
 from folio.audit import write_audit
 from folio.db.base import utcnow
 from folio.db.models_insight import BackgroundNote
+from folio.strategies import service as strategy_service
+from folio.strategies.diff import side_by_side
 
 router = APIRouter(prefix="/assistant", tags=["assistant"])
 
@@ -337,4 +340,69 @@ async def summarise_chats(
         failed=[ChatFailureOut(id=f.id, title=f.title, reason=f.reason) for f in failed],
         stopped=stopped,
         cost_eur=sum((d.cost_eur for d in done), Decimal(0)),
+    )
+
+
+# --- the free mode: a prompt for claude.ai, and checking what comes back ---------------
+
+
+class HelperPromptOut(BaseModel):
+    text: str
+    characters: int
+    notes_used: int  # characters of your background notes that are in it
+
+
+class ProposalIn(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    strategy_id: int
+    yaml: str = Field(min_length=1)
+
+
+class ProposalDiffOut(BaseModel):
+    rows: list[DiffRowOut]
+    changed: bool
+
+
+@router.get("/prompt", response_model=HelperPromptOut)
+def helper_prompt(
+    _user: UserDep,
+    db: DbDep,
+    mode: Literal["new", "revise"] = "new",
+    strategy: int | None = None,
+) -> HelperPromptOut:
+    """One prompt to paste into a chat with Claude on the subscription: the rules of the
+    interview, the format of a strategy, the holdings as shares (no euro amounts), the background
+    notes and, to revise, the current strategy. Claude answers with a strategy that is pasted back
+    and checked like any other."""
+    if mode == "revise" and strategy is None:
+        raise ApiError(422, "Which strategy?", "Choose the strategy to revise.")
+    today = dt.date.today()
+    try:
+        text = strategist.paste_prompt(db, today, strategy if mode == "revise" else None)
+    except strategy_service.StrategyNotFound:
+        raise ApiError(404, "Not found", "That strategy does not exist.") from None
+    return HelperPromptOut(text=text, characters=len(text), notes_used=helper_notes(db).used)
+
+
+@router.post("/diff", response_model=ProposalDiffOut)
+def proposal_diff(body: ProposalIn, _user: UserDep, db: DbDep) -> ProposalDiffOut:
+    """What a proposed strategy changes against the strategy it would revise, line by line."""
+    try:
+        current = strategy_service.latest(db, strategy_service.load(db, body.strategy_id))
+    except strategy_service.StrategyNotFound:
+        raise ApiError(404, "Not found", "That strategy does not exist.") from None
+    rows = side_by_side(current.yaml, body.yaml)
+    return ProposalDiffOut(
+        rows=[
+            DiffRowOut(
+                kind=r.kind,
+                old_line=r.old_line,
+                old_text=r.old_text,
+                new_line=r.new_line,
+                new_text=r.new_text,
+            )
+            for r in rows
+        ],
+        changed=any(r.kind != "same" for r in rows),
     )

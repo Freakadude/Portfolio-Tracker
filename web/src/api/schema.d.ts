@@ -248,6 +248,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/assistant/diff": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Proposal Diff
+         * @description What a proposed strategy changes against the strategy it would revise, line by line.
+         */
+        post: operations["proposal_diff_api_v1_assistant_diff_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/assistant/notes": {
         parameters: {
             query?: never;
@@ -303,6 +323,29 @@ export interface paths {
         head?: never;
         /** Change Note */
         patch: operations["change_note_api_v1_assistant_notes__note_id__patch"];
+        trace?: never;
+    };
+    "/api/v1/assistant/prompt": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Helper Prompt
+         * @description One prompt to paste into a chat with Claude on the subscription: the rules of the
+         *     interview, the format of a strategy, the holdings as shares (no euro amounts), the background
+         *     notes and, to revise, the current strategy. Claude answers with a strategy that is pasted back
+         *     and checked like any other.
+         */
+        get: operations["helper_prompt_api_v1_assistant_prompt_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
         trace?: never;
     };
     "/api/v1/audit": {
@@ -4193,6 +4236,15 @@ export interface components {
             /** Label */
             label: string;
         };
+        /** HelperPromptOut */
+        HelperPromptOut: {
+            /** Characters */
+            characters: number;
+            /** Notes Used */
+            notes_used: number;
+            /** Text */
+            text: string;
+        };
         /** HistoryPoint */
         HistoryPoint: {
             /**
@@ -5391,6 +5443,20 @@ export interface components {
         PromptOut: {
             /** Text */
             text: string;
+        };
+        /** ProposalDiffOut */
+        ProposalDiffOut: {
+            /** Changed */
+            changed: boolean;
+            /** Rows */
+            rows: components["schemas"]["DiffRowOut"][];
+        };
+        /** ProposalIn */
+        ProposalIn: {
+            /** Strategy Id */
+            strategy_id: number;
+            /** Yaml */
+            yaml: string;
         };
         /** ReadIn */
         ReadIn: {
@@ -7519,6 +7585,39 @@ export interface operations {
             };
         };
     };
+    proposal_diff_api_v1_assistant_diff_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ProposalIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProposalDiffOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     list_notes_api_v1_assistant_notes_get: {
         parameters: {
             query?: never;
@@ -7643,6 +7742,38 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["NoteOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    helper_prompt_api_v1_assistant_prompt_get: {
+        parameters: {
+            query?: {
+                mode?: "new" | "revise";
+                strategy?: number | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HelperPromptOut"];
                 };
             };
             /** @description Validation Error */
