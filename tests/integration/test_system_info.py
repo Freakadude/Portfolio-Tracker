@@ -123,3 +123,47 @@ def test_the_diagnostics_file_shows_failures_and_nothing_private(
 
 def test_the_diagnostics_file_needs_a_login(client: TestClient) -> None:
     assert client.get("/api/v1/system/diagnostics").status_code == 401
+
+
+# --- how long the containers have been running, and which commit (FR-SY-10) ------------------
+
+
+def test_the_web_container_reports_its_commit_and_how_long_it_has_run(api: TestClient) -> None:
+    web = api.get("/api/v1/system/info").json()["web"]
+    assert web["build"] is None  # the test settings carry no build (the image sets it)
+    assert 0 <= web["uptime_seconds"] < 120
+    started = datetime.fromisoformat(web["started_at"])
+    assert (datetime.now(UTC) - started).total_seconds() < 120
+
+
+def test_the_worker_is_unknown_until_it_reports_then_alive_or_not(
+    api: TestClient, settings: Settings
+) -> None:
+    from datetime import timedelta
+
+    from folio.jobs import heartbeat
+
+    assert api.get("/api/v1/system/info").json()["worker"] is None  # it has not written yet
+    now = datetime.now(UTC)
+    heartbeat.write(settings, now - timedelta(hours=3, minutes=5), now - timedelta(seconds=20))
+    worker = api.get("/api/v1/system/info").json()["worker"]
+    assert worker["alive"] is True and 10 <= worker["seen_seconds_ago"] < 120
+    assert 3 * 3600 + 5 * 60 <= worker["uptime_seconds"] < 3 * 3600 + 5 * 60 + 120
+    heartbeat.write(settings, now - timedelta(hours=3), now - timedelta(minutes=10))
+    stale = api.get("/api/v1/system/info").json()["worker"]
+    assert stale["alive"] is False and stale["seen_seconds_ago"] >= 600
+
+
+def test_the_worker_status_file_is_written_atomically_and_a_bad_one_is_ignored(
+    settings: Settings,
+) -> None:
+    from folio.jobs import heartbeat
+
+    when = datetime(2026, 10, 8, 9, 0, tzinfo=UTC)
+    heartbeat.write(settings, when, when)
+    status = heartbeat.read(settings)
+    assert status is not None and status.started_at == when and status.build == settings.version
+    path = heartbeat._path(settings)  # noqa: SLF001 - the file the web container reads
+    assert path is not None and not path.with_suffix(".tmp").exists()
+    path.write_text("not json", encoding="utf-8")
+    assert heartbeat.read(settings) is None

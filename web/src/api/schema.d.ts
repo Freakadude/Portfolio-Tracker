@@ -4041,6 +4041,25 @@ export interface components {
             /** Weight Pct */
             weight_pct: string;
         };
+        /** ContainerOut */
+        ContainerOut: {
+            /**
+             * Alive
+             * @default true
+             */
+            alive: boolean;
+            /** Build */
+            build: string | null;
+            /** Seen Seconds Ago */
+            seen_seconds_ago?: number | null;
+            /**
+             * Started At
+             * Format: date-time
+             */
+            started_at: string;
+            /** Uptime Seconds */
+            uptime_seconds: number;
+        };
         /** ContributionOut */
         ContributionOut: {
             /** Key */
@@ -4574,6 +4593,8 @@ export interface components {
             failing_news_sources: string[];
             /** Version */
             version: string;
+            web: components["schemas"]["ContainerOut"];
+            worker: components["schemas"]["ContainerOut"] | null;
         };
         /** InstrumentChanges */
         InstrumentChanges: {

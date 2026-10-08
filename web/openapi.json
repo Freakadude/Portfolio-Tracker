@@ -2807,6 +2807,53 @@
         "title": "ConstituentOut",
         "type": "object"
       },
+      "ContainerOut": {
+        "properties": {
+          "alive": {
+            "default": true,
+            "title": "Alive",
+            "type": "boolean"
+          },
+          "build": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Build"
+          },
+          "seen_seconds_ago": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Seen Seconds Ago"
+          },
+          "started_at": {
+            "format": "date-time",
+            "title": "Started At",
+            "type": "string"
+          },
+          "uptime_seconds": {
+            "title": "Uptime Seconds",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "build",
+          "started_at",
+          "uptime_seconds"
+        ],
+        "title": "ContainerOut",
+        "type": "object"
+      },
       "ContributionOut": {
         "properties": {
           "key": {
@@ -4439,11 +4486,26 @@
           "version": {
             "title": "Version",
             "type": "string"
+          },
+          "web": {
+            "$ref": "#/components/schemas/ContainerOut"
+          },
+          "worker": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ContainerOut"
+              },
+              {
+                "type": "null"
+              }
+            ]
           }
         },
         "required": [
           "version",
           "build",
+          "web",
+          "worker",
           "disk",
           "agent",
           "failed_jobs_24h",

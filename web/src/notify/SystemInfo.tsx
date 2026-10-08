@@ -2,6 +2,7 @@ import { useQuery } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
 import { api, errorMessage, unwrap } from '../api/client'
 import { Alert } from '../components/ui'
+import { Containers } from './Containers'
 
 function size(bytes: number | null | undefined): string {
   if (bytes === null || bytes === undefined) return '–'
@@ -21,6 +22,7 @@ export function SystemInfo() {
   const info = useQuery({
     queryKey: ['system', 'info'],
     queryFn: () => unwrap(api.GET('/api/v1/system/info')),
+    refetchInterval: 30_000, // so the uptime moves
   })
   if (info.isError) return <Alert>{errorMessage(info.error)}</Alert>
   const d = info.data
@@ -29,6 +31,7 @@ export function SystemInfo() {
       <h2 id="info-title" className="text-lg font-semibold">
         {t('systemInfo.title')}
       </h2>
+      {d && <Containers web={d.web} worker={d.worker ?? null} />}
       {d && (
         <dl className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
           <Item label={t('systemInfo.version')}>

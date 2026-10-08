@@ -180,13 +180,18 @@ def worker() -> None:
     signal.signal(signal.SIGINT, _stop)
     signal.signal(signal.SIGTERM, _stop)
     from folio import restore as restore_module
+    from folio.db.base import utcnow
+    from folio.jobs import heartbeat
 
     restored_at_start = restore_module.result_stamp(settings.db_url)
+    started_at = utcnow()
+    heartbeat.write(settings, started_at, started_at)
     scheduler.start()
     log.info("worker started", jobs=[job.id for job in scheduler.get_jobs()])
     # a restore from the web app swaps the database file: stop, so the container restarts the
     # worker on the restored one
     while not stop.wait(RESTORE_CHECK_SECONDS):
+        heartbeat.write(settings, started_at, utcnow())  # the System page shows it (FR-SY-10)
         if restore_module.result_stamp(settings.db_url) != restored_at_start:
             log.info("a backup was restored; restarting on the restored database")
             break

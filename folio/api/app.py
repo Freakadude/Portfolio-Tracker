@@ -44,6 +44,7 @@ from folio.api.routers import settings as settings_router
 from folio.api.routers import setup as setup_router
 from folio.api.spa import STATIC_DIR, mount_spa
 from folio.config import Settings, get_settings
+from folio.db.base import utcnow
 from folio.db.engine import make_engine, make_session_factory
 from folio.marketdata.runtime import make_usage_tracker
 
@@ -69,6 +70,7 @@ def create_app(
     )
     engine = make_engine(cfg.db_url)
     app.state.settings = cfg
+    app.state.started_at = utcnow()  # for the uptime on the System page
     app.state.engine = engine
     app.state.session_factory = make_session_factory(engine)
     # Interactive lookups (resolving an ISIN) run in the web process; the call budget lives in

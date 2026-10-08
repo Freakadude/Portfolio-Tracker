@@ -31,6 +31,7 @@ from folio.db.models_ledger import (
     ProviderCall,
 )
 from folio.diagnostics import build_report
+from folio.jobs import heartbeat
 from folio.jobs.requests import enqueue
 from folio.jobs.scheduler import JOB_PARAMS
 from folio.marketdata import exchanges
@@ -202,9 +203,19 @@ class AgentUsageOut(BaseModel):
     note: str | None
 
 
+class ContainerOut(BaseModel):
+    build: str | None  # the git commit the image was built from
+    started_at: dt.datetime
+    uptime_seconds: int
+    seen_seconds_ago: int | None = None  # worker only: when it last reported
+    alive: bool = True
+
+
 class InfoOut(BaseModel):
     version: str
     build: str | None
+    web: ContainerOut
+    worker: ContainerOut | None  # None: it has not reported since this installation started
     disk: DiskOut
     agent: AgentUsageOut
     failed_jobs_24h: int
@@ -268,9 +279,26 @@ def info(request: Request, _user: UserDep, db: DbDep) -> InfoOut:
         db.scalar(select(func.count()).where(JobRun.status == "failed", JobRun.started_at >= since))
         or 0
     )
+    now = utcnow()
+    started = getattr(request.app.state, "started_at", now)
+    reported = heartbeat.read(settings)
     return InfoOut(
         version=_folio_version(),
         build=settings.version,
+        web=ContainerOut(
+            build=settings.version,
+            started_at=started,
+            uptime_seconds=max(0, int((now - started).total_seconds())),
+        ),
+        worker=None
+        if reported is None
+        else ContainerOut(
+            build=reported.build,
+            started_at=reported.started_at,
+            uptime_seconds=max(0, int((now - reported.started_at).total_seconds())),
+            seen_seconds_ago=max(0, int((now - reported.seen_at).total_seconds())),
+            alive=reported.alive(now),
+        ),
         disk=DiskOut(
             database_bytes=database,
             backups_bytes=backups,

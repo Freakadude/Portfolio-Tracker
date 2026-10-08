@@ -320,6 +320,14 @@ describe('system information (FR-SY-10)', () => {
       '/api/v1/system/info': {
         version: '0.1.0',
         build: 'abc1234def5678',
+        web: {
+          build: 'abc1234def5678',
+          started_at: '2026-10-08T06:00:00Z',
+          uptime_seconds: 3 * 3600 + 12 * 60,
+          seen_seconds_ago: null,
+          alive: true,
+        },
+        worker: null,
         disk: {
           database_bytes: 5 * 1024 * 1024,
           backups_bytes: 20 * 1024 * 1024,
