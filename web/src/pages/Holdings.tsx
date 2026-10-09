@@ -124,10 +124,51 @@ export function Holdings() {
 }
 
 const GROUP_BY_ISIN_KEY = 'folio.holdings.groupByIsin'
+const VIEW_KEY = 'folio.holdings.view'
 
-/** The "group by ISIN" choice, kept in this browser between visits. */
-function useGroupByIsin(): [boolean, (on: boolean) => void] {
+/** What the Positions tab looks like when it opens: the owner's default view. */
+interface HoldingsView {
+  account: number | null
+  includeClosed: boolean
+  groupMode: GroupMode
+  byIsin: boolean
+  sort: { key: SortKey; dir: 'asc' | 'desc' }
+}
+
+const STANDARD_SORT: HoldingsView['sort'] = { key: 'value', dir: 'desc' }
+
+/** The default view saved in this browser, or null; anything unreadable is ignored. */
+function readView(): HoldingsView | null {
+  try {
+    const v = JSON.parse(localStorage.getItem(VIEW_KEY) ?? 'null') as HoldingsView | null
+    if (!v || typeof v !== 'object') return null
+    const ok =
+      (v.account === null || typeof v.account === 'number') &&
+      typeof v.includeClosed === 'boolean' &&
+      GROUP_MODES.includes(v.groupMode) &&
+      typeof v.byIsin === 'boolean' &&
+      v.sort?.key in ACCESSORS &&
+      (v.sort.dir === 'asc' || v.sort.dir === 'desc')
+    return ok ? v : null
+  } catch {
+    return null
+  }
+}
+
+function writeView(view: HoldingsView | null) {
+  try {
+    if (view === null) localStorage.removeItem(VIEW_KEY)
+    else localStorage.setItem(VIEW_KEY, JSON.stringify(view))
+  } catch {
+    /* the view just is not remembered */
+  }
+}
+
+/** The "group by ISIN" choice, kept in this browser between visits (a saved default view
+ * decides it when there is one). */
+function useGroupByIsin(saved: boolean | undefined): [boolean, (on: boolean) => void] {
   const [on, setOn] = useState(() => {
+    if (saved !== undefined) return saved
     try {
       return localStorage.getItem(GROUP_BY_ISIN_KEY) === '1'
     } catch {
@@ -148,14 +189,23 @@ function useGroupByIsin(): [boolean, (on: boolean) => void] {
 function PositionsTab({ onAdd }: { onAdd: () => void }) {
   const { t } = useTranslation()
   const { eur, num, qty, pct } = useFormat()
-  const [account, setAccount] = useState<number | undefined>()
-  const [includeClosed, setIncludeClosed] = useState(false)
-  const [groupMode, setGroupMode] = useState<GroupMode>('none')
-  const [byIsin, setByIsin] = useGroupByIsin()
+  const [saved, setSaved] = useState(readView)
+  const [justSaved, setJustSaved] = useState(false)
+  const [chosenAccount, setAccount] = useState<number | undefined>(saved?.account ?? undefined)
+  const [includeClosed, setIncludeClosed] = useState(saved?.includeClosed ?? false)
+  const [groupMode, setGroupMode] = useState<GroupMode>(saved?.groupMode ?? 'none')
+  const [byIsin, setByIsin] = useGroupByIsin(saved?.byIsin)
   const [params, setParams] = useSearchParams()
   const accounts = useAccounts()
   const instruments = useInstruments('all')
   const sleeves = useSleeves()
+  // a saved account that has since been removed is simply not applied
+  const account =
+    chosenAccount !== undefined &&
+    accounts.data &&
+    !accounts.data.some((a) => a.id === chosenAccount)
+      ? undefined
+      : chosenAccount
   const { data, isPending, isError, error } = usePositions({
     account,
     includeClosed,
@@ -177,10 +227,34 @@ function PositionsTab({ onAdd }: { onAdd: () => void }) {
     if (!filterBy || filterValue === null) return all
     return all.filter((p) => groupValue(p, instrumentById, sleeveName, filterBy) === filterValue)
   }, [data, filterBy, filterValue, instrumentById, sleeveName])
-  const { sorted, sort, toggle } = useSort<Position, SortKey>(rows, ACCESSORS, {
-    key: 'value',
-    dir: 'desc',
-  })
+  const { sorted, sort, setSort, toggle } = useSort<Position, SortKey>(
+    rows,
+    ACCESSORS,
+    saved?.sort ?? STANDARD_SORT,
+  )
+  const view: HoldingsView = {
+    account: account ?? null,
+    includeClosed,
+    groupMode,
+    byIsin,
+    sort: { key: sort.key, dir: sort.dir },
+  }
+  const isDefault = saved !== null && JSON.stringify(saved) === JSON.stringify(view)
+  const saveView = () => {
+    writeView(view)
+    setSaved(view)
+    setJustSaved(true)
+  }
+  const resetView = () => {
+    writeView(null)
+    setSaved(null)
+    setJustSaved(false)
+    setAccount(undefined)
+    setIncludeClosed(false)
+    setGroupMode('none')
+    setByIsin(false)
+    setSort(STANDARD_SORT)
+  }
 
   const groups = useMemo(() => {
     if (groupMode === 'none') return [{ name: null as string | null, rows: sorted }]
@@ -239,6 +313,25 @@ function PositionsTab({ onAdd }: { onAdd: () => void }) {
           ))}
         </Select>
       </label>
+      <span className="flex flex-wrap items-center gap-2">
+        <Button
+          variant="secondary"
+          className="min-h-9"
+          title={t('holdings.saveViewHint')}
+          disabled={isDefault}
+          onClick={saveView}
+        >
+          {t('holdings.saveView')}
+        </Button>
+        {saved && (
+          <Button variant="ghost" className="min-h-9" onClick={resetView}>
+            {t('holdings.resetView')}
+          </Button>
+        )}
+        <span role="status" className="text-xs text-muted">
+          {justSaved && isDefault ? t('holdings.viewSaved') : ''}
+        </span>
+      </span>
       {filterBy && filterValue !== null && (
         <span className="flex items-center gap-2 rounded-md border border-border px-2 py-1 text-sm">
           {t('holdings.filteredBy', {

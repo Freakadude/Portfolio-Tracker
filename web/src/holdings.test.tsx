@@ -321,6 +321,80 @@ describe('grouping holdings with the same ISIN', () => {
   })
 })
 
+describe('the default view (remembered in this browser)', () => {
+  const unrealizedHeader = (table: HTMLElement) =>
+    within(table).getByRole('columnheader', { name: /Unrealized/ })
+
+  it('keeps grouping, closed positions and sort order for the next visit, until it is reset', async () => {
+    api()
+    const first = renderAt(<Holdings />)
+    await screen.findByRole('table')
+    const save = () => screen.getByRole('button', { name: 'Save as default view' })
+    expect(save()).toBeEnabled()
+    expect(screen.queryByRole('button', { name: 'Back to the standard view' })).toBeNull()
+
+    await userEvent.selectOptions(screen.getByLabelText('Group by'), 'asset_class')
+    await userEvent.click(screen.getByLabelText('Show closed positions'))
+    const table = await screen.findByRole('table') // the list reloads with the closed ones
+    await userEvent.click(within(unrealizedHeader(table)).getByRole('button'))
+    await userEvent.click(save())
+    expect(await screen.findByText('Saved as your default view.')).toBeVisible()
+    expect(save()).toBeDisabled() // nothing differs from the default now
+    expect(JSON.parse(localStorage.getItem('folio.holdings.view') ?? 'null')).toEqual({
+      account: null,
+      includeClosed: true,
+      groupMode: 'asset_class',
+      byIsin: false,
+      sort: { key: 'unrealized', dir: 'asc' },
+    })
+    first.unmount()
+
+    renderAt(<Holdings />) // another visit: the view is as it was left
+    const again = await screen.findByRole('table')
+    expect(screen.getByLabelText('Group by')).toHaveValue('asset_class')
+    expect(screen.getByLabelText('Show closed positions')).toBeChecked()
+    expect(unrealizedHeader(again)).toHaveAttribute('aria-sort', 'ascending')
+    expect(screen.getByRole('button', { name: 'Save as default view' })).toBeDisabled()
+
+    // a change makes it saveable again; resetting brings back the standard view
+    await userEvent.selectOptions(screen.getByLabelText('Group by'), 'none')
+    expect(screen.getByRole('button', { name: 'Save as default view' })).toBeEnabled()
+    await userEvent.click(screen.getByRole('button', { name: 'Back to the standard view' }))
+    expect(localStorage.getItem('folio.holdings.view')).toBeNull()
+    expect(screen.getByLabelText('Group by')).toHaveValue('none')
+    expect(screen.getByLabelText('Show closed positions')).not.toBeChecked()
+    expect(unrealizedHeader(await screen.findByRole('table'))).not.toHaveAttribute(
+      'aria-sort',
+      'ascending',
+    )
+  })
+
+  it('ignores a saved view it cannot read, and a saved account that no longer exists', async () => {
+    localStorage.setItem('folio.holdings.view', '{"nonsense": true}')
+    api()
+    const bad = renderAt(<Holdings />)
+    await screen.findByRole('table')
+    expect(screen.getByLabelText('Group by')).toHaveValue('none')
+    bad.unmount()
+
+    localStorage.setItem(
+      'folio.holdings.view',
+      JSON.stringify({
+        account: 99,
+        includeClosed: false,
+        groupMode: 'none',
+        byIsin: false,
+        sort: { key: 'value', dir: 'desc' },
+      }),
+    )
+    const { calls } = api()
+    renderAt(<Holdings />)
+    await screen.findByRole('table')
+    const asked = calls.filter((c) => c.path === '/api/v1/positions')
+    expect(asked.length).toBeGreaterThan(0)
+  })
+})
+
 describe('empty states say what to do next', () => {
   it('asks for the first instrument when there is nothing at all', async () => {
     api(
