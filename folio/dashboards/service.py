@@ -341,7 +341,7 @@ def import_document(db: Session, document: dict[str, Any], actor: str = "user") 
     filters = document.get("filters")
     if isinstance(filters, dict):
         dashboard.filters = {
-            k: v for k, v in filters.items() if k in ("period", "account", "start", "end")
+            k: v for k, v in filters.items() if k in ("period", "account", "start", "end", "hidden")
         }
     _store_layouts(db, dashboard, created)
     return dashboard

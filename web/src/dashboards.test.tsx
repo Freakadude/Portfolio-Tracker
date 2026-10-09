@@ -700,6 +700,71 @@ describe('Home', () => {
 
 // --- the list of dashboards (FR-DB-01, FR-DB-07) ------------------------------------------------
 
+describe('copying a widget and removing filter bars (edit mode)', () => {
+  beforeEach(() => localStorage.clear())
+
+  it('copies a widget with its settings and size, under the others, and marks a titled copy', async () => {
+    const { calls } = home({ 'POST /api/v1/dashboards/1/widgets': dashboard() })
+    renderAt(<Home />)
+    await screen.findByText('€1,188.00')
+    expect(screen.queryByRole('button', { name: /^Duplicate/ })).toBeNull() // only when editing
+    await userEvent.click(screen.getByRole('button', { name: 'Edit' }))
+
+    await userEvent.click(screen.getByRole('button', { name: 'Duplicate Reminder' }))
+    await vi.waitFor(() =>
+      expect(calls.some((c) => c.method === 'POST' && c.path.endsWith('/widgets'))).toBe(true),
+    )
+    const body = calls.find((c) => c.method === 'POST' && c.path.endsWith('/widgets'))?.body as {
+      type: string
+      config: Record<string, unknown>
+      grid: Record<string, number>
+    }
+    expect(body.type).toBe('note')
+    expect(body.config).toMatchObject({ text: 'Check **fees**', title: 'Reminder (copy)' })
+    // the same size as the original (4 wide, 3 high), below the lowest widget (it ends at row 3)
+    expect(body.grid).toEqual({ x: 3, y: 3, w: 4, h: 3 })
+  })
+
+  it('removes the timeframe bar, keeps the period, and adds it back', async () => {
+    const { calls } = home({
+      'PATCH /api/v1/dashboards/1': dashboard(),
+    })
+    renderAt(<Home />)
+    await screen.findByText('€1,188.00')
+    expect(screen.queryByRole('button', { name: 'Remove the timeframe filter' })).toBeNull()
+    expect(screen.getByRole('group', { name: 'Period' })).toBeVisible()
+    await userEvent.click(screen.getByRole('button', { name: 'Edit' }))
+
+    await userEvent.click(screen.getByRole('button', { name: 'Remove the timeframe filter' }))
+    expect(screen.queryByRole('group', { name: 'Period' })).toBeNull()
+    expect(screen.getByText('Timeframe filter removed.')).toBeVisible()
+    expect(screen.getByText(/keep using This year/)).toBeVisible() // the period it had
+    await vi.waitFor(() => expect(calls.some((c) => c.method === 'PATCH')).toBe(true))
+    expect(calls.find((c) => c.method === 'PATCH')?.body).toMatchObject({
+      filters: { period: 'YTD', hidden: ['timeframe'] },
+    })
+
+    await userEvent.click(screen.getByRole('button', { name: 'Add it back' }))
+    expect(screen.getByRole('group', { name: 'Period' })).toBeVisible()
+    expect(screen.queryByText('Timeframe filter removed.')).toBeNull()
+  })
+
+  it('opens a dashboard saved without its filter bars without them, and offers them back only when editing', async () => {
+    home({
+      '/api/v1/dashboards/default': dashboard({
+        filters: { period: 'YTD', account: null, hidden: ['timeframe', 'scope'] },
+      }),
+    })
+    renderAt(<Home />)
+    await screen.findByText('€1,188.00')
+    expect(screen.queryByRole('group', { name: 'Period' })).toBeNull()
+    expect(screen.queryByText('Timeframe filter removed.')).toBeNull()
+    await userEvent.click(screen.getByRole('button', { name: 'Edit' }))
+    expect(screen.getByText('Timeframe filter removed.')).toBeVisible()
+    expect(screen.getByText('Account and instruments filter removed.')).toBeVisible()
+  })
+})
+
 describe('choosing a dashboard for the Dashboards tab', () => {
   beforeEach(() => localStorage.clear())
 

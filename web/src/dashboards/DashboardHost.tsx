@@ -52,6 +52,7 @@ export function DashboardHost({ dashboard }: { dashboard: Dashboard }) {
     end: saved.end ?? null,
     types: saved.types ?? [],
     instruments: saved.instruments ?? [],
+    hidden: saved.hidden ?? [],
   })
 
   // the filters belong to the dashboard: saved a moment after they stop changing
@@ -69,6 +70,31 @@ export function DashboardHost({ dashboard }: { dashboard: Dashboard }) {
   const error = actions.saveLayout.error ?? actions.addWidget.error ?? actions.removeWidget.error
   const boxOf = (w: DashboardWidget): Box | undefined =>
     ((dashboard.layouts as Layouts)[breakpoint] ?? []).find((b) => b.i === String(w.id))
+  const hidden = filters.hidden ?? []
+  const hide = (bar: 'timeframe' | 'scope') =>
+    setFilters((f) => ({
+      ...f,
+      hidden: [...(f.hidden ?? []).filter((b) => b !== bar), bar],
+      // a filter that is out of sight must not keep narrowing the widgets
+      ...(bar === 'scope' ? { account: null, types: [], instruments: [] } : {}),
+    }))
+  const bringBack = (bar: 'timeframe' | 'scope') =>
+    setFilters((f) => ({ ...f, hidden: (f.hidden ?? []).filter((b) => b !== bar) }))
+  const clone = (w: DashboardWidget) => {
+    const lg = (dashboard.layouts as Layouts).lg ?? []
+    const own = lg.find((b) => b.i === String(w.id))
+    const config = JSON.parse(JSON.stringify(w.config)) as Config
+    if (typeof config.title === 'string' && config.title.trim()) {
+      config.title = `${config.title.slice(0, 92)} (copy)`
+    }
+    actions.addWidget.mutate({
+      id: dashboard.id,
+      type: w.type,
+      config,
+      // the same size, under the lowest widget
+      grid: own ? { ...own, y: lg.reduce((low, b) => Math.max(low, b.y + b.h), 0) } : undefined,
+    })
+  }
   const customReady = Boolean(filters.start && filters.end && filters.start <= filters.end)
   // an unfinished custom range keeps showing the year to date instead of failing every widget
   const effective = useMemo<Filters>(
@@ -160,59 +186,74 @@ export function DashboardHost({ dashboard }: { dashboard: Dashboard }) {
         role="group"
         aria-label={t('dashboard.filters')}
       >
-        <div role="group" aria-label={t('overview.periods.label')} className="flex flex-wrap gap-1">
-          {PERIODS.map((p) => (
-            <button
-              key={p}
-              type="button"
-              aria-pressed={filters.period === p}
-              onClick={() => setFilters((f) => ({ ...f, period: p }))}
-              className={cn(
-                'min-h-9 rounded-md px-3 text-sm',
-                filters.period === p
-                  ? 'bg-primary text-primary-foreground'
-                  : 'border border-border hover:bg-border/40',
-              )}
+        {!hidden.includes('timeframe') && (
+          <>
+            <div
+              role="group"
+              aria-label={t('overview.periods.label')}
+              className="flex flex-wrap gap-1"
             >
-              {t(`overview.periods.${p}`)}
-            </button>
-          ))}
-          <button
-            type="button"
-            aria-pressed={filters.period === 'CUSTOM'}
-            onClick={() => setFilters((f) => ({ ...f, period: 'CUSTOM' }))}
-            className={cn(
-              'min-h-9 rounded-md px-3 text-sm',
-              filters.period === 'CUSTOM'
-                ? 'bg-primary text-primary-foreground'
-                : 'border border-border hover:bg-border/40',
+              {PERIODS.map((p) => (
+                <button
+                  key={p}
+                  type="button"
+                  aria-pressed={filters.period === p}
+                  onClick={() => setFilters((f) => ({ ...f, period: p }))}
+                  className={cn(
+                    'min-h-9 rounded-md px-3 text-sm',
+                    filters.period === p
+                      ? 'bg-primary text-primary-foreground'
+                      : 'border border-border hover:bg-border/40',
+                  )}
+                >
+                  {t(`overview.periods.${p}`)}
+                </button>
+              ))}
+              <button
+                type="button"
+                aria-pressed={filters.period === 'CUSTOM'}
+                onClick={() => setFilters((f) => ({ ...f, period: 'CUSTOM' }))}
+                className={cn(
+                  'min-h-9 rounded-md px-3 text-sm',
+                  filters.period === 'CUSTOM'
+                    ? 'bg-primary text-primary-foreground'
+                    : 'border border-border hover:bg-border/40',
+                )}
+              >
+                {t('overview.periods.CUSTOM')}
+              </button>
+            </div>
+            {filters.period === 'CUSTOM' && (
+              <div className="flex flex-wrap items-end gap-2">
+                <label className="text-sm">
+                  <span className="mb-1 block font-medium">{t('overview.from')}</span>
+                  <Input
+                    type="date"
+                    value={filters.start ?? ''}
+                    onChange={(e) => setFilters((f) => ({ ...f, start: e.target.value || null }))}
+                  />
+                </label>
+                <label className="text-sm">
+                  <span className="mb-1 block font-medium">{t('overview.to')}</span>
+                  <Input
+                    type="date"
+                    value={filters.end ?? ''}
+                    onChange={(e) => setFilters((f) => ({ ...f, end: e.target.value || null }))}
+                  />
+                </label>
+                {!customReady && (
+                  <p className="text-sm text-muted">{t('overview.customInvalid')}</p>
+                )}
+              </div>
             )}
-          >
-            {t('overview.periods.CUSTOM')}
-          </button>
-        </div>
-        {filters.period === 'CUSTOM' && (
-          <div className="flex flex-wrap items-end gap-2">
-            <label className="text-sm">
-              <span className="mb-1 block font-medium">{t('overview.from')}</span>
-              <Input
-                type="date"
-                value={filters.start ?? ''}
-                onChange={(e) => setFilters((f) => ({ ...f, start: e.target.value || null }))}
-              />
-            </label>
-            <label className="text-sm">
-              <span className="mb-1 block font-medium">{t('overview.to')}</span>
-              <Input
-                type="date"
-                value={filters.end ?? ''}
-                onChange={(e) => setFilters((f) => ({ ...f, end: e.target.value || null }))}
-              />
-            </label>
-            {!customReady && <p className="text-sm text-muted">{t('overview.customInvalid')}</p>}
-          </div>
+            {editing && (
+              <Button variant="ghost" className="min-h-9" onClick={() => hide('timeframe')}>
+                {t('dashboard.removeFilter.timeframe')}
+              </Button>
+            )}
+          </>
         )}
-        {accounts.data && accounts.data.length > 1 && (
+        {!hidden.includes('scope') && accounts.data && accounts.data.length > 1 && (
           <Select
             aria-label={t('overview.account')}
             value={filters.account ?? ''}
@@ -231,10 +272,40 @@ export function DashboardHost({ dashboard }: { dashboard: Dashboard }) {
         )}
       </div>
 
-      <ScopeFilter
-        filters={filters}
-        onChange={(patch) => setFilters((f) => ({ ...f, ...patch }))}
-      />
+      {!hidden.includes('scope') && (
+        <ScopeFilter
+          filters={filters}
+          onChange={(patch) => setFilters((f) => ({ ...f, ...patch }))}
+        />
+      )}
+      {editing && !hidden.includes('scope') && (
+        <div>
+          <Button variant="ghost" className="min-h-9" onClick={() => hide('scope')}>
+            {t('dashboard.removeFilter.scope')}
+          </Button>
+        </div>
+      )}
+      {editing &&
+        (['timeframe', 'scope'] as const)
+          .filter((bar) => hidden.includes(bar))
+          .map((bar) => (
+            <div
+              key={bar}
+              className="flex flex-wrap items-center gap-3 rounded-md border border-dashed border-border px-3 py-2 text-sm text-muted"
+            >
+              <span>{t(`dashboard.removed.${bar}`)}</span>
+              {bar === 'timeframe' && (
+                <span>
+                  {t('dashboard.removed.keeps', {
+                    period: t(`overview.periods.${effective.period ?? 'YTD'}`),
+                  })}
+                </span>
+              )}
+              <Button variant="secondary" className="min-h-8" onClick={() => bringBack(bar)}>
+                {t('dashboard.addBack')}
+              </Button>
+            </div>
+          ))}
 
       {error !== undefined && error !== null && <Alert>{errorMessage(error)}</Alert>}
       {dashboard.widgets.length === 0 ? (
@@ -260,6 +331,7 @@ export function DashboardHost({ dashboard }: { dashboard: Dashboard }) {
           onBreakpoint={setBreakpoint}
           onLayoutChange={(layouts) => actions.saveLayout.mutate({ id: dashboard.id, layouts })}
           onConfigure={setConfiguring}
+          onClone={clone}
           onRemove={(w) => {
             if (window.confirm(t('dashboard.removeConfirm')))
               actions.removeWidget.mutate({ id: dashboard.id, widgetId: w.id })

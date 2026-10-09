@@ -107,6 +107,51 @@ def test_a_duplicate_has_its_own_widgets_with_the_same_layout(api) -> None:
         assert {b["i"] for b in copy["layouts"][bp]} == ids
 
 
+def test_a_widget_can_be_copied_with_its_settings_and_size(api) -> None:
+    d = make(api, "Copies")
+    first = api.post(
+        f"/api/v1/dashboards/{d['id']}/widgets",
+        json={"type": "note", "config": {"title": "Plan", "text": "Keep going"}},
+    ).json()
+    source = first["widgets"][0]
+    box = first["layouts"]["lg"][0]
+    copied = api.post(
+        f"/api/v1/dashboards/{d['id']}/widgets",
+        json={
+            "type": source["type"],
+            "config": {**source["config"], "title": "Plan (copy)"},
+            "grid": {"x": box["x"], "y": box["y"] + box["h"], "w": box["w"], "h": box["h"]},
+        },
+    )
+    assert copied.status_code == 201, copied.text
+    original, twin = copied.json()["widgets"]
+    assert twin["id"] != original["id"] and twin["type"] == "note"
+    assert twin["config"]["text"] == "Keep going" and twin["config"]["title"] == "Plan (copy)"
+    assert twin["grid"]["w"] == original["grid"]["w"] and twin["grid"]["h"] == original["grid"]["h"]
+    assert twin["grid"]["y"] == original["grid"]["y"] + original["grid"]["h"]  # below it
+
+
+def test_removed_filter_bars_are_kept_with_the_other_filters_and_travel_with_the_dashboard(
+    api,
+) -> None:
+    d = make(api, "Plain")
+    saved = api.patch(
+        f"/api/v1/dashboards/{d['id']}",
+        json={"filters": {"period": "1Y", "hidden": ["timeframe", "scope"]}},
+    ).json()
+    assert (
+        saved["filters"]["hidden"] == ["timeframe", "scope"] and saved["filters"]["period"] == "1Y"
+    )
+    later = api.patch(f"/api/v1/dashboards/{d['id']}", json={"filters": {"account": None}}).json()
+    assert later["filters"]["hidden"] == ["timeframe", "scope"]  # merged, not replaced
+
+    twin = api.post(f"/api/v1/dashboards/{d['id']}/duplicate").json()
+    assert twin["filters"]["hidden"] == ["timeframe", "scope"]
+    document = api.get(f"/api/v1/dashboards/{d['id']}/export").json()
+    imported = api.post("/api/v1/dashboards/import", json={"document": document}).json()
+    assert imported["filters"]["hidden"] == ["timeframe", "scope"]
+
+
 def test_bad_input_is_explained(api) -> None:
     assert api.post("/api/v1/dashboards", json={"name": "  "}).status_code == 422
     unknown = api.post("/api/v1/dashboards", json={"name": "X", "template": "nope"})

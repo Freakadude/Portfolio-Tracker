@@ -21,6 +21,8 @@ export interface Filters {
   end?: string | null
   types?: string[] // instrument types to look at (asset classes)
   instruments?: number[] // or these holdings; nothing chosen means everything
+  /** Filter bars the owner has taken off this dashboard: 'timeframe' and 'scope'. */
+  hidden?: string[]
 }
 
 export interface WidgetRequest {
@@ -174,11 +176,15 @@ export function useDashboardActions() {
         ).then(settle),
     }),
     addWidget: useMutation({
-      mutationFn: (b: { id: number; type: string; config?: Config }) =>
+      mutationFn: (b: { id: number; type: string; config?: Config; grid?: Box }) =>
         unwrap(
           api.POST('/api/v1/dashboards/{dashboard_id}/widgets', {
             params: { path: { dashboard_id: b.id } },
-            body: { type: b.type, config: b.config ?? {} },
+            body: {
+              type: b.type,
+              config: b.config ?? {},
+              grid: b.grid ? { x: b.grid.x, y: b.grid.y, w: b.grid.w, h: b.grid.h } : null,
+            },
           }),
         ).then(settle),
     }),

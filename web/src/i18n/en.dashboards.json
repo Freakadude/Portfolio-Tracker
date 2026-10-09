@@ -36,6 +36,18 @@
     "done": "Done",
     "edit": "Edit",
     "manage": "All dashboards",
+    "clone": "Duplicate {{name}}",
+    "cloneHint": "Add a copy of this widget with the same settings and size",
+    "removeFilter": {
+      "timeframe": "Remove the timeframe filter",
+      "scope": "Remove the account and instruments filter"
+    },
+    "removed": {
+      "timeframe": "Timeframe filter removed.",
+      "scope": "Account and instruments filter removed.",
+      "keeps": "Widgets that follow the dashboard keep using {{period}}."
+    },
+    "addBack": "Add it back",
     "tabMakeThis": "Open this from the Dashboards tab",
     "tabIsThis": "Dashboards tab opens this one",
     "tabHint": "The Dashboards tab in the menu opens this dashboard. All dashboards still shows the list. Kept in this browser.",

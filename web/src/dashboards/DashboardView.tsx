@@ -102,6 +102,7 @@ interface Props {
   editing: boolean
   onLayoutChange: (layouts: Layouts) => void
   onConfigure: (widget: DashboardWidget) => void
+  onClone: (widget: DashboardWidget) => void
   onRemove: (widget: DashboardWidget) => void
   onBreakpoint?: (bp: Breakpoint) => void
 }
@@ -116,6 +117,7 @@ export function DashboardView({
   editing,
   onLayoutChange,
   onConfigure,
+  onClone,
   onRemove,
   onBreakpoint,
 }: Props) {
@@ -201,6 +203,15 @@ export function DashboardView({
                         aria-label={t('dashboard.configure', { name: widgetTitle(t, w) })}
                       >
                         ✎
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        className="widget-cancel min-h-8 px-2"
+                        onClick={() => onClone(w)}
+                        aria-label={t('dashboard.clone', { name: widgetTitle(t, w) })}
+                        title={t('dashboard.cloneHint')}
+                      >
+                        ⧉
                       </Button>
                       <Button
                         variant="ghost"
