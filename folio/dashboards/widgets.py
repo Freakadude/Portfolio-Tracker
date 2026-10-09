@@ -82,6 +82,12 @@ class PriceChartConfig(BaseConfig):
     overlays: list[Overlay] = Field(default_factory=_default_overlays)
 
 
+class PriceHistoryConfig(BaseConfig):
+    """The price of up to six instruments over a period, each in a pane of its own."""
+
+    instrument_ids: list[int] = Field(default_factory=list, max_length=6)
+
+
 class SeriesRef(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
@@ -194,6 +200,7 @@ WIDGET_TYPES: dict[str, WidgetType] = {
         WidgetType("kpi", KpiConfig, 3, 3, "widgets.kpi"),
         WidgetType("value_history", ValueHistoryConfig, 8, 6, "widgets.value_history"),
         WidgetType("price_chart", PriceChartConfig, 8, 5, "widgets.price_chart"),
+        WidgetType("price_history", PriceHistoryConfig, 8, 6, "widgets.price_history"),
         WidgetType("performance_comparison", PerformanceConfig, 8, 5, "widgets.performance"),
         WidgetType("allocation", AllocationConfig, 4, 7, "widgets.allocation"),
         WidgetType("drift_bars", DriftBarsConfig, 6, 4, "widgets.drift_bars"),

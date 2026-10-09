@@ -234,6 +234,28 @@ export interface PriceChartData extends Empty {
   trades?: { date: string; type: string; quantity: string; price: string }[]
 }
 
+/** The price of several instruments over a period; one day is the refresh prices of a session. */
+export interface PriceHistoryData extends Empty {
+  intraday?: boolean
+  /** The day a one-day chart shows (YYYY-MM-DD). */
+  day?: string
+  /** Whether that day is today. */
+  today?: boolean
+  /** Open and close of trading that day on the owner's clock (YYYY-MM-DDTHH:MM:SS). */
+  session?: { start: string; end: string } | null
+  start?: string
+  end?: string
+  series?: {
+    instrument_id: number
+    name: string
+    currency: string
+    points: { date: string; value: string }[]
+    last: string | null
+    change_ratio: string | null
+  }[]
+  notes?: string[]
+}
+
 export interface PerformanceData extends Empty {
   suggest_benchmark?: boolean
   start?: string

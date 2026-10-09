@@ -197,9 +197,9 @@ def test_options_that_do_not_exist_are_refused(api) -> None:
     assert missing.status_code == 404
 
 
-def test_the_widget_library_lists_all_twenty_one(api) -> None:
+def test_the_widget_library_lists_all_twenty_two(api) -> None:
     library = api.get("/api/v1/dashboard-widgets").json()
-    assert len(library) == 21
+    assert len(library) == 22
     kpi = next(w for w in library if w["type"] == "kpi")
     assert (kpi["width"], kpi["height"], kpi["defaults"]["metric"]) == (3, 3, "value")
 
@@ -682,6 +682,97 @@ def test_the_latest_price_needs_a_holding_but_not_a_position(api, book, db) -> N
     db.commit()
     shown = _latest_price(api, never.id, None)
     assert D(shown["value"]) == D("12.3456") and shown["currency"] == "EUR"
+
+
+def _second_instrument(db, book, mic: str = "XETR", currency: str = "EUR"):  # type: ignore[no-untyped-def]
+    other, listing = make_listing(db, ticker="U", mic=mic, currency=currency, isin=None)
+    for bar in bars_for(mic, date(2024, 1, 1), date(2024, 1, 12), first_close=50):
+        db.add(PriceBar(listing_id=listing.id, date=bar.date, close=bar.close, source="x"))
+    db.commit()
+    return other, listing
+
+
+def test_price_history_over_a_week_is_one_close_a_day_for_each_instrument(api, book, db) -> None:
+    from sqlalchemy import select
+
+    other, other_listing = _second_instrument(db, book)
+    out = one(api, "price_history", {"instrument_ids": [book["fund"], other.id], "period": "1W"})
+    assert out["intraday"] is False and len(out["series"]) == 2
+    first, second = out["series"]
+    assert first["instrument_id"] == book["fund"] and second["instrument_id"] == other.id
+    for series in out["series"]:
+        dates = [p["date"] for p in series["points"]]
+        assert dates == ["2024-01-09", "2024-01-10", "2024-01-11", "2024-01-12"]  # one a day
+    assert D(first["points"][-1]["value"]) == 108 and D(first["last"]) == 108
+    base = db.scalars(
+        select(PriceBar).where(
+            PriceBar.listing_id == other_listing.id, PriceBar.date == date(2024, 1, 8)
+        )
+    ).one()
+    last = second["points"][-1]["value"]
+    assert D(second["change_ratio"]) == (D(last) / base.close - 1).quantize(D("0.000001"))
+
+
+def test_price_history_for_one_day_is_the_refresh_prices_over_the_trading_day(
+    api, book, db
+) -> None:
+    listing = _fund_listing(db, book)
+    other, other_listing = _second_instrument(db, book, "XNYS", "USD")
+    _quotes(
+        db,
+        listing.id,
+        [
+            ((2024, 1, 12, 15, 0), "1"),  # an earlier session: not on the chart
+            ((2024, 1, 16, 8, 0), "109"),
+            ((2024, 1, 16, 8, 15), "110.5"),
+            ((2024, 1, 16, 16, 0), "107.9"),
+        ],
+    )
+    _quotes(db, other_listing.id, [((2024, 1, 16, 15, 0), "61"), ((2024, 1, 16, 17, 0), "62.5")])
+    out = one(api, "price_history", {"instrument_ids": [book["fund"], other.id], "period": "1D"})
+    assert out["intraday"] is True and out["day"] == "2024-01-16" and out["today"] is False
+    fund, usd = out["series"]
+    # on the owner's clock (Amsterdam, UTC+1 in January), whatever the exchange
+    assert [(p["date"], p["value"]) for p in fund["points"]] == [
+        ("2024-01-16T09:00:00", "109"),
+        ("2024-01-16T09:15:00", "110.5"),
+        ("2024-01-16T17:00:00", "107.9"),
+    ]
+    assert [p["date"] for p in usd["points"]] == ["2024-01-16T16:00:00", "2024-01-16T18:00:00"]
+    # from the first open (Xetra 09:00) to the last close (New York 22:00)
+    assert out["session"] == {"start": "2024-01-16T09:00:00", "end": "2024-01-16T22:00:00"}
+    assert D(fund["last"]) == D("107.9") and D(usd["last"]) == D("62.5")
+    # against the close before the session
+    assert D(fund["change_ratio"]) == (D("107.9") / 108 - 1).quantize(D("0.000001"))
+
+
+def test_price_history_for_one_day_says_when_nothing_is_fetched_or_chosen(api, book, db) -> None:
+    out = one(api, "price_history", {"instrument_ids": [book["fund"]], "period": "1D"})
+    assert out["empty"] is True and "every 15 minutes" in out["reason"]
+    none = one(api, "price_history", {})
+    assert none["empty"] is True and "Choose at least one instrument" in none["reason"]
+    gone = one(api, "price_history", {"instrument_ids": [99999]})
+    assert gone["empty"] is True and "None of the chosen" in gone["reason"]
+    assert any("no longer exists" in n for n in gone["notes"])
+
+
+def test_price_history_takes_at_most_six_instruments(api, book) -> None:
+    r = api.post(
+        "/api/v1/widgets/data",
+        json={
+            "as_of": AS_OF,
+            "filters": {},
+            "requests": [
+                {
+                    "key": "w",
+                    "type": "price_history",
+                    "config": {"instrument_ids": [1, 2, 3, 4, 5, 6, 7]},
+                }
+            ],
+        },
+    )
+    assert r.status_code == 200
+    assert r.json()["results"]["w"]["error"] is not None
 
 
 def test_a_fifty_day_average_is_the_mean_of_fifty_closes(api, db) -> None:

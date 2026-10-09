@@ -1,6 +1,7 @@
 import { useCallback, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link, useNavigate } from 'react-router-dom'
+import { Delta } from '../../components/display'
 import { toNumber } from '../../lib/format'
 import { useFormat } from '../../lib/useFormat'
 import { ChartFrame, DataTable } from '../charts/ChartFrame'
@@ -10,6 +11,7 @@ import type {
   DrawdownData,
   PerformanceData,
   PriceChartData,
+  PriceHistoryData,
   ValueHistoryData,
   WidgetProps,
 } from '../types'
@@ -373,6 +375,114 @@ export function PriceChartWidget({ data, config }: WidgetProps<PriceChartData>) 
           />
         }
       />
+    </div>
+  )
+}
+
+/** The price of one or more instruments over a period (Price history). One day: every refresh
+ * price of the trading day as its own point, from the open to the close; any longer period: the
+ * closing price of each day. Each instrument has a chart of its own under the others on the same
+ * time axis, because prices of different instruments and currencies do not share a scale. */
+export function PriceHistoryWidget({ data }: WidgetProps<PriceHistoryData>) {
+  const { t } = useTranslation()
+  const { num } = useFormat()
+  const navigate = useNavigate()
+  const intraday = data.intraday === true
+  const list = useMemo(() => data.series ?? [], [data.series])
+  const format = useMemo(() => (v: number) => num(v, 2), [num])
+  const when = useCallback(
+    (date: string): ChartTime => (intraday ? clockSeconds(date) : date),
+    [intraday],
+  )
+  const extend = useMemo(
+    () => (data.session ? [clockSeconds(data.session.start), clockSeconds(data.session.end)] : []),
+    [data.session],
+  )
+  const series: TimeSeries[] = useMemo(
+    () =>
+      list.map((x, i) => ({
+        key: String(x.instrument_id),
+        label: `${x.name} (${x.currency})`,
+        color: SERIES[i % SERIES.length],
+        pane: i,
+        extend: i === 0 && extend.length > 0 ? extend : undefined,
+        points: x.points.map((p) => ({ time: when(p.date), value: n(p.value) })),
+      })),
+    [list, extend, when],
+  )
+  const first = list[0]
+  const drill = useCallback(
+    () => first && navigate(`/holdings/${first.instrument_id}`),
+    [first, navigate],
+  )
+  if (data.empty) {
+    return (
+      <div className="space-y-1 text-sm text-muted">
+        <p>{data.reason}</p>
+        {(data.notes ?? []).map((note) => (
+          <p key={note}>{note}</p>
+        ))}
+      </div>
+    )
+  }
+  // the table lists every moment any instrument has a point
+  const moments = [...new Set(list.flatMap((x) => x.points.map((p) => p.date)))].sort()
+  const valueAt = list.map((x) => new Map(x.points.map((p) => [p.date, p.value])))
+  return (
+    <div className="flex h-full flex-col gap-2">
+      {intraday && data.day && (
+        <p className="text-sm text-muted">
+          {t('widgets.historyDay', { date: data.day })}
+          {data.today === false && ` · ${t('widgets.historyNotToday')}`}
+        </p>
+      )}
+      <ChartFrame
+        chart={
+          <TimeChart
+            series={series}
+            intraday={intraday}
+            timeLabel={intraday ? clockLabel : undefined}
+            label={t('widgets.price_history')}
+            format={format}
+            onTimeClick={list.length === 1 ? drill : undefined}
+          />
+        }
+        table={
+          <DataTable
+            caption={t('widgets.price_history')}
+            head={[
+              t(intraday ? 'charts.time' : 'charts.date'),
+              ...list.map((x) => `${x.name} (${x.currency})`),
+            ]}
+            rows={[...moments]
+              .reverse()
+              .map((moment) => [
+                intraday ? moment.slice(11, 16) : moment,
+                ...valueAt.map((values) => (values.has(moment) ? num(values.get(moment), 2) : '')),
+              ])}
+          />
+        }
+      />
+      <ul className="space-y-1 text-sm" aria-label={t('widgets.price_history')}>
+        {list.map((x) => (
+          <li key={x.instrument_id} className="flex flex-wrap items-center gap-x-3">
+            <Link to={`/holdings/${x.instrument_id}`} className="font-medium underline">
+              {x.name}
+            </Link>
+            <span className="tabular-nums">
+              {x.last === null
+                ? '–'
+                : t('widgets.historyLast', { price: num(x.last), currency: x.currency })}
+            </span>
+            {x.change_ratio !== null && <Delta value={x.change_ratio} kind="pct" />}
+          </li>
+        ))}
+      </ul>
+      {(data.notes ?? []).map((note) => (
+        <p key={note} className="text-xs text-muted">
+          {note}
+        </p>
+      ))}
     </div>
   )
 }

@@ -17,7 +17,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from folio import analytics_service as svc
-from folio.agent.budget import agent_settings
+from folio.agent.budget import agent_settings, timezone_of
 from folio.analytics.lookthrough import DIMENSIONS, Exposure
 from folio.analytics.returns import DailyPoint, twr_index, twr_segments, xirr_flow_rows
 from folio.analytics.risk import drawdown
@@ -960,12 +960,9 @@ def _primary_listing(env: Env, instrument_id: int) -> Listing | None:
     ).first()
 
 
-def _session(
-    env: Env, listing: Listing
-) -> tuple[date, list[tuple[str, Decimal]], Decimal | None] | None:
+def _session_quotes(env: Env, listing: Listing) -> tuple[date, list[Quote], Decimal | None] | None:
     """The latest session with refresh prices on record for a listing: its exchange-local date,
-    its quotes in order as (exchange-local time, price), and the close before that date. None
-    when no quote is stored."""
+    its quotes in order, and the close before that date. None when no quote is stored."""
     latest = env.db.scalars(
         select(Quote).where(Quote.listing_id == listing.id).order_by(Quote.ts.desc()).limit(1)
     ).first()
@@ -988,8 +985,19 @@ def _session(
         .order_by(PriceBar.date.desc())
         .limit(1)
     ).first()
-    pairs = [(exchanges.local_time(mic, q.ts).isoformat(), q.price) for q in quotes]
-    return day, pairs, None if before is None else before.close
+    return day, quotes, None if before is None else before.close
+
+
+def _session(
+    env: Env, listing: Listing
+) -> tuple[date, list[tuple[str, Decimal]], Decimal | None] | None:
+    """The same, with each quote as (exchange-local time, price)."""
+    found = _session_quotes(env, listing)
+    if found is None:
+        return None
+    day, quotes, previous = found
+    mic = listing.exchange_mic
+    return day, [(exchanges.local_time(mic, q.ts).isoformat(), q.price) for q in quotes], previous
 
 
 NO_REFRESH_PRICES = (
@@ -1112,6 +1120,146 @@ def price_chart(env: Env, cfg: Any) -> dict[str, Any]:
             if key in cfg.overlays:
                 out[key] = [p for p in _moving_average(closes, n) if p["date"] > start.isoformat()]
     return out
+
+
+def _history_series(
+    instrument: Instrument,
+    listing: Listing,
+    points: Sequence[tuple[str, Decimal]],
+    base: Decimal | None,
+) -> dict[str, Any]:
+    """One instrument of a price history: its points and how it moved from `base` (the first
+    point when there is none)."""
+    first = base if base else (points[0][1] if points else None)
+    last = points[-1][1] if points else None
+    change = None
+    if first and last is not None:
+        change = (last / first - 1).quantize(Decimal("0.000001"))
+    return {
+        "instrument_id": instrument.id,
+        "name": instrument.name,
+        "currency": listing.currency,
+        "points": [{"date": d, "value": str(v)} for d, v in points],
+        "last": s(last),
+        "change_ratio": s(change),
+    }
+
+
+def _history_days(
+    env: Env,
+    entries: list[tuple[Instrument, Listing]],
+    period: str,
+    notes: list[str],
+) -> dict[str, Any]:
+    """Daily closes: one point a day, the last closed price of that day."""
+    ctx = context(env, None)
+    start, end = _price_window(env, ctx, period)
+    series = []
+    for instrument, listing in entries:
+        bars = list(
+            env.db.scalars(
+                select(PriceBar)
+                .where(
+                    PriceBar.listing_id == listing.id, PriceBar.date > start, PriceBar.date <= end
+                )
+                .order_by(PriceBar.date)
+            )
+        )
+        before = env.db.scalars(
+            select(PriceBar)
+            .where(PriceBar.listing_id == listing.id, PriceBar.date <= start)
+            .order_by(PriceBar.date.desc())
+            .limit(1)
+        ).first()
+        points = thin([(b.date.isoformat(), b.close) for b in bars], CHART_POINTS)
+        if not points:
+            notes.append(f"No prices are stored for {instrument.name} in this period.")
+        series.append(
+            _history_series(instrument, listing, points, None if before is None else before.close)
+        )
+    if not any(x["points"] for x in series):
+        return {
+            **_empty("No prices are stored for these instruments in this period."),
+            "notes": notes,
+        }
+    return {
+        "intraday": False,
+        "start": start.isoformat(),
+        "end": end.isoformat(),
+        "series": series,
+        "notes": notes,
+    }
+
+
+def _history_day(
+    env: Env, entries: list[tuple[Instrument, Listing]], notes: list[str]
+) -> dict[str, Any]:
+    """One day: the refresh prices of the latest session on record, on the owner's clock so
+    instruments of different exchanges share one axis, from the open to the close of trading."""
+    zone = timezone_of(env.db)
+
+    def clock(at: datetime) -> datetime:
+        return at.astimezone(zone).replace(tzinfo=None)
+
+    found = [(i, lst, _session_quotes(env, lst)) for i, lst in entries]
+    newest = max((q.ts for _, _, f in found if f for q in f[1]), default=None)
+    if newest is None:
+        return {**_empty(NO_REFRESH_PRICES), "notes": notes}
+    day = clock(newest).date()
+    series = []
+    opens: list[datetime] = []
+    closes: list[datetime] = []
+    for instrument, listing, f in found:
+        points: list[tuple[str, Decimal]] = []
+        previous = None
+        if f is not None:
+            session_day, quotes, previous = f
+            points = [
+                (clock(q.ts).isoformat(), q.price) for q in quotes if clock(q.ts).date() == day
+            ]
+            hours = exchanges.session_times(listing.exchange_mic, session_day) if points else None
+            if hours is not None:
+                opens.append(clock(hours[0]))
+                closes.append(clock(hours[1]))
+        if not points:
+            notes.append(f"No refresh prices of {day.isoformat()} for {instrument.name}.")
+        series.append(_history_series(instrument, listing, points, previous))
+    return {
+        "intraday": True,
+        "day": day.isoformat(),
+        "today": day == env.today,
+        "session": (
+            {"start": min(opens).isoformat(), "end": max(closes).isoformat()} if opens else None
+        ),
+        "series": series,
+        "notes": notes,
+    }
+
+
+def price_history(env: Env, cfg: Any) -> dict[str, Any]:
+    """The price of the chosen instruments over a period. One day: the refresh prices of the
+    session; any longer period: the daily closes."""
+    ids = list(dict.fromkeys(cfg.instrument_ids))
+    if not ids:
+        return _empty("Choose at least one instrument in the settings of this widget.")
+    entries: list[tuple[Instrument, Listing]] = []
+    notes: list[str] = []
+    for instrument_id in ids:
+        instrument = env.db.get(Instrument, instrument_id)
+        if instrument is None or instrument.deleted_at is not None:
+            notes.append(f"Instrument {instrument_id} no longer exists.")
+            continue
+        listing = _primary_listing(env, instrument_id)
+        if listing is None:
+            notes.append(f"{instrument.name} has no listing to price.")
+            continue
+        entries.append((instrument, listing))
+    if not entries:
+        return {**_empty("None of the chosen instruments can be priced."), "notes": notes}
+    period = period_of(cfg, env, "1M")
+    if period == "1D":
+        return _history_day(env, entries, notes)
+    return _history_days(env, entries, period, notes)
 
 
 def performance(env: Env, cfg: Any) -> dict[str, Any]:
@@ -1428,6 +1576,7 @@ COMPUTE: dict[str, Callable[[Env, Any], dict[str, Any]]] = {
     "kpi": kpi,
     "value_history": value_history,
     "price_chart": price_chart,
+    "price_history": price_history,
     "performance_comparison": performance,
     "allocation": allocation,
     "drift_bars": drift_bars,

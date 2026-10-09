@@ -5,6 +5,7 @@ import {
   DrawdownWidget,
   PerformanceWidget,
   PriceChartWidget,
+  PriceHistoryWidget,
   ValueHistoryWidget,
 } from './widgets/History'
 import { KpiWidget } from './widgets/Kpi'
@@ -33,6 +34,7 @@ export interface OptionField {
     | 'number'
     | 'longtext'
     | 'instrument'
+    | 'instruments'
     | 'multi'
     | 'ordered'
     | 'sortby'
@@ -131,6 +133,13 @@ const DEFS: Record<string, Omit<WidgetDef, 'type'>> = {
         labels: 'widgets.overlays',
       },
     ],
+  }),
+  price_history: def(PriceHistoryWidget, {
+    chart: true,
+    drillsTo: 'the position page',
+    scopes: ['portfolio'],
+    period: true,
+    fields: [{ key: 'instrument_ids', kind: 'instruments' }],
   }),
   performance_comparison: def(PerformanceWidget, {
     chart: true,

@@ -129,6 +129,18 @@ def local_date(mic: str, at: datetime) -> date:
     return at.astimezone(ZoneInfo(str(calendar(mic).tz))).date()
 
 
+def session_times(mic: str, day: date) -> tuple[datetime, datetime] | None:
+    """When the session of exchange-local `day` opens and closes, as UTC moments; None for a
+    day without a session or an exchange without a calendar."""
+    if not has_calendar(mic):
+        return None
+    cal = calendar(mic)
+    stamp = pd.Timestamp(day)
+    if not cal.is_session(stamp):
+        return None
+    return cal.session_open(stamp).to_pydatetime(), cal.session_close(stamp).to_pydatetime()
+
+
 def local_time(mic: str, at: datetime) -> datetime:
     """The exchange-local wall clock of a moment, without a zone (UTC for a listing without a
     calendar). A chart that shows these reads in market hours."""

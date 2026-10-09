@@ -104,3 +104,39 @@ test('the key figure "Latest price" shows the price of one holding', async ({ pa
   await expect(dialog.getByText(/98[.,]50 EUR/)).toBeVisible() // no refresh prices: the close, with the reason
   await expect(dialog.getByText(/No refresh prices yet/)).toBeVisible()
 })
+
+test('the Price history widget charts several instruments and explains a day without prices', async ({
+  page,
+}) => {
+  await login(page)
+  await page.goto('/dashboards')
+  await page.getByLabel('Name').fill('History check')
+  await page.getByRole('button', { name: 'Create dashboard' }).click()
+  await expect(page.getByRole('heading', { level: 1, name: 'History check' })).toBeVisible()
+
+  await page.getByRole('button', { name: 'Add widget' }).first().click()
+  await page.getByRole('searchbox', { name: 'Search widgets and figures' }).fill('price history')
+  await page
+    .getByRole('button', { name: /^Price history/ })
+    .first()
+    .click()
+  await page.getByRole('button', { name: 'Settings of Price history' }).click()
+
+  const dialog = page.getByRole('dialog', { name: /Settings of Price history/ })
+  await expect(dialog.getByText(/Choose at least one instrument/)).toBeVisible()
+  const group = dialog.getByRole('group', { name: 'Instruments' })
+  await group.getByRole('combobox', { name: 'Add an instrument' }).selectOption({
+    label: 'E2E Chart fund',
+  })
+  await group.getByRole('combobox', { name: 'Add an instrument' }).selectOption({
+    label: 'E2E Stock',
+  })
+  await dialog.getByLabel('Period', { exact: true }).selectOption('MAX')
+  const summary = dialog.getByRole('list', { name: 'Price history' })
+  await expect(summary.getByRole('link', { name: 'E2E Chart fund' })).toBeVisible()
+  await expect(summary.getByRole('link', { name: 'E2E Stock' })).toBeVisible()
+
+  // one day uses the refresh prices; none are stored here, and it says why
+  await dialog.getByLabel('Period', { exact: true }).selectOption('1D')
+  await expect(dialog.getByText(/No refresh prices are stored/)).toBeVisible()
+})

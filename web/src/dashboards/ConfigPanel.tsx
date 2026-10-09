@@ -268,6 +268,52 @@ export function ConfigPanel({
             )}
           </Field>
         )
+      case 'instruments': {
+        const chosen = (value as number[] | undefined) ?? []
+        const rest = (instruments.data ?? []).filter((i) => !chosen.includes(i.id))
+        const nameOf = (id: number) => instruments.data?.find((i) => i.id === id)?.name ?? `#${id}`
+        return (
+          <fieldset key={f.key} className="space-y-1">
+            <legend className="text-sm font-medium">{label}</legend>
+            <p className="text-xs text-muted">{t('widgetOptions.instrumentsHint')}</p>
+            <ul className="space-y-1">
+              {chosen.map((id) => (
+                <li key={id} className="flex items-center gap-1 text-sm">
+                  <span className="flex-1">{nameOf(id)}</span>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    className="min-h-8 px-2"
+                    aria-label={t('widgetOptions.removeItem', { name: nameOf(id) })}
+                    onClick={() =>
+                      set(
+                        f.key,
+                        chosen.filter((c) => c !== id),
+                      )
+                    }
+                  >
+                    ✕
+                  </Button>
+                </li>
+              ))}
+            </ul>
+            {chosen.length < 6 && rest.length > 0 && (
+              <Select
+                aria-label={t('widgetOptions.addInstrument')}
+                value=""
+                onChange={(e) => e.target.value && set(f.key, [...chosen, Number(e.target.value)])}
+              >
+                <option value="">{t('widgetOptions.addInstrument')}</option>
+                {rest.map((i) => (
+                  <option key={i.id} value={i.id}>
+                    {i.name}
+                  </option>
+                ))}
+              </Select>
+            )}
+          </fieldset>
+        )
+      }
       case 'longtext':
         return (
           <Field key={f.key} label={label} hint={t('widgetOptions.markdownHint')}>

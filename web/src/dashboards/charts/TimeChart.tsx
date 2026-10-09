@@ -33,6 +33,9 @@ export interface TimeSeries {
   pane?: number
   /** How its values are written on the axis and in the tooltip (default: the chart's format). */
   format?: (value: number) => string
+  /** Moments with no value that stretch the time axis, such as the open and the close of a
+   * trading day the curve has not reached yet. */
+  extend?: ChartTime[]
 }
 
 export interface Candle {
@@ -175,13 +178,17 @@ export function TimeChart({
                 )
       const up = resolve('var(--diverge-pos)')
       const down = resolve('var(--diverge-neg)')
-      api.setData(
-        s.points.map((p) =>
+      const have = new Set(s.points.map((p) => p.time))
+      const blanks = (s.extend ?? []).filter((time) => !have.has(time))
+      const data = [
+        ...s.points.map((p) =>
           s.kind === 'bars'
             ? { time: p.time as Time, value: p.value, color: p.value >= 0 ? up : down }
             : { time: p.time as Time, value: p.value },
         ),
-      )
+        ...blanks.map((time) => ({ time: time as Time })),
+      ].sort((a, b) => (a.time < b.time ? -1 : a.time > b.time ? 1 : 0))
+      api.setData(data)
       drawn.push({ api, label: s.label, color, format: s.format })
     }
     if (candles?.length) {

@@ -90,3 +90,18 @@ def test_local_time_is_the_exchange_wall_clock_without_a_zone() -> None:
     assert exchanges.local_time("XLON", winter) == datetime(2024, 1, 12, 8, 15)  # GMT
     assert exchanges.local_time("XNYS", winter) == datetime(2024, 1, 12, 3, 15)  # EST
     assert exchanges.local_time("XXXX", winter) == datetime(2024, 1, 12, 8, 15)  # no calendar: UTC
+
+
+def test_session_times_are_the_open_and_close_in_utc() -> None:
+    xetra = exchanges.session_times("XETR", date(2024, 1, 15))
+    assert xetra == (
+        datetime(2024, 1, 15, 8, 0, tzinfo=UTC),
+        datetime(2024, 1, 15, 16, 30, tzinfo=UTC),
+    )
+    newyork = exchanges.session_times(
+        "XNYS", date(2024, 1, 15 + 1)
+    )  # Tuesday, after Martin Luther King Day
+    assert newyork is not None and newyork[0].hour == 14 and newyork[1].hour == 21
+    assert exchanges.session_times("XETR", date(2024, 1, 13)) is None  # a Saturday
+    assert exchanges.session_times("XNYS", date(2024, 1, 15)) is None  # a US holiday
+    assert exchanges.session_times("XXXX", date(2024, 1, 15)) is None  # no calendar
