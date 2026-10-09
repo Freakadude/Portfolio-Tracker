@@ -1,6 +1,14 @@
 import { useQuery } from '@tanstack/react-query'
 import { api, unwrap } from '../api/client'
-import { formatEur, formatNumber, formatPercent, formatQuantity, type NumberFormat } from './format'
+import {
+  formatEur,
+  formatNumber,
+  formatPercent,
+  formatQuantity,
+  formatSmallEur,
+  roundNumbersIn,
+  type NumberFormat,
+} from './format'
 
 /** The owner's number format (Settings > General), with formatters bound to it. */
 export function useFormat() {
@@ -23,7 +31,11 @@ export function useFormat() {
     /** A weekday and clock time (Tue 09:00) in the owner's time zone. */
     dayClock: (iso: string | null | undefined) => formatClock(iso, timezone, true),
     eur: (v: string | number | null | undefined, decimals = 2) => formatEur(v, format, decimals),
+    /** An amount that may be less than a cent: "< 0.01" instead of 0.00. */
+    smallEur: (v: string | number | null | undefined) => formatSmallEur(v, format),
     num: (v: string | number | null | undefined, decimals = 2) => formatNumber(v, format, decimals),
+    /** A text with every number of three or more decimals shown with two. */
+    rounded: (text: string) => roundNumbersIn(text, format),
     qty: (v: string | number | null | undefined) => formatQuantity(v, format),
     pct: (v: string | number | null | undefined, decimals = 2) =>
       formatPercent(v, format, decimals),

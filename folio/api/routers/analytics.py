@@ -24,6 +24,7 @@ from folio.api.deps import DbDep, UserDep
 from folio.api.errors import ApiError
 from folio.db.models import Account
 from folio.db.models_ledger import Instrument
+from folio.display import two
 
 router = APIRouter(prefix="/portfolio", tags=["analytics"])
 
@@ -686,7 +687,10 @@ def simulate_trades(body: SimulateIn, _user: UserDep, db: DbDep) -> SimulationOu
     except SimulationError as exc:
         name = found[exc.instrument_id].name
         raise ApiError(
-            422, "Not enough units", f"You hold {exc.held} of {name}; this sale needs {exc.wanted}."
+            422,
+            "Not enough units",
+            f"You hold {two(exc.held, trim=True)} of {name}; this sale needs "
+            f"{two(exc.wanted, trim=True)}.",
         ) from exc
 
     meta = svc.load_meta(db, {p.instrument_id for p in result.positions})

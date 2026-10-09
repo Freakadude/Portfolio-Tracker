@@ -16,6 +16,12 @@ function formatter(key: string, locale: string, options: Intl.NumberFormatOption
   return f
 }
 
+/** Nothing the owner reads shows more than two decimals, whatever the server calculated with.
+ * The formatters below clamp to this, so no caller can ask for more. Fields you type into and
+ * downloads are not "read" and keep the exact value. */
+export const MAX_DECIMALS = 2
+const clamp = (decimals: number) => Math.max(0, Math.min(decimals, MAX_DECIMALS))
+
 export function toNumber(value: string | number | null | undefined): number | null {
   if (value === null || value === undefined || value === '') return null
   const n = typeof value === 'number' ? value : Number(value)
@@ -30,12 +36,24 @@ export function formatEur(
 ): string {
   const n = toNumber(value)
   if (n === null) return '–'
-  return formatter(`eur${decimals}`, localeFor(format), {
+  const places = clamp(decimals)
+  return formatter(`eur${places}`, localeFor(format), {
     style: 'currency',
     currency: 'EUR',
-    minimumFractionDigits: decimals,
-    maximumFractionDigits: decimals,
+    minimumFractionDigits: places,
+    maximumFractionDigits: places,
   }).format(n)
+}
+
+/** An amount that is above zero but rounds to nothing (what one AI call costs) reads "< 0.01"
+ * rather than "0.00", which would say it was free. */
+export function formatSmallEur(
+  value: string | number | null | undefined,
+  format: NumberFormat,
+): string {
+  const n = toNumber(value)
+  if (n !== null && n > 0 && n < 0.005) return `< ${formatEur(0.01, format)}`
+  return formatEur(value, format)
 }
 
 /** A plain number with a fixed number of decimals. */
@@ -46,17 +64,27 @@ export function formatNumber(
 ): string {
   const n = toNumber(value)
   if (n === null) return '–'
-  return formatter(`num${decimals}`, localeFor(format), {
-    minimumFractionDigits: decimals,
-    maximumFractionDigits: decimals,
+  const places = clamp(decimals)
+  return formatter(`num${places}`, localeFor(format), {
+    minimumFractionDigits: places,
+    maximumFractionDigits: places,
   }).format(n)
 }
 
-/** Units held: whole numbers stay whole, fractions show up to six places. */
+/** Units held: whole numbers stay whole, fractions show up to two places. */
 export function formatQuantity(value: string | number | null | undefined, format: NumberFormat) {
   const n = toNumber(value)
   if (n === null) return '–'
-  return formatter('qty', localeFor(format), { maximumFractionDigits: 6 }).format(n)
+  return formatter('qty', localeFor(format), { maximumFractionDigits: MAX_DECIMALS }).format(n)
+}
+
+/** The numbers with three or more decimals inside a text (data the agent read, as JSON or
+ * prose), written with two, for showing. A number that rounds to a whole one keeps its two
+ * places, so 0.001 reads 0.00 rather than 0. */
+export function roundNumbersIn(text: string, format: NumberFormat): string {
+  return text.replace(/(?<![\w.])-?\d+\.\d{3,}(?![\w.])/g, (found) =>
+    formatNumber(found, format, MAX_DECIMALS),
+  )
 }
 
 /** A ratio such as 0.0643 as "6.43%" (the API sends fractions). */
@@ -67,10 +95,11 @@ export function formatPercent(
 ): string {
   const n = toNumber(ratio)
   if (n === null) return '–'
-  return formatter(`pct${decimals}`, localeFor(format), {
+  const places = clamp(decimals)
+  return formatter(`pct${places}`, localeFor(format), {
     style: 'percent',
-    minimumFractionDigits: decimals,
-    maximumFractionDigits: decimals,
+    minimumFractionDigits: places,
+    maximumFractionDigits: places,
   }).format(n)
 }
 

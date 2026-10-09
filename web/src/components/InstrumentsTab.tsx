@@ -16,7 +16,7 @@ type Blocked = { name: string; total: number; rows: Record<string, string>[] }
 
 export function InstrumentsTab({ onAdd }: { onAdd: () => void }) {
   const { t } = useTranslation()
-  const { eur } = useFormat()
+  const { eur, qty } = useFormat()
   const invalidate = useInvalidateLedger()
   const [filter, setFilter] = useState<Filter>('active')
   const [editing, setEditing] = useState<Instrument | null>(null)
@@ -198,7 +198,7 @@ export function InstrumentsTab({ onAdd }: { onAdd: () => void }) {
             <ul className="list-disc pl-5 text-sm">
               {blocked.rows.map((r) => (
                 <li key={r.id}>
-                  {r.trade_date} · {r.type} · {r.quantity} · {r.account}
+                  {r.trade_date} · {r.type} · {qty(r.quantity)} · {r.account}
                 </li>
               ))}
             </ul>

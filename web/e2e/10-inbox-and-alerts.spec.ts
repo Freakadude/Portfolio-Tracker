@@ -64,5 +64,5 @@ test('notification settings: routing, a test push and the system information (FR
   await page.getByRole('link', { name: 'System' }).click()
   const info = page.getByRole('region', { name: 'This installation' })
   await expect(info).toContainText('0.1.0')
-  await expect(info).toContainText('0 runs, 0.00 of 5 EUR')
+  await expect(info).toContainText(/0 runs, 0[.,]00 of 5[.,]00 EUR/)
 })

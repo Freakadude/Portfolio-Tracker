@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next'
 import { errorMessage } from '../api/client'
 import { Badge } from '../components/display'
 import { Alert, Button } from '../components/ui'
+import { useFormat } from '../lib/useFormat'
 import { useAgentRun, useAgentRuns, type AgentRun } from './api'
 
 const TONE = { ok: 'good', failed: 'bad', budget: 'warn', running: 'neutral' } as const
@@ -49,6 +50,7 @@ export function RunsPanel() {
 
 function RunRow({ run, onOpen }: { run: AgentRun; onOpen: () => void }) {
   const { t } = useTranslation()
+  const { smallEur } = useFormat()
   return (
     <tr className="border-b border-border align-top">
       <td className="py-1 pr-3 whitespace-nowrap">{new Date(run.started_at).toLocaleString()}</td>
@@ -65,7 +67,7 @@ function RunRow({ run, onOpen }: { run: AgentRun; onOpen: () => void }) {
       <td className="py-1 pr-3 tabular-nums">
         {t('runs.items', { made: run.recommendations, refused: run.refused })}
       </td>
-      <td className="py-1 pr-3 tabular-nums">{Number(run.cost_eur).toFixed(4)}</td>
+      <td className="py-1 pr-3 tabular-nums">{smallEur(run.cost_eur)}</td>
       <td className="py-1">
         <Button variant="secondary" onClick={onOpen} aria-label={`${t('runs.trace')} ${run.id}`}>
           {t('runs.trace')}

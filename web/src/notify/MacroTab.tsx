@@ -1,5 +1,6 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
+import { useFormat } from '../lib/useFormat'
 import { api, errorMessage, unwrap } from '../api/client'
 import { SectionForm } from '../components/SectionForm'
 import { Alert, Button, Help } from '../components/ui'
@@ -10,6 +11,7 @@ import { JobStatus } from '../system/JobStatus'
  * fetch now (FR-MD-08). FRED series need the free key under Providers. */
 export function MacroTab() {
   const { t } = useTranslation()
+  const { num } = useFormat()
   const series = useMacroSeries()
   const queryClient = useQueryClient()
   const fetchNow = useMutation({ mutationFn: () => unwrap(api.POST('/api/v1/macro/refresh')) })
@@ -50,7 +52,7 @@ export function MacroTab() {
                 <td className="py-1 pr-3 tabular-nums">
                   {s.last_value === null
                     ? t('macroSettings.none')
-                    : `${s.last_value} (${s.last_date})`}
+                    : `${num(s.last_value)} (${s.last_date})`}
                 </td>
                 <td className="py-1 pr-3 tabular-nums">{s.points}</td>
               </tr>

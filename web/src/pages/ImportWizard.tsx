@@ -1,6 +1,7 @@
 import { useMutation, useQuery } from '@tanstack/react-query'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
+import { useFormat } from '../lib/useFormat'
 import { Link } from 'react-router-dom'
 import { api, errorMessage, unwrap } from '../api/client'
 import {
@@ -504,6 +505,7 @@ function ReviewStep({
   onDone: (b: ImportBatch) => void
 }) {
   const { t } = useTranslation()
+  const { num, qty } = useFormat()
   const invalidate = useInvalidateLedger()
   const [onlyProblems, setOnlyProblems] = useState(false)
   const [skipErrors, setSkipErrors] = useState(false)
@@ -593,8 +595,12 @@ function ReviewStep({
                     : ''}
                 </td>
                 <td className="py-1 pr-3">{r.summary?.isin ?? ''}</td>
-                <td className="py-1 pr-3 text-right tabular-nums">{r.summary?.quantity ?? ''}</td>
-                <td className="py-1 pr-3 text-right tabular-nums">{r.summary?.price ?? ''}</td>
+                <td className="py-1 pr-3 text-right tabular-nums">
+                  {r.summary?.quantity ? qty(r.summary.quantity) : ''}
+                </td>
+                <td className="py-1 pr-3 text-right tabular-nums">
+                  {r.summary?.price ? num(r.summary.price) : ''}
+                </td>
                 <td className="py-1 text-danger">{r.reason ?? ''}</td>
               </tr>
             ))}

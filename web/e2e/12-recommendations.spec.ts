@@ -62,7 +62,7 @@ test('the System page lists the agent run and opens its trace (FR-AG-04)', async
   await page.goto('/system')
   const table = page.getByRole('table', { name: 'Agent runs' })
   const row = table.getByRole('row', { name: /Daily review/ })
-  await expect(row).toContainText('0.0123')
+  await expect(row).toContainText(/0[.,]01/) // 0.0123, to two places
   await expect(row).toContainText('2 shown, 1 refused')
   await row.getByRole('button', { name: /Trace of run/ }).click()
   const trace = page.getByRole('region', { name: /Trace of run/ })

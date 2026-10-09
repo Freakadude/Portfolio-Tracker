@@ -10,6 +10,8 @@ from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from decimal import Decimal
 
+from folio.display import two
+
 ZERO = Decimal(0)
 
 
@@ -26,7 +28,10 @@ class SimulationError(ValueError):
         self.instrument_id = instrument_id
         self.held = held
         self.wanted = wanted
-        super().__init__(f"Instrument {instrument_id}: holds {held}, a sale needs {wanted}.")
+        super().__init__(
+            f"Instrument {instrument_id}: holds {two(held, trim=True)}, "
+            f"a sale needs {two(wanted, trim=True)}."
+        )
 
 
 @dataclass(frozen=True)

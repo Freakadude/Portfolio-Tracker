@@ -6,6 +6,8 @@ import {
   formatNumber,
   formatPercent,
   formatQuantity,
+  formatSmallEur,
+  roundNumbersIn,
   toNumber,
 } from './format'
 
@@ -32,10 +34,31 @@ describe('numbers, quantities and percentages', () => {
     expect(formatNumber('1234.5', 'eu')).toBe('1.234,50')
     expect(formatNumber('1234.5', 'us')).toBe('1,234.50')
   })
-  it('shows whole quantities whole and fractions to six places', () => {
+  it('shows whole quantities whole and fractions to two places', () => {
     expect(formatQuantity('10', 'us')).toBe('10')
-    expect(formatQuantity('0.123456789', 'us')).toBe('0.123457')
+    expect(formatQuantity('0.123456789', 'us')).toBe('0.12')
     expect(formatQuantity('1234.5', 'eu')).toBe('1.234,5')
+  })
+  it('never shows more than two decimals, whatever a caller asks for', () => {
+    expect(formatNumber('98.5432', 'us', 4)).toBe('98.54')
+    expect(formatNumber('98.5432', 'us', 6)).toBe('98.54')
+    expect(plain(formatEur('98.5432', 'us', 4))).toBe('€98.54')
+    expect(plain(formatPercent('0.123456', 'us', 4))).toBe('12.35%')
+    expect(formatNumber('98.5432', 'eu', 0)).toBe('99')
+  })
+  it('writes an amount below a cent as less than a cent, not as nothing', () => {
+    expect(plain(formatSmallEur('0.0042', 'us'))).toBe('< €0.01')
+    expect(plain(formatSmallEur('0.0213', 'us'))).toBe('€0.02')
+    expect(plain(formatSmallEur('0', 'us'))).toBe('€0.00')
+    expect(formatSmallEur(null, 'us')).toBe('–')
+  })
+  it('rounds the long numbers inside a text and leaves the rest alone', () => {
+    const text =
+      '{"weight": 0.123456, "price": "98.5432", "isin": "IE00B5BMR087", "n": 12, "d": "2026-10-09", "x": -1.2349, "v": 1.5}'
+    expect(roundNumbersIn(text, 'us')).toBe(
+      '{"weight": 0.12, "price": "98.54", "isin": "IE00B5BMR087", "n": 12, "d": "2026-10-09", "x": -1.23, "v": 1.5}',
+    )
+    expect(roundNumbersIn('rate 1.08523 and 1.085.234', 'eu')).toBe('rate 1,09 and 1.085.234')
   })
   it('turns the API fractions into percentages', () => {
     expect(plain(formatPercent('0.0643', 'us'))).toBe('6.43%')

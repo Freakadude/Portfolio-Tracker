@@ -102,7 +102,7 @@ def test_a_question_is_investigated_answered_checked_and_shown_with_its_data(
     ]
 
     assert (run.run_type, run.status, run.cost_eur > 0) == ("ask", "ok", True)
-    assert run.prompt_version.count("@1+") == 3 and "ask_answer@1+" in run.prompt_version
+    assert run.prompt_version.count("@") == 3 and "ask_answer@2+" in run.prompt_version
     assert run.output["answer"] == "Gold is 20.0 pp under its target."
     (used,) = run.output["data"]
     assert used["tool"] == "get_signals" and used["input"] == {"state": "open", "since": None}

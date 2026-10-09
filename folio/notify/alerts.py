@@ -17,6 +17,7 @@ from sqlalchemy.orm import Session
 
 from folio.db.models_ledger import Instrument
 from folio.db.models_strategy import PriceAlert, Signal
+from folio.display import two
 from folio.instruments import primary_listing
 from folio.marketdata.prices import PriceService
 
@@ -49,7 +50,7 @@ def evaluate_alerts(
         if not alert.armed:
             continue
         alert.armed, alert.last_fired_at = False, now
-        level = f"{alert.threshold.normalize():f} {listing.currency}"
+        level = f"{two(alert.threshold)} {listing.currency}"
         title = f"{instrument.name} closed {alert.condition} {level}"
         note = f" Your note: {alert.note}" if alert.note else ""
         signal = Signal(
@@ -59,7 +60,7 @@ def evaluate_alerts(
             subject=instrument.name,
             ts=now,
             severity=SEVERITY,
-            message=f"{title}: {bar.close.normalize():f} on {bar.date.isoformat()}.{note}",
+            message=f"{title}: {two(bar.close)} on {bar.date.isoformat()}.{note}",
             value=bar.close,
             payload={
                 "title": title,

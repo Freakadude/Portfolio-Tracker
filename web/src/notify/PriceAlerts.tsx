@@ -1,6 +1,7 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useState, type FormEvent } from 'react'
 import { useTranslation } from 'react-i18next'
+import { useFormat } from '../lib/useFormat'
 import { api, errorMessage, unwrap } from '../api/client'
 import { Badge } from '../components/display'
 import { Alert, Button, Field, Input, Select } from '../components/ui'
@@ -11,6 +12,7 @@ import { useAlerts } from './api'
  * An alert fires once when a close crosses the level and re-arms when the price is back. */
 export function PriceAlerts({ instrumentId, name }: { instrumentId: number; name: string }) {
   const { t } = useTranslation()
+  const { num } = useFormat()
   const queryClient = useQueryClient()
   const alerts = useAlerts(instrumentId)
   const [condition, setCondition] = useState<'above' | 'below'>('above')
@@ -66,7 +68,7 @@ export function PriceAlerts({ instrumentId, name }: { instrumentId: number; name
           {rows.map((a) => (
             <li key={a.id} className="flex flex-wrap items-center gap-2">
               <span>
-                {t(`alerts.conditions.${a.condition}`)} {a.threshold} {a.currency ?? ''}
+                {t(`alerts.conditions.${a.condition}`)} {num(a.threshold)} {a.currency ?? ''}
               </span>
               {!a.active ? (
                 <Badge>{t('alerts.paused')}</Badge>
@@ -88,7 +90,7 @@ export function PriceAlerts({ instrumentId, name }: { instrumentId: number; name
                 className="min-h-8 px-2"
                 aria-label={t('alerts.deleteLabel', {
                   condition: t(`alerts.conditions.${a.condition}`),
-                  threshold: a.threshold,
+                  threshold: num(a.threshold),
                 })}
                 onClick={() => remove.mutate(a.id)}
               >

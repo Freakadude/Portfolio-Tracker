@@ -31,6 +31,7 @@ const TRADES = ['direct_contribution', 'trim', 'rebalance']
  * that departs from your principles carries its own badge. */
 export function Recommendations() {
   const { t } = useTranslation()
+  const { num } = useFormat()
   const [status, setStatus] = useState<RecStatus>('open')
   const [params] = useSearchParams()
   const focus = Number(params.get('recommendation')) || null
@@ -71,8 +72,8 @@ export function Recommendations() {
       {budget.data && (
         <p className="text-xs text-muted">
           {t('recs.budget', {
-            spent: Number(budget.data.spent_eur).toFixed(2),
-            budget: budget.data.budget_eur,
+            spent: num(budget.data.spent_eur),
+            budget: num(budget.data.budget_eur),
           })}
           {!budget.data.key_set && ` ${t('recs.noKey')}`}
           {budget.data.paused && ` ${t('recs.paused')}`}
@@ -105,7 +106,7 @@ function RecCard({
   highlighted: boolean
 }) {
   const { t } = useTranslation()
-  const { eur, qty } = useFormat()
+  const { eur, num, qty } = useFormat()
   const detail = useRecommendation(rec.id)
   const decide = useDecide()
   const [rejecting, setRejecting] = useState(false)
@@ -168,7 +169,7 @@ function RecCard({
                   <td className="py-1 pr-3">{o.name}</td>
                   <td className="py-1 pr-3 tabular-nums">{qty(o.quantity)}</td>
                   <td className="py-1 pr-3 tabular-nums">
-                    {o.price} {o.currency}
+                    {num(o.price)} {o.currency}
                   </td>
                   <td className="py-1 pr-3 tabular-nums">{eur(o.amount_eur)}</td>
                 </tr>

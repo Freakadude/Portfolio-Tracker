@@ -12,6 +12,7 @@ from datetime import datetime
 from sqlalchemy.orm import Session
 
 from folio.db.models_insight import NewsSource
+from folio.display import small
 from folio.jobs.context import JobContext
 from folio.jobs.runner import JobLog, JobResult, run_job
 from folio.marketdata.base import ProviderError
@@ -117,7 +118,7 @@ def news_job(ctx: JobContext, source_id: int | None = None) -> JobResult:
                 log.info(
                     f"News triage: {triaged.assessed} stories assessed, {triaged.escalated} "
                     f"re-assessed by the stronger model, {triaged.links_added} links added, "
-                    f"{triaged.notified} notified ({triaged.cost_eur:.4f} EUR)"
+                    f"{triaged.notified} notified ({small(triaged.cost_eur)} EUR)"
                 )
             for problem in triaged.problems:
                 (log.error if triaged.stopped in ("auth", "billing") else log.info)(

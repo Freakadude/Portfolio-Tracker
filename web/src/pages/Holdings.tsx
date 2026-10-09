@@ -147,7 +147,7 @@ function useGroupByIsin(): [boolean, (on: boolean) => void] {
 
 function PositionsTab({ onAdd }: { onAdd: () => void }) {
   const { t } = useTranslation()
-  const { eur, qty, pct } = useFormat()
+  const { eur, num, qty, pct } = useFormat()
   const [account, setAccount] = useState<number | undefined>()
   const [includeClosed, setIncludeClosed] = useState(false)
   const [groupMode, setGroupMode] = useState<GroupMode>('none')
@@ -414,7 +414,7 @@ function PositionsTab({ onAdd }: { onAdd: () => void }) {
                             <Badge tone="neutral" title={t('holdings.delayedHint')}>
                               {t('holdings.delayed', { time: p.price.delayed_at.slice(11, 16) })}
                             </Badge>{' '}
-                            {p.price.delayed_price} {p.currency}
+                            {num(p.price.delayed_price)} {p.currency}
                           </div>
                         )}
                         {p.price.stale && (

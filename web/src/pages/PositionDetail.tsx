@@ -26,7 +26,7 @@ function Stat({ label, children }: { label: string; children: ReactNode }) {
 
 export function PositionDetail() {
   const { t } = useTranslation()
-  const { eur, qty, pct, when } = useFormat()
+  const { eur, num, qty, pct, when } = useFormat()
   const id = Number(useParams().instrumentId)
   const detail = usePositionDetail(id)
   const prices = usePrices(id)
@@ -143,7 +143,7 @@ export function PositionDetail() {
           <Stat label={t('position.latestPrice')}>
             {s.price?.delayed_price && s.price.delayed_at ? (
               <AsOf date={s.price.delayed_at.slice(0, 10)} source={s.price.delayed_source}>
-                {s.price.delayed_price} {d.instrument.currency}
+                {num(s.price.delayed_price)} {d.instrument.currency}
                 <div className="text-xs font-normal text-muted">
                   {t('position.latestPriceAt', { when: when(s.price.delayed_at) })}
                 </div>
@@ -177,9 +177,9 @@ export function PositionDetail() {
         </dl>
         {foreign && s.market_value_native && (
           <p className="text-sm text-muted">
-            {t('position.native', { currency: d.instrument.currency })}: {s.market_value_native} ·{' '}
-            {t('position.costBasis')} {s.cost_basis_native} · {t('position.unrealized')}{' '}
-            {s.unrealized_pnl_native}
+            {t('position.native', { currency: d.instrument.currency })}:{' '}
+            {num(s.market_value_native)} · {t('position.costBasis')} {num(s.cost_basis_native)} ·{' '}
+            {t('position.unrealized')} {num(s.unrealized_pnl_native)}
           </p>
         )}
         {s.note && <Alert>{s.note}</Alert>}
@@ -338,7 +338,7 @@ export function PositionDetail() {
                       {Number(tx.quantity) ? qty(tx.quantity) : '–'}
                     </td>
                     <td className="px-3 py-2 text-right tabular-nums">
-                      {Number(tx.price) ? `${tx.price} ${tx.currency}` : '–'}
+                      {Number(tx.price) ? `${num(tx.price)} ${tx.currency}` : '–'}
                     </td>
                     <td className="px-3 py-2 text-right tabular-nums">
                       {tx.net_amount_eur ? eur(tx.net_amount_eur) : '–'}

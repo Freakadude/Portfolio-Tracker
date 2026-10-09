@@ -142,7 +142,7 @@ def test_linked_stories_are_assessed_in_one_cheap_call_and_the_model_may_add_lin
     ]
     (run,) = db.scalars(select(AgentRun)).all()
     assert (run.run_type, run.status, run.cost_eur) == ("news_assess", "ok", done.cost_eur)
-    assert run.prompt_version.startswith("system@1+") and ", news_assess@1+" in run.prompt_version
+    assert run.prompt_version.startswith("system@2+") and ", news_assess@1+" in run.prompt_version
     assert (
         run.context["clusters"] == [c.id for c in clusters]
         and "<untrusted>" in run.context["message"]

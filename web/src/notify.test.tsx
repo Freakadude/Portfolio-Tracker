@@ -234,7 +234,7 @@ describe('price alerts (FR-INS-05)', () => {
             ],
     })
     renderAt(<PriceAlerts instrumentId={5} name="Watched Co" />)
-    expect(await screen.findByText(/Above 110 USD/)).toBeInTheDocument()
+    expect(await screen.findByText(/Above 110[.,]00 USD/)).toBeInTheDocument()
     expect(screen.getByText(/Fired; waiting/)).toBeInTheDocument()
     await userEvent.click(screen.getByRole('button', { name: 'Add alert' }))
     expect(await screen.findByText('Enter a price above zero.')).toBeInTheDocument()
@@ -307,7 +307,7 @@ describe('macro (FR-MD-08)', () => {
     })
     renderAt(<MacroTab />)
     const row = (await screen.findByText('US 10-year real yield')).closest('tr') as HTMLElement
-    expect(row).toHaveTextContent('2.34 (2024-06-14)')
+    expect(row).toHaveTextContent(/2[.,]34 \(2024-06-14\)/)
     await userEvent.click(screen.getByRole('button', { name: 'Fetch now' }))
     expect(await screen.findByText(/Asking the worker to start/)).toBeInTheDocument()
     expect(calls.some((c) => c.path === '/api/v1/macro/refresh')).toBe(true)
@@ -350,7 +350,7 @@ describe('system information (FR-SY-10)', () => {
     expect(screen.getByText('(abc1234def56)')).toBeInTheDocument()
     expect(screen.getByText('5.0 MB')).toBeInTheDocument()
     expect(screen.getByText('3 files, 20.0 MB')).toBeInTheDocument()
-    expect(screen.getByText('0 runs, 0.00 of 5 EUR')).toBeInTheDocument()
+    expect(screen.getByText(/0 runs, 0[.,]00 of 5[.,]00 EUR/)).toBeInTheDocument()
     expect(screen.getByText('1')).toHaveClass('text-danger')
     expect(screen.getByText(/Add your Anthropic API key/)).toBeInTheDocument()
     expect(screen.getByText('ECB press releases')).toHaveClass('text-danger') // a failing source

@@ -15,6 +15,8 @@ from datetime import date
 from decimal import ROUND_HALF_EVEN, Decimal, localcontext
 from enum import StrEnum
 
+from folio.display import two
+
 ZERO = Decimal(0)
 ONE = Decimal(1)
 _SHARE_QUANTUM = Decimal("1E-12")
@@ -53,8 +55,8 @@ class OversellError(LedgerError):
         self.available = available
         self.on = on
         super().__init__(
-            f"Cannot sell {requested.normalize():f} units on {on.isoformat()}: "
-            f"only {available.normalize():f} are held at that point."
+            f"Cannot sell {two(requested, trim=True)} units on {on.isoformat()}: "
+            f"only {two(available, trim=True)} are held at that point."
         )
 
 

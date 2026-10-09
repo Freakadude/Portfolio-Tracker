@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
+import { useFormat } from '../lib/useFormat'
 import { errorMessage } from '../api/client'
 import { SectionForm } from '../components/SectionForm'
 import { Badge } from '../components/display'
@@ -119,6 +120,7 @@ function SourceRow({
   onFetch: () => void
 }) {
   const { t } = useTranslation()
+  const { num } = useFormat()
   return (
     <tr className="border-b border-border align-top">
       <td className="py-2 pr-3">
@@ -127,7 +129,7 @@ function SourceRow({
           <span className="ml-1 text-xs text-muted">({t('newsSettings.off')})</span>
         )}
         <div className="text-xs text-muted">
-          {t('newsSettings.trust', { trust: source.trust_weight })}
+          {t('newsSettings.trust', { trust: num(source.trust_weight) })}
           {source.macro_series.length > 0 && ` · ${source.macro_series.join(', ')}`}
         </div>
       </td>

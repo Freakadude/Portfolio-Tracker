@@ -261,7 +261,7 @@ export function Transactions() {
                       {Number(tx.quantity) ? qty(tx.quantity) : '–'}
                     </td>
                     <td className="py-2 pr-3 text-right tabular-nums">
-                      {trade ? `${num(tx.price, 4)} ${tx.currency}` : '–'}
+                      {trade ? `${num(tx.price)} ${tx.currency}` : '–'}
                     </td>
                     <td className="py-2 pr-3 text-right tabular-nums">
                       {Number(tx.fees) ? eur(tx.fees) : '–'}

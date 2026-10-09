@@ -228,7 +228,7 @@ def test_a_daily_review_investigates_composes_validates_and_delivers(db: Session
     assert trace.status == "ok" and trace.run_type == "daily_review" and trace.cost_eur > 0
     assert [c["name"] for c in trace.tool_calls] == ["get_signals", "run_calculator"]
     assert "Allocator calc-1" in trace.findings
-    assert trace.prompt_version.count("@1+") == 3  # system, investigate and compose, with digests
+    assert trace.prompt_version.count("@") == 3  # system, investigate and compose, with digests
     assert (
         trace.digest.startswith("Gold is under its target")
         and trace.output["verdicts"][0]["accepted"]

@@ -100,7 +100,7 @@
     "paused": "Paused: the budget is used up",
     "test": "Test the key",
     "saveKeyFirst": "Save your Anthropic API key first.",
-    "testOk": "The key works ({{model}}). The test cost {{cost}} EUR.",
+    "testOk": "The key works ({{model}}). The test cost {{cost}}.",
     "pricesHint": "The prices are list prices in US dollars per million tokens: check them against Anthropic's pricing page. A model without a price cannot be used, because its cost could not be limited."
   },
   "runs": {

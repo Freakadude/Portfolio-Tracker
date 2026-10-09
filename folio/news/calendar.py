@@ -22,6 +22,7 @@ from sqlalchemy.orm import Session
 
 from folio.db.models_insight import CalendarEvent
 from folio.db.models_ledger import Instrument
+from folio.display import two
 
 DATA = Path(__file__).parent / "data" / "central_bank_meetings.json"
 KINDS = ("earnings", "central_bank", "custom")
@@ -134,7 +135,7 @@ def upsert_earnings(
             p
             for p in (
                 timing,
-                "" if row.estimate is None else f"expected earnings per share {row.estimate}",
+                "" if row.estimate is None else f"expected earnings per share {two(row.estimate)}",
             )
             if p
         )

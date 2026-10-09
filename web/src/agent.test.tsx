@@ -85,7 +85,7 @@ describe('recommendations on Insights (FR-AG-05)', () => {
     const orders = await within(card).findByRole('table', { name: 'Orders from the calculator' })
     expect(within(orders).getByText('Gold ETC')).toBeInTheDocument()
     expect(within(card).queryByText('Departs from your principles')).not.toBeInTheDocument()
-    expect(screen.getByText('AI cost this month: 0.42 of 5 EUR.')).toBeInTheDocument()
+    expect(screen.getByText(/AI cost this month: 0[.,]42 of 5[.,]00 EUR\./)).toBeInTheDocument()
     const link = within(card).getByRole('link', { name: 'Open in What-if' })
     expect(decodeURIComponent(link.getAttribute('href') ?? '')).toContain(
       '"instrument_id":3,"side":"buy","quantity":"10"',
@@ -264,15 +264,13 @@ describe('Settings, Agent (FR-AG-09)', () => {
       },
     })
     renderAt(<AgentTab />)
-    expect(await screen.findByText('0.42 of 5 EUR (4.58 left)')).toBeInTheDocument()
+    expect(await screen.findByText(/0[.,]42 of 5[.,]00 EUR \(4[.,]58 left\)/)).toBeInTheDocument()
     expect(screen.getByText('0.10 of 1.50 EUR')).toBeInTheDocument()
     expect(screen.getByText('3 this month, 1 today (cap 10 a day)')).toBeInTheDocument()
     expect(screen.getByText('On')).toBeInTheDocument()
     await userEvent.click(screen.getByRole('button', { name: 'Test the key' }))
     expect(
-      await screen.findByText(
-        'The key works (claude-haiku-4-5-20251001). The test cost 0.00003 EUR.',
-      ),
+      await screen.findByText('The key works (claude-haiku-4-5-20251001). The test cost < €0.01.'),
     ).toBeInTheDocument()
   })
 
@@ -368,7 +366,7 @@ describe('the agent run list and its trace', () => {
     expect(within(table).getByText('Done')).toBeInTheDocument()
     expect(within(table).getByText('Stopped by the budget')).toBeInTheDocument()
     expect(within(table).getByText('1 shown, 1 refused')).toBeInTheDocument()
-    expect(within(table).getByText('0.0213')).toBeInTheDocument()
+    expect(within(table).getByText(/0[.,]02/)).toBeInTheDocument() // 0.0213, to two places
     await userEvent.click(screen.getByRole('button', { name: 'Trace of run 1' }))
     const trace = await screen.findByRole('region', { name: 'Trace of run 1' })
     expect(

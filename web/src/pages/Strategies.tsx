@@ -358,7 +358,7 @@ function Editor({ strategy }: { strategy: Strategy }) {
 
 function RulesPanel({ id }: { id: number }) {
   const { t } = useTranslation()
-  const { pct } = useFormat()
+  const { qty, pct } = useFormat()
   const status = useStatus(id)
   const signals = useSignals(id)
   return (
@@ -386,13 +386,13 @@ function RulesPanel({ id }: { id: number }) {
                     <td className="py-1 pr-3">{s.id}</td>
                     <td className="py-1 pr-3 tabular-nums">{pct(s.weight, 1)}</td>
                     <td className="py-1 pr-3 tabular-nums">
-                      {s.target === null ? '–' : `${s.target}%`}
+                      {s.target === null ? '–' : `${qty(s.target)}%`}
                     </td>
                     <td className="py-1 pr-3 tabular-nums">
-                      {s.soft_band_pp === null ? '–' : `± ${s.soft_band_pp} pp`}
+                      {s.soft_band_pp === null ? '–' : `± ${qty(s.soft_band_pp)} pp`}
                     </td>
                     <td className="py-1 pr-3 tabular-nums">
-                      {s.hard_band_pp === null ? '–' : `± ${s.hard_band_pp} pp`}
+                      {s.hard_band_pp === null ? '–' : `± ${qty(s.hard_band_pp)} pp`}
                     </td>
                   </tr>
                 ))}
@@ -471,7 +471,7 @@ function RulesPanel({ id }: { id: number }) {
 
 function Calculators({ strategy }: { strategy: Strategy }) {
   const { t } = useTranslation()
-  const { eur, qty, pct } = useFormat()
+  const { eur, num, qty, pct } = useFormat()
   const invalidate = useInvalidateLedger()
   const sleeves = ((strategy.current.definition.sleeves as { id: string }[] | undefined) ?? []).map(
     (s) => s.id,
@@ -610,7 +610,7 @@ function Calculators({ strategy }: { strategy: Strategy }) {
                       <td className="py-1 pr-3">{o.name}</td>
                       <td className="py-1 pr-3 tabular-nums">{qty(o.quantity)}</td>
                       <td className="py-1 pr-3 tabular-nums">
-                        {o.price} {o.currency}
+                        {num(o.price)} {o.currency}
                       </td>
                       <td className="py-1 pr-3 tabular-nums">{eur(o.amount_eur)}</td>
                       <td className="py-1 pr-3 tabular-nums">

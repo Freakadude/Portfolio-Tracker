@@ -20,6 +20,7 @@ from folio.audit import write_audit
 from folio.db.base import utcnow
 from folio.db.models import Account
 from folio.db.models_ledger import CorporateAction, Instrument, LedgerTransaction, Listing
+from folio.display import two
 from folio.ledger_service import (
     TransactionError,
     TransactionIn,
@@ -168,7 +169,7 @@ def confirm_split(db: Session, action_id: int, actor: str = "user") -> list[Ledg
                 trade_date=action.ex_date,
                 instrument_id=action.instrument_id,
                 ratio=action.ratio,
-                note=f"Split {action.ratio.normalize():f} new per 1 old (from {action.source}).",
+                note=f"Split {two(action.ratio, trim=True)} new per 1 old (from {action.source}).",
             ),
         )
         created.append(
@@ -287,8 +288,8 @@ def propose_dividends(
                         instrument_id=instrument.id,
                         net_amount_eur=gross,
                         note=(
-                            f"Proposed: {event.amount.normalize():f} {currency} x "
-                            f"{quantity.normalize():f} units. Dated at the ex-date; set the "
+                            f"Proposed: {two(event.amount)} {currency} x "
+                            f"{two(quantity, trim=True)} units. Dated at the ex-date; set the "
                             "payment date, the amount and any withholding tax to match your broker."
                         ),
                     ),

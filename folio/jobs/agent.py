@@ -28,6 +28,7 @@ from folio.agent.tools import untrusted
 from folio.agent.trackrecord import measure_due
 from folio.db.models_insight import AgentRun, NewsCluster
 from folio.db.models_strategy import Signal
+from folio.display import small
 from folio.jobs.context import JobContext
 from folio.jobs.runner import JobLog, JobResult, run_job
 from folio.news.assess import news_settings
@@ -125,7 +126,7 @@ def agent_run_job(
         outcome = run_agent(db, llm, ctx.now(), run_type=run_type, trigger=trigger, focus=focus)
         log.info(
             f"{run_type} ({trigger}): {outcome.status}, {len(outcome.accepted)} recommendation(s), "
-            f"{outcome.refused} refused, {outcome.cost_eur:.4f} EUR"
+            f"{outcome.refused} refused, {small(outcome.cost_eur)} EUR"
         )
         if outcome.status == "failed":
             log.error(outcome.error or "The run failed.")
@@ -153,7 +154,7 @@ def agent_ask_job(ctx: JobContext, run_id: int) -> JobResult:
         log.info(
             f"{run.run_type}: {outcome.status}, "
             + ("answered" if outcome.accepted else "no answer shown")
-            + f", {outcome.cost_eur:.4f} EUR"
+            + f", {small(outcome.cost_eur)} EUR"
         )
         if outcome.status == "failed":
             log.error(outcome.error or "The question failed.")

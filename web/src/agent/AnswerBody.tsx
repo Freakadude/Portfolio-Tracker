@@ -1,11 +1,13 @@
 import { useTranslation } from 'react-i18next'
 import { Alert } from '../components/ui'
+import { useFormat } from '../lib/useFormat'
 import type { Question } from './api'
 
 /** What came back for a question (FR-AG-08): the answer, what could not be found, why an answer
  * was held back, and the data it rests on. Shared by the Ask box and the chat side panel. */
 export function AnswerBody({ q, compact = false }: { q: Question; compact?: boolean }) {
   const { t } = useTranslation()
+  const { rounded } = useFormat()
   return (
     <>
       {q.answer && <p className="whitespace-pre-line text-sm">{q.answer}</p>}
@@ -38,7 +40,7 @@ export function AnswerBody({ q, compact = false }: { q: Question; compact?: bool
                   <code>{d.tool}</code> <span className="text-muted">{d.note}</span>
                 </div>
                 <pre className="mt-1 max-h-48 overflow-auto rounded bg-card p-2 text-xs whitespace-pre-wrap">
-                  {d.result}
+                  {rounded(d.result)}
                 </pre>
               </li>
             ))}

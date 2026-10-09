@@ -19,6 +19,7 @@ from typing import Literal
 
 from pydantic import BaseModel
 
+from folio.display import two
 from folio.imports.mapping import CellError, detect_separators, parse_decimal
 from folio.imports.parse import ParseError, decode, sniff_delimiter
 from folio.lookthrough.formats import (
@@ -455,7 +456,7 @@ def read_holdings(file: HoldingsFile, mapping: HoldingsMapping | None = None) ->
             or any(word in sector_text for word in _NOT_A_COMPANY_SECTOR)
             or (not _cell(row, m.isin) and any(word == name.lower() for word in _NOT_A_COMPANY))
         ):
-            result.dropped.append(f"{name or kind}: {weight.normalize():f} %")
+            result.dropped.append(f"{name or kind}: {two(weight)} %")
             continue
         isin = _cell(row, m.isin).upper()
         currency = _cell(row, m.currency).upper()

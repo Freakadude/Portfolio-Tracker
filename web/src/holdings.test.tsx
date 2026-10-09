@@ -144,7 +144,7 @@ describe('the positions table', () => {
     renderAt(<Holdings />)
     const row = (await screen.findByText('iShares Core S&P 500')).closest('tr') as HTMLElement
     expect(within(row).getByText('Delayed 14:32')).toBeInTheDocument()
-    expect(row).toHaveTextContent('141.5 EUR')
+    expect(row).toHaveTextContent(/141[.,]50 EUR/)
   })
 
   it('shows each position with figures in the chosen number format', async () => {

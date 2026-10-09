@@ -83,7 +83,7 @@ def test_an_alert_fires_once_on_crossing_and_again_after_it_clears(
     price(api, watched["id"], "2024-03-04", "112")  # crosses: fires at once
     (item,) = inbox(api)
     assert (item["source"], item["severity"], item["subject"]) == ("alert", "high", "Watched Co")
-    assert item["title"] == "Watched Co closed above 110 USD"
+    assert item["title"] == "Watched Co closed above 110.00 USD"
     assert "take a look" in item["body"] and item["link"] == f"/holdings/{watched['id']}"
     assert [d["channel"] for d in item["deliveries"]] == ["home_assistant", "ntfy"]  # high: pushed
 

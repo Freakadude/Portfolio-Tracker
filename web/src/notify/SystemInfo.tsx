@@ -1,5 +1,6 @@
 import { useQuery } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
+import { useFormat } from '../lib/useFormat'
 import { api, errorMessage, unwrap } from '../api/client'
 import { Alert } from '../components/ui'
 import { Containers } from './Containers'
@@ -19,6 +20,7 @@ function size(bytes: number | null | undefined): string {
 /** Version and build, disk use, the agent's cost this month and recent failures (FR-SY-10). */
 export function SystemInfo() {
   const { t } = useTranslation()
+  const { num } = useFormat()
   const info = useQuery({
     queryKey: ['system', 'info'],
     queryFn: () => unwrap(api.GET('/api/v1/system/info')),
@@ -51,8 +53,8 @@ export function SystemInfo() {
           <Item label={t('systemInfo.agent')}>
             {t('systemInfo.agentValue', {
               runs: d.agent.runs_this_month,
-              cost: d.agent.cost_this_month_eur,
-              budget: d.agent.budget_eur,
+              cost: num(d.agent.cost_this_month_eur),
+              budget: num(d.agent.budget_eur),
             })}
             {d.agent.note && <span className="block text-xs text-muted">{d.agent.note}</span>}
           </Item>

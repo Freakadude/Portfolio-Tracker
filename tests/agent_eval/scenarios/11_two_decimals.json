@@ -1,0 +1,46 @@
+{
+  "description": "Nothing the owner reads shows more than two decimals (ADR 0052). A tool returned 6.4312, so the text may say 6.43% (rounded half up to two decimals) but not 6.5%, which is not what the tool said rounded to the digits shown.",
+  "now": "2026-10-14T17:30:00+00:00",
+  "facts": {
+    "signals": {"12": "2026-10-14T08:00:00+00:00"},
+    "tools": ["get_signals"],
+    "numbers": ["6.4312"],
+    "calculations": {}
+  },
+  "output": {
+    "digest": "Two readings of the same weight.",
+    "recommendations": [
+      {
+        "action_type": "watch",
+        "severity": "low",
+        "subjects": ["us_equity"],
+        "title": "Keep an eye on us_equity",
+        "summary": "us_equity is 6.43% of the portfolio.",
+        "rationale": "The weight is drifting (signal 12).",
+        "calculation_id": null,
+        "evidence": [{"kind": "signal", "ref": "12", "note": "Drift"}],
+        "sources": [],
+        "confidence": "medium",
+        "departs_from_principles": null,
+        "what_would_change_this": "A rally.",
+        "expires_in_days": 14
+      },
+      {
+        "action_type": "watch",
+        "severity": "low",
+        "subjects": ["gold"],
+        "title": "Keep an eye on gold",
+        "summary": "gold is 6.5% of the portfolio.",
+        "rationale": "The weight is drifting (signal 12).",
+        "calculation_id": null,
+        "evidence": [{"kind": "signal", "ref": "12", "note": "Drift"}],
+        "sources": [],
+        "confidence": "medium",
+        "departs_from_principles": null,
+        "what_would_change_this": "A rally.",
+        "expires_in_days": 14
+      }
+    ]
+  },
+  "expect": {"accepted": [0], "rejected": {"1": "'6.5%' is not in any tool result"}}
+}

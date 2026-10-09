@@ -13,6 +13,8 @@ from dataclasses import dataclass, field, replace
 from decimal import ROUND_FLOOR, Decimal, localcontext
 from typing import Literal
 
+from folio.display import two
+
 ZERO = Decimal(0)
 ONE = Decimal(1)
 
@@ -147,7 +149,9 @@ def allocate_contribution(
                 nxt_key, nxt = ordered[i + 1]
                 ordered[i + 1] = (nxt_key, nxt + amount)
                 ordered[i] = (key, ZERO)
-                notes.append(f"{key}: below the {min_order_eur} EUR minimum, added to {nxt_key}.")
+                notes.append(
+                    f"{key}: below the {two(min_order_eur)} EUR minimum, added to {nxt_key}."
+                )
         amounts = dict(ordered)
 
         orders: list[Order] = []

@@ -23,6 +23,7 @@ from folio.agent import outcomes
 from folio.analytics.allocation import drift
 from folio.db.models_insight import Recommendation
 from folio.db.models_strategy import Notification, Signal, Strategy, StrategyVersion
+from folio.display import two
 from folio.notify.service import notify
 from folio.strategies.inputs import sleeve_of_instruments
 from folio.strategies.schema import SEVERITIES, StrategyDef
@@ -200,6 +201,10 @@ def build_review(
     return Review(quarter, strategy_name, sleeve_reviews, signal_counts, summary, len(days), notes)
 
 
+def _plain(value: Decimal) -> str:
+    return two(value, trim=True)
+
+
 def _pp(value: Decimal) -> str:
     return f"{value:+.1f} pp"
 
@@ -225,7 +230,8 @@ def render(review: Review) -> str:
             else ""
         )
         lines.append(
-            f"- {sleeve.id} (target {sleeve.target_pct}%): month ends {ends}{worst}{outside}."
+            f"- {sleeve.id} (target {_plain(sleeve.target_pct)}%): "
+            f"month ends {ends}{worst}{outside}."
         )
     if review.signals:
         fired = "; ".join(

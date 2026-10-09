@@ -2,6 +2,7 @@ import { useTranslation } from 'react-i18next'
 import { errorMessage } from '../api/client'
 import { SectionForm } from '../components/SectionForm'
 import { Alert, Button, Help } from '../components/ui'
+import { useFormat } from '../lib/useFormat'
 import { useAgentBudget, useTestKey } from './api'
 
 /** Settings, Agent: the month's cost against the budget, a test of the saved key, and every
@@ -10,6 +11,7 @@ import { useAgentBudget, useTestKey } from './api'
  * rules, alerts and notifications keep working. */
 export function AgentTab() {
   const { t } = useTranslation()
+  const { num, smallEur } = useFormat()
   const budget = useAgentBudget()
   const test = useTestKey()
   const b = budget.data
@@ -27,9 +29,9 @@ export function AgentTab() {
             <dt className="text-muted">{t('agentSettings.month', { month: b.month })}</dt>
             <dd className="tabular-nums">
               {t('agentSettings.spent', {
-                spent: Number(b.spent_eur).toFixed(2),
-                budget: b.budget_eur,
-                left: Number(b.remaining_eur).toFixed(2),
+                spent: num(b.spent_eur),
+                budget: num(b.budget_eur),
+                left: num(b.remaining_eur),
               })}
             </dd>
           </div>
@@ -37,8 +39,8 @@ export function AgentTab() {
             <dt className="text-muted">{t('agentSettings.newsShare')}</dt>
             <dd className="tabular-nums">
               {t('agentSettings.newsSpent', {
-                spent: Number(b.news_spent_eur).toFixed(2),
-                share: b.news_share_eur,
+                spent: num(b.news_spent_eur),
+                share: num(b.news_share_eur),
               })}
             </dd>
           </div>
@@ -81,7 +83,7 @@ export function AgentTab() {
           <span role="status" className="text-sm text-gain">
             {t('agentSettings.testOk', {
               model: test.data.model,
-              cost: Number(test.data.cost_eur).toFixed(5),
+              cost: smallEur(test.data.cost_eur),
             })}
           </span>
         )}

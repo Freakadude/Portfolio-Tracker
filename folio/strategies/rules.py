@@ -17,6 +17,7 @@ from decimal import Decimal, localcontext
 from folio.analytics.allocation import drift
 from folio.analytics.lookthrough import Exposure, concentration
 from folio.analytics.risk import correlation, daily_returns
+from folio.display import two
 from folio.strategies.schema import (
     SEVERITIES,
     CashBufferRule,
@@ -110,6 +111,10 @@ class Evaluation:
     statuses: list[RuleStatus]
 
 
+def _plain(value: Decimal | None) -> str:
+    return two(value, trim=True)
+
+
 def _pct(value: Decimal, places: int = 1) -> str:
     return f"{(value * HUNDRED).quantize(Decimal(1).scaleb(-places)):f}"
 
@@ -153,7 +158,7 @@ def _drift_band(rule: DriftBandRule, s: StrategyDef, x: RuleInputs) -> list[Find
         )
         band = spec.hard_band_pp if hard else spec.soft_band_pp
         kind = "hard" if hard else "soft"
-        title = f"{spec.id} is {_num(gap, 1)} pp {side} its target ({kind} band {band} pp)"
+        title = f"{spec.id} is {_num(gap, 1)} pp {side} its target ({kind} band {_plain(band)} pp)"
         out.append(
             Finding(
                 rule.id,
@@ -182,7 +187,7 @@ def _trim_threshold(rule: TrimThresholdRule, s: StrategyDef, x: RuleInputs) -> l
         weight = state.weight * HUNDRED
         if weight <= spec.trim_threshold_pct:
             continue
-        title = f"{spec.id} is above its trim threshold of {spec.trim_threshold_pct}%"
+        title = f"{spec.id} is above its trim threshold of {_plain(spec.trim_threshold_pct)}%"
         out.append(
             Finding(
                 rule.id,
@@ -191,8 +196,8 @@ def _trim_threshold(rule: TrimThresholdRule, s: StrategyDef, x: RuleInputs) -> l
                 rule.severity,
                 title,
                 f"{spec.id} weighs {_num(weight, 1)}%, above the trim level of "
-                f"{spec.trim_threshold_pct}% you set in advance. The trim calculator shows the "
-                "sale back to target and its realized result.",
+                f"{_plain(spec.trim_threshold_pct)}% you set in advance. The trim calculator "
+                "shows the sale back to target and its realized result.",
                 f"{title}. Open the trim calculator.",
                 "A sleeve is above its trim threshold. Open the trim calculator.",
                 value=weight,
@@ -314,7 +319,7 @@ def _price_level(rule: PriceLevelRule, _s: StrategyDef, x: RuleInputs) -> list[F
     if side is None:
         return []
     level = rule.above if side == "above" else rule.below
-    title = f"{p.name} closed {side} {level} {p.currency or ''}".rstrip()
+    title = f"{p.name} closed {side} {two(level)} {p.currency or ''}".rstrip()
     return [
         Finding(
             rule.id,
@@ -322,7 +327,7 @@ def _price_level(rule: PriceLevelRule, _s: StrategyDef, x: RuleInputs) -> list[F
             p.name,
             rule.severity,
             title,
-            f"{title}: {p.close}.",
+            f"{title}: {two(p.close)}.",
             f"{p.name} closed {side} the level you set.",
             f"A position closed {side} a level you set.",
             variant=side,
@@ -347,9 +352,9 @@ def _macro_threshold(rule: MacroThresholdRule, s: StrategyDef, x: RuleInputs) ->
     last_day, last = points[-1]
     reasons: list[tuple[str, Decimal, str]] = []  # (text, value, variant)
     if rule.above is not None and last > rule.above:
-        reasons.append((f"is {last}, above {rule.above}", last, "above"))
+        reasons.append((f"is {two(last)}, above {two(rule.above)}", last, "above"))
     if rule.below is not None and last < rule.below:
-        reasons.append((f"is {last}, below {rule.below}", last, "below"))
+        reasons.append((f"is {two(last)}, below {two(rule.below)}", last, "below"))
     before = _value_at(points, last_day - timedelta(days=rule.window_days))
     if before is not None:
         if rule.change_bp is not None:
@@ -405,7 +410,7 @@ def _correlation_shift(rule: CorrelationShiftRule, _s: StrategyDef, x: RuleInput
                 f"{rule.hedge}/{other}",
                 rule.severity,
                 title,
-                f"{title} over {rule.window_days} days, above {rule.above}. The hedge may "
+                f"{title} over {rule.window_days} days, above {two(rule.above)}. The hedge may "
                 "not protect against a fall in that sleeve as you intended.",
                 f"{title}.",
                 "A hedge is moving with the sleeve it should protect.",
@@ -438,7 +443,7 @@ def _contribution_due(rule: ContributionDueRule, s: StrategyDef, x: RuleInputs) 
     due = next_contribution(plan.next_date, plan.cadence, x.today)
     if due is None or (due - x.today).days > rule.days_before:
         return []
-    title = f"Contribution of {plan.amount_eur} EUR due on {due.isoformat()}"
+    title = f"Contribution of {two(plan.amount_eur)} EUR due on {due.isoformat()}"
     return [
         Finding(
             rule.id,
@@ -559,7 +564,7 @@ def _concentration(rule: ConcentrationLimitRule, s: StrategyDef, x: RuleInputs) 
             for p in e.parts
             if x.total_eur > 0
         )
-        title = f"{e.label} is {_num(share, 1)}% of your portfolio (limit {limit}%)"
+        title = f"{e.label} is {_num(share, 1)}% of your portfolio (limit {_plain(limit)}%)"
         out.append(
             Finding(
                 rule.id,
@@ -568,7 +573,7 @@ def _concentration(rule: ConcentrationLimitRule, s: StrategyDef, x: RuleInputs) 
                 rule.severity,
                 title,
                 f"Counting the holdings inside your ETFs, {e.label} adds up to "
-                f"{_num(share, 1)}% of the portfolio against a limit of {limit}%: {where}.",
+                f"{_num(share, 1)}% of the portfolio against a limit of {_plain(limit)}%: {where}.",
                 f"{title}. Open Look-through.",
                 f"One {what} is above its concentration limit.",
                 value=share,

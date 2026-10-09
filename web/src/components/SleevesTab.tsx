@@ -8,6 +8,7 @@ import { useSleeves } from '../dashboards/api'
 import { Dialog, EmptyState } from './display'
 import { TypeBadge } from './AssetType'
 import { Alert, Button, Checkbox, Field, Input } from './ui'
+import { useFormat } from '../lib/useFormat'
 
 type Sleeve = {
   id: number
@@ -22,6 +23,7 @@ type Sleeve = {
  * a target is set a sleeve shows no drift (owner decision Q3). */
 export function SleevesTab() {
   const { t } = useTranslation()
+  const { qty } = useFormat()
   const queryClient = useQueryClient()
   const invalidate = useInvalidateLedger()
   const sleeves = useSleeves()
@@ -103,10 +105,10 @@ export function SleevesTab() {
                 <tr key={s.id} className="border-b border-border">
                   <td className="py-2 pr-3">{s.name}</td>
                   <td className="py-2 pr-3 text-right tabular-nums">
-                    {s.target_pct ? `${s.target_pct} %` : '–'}
+                    {s.target_pct ? `${qty(s.target_pct)} %` : '–'}
                   </td>
                   <td className="py-2 pr-3 text-right tabular-nums">
-                    {s.band_pct ? `± ${s.band_pct} pp` : '–'}
+                    {s.band_pct ? `± ${qty(s.band_pct)} pp` : '–'}
                   </td>
                   <td className="py-2 pr-3 text-right tabular-nums">{s.instrument_count}</td>
                   <td className="py-2 whitespace-nowrap">
@@ -145,7 +147,7 @@ export function SleevesTab() {
           </table>
         </div>
       )}
-      {total > 100 && <Alert>{t('sleeves.over', { total })}</Alert>}
+      {total > 100 && <Alert>{t('sleeves.over', { total: qty(total) })}</Alert>}
       {editing && (
         <Dialog
           open

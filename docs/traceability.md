@@ -13,6 +13,7 @@ Requirement ID → module → test → status (`todo`, `in progress`, `done`).
 | NFR-07 | folio/api/middleware (CSP, CSRF), docker/Dockerfile, docker-compose.yml | tests/integration/test_security_headers.py, test_deploy_config.py; multi-arch image build in CI (passed) | done |
 | NFR-09 | folio/logging, folio/api/routers/health (Prometheus /metrics is optional, not built) | tests/integration/test_health.py, test_logging.py | done |
 | NFR-10 | .github/workflows/ci.yml, .pre-commit-config.yaml, pyproject.toml, web/eslint.config.js | CI workflow: ruff, mypy, pytest, pip-audit, eslint, vitest, npm audit, e2e, gitleaks | done |
+| Display rule (ADR 0052): at most two decimals for what is read | web/src/lib/format.ts, web/src/lib/useFormat.tsx, folio/display.py, folio/agent/prompts (system, ask_answer, compose v2) | web/src/display-rule.test.ts (scan of the source), web/src/lib/format.test.ts, tests/unit/test_display.py, tests/agent_eval/scenarios/11_two_decimals.json, web/src/transaction-form.test.tsx (the field keeps the exact value) | done |
 | NFR-01 (groundwork) | folio/db/types | tests/unit/test_decimal_type.py | done |
 
 ## Phase 1 — Ledger and prices

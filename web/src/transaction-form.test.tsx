@@ -299,6 +299,20 @@ describe('editing a stored transaction (FR-TX-14)', () => {
     expect(screen.queryByText(/cannot be changed/)).not.toBeInTheDocument()
   })
 
+  it('shows the stored price and units exactly, though lists show two decimals (ADR 0052)', async () => {
+    mockApi(editRoutes)
+    renderAt(
+      <TransactionForm
+        onDone={vi.fn()}
+        editing={{ ...STORED, quantity: '1.23456', price: '98.5432' } as never}
+      />,
+    )
+    await screen.findByRole('option', { name: 'Second' })
+    // a field you type into holds the exact value, so saving never rounds it
+    expect(screen.getByLabelText(/Price per unit/)).toHaveValue('98.5432')
+    expect(screen.getByLabelText('Units')).toHaveValue('1.23456')
+  })
+
   it('sends only what changed when the type stays', async () => {
     const { calls } = mockApi(editRoutes)
     const onDone = vi.fn()

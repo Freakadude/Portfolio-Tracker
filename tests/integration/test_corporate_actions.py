@@ -275,7 +275,7 @@ def test_a_dividend_is_proposed_as_a_draft_that_stays_out_of_the_ledger(
         "2024-03-15",
     )
     assert Decimal(draft["net_amount_eur"]) == D("5.00")  # 0.50 per unit x 10 units
-    assert "0.5 EUR x 10 units" in draft["note"] and "Dated at the ex-date" in draft["note"]
+    assert "0.50 EUR x 10 units" in draft["note"] and "Dated at the ex-date" in draft["note"]
     assert position(db, dist["account"], dist["instrument"]).income_eur == 0  # not yet income
     assert (
         len([t for t in api.get("/api/v1/transactions").json()["items"] if t["type"] == "dividend"])
@@ -396,7 +396,7 @@ def test_a_dividend_in_another_currency_is_converted_with_the_ecb_rate(
     run(settings, dividends(listing.id, ("2024-03-15", "0.4", "USD")))
     (draft,) = drafts(api)
     assert Decimal(draft["net_amount_eur"]) == D("3.20")  # 0.40 USD x 10 units x 0.8 EUR per USD
-    assert "0.4 USD" in draft["note"]
+    assert "0.40 USD" in draft["note"]
 
 
 def test_a_missing_ecb_rate_is_reported_and_other_instruments_continue(

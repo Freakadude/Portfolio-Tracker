@@ -191,7 +191,7 @@ interface Props {
 
 export function TransactionForm({ onDone, initial, editing }: Props) {
   const { t } = useTranslation()
-  const { eur, qty } = useFormat()
+  const { eur, num, qty } = useFormat()
   const invalidate = useInvalidateLedger()
   const accounts = useAccounts()
   const instruments = useInstruments('active')
@@ -486,7 +486,7 @@ export function TransactionForm({ onDone, initial, editing }: Props) {
         )}
         {foreign && rateInUse && (
           <p className="self-end text-sm text-muted sm:col-span-2">
-            {t('txForm.fxUsed', { currency: v.currency.toUpperCase(), rate: rateInUse })}
+            {t('txForm.fxUsed', { currency: v.currency.toUpperCase(), rate: num(rateInUse) })}
           </p>
         )}
         {fields.fees && (

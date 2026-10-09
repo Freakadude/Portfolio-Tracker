@@ -82,7 +82,7 @@ function Splits() {
                   <td className="py-2 pr-3">{a.instrument_name}</td>
                   <td className="py-2 pr-3 whitespace-nowrap">{a.ex_date}</td>
                   <td className="py-2 pr-3">
-                    {a.ratio ? t('insights.splits.ratio', { ratio: trimDecimal(a.ratio) }) : '–'}
+                    {a.ratio ? t('insights.splits.ratio', { ratio: qty(a.ratio) }) : '–'}
                   </td>
                   <td className="py-2 pr-3">
                     <ul className="space-y-1">
