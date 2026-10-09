@@ -6,6 +6,7 @@ import datetime as dt
 from collections.abc import Sequence
 from datetime import date
 from decimal import Decimal
+from functools import partial
 from typing import Annotated, Any, Literal
 
 from fastapi import APIRouter, Query
@@ -201,6 +202,12 @@ class InstrumentReturnOut(BaseModel):
     value_end_eur: Decimal
 
 
+def _instrument_result(
+    ctx: svc.AnalyticsContext, instrument_id: int, start: date, end: date
+) -> svc.ReturnsResult | None:
+    return svc.returns_for(svc.instrument_series(ctx, [instrument_id], start, end))
+
+
 @router.get("/returns/instruments", response_model=list[InstrumentReturnOut])
 def instrument_returns(
     _user: UserDep,
@@ -220,7 +227,10 @@ def instrument_returns(
     meta = svc.load_meta(db, ctx.instruments)
     out: list[InstrumentReturnOut] = []
     for instrument_id in ctx.instruments:
-        result = svc.returns_for(svc.instrument_series(ctx, [instrument_id], start, end))
+        result = ctx.cached(
+            ("instrument_returns", instrument_id, start, end),
+            partial(_instrument_result, ctx, instrument_id, start, end),
+        )
         if result is None or (
             result.value_start == 0 and result.value_end == 0 and result.pnl == 0
         ):

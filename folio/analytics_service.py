@@ -10,10 +10,12 @@ request after a change pays, the rest are answered from memory (NFR-03).
 
 from __future__ import annotations
 
+import gc
 import threading
 from bisect import bisect_right
 from collections import OrderedDict
-from collections.abc import Callable, Iterable, Sequence
+from collections.abc import Callable, Iterable, Iterator, Sequence
+from contextlib import contextmanager
 from dataclasses import dataclass, field
 from datetime import date, timedelta
 from decimal import Decimal
@@ -158,6 +160,27 @@ _cache: OrderedDict[tuple[object, ...], AnalyticsContext] = OrderedDict()
 _lock = threading.Lock()
 
 
+@contextmanager
+def _build_without_gc() -> Iterator[None]:
+    """Build a context with the cyclic collector paused, then keep the result out of its reach.
+
+    A context is millions of small objects with no reference cycles among them (they are freed
+    by reference counting when the cache drops them). Left to the collector, building one spends
+    a third of its time scanning objects that are all still alive, and every later full
+    collection pauses a request for the same scan (200 ms or more on a small server), which
+    showed up as random slow dashboard requests (NFR-03). Pausing it during the build and
+    freezing what exists afterwards removes both costs; it was only ever collecting garbage that
+    was not there."""
+    was_enabled = gc.isenabled()
+    gc.disable()
+    try:
+        yield
+    finally:
+        if was_enabled:
+            gc.enable()
+        gc.freeze()
+
+
 def get_context(
     db: Session,
     today: date,
@@ -176,7 +199,8 @@ def get_context(
         if found is not None:
             _cache.move_to_end(key)
             return found
-    context = build_context(db, today, account_id, extras, only, live)
+    with _build_without_gc():
+        context = build_context(db, today, account_id, extras, only, live)
     with _lock:
         _cache[key] = context
         while len(_cache) > CACHE_SIZE:
@@ -234,9 +258,17 @@ def instrument_series(
     previous_invested = previous_income = ZERO
     for n in range(first, last + 1):
         day = ctx.days[n]
-        value = sum((ctx.instruments[i][n].value or ZERO for i in ids), ZERO)
-        invested = sum((ctx.instruments[i][n].net_invested_eur for i in ids), ZERO)
-        income = sum((ctx.instruments[i][n].income_eur for i in ids), ZERO)
+        if len(ids) == 1:  # the common case (a heatmap of every position): no summing needed
+            row = ctx.instruments[ids[0]][n]
+            value, invested, income = (
+                ZERO + (row.value or ZERO),
+                ZERO + row.net_invested_eur,
+                (ZERO + row.income_eur),
+            )
+        else:
+            value = sum((ctx.instruments[i][n].value or ZERO for i in ids), ZERO)
+            invested = sum((ctx.instruments[i][n].net_invested_eur for i in ids), ZERO)
+            income = sum((ctx.instruments[i][n].income_eur for i in ids), ZERO)
         if n == first:
             out.append(DailyPoint(day, value))
         else:

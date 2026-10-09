@@ -128,3 +128,42 @@ def test_correlation_matrix_is_symmetric_with_unit_diagonal_in_range(
             assert value == matrix[b][a]
             if value is not None:
                 assert D(-1) <= value <= D(1)
+
+
+@settings(max_examples=40, deadline=None)
+@given(
+    st.lists(
+        st.lists(
+            st.decimals(min_value=D("-0.05"), max_value=D("0.05"), places=4), min_size=9, max_size=9
+        ),
+        min_size=2,
+        max_size=5,
+    ),
+    st.integers(min_value=0, max_value=8),
+)
+def test_the_matrix_agrees_with_the_exact_pairwise_figure_on_shared_and_on_ragged_days(
+    rows: list[list[Decimal]], dropped: int
+) -> None:
+    """Series on the same days take the fast path; one missing a day takes the general one."""
+    for ragged in (False, True):
+        data = {i: series([str(v) for v in row]) for i, row in enumerate(rows)}
+        if ragged:
+            data[0] = data[0][:dropped] + data[0][dropped + 1 :]
+        matrix = correlation_matrix(data)
+        for a in data:
+            for b in data:
+                if a == b:
+                    continue
+                exact = correlation(data[a], data[b])
+                value = matrix[a][b]
+                if exact is None or value is None:
+                    assert exact is None or abs(exact) < D("1E-9") or value is None
+                else:
+                    assert abs(value - exact) < D("1E-12")
+
+
+def test_a_flat_series_has_no_correlation_on_the_shared_day_path() -> None:
+    flat = series(["0.01"] * 6)
+    moving = series(["0.01", "0.02", "-0.01", "0.03", "0.00", "0.01"])
+    matrix = correlation_matrix({1: flat, 2: moving})
+    assert matrix[1][2] is None and matrix[2][1] is None and matrix[1][1] == 1

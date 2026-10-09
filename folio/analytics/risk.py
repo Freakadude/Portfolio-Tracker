@@ -9,6 +9,7 @@ only those days are kept; dropping a zero-return day leaves the compounded index
 from __future__ import annotations
 
 import math
+import operator
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from datetime import date
@@ -158,6 +159,19 @@ def _float_correlation(xs: Sequence[float], ys: Sequence[float]) -> float | None
     return max(-1.0, min(1.0, sxy / math.sqrt(sxx * syy)))
 
 
+def _standardised(values: Sequence[float]) -> list[float] | None:
+    """Deviations from the mean scaled to unit length, so that the correlation of two series
+    on the same days is the plain dot product of their standardised forms."""
+    mean = sum(values) / len(values)
+    deviations = [v - mean for v in values]
+    length = math.sqrt(sum(map(operator.mul, deviations, deviations)))
+    return None if length == 0 else [d / length for d in deviations]
+
+
+def _clamped(value: float) -> Decimal:
+    return Decimal(repr(max(-1.0, min(1.0, value))))
+
+
 def correlation_matrix(
     series: Mapping[int, Sequence[tuple[date, Decimal]]],
 ) -> dict[int, dict[int, Decimal | None]]:
@@ -169,14 +183,34 @@ def correlation_matrix(
     the dashboard can wait. The pairs are therefore computed in binary floating point
     (accurate to about 1e-15) and returned as Decimal. Money and quantities never pass
     through here (ADR 0014). `correlation` above is the exact Decimal version for one pair.
+
+    Holdings that trade on the same days (the usual case) share one standardised form each,
+    and every pair is then a single dot product.
     """
     keys = sorted(series)
-    values = {k: {day: float(r) for day, r in series[k]} for k in keys}
     matrix: dict[int, dict[int, Decimal | None]] = {k: {} for k in keys}
+    day_sets = {k: tuple(day for day, _ in series[k]) for k in keys}
+    if (
+        keys
+        and len({days for days in day_sets.values()}) == 1
+        and len(day_sets[keys[0]]) >= MIN_POINTS
+    ):
+        forms = {k: _standardised([float(r) for _, r in series[k]]) for k in keys}
+        for i, a in enumerate(keys):
+            matrix[a][a] = ONE
+            for b in keys[i + 1 :]:
+                fa, fb = forms[a], forms[b]
+                result = (
+                    None if fa is None or fb is None else _clamped(sum(map(operator.mul, fa, fb)))
+                )
+                matrix[a][b] = result
+                matrix[b][a] = result
+        return matrix
+    values = {k: {day: float(r) for day, r in series[k]} for k in keys}
     for i, a in enumerate(keys):
         matrix[a][a] = ONE
         for b in keys[i + 1 :]:
-            days = sorted(values[a].keys() & values[b].keys())
+            days = values[a].keys() & values[b].keys()  # order does not matter to a correlation
             result = None
             if len(days) >= MIN_POINTS:
                 found = _float_correlation(
