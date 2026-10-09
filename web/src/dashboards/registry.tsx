@@ -126,7 +126,7 @@ const DEFS: Record<string, Omit<WidgetDef, 'type'>> = {
       {
         key: 'overlays',
         kind: 'multi',
-        options: ['trades', 'ma50', 'ma200', 'volume'],
+        options: ['price', 'trades', 'ma50', 'ma200', 'volume', 'changes', 'since_start'],
         labels: 'widgets.overlays',
       },
     ],

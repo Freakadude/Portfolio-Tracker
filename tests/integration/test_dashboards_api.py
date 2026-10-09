@@ -475,6 +475,99 @@ def test_price_chart_with_trades_and_averages(api, book, db) -> None:
     assert nothing["empty"] is True and "Choose an instrument" in nothing["reason"]
 
 
+def _chart_with_closes(api, db, closes: list[str]):  # type: ignore[no-untyped-def]
+    fund, listing = make_listing(db, ticker="P")
+    for i, close in enumerate(closes):
+        day = date.fromordinal(date(2024, 1, 2).toordinal() + i)
+        db.add(PriceBar(listing_id=listing.id, date=day, close=D(close), source="x"))
+    db.commit()
+    account = api.post("/api/v1/accounts", json={"name": "A"}).json()["id"]
+    tx(api, account_id=account, instrument_id=fund.id, type="buy",
+       trade_date="2024-01-02", quantity="1", price="100")  # fmt: skip
+    return fund
+
+
+def test_price_changes_are_the_day_over_day_and_the_since_start_percent(api, db) -> None:
+    fund = _chart_with_closes(api, db, ["100", "110", "99", "108.9"])
+    base = {"instrument_id": fund.id, "period": "MAX"}
+    chart = one(api, "price_chart", {**base, "overlays": ["price", "changes", "since_start"]})
+    assert chart["show_price"] is True and len(chart["points"]) == 4
+    assert [(c["date"], D(c["value"])) for c in chart["changes"]] == [
+        ("2024-01-03", 10), ("2024-01-04", -10), ("2024-01-05", 10),
+    ]  # fmt: skip
+    assert [D(c["value"]) for c in chart["since_start"]] == [0, 10, -1, D("8.9")]
+    plain = one(api, "price_chart", {**base, "overlays": ["trades"]})
+    assert "changes" not in plain and "since_start" not in plain and plain["show_price"] is True
+
+
+def test_only_the_changes_are_shown_when_the_price_is_left_out(api, db) -> None:
+    fund = _chart_with_closes(api, db, ["100", "110", "99", "108.9"])
+    only = one(
+        api,
+        "price_chart",
+        {"instrument_id": fund.id, "period": "MAX", "overlays": ["changes", "trades", "ma50"]},
+    )
+    assert only["show_price"] is False and only["trades"] == [] and "ma50" not in only
+    assert len(only["changes"]) == 3
+    # a chart is never blank: with no change view the price comes back even if not ticked
+    blank = one(api, "price_chart", {"instrument_id": fund.id, "period": "MAX", "overlays": []})
+    assert blank["show_price"] is True
+
+
+def test_one_day_shows_the_refresh_prices_of_the_latest_session(api, book, db) -> None:
+    from datetime import UTC, datetime
+
+    from sqlalchemy import select
+
+    from folio.db.models_analytics import Quote
+    from folio.db.models_ledger import Listing
+
+    listing = db.scalars(select(Listing).where(Listing.instrument_id == book["fund"])).first()
+    before = db.scalars(
+        select(PriceBar).where(
+            PriceBar.listing_id == listing.id, PriceBar.date == date(2024, 1, 11)
+        )
+    ).one()
+    for ts, price in (
+        (datetime(2024, 1, 11, 15, 0, tzinfo=UTC), "1"),  # an earlier session: left out
+        (datetime(2024, 1, 12, 8, 0, tzinfo=UTC), "109"),
+        (datetime(2024, 1, 12, 8, 15, tzinfo=UTC), "110.5"),
+        (datetime(2024, 1, 12, 9, 30, tzinfo=UTC), "107.9"),
+    ):
+        db.add(Quote(listing_id=listing.id, ts=ts, price=D(price), source="fake"))
+    db.commit()
+
+    chart = one(
+        api,
+        "price_chart",
+        {
+            "instrument_id": book["fund"],
+            "period": "1D",
+            "chart": "candles",
+            "overlays": ["price", "trades", "ma50", "changes", "since_start"],
+        },
+    )
+    assert chart["intraday"] is True and chart["chart"] == "line"  # no open, high or low
+    assert chart["session_date"] == "2024-01-12" and chart["previous_close"] == str(before.close)
+    assert [(p["date"], p["close"]) for p in chart["points"]] == [
+        ("2024-01-12T09:00:00", "109"),  # Xetra clock: UTC+1 in January
+        ("2024-01-12T09:15:00", "110.5"),
+        ("2024-01-12T10:30:00", "107.9"),
+    ]
+    assert chart["trades"] == [] and "ma50" not in chart
+    prices = [D("109"), D("110.5"), D("107.9")]
+    steps = [prices[0] / before.close - 1, prices[1] / prices[0] - 1, prices[2] / prices[1] - 1]
+    assert [round(D(c["value"]), 3) for c in chart["changes"]] == [round(x * 100, 3) for x in steps]
+    assert D(chart["since_start"][-1]["value"]) == round((prices[2] / before.close - 1) * 100, 4)
+
+
+def test_one_day_without_refresh_prices_says_why(api, book) -> None:
+    out = one(api, "price_chart", {"instrument_id": book["fund"], "period": "1D"})
+    assert out["empty"] is True and "every 15 minutes" in out["reason"]
+    followed = one(api, "price_chart", {"instrument_id": book["fund"]}, period="1D")
+    assert followed["empty"] is True  # a widget that follows the dashboard is a day too
+
+
 def test_a_fifty_day_average_is_the_mean_of_fifty_closes(api, db) -> None:
     fund, listing = make_listing(db, ticker="F")
     for i in range(60):

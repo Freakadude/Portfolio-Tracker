@@ -452,12 +452,16 @@ export function ConfigPanel({
           aria-label={t('widgetOptions.preview')}
         >
           <p className="mb-2 text-xs text-muted">{t('widgetOptions.preview')}</p>
-          <WidgetBody
-            widget={{ id: widget.id, type: widget.type, config: preview }}
-            result={query.data?.preview}
-            filters={filters}
-            loading={query.isLoading}
-          />
+          {/* A chart fills the room its widget has, so the preview needs a height of its own:
+              left to size itself it would grow for ever. */}
+          <div className={def.chart ? 'h-80 overflow-auto' : undefined} data-testid="preview-body">
+            <WidgetBody
+              widget={{ id: widget.id, type: widget.type, config: preview }}
+              result={query.data?.preview}
+              filters={filters}
+              loading={query.isLoading}
+            />
+          </div>
         </div>
       </div>
     </Dialog>

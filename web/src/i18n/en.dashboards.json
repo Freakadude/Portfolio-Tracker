@@ -1,5 +1,6 @@
 {
   "charts": {
+    "time": "Time",
     "showChart": "Show the chart",
     "showTable": "Show data as a table",
     "date": "Date",
@@ -157,6 +158,11 @@
     "ma50": "50-day average",
     "ma200": "200-day average",
     "close": "Close",
+    "changesPerDay": "Change per day",
+    "changesPerRefresh": "Change per refresh",
+    "sinceStart": "Change since the start",
+    "sessionOf": "Session of {{date}}",
+    "previousClose": "previous close {{price}}",
     "total": "Total",
     "weight": "Weight",
     "target": "Target",
@@ -247,10 +253,13 @@
       "treemap": "Treemap"
     },
     "overlays": {
+      "price": "The price",
       "trades": "Your buys and sales",
       "ma50": "50-day average",
       "ma200": "200-day average",
-      "volume": "Volume"
+      "volume": "Volume",
+      "changes": "Price changes (daily; per refresh for 1 day)",
+      "since_start": "Change since the start"
     },
     "windows": {
       "90D": "90 days",

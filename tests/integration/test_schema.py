@@ -223,3 +223,48 @@ def test_accounts_do_not_track_cash_unless_asked(db: Session) -> None:
     account = _account(db)
     db.commit()
     assert account.track_cash is False
+
+
+def test_migration_0014_adds_the_price_to_what_stored_price_charts_show(tmp_path) -> None:  # type: ignore[no-untyped-def]
+    """Before 0014 the price was implied; a stored chart must keep showing it."""
+    import json
+
+    from alembic import command
+    from sqlalchemy import text
+
+    from folio.db.migrate import _config
+
+    url = f"sqlite:///{tmp_path / 'old.db'}"
+    command.upgrade(_config(url), "0013")
+    engine = make_engine(url)
+    with engine.begin() as conn:
+        conn.execute(
+            text(
+                "INSERT INTO dashboard (name, layouts, filters, is_default, sort_order, created_at, updated_at) VALUES ('D', '{}', '{}', 1, 0, '2026-10-01', '2026-10-01')"
+            )
+        )
+        for kind, config in (
+            ("price_chart", {"overlays": ["trades", "ma50"], "chart": "line"}),
+            ("price_chart", {"overlays": ["price", "volume"]}),
+            ("kpi", {"metric": "value"}),
+        ):
+            conn.execute(
+                text(
+                    "INSERT INTO widget (dashboard_id, type, config, grid, created_at, updated_at) VALUES (1, :t, :c, '{}', '2026-10-01', '2026-10-01')"
+                ),
+                {"t": kind, "c": json.dumps(config)},
+            )
+    command.upgrade(_config(url), "0014")
+    with engine.connect() as conn:
+        rows = [
+            json.loads(c) for (c,) in conn.execute(text("SELECT config FROM widget ORDER BY id"))
+        ]
+    assert rows[0] == {"overlays": ["price", "trades", "ma50"], "chart": "line"}
+    assert rows[1] == {"overlays": ["price", "volume"]}  # already has it
+    assert rows[2] == {"metric": "value"}  # other widgets are left alone
+    command.downgrade(_config(url), "0013")
+    with engine.connect() as conn:
+        rows = [
+            json.loads(c) for (c,) in conn.execute(text("SELECT config FROM widget ORDER BY id"))
+        ]
+    assert rows[0]["overlays"] == ["trades", "ma50"] and rows[1]["overlays"] == ["volume"]

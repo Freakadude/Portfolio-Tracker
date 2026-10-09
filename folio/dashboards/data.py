@@ -23,10 +23,11 @@ from folio.analytics.returns import DailyPoint, twr_index, twr_segments, xirr_fl
 from folio.analytics.risk import drawdown
 from folio.analytics.series import bridge, monthly_returns, rebase
 from folio.dashboards.widgets import WIDGET_TYPES, BaseConfig
-from folio.db.models_analytics import MacroPoint, MacroSeries
+from folio.db.models_analytics import MacroPoint, MacroSeries, Quote
 from folio.db.models_insight import NewsAssessment, NewsCluster, NewsLink, Recommendation
 from folio.db.models_ledger import Instrument, LedgerTransaction, Listing, PriceBar
 from folio.db.models_strategy import Signal
+from folio.marketdata import exchanges
 from folio.positions import load_positions, totals_for
 
 ZERO = Decimal(0)
@@ -807,6 +808,103 @@ def _moving_average(closes: list[tuple[date, Decimal]], n: int) -> list[dict[str
     return out
 
 
+PERCENT_PLACES = Decimal("0.0001")
+
+
+def _percent(value: Decimal, base: Decimal) -> str:
+    return str(((value / base - 1) * 100).quantize(PERCENT_PLACES))
+
+
+def _step_changes(
+    points: Sequence[tuple[str, Decimal]], base: Decimal | None
+) -> list[dict[str, str]]:
+    """The percent change of each point against the one before it (the first against `base`)."""
+    out: list[dict[str, str]] = []
+    before = base
+    for day, close in points:
+        if before is not None and before != 0:
+            out.append({"date": day, "value": _percent(close, before)})
+        before = close
+    return out
+
+
+def _since_start(
+    points: Sequence[tuple[str, Decimal]], base: Decimal | None
+) -> list[dict[str, str]]:
+    """The percent change of each point against `base` (the first point when there is none)."""
+    if not points:
+        return []
+    start = base if base else points[0][1]
+    if start == 0:
+        return []
+    return [{"date": day, "value": _percent(close, start)} for day, close in points]
+
+
+def _shows_price(cfg: Any) -> bool:
+    """The price itself is drawn unless only a change view was asked for."""
+    return "price" in cfg.overlays or not ({"changes", "since_start"} & set(cfg.overlays))
+
+
+def _change_views(
+    cfg: Any, points: Sequence[tuple[str, Decimal]], base: Decimal | None
+) -> dict[str, Any]:
+    """The chosen change views of a price chart, with whether the price is drawn."""
+    views: dict[str, Any] = {}
+    if "changes" in cfg.overlays:
+        views["changes"] = _step_changes(points, base)
+    if "since_start" in cfg.overlays:
+        views["since_start"] = _since_start(points, base)
+    views["show_price"] = _shows_price(cfg)
+    return views
+
+
+def _intraday(env: Env, cfg: Any, instrument: Instrument, listing: Listing) -> dict[str, Any]:
+    """One day of a price chart: the refresh prices (quotes) of the latest session on record,
+    in exchange-local time, against the close before it."""
+    latest = env.db.scalars(
+        select(Quote).where(Quote.listing_id == listing.id).order_by(Quote.ts.desc()).limit(1)
+    ).first()
+    if latest is None:
+        return _empty(
+            "No refresh prices are stored for this instrument yet. They are fetched every 15 "
+            "minutes while its exchange is open, and only for what you hold or watch."
+        )
+    mic = listing.exchange_mic
+    day = exchanges.local_date(mic, latest.ts)
+    quotes = [
+        q
+        for q in env.db.scalars(
+            select(Quote)
+            .where(Quote.listing_id == listing.id, Quote.ts >= latest.ts - timedelta(hours=36))
+            .order_by(Quote.ts)
+        )
+        if exchanges.local_date(mic, q.ts) == day
+    ]
+    before = env.db.scalars(
+        select(PriceBar)
+        .where(PriceBar.listing_id == listing.id, PriceBar.date < day)
+        .order_by(PriceBar.date.desc())
+        .limit(1)
+    ).first()
+    previous = None if before is None else before.close
+    pairs = [(exchanges.local_time(mic, q.ts).isoformat(), q.price) for q in quotes]
+    return {
+        "instrument_id": instrument.id,
+        "name": instrument.name,
+        "currency": listing.currency,
+        "chart": "line",  # the refresh prices have no open, high or low
+        "intraday": True,
+        "session_date": day.isoformat(),
+        "previous_close": s(previous),
+        "points": [
+            {"date": d, "open": None, "high": None, "low": None, "close": str(c), "volume": None}
+            for d, c in pairs
+        ],
+        "trades": [],
+        **_change_views(cfg, pairs, previous),
+    }
+
+
 def price_chart(env: Env, cfg: Any) -> dict[str, Any]:
     instrument_id = cfg.instrument_id or (cfg.scope.id if cfg.scope.kind == "instrument" else None)
     if instrument_id is None:
@@ -822,13 +920,14 @@ def price_chart(env: Env, cfg: Any) -> dict[str, Any]:
     ).first()
     if listing is None:
         return _empty("This instrument has no listing to chart.")
+    period = period_of(cfg, env, "1Y")
+    if period == "1D":
+        return _intraday(env, cfg, instrument, listing)
     ctx = context(env, None)
     first_day = ctx.first_transaction_day
     try:
         start, end = (
-            svc.resolve(
-                ctx, period_of(cfg, env, "1Y"), env.today, env.filters.start, env.filters.end
-            )
+            svc.resolve(ctx, period, env.today, env.filters.start, env.filters.end)
             if not ctx.empty
             else (env.today - timedelta(days=365), env.today)
         )
@@ -847,7 +946,7 @@ def price_chart(env: Env, cfg: Any) -> dict[str, Any]:
     closes = [(b.date, b.close) for b in bars]
     shown = [b for b in bars if b.date > start]
     trades = []
-    if "trades" in cfg.overlays:
+    if "trades" in cfg.overlays and _shows_price(cfg):
         for tx in env.db.scalars(
             select(LedgerTransaction)
             .where(
@@ -868,31 +967,35 @@ def price_chart(env: Env, cfg: Any) -> dict[str, Any]:
                     "price": str(tx.price),
                 }
             )
+    points = thin(shown, CHART_POINTS)  # the changes are between the points the chart shows
     out: dict[str, Any] = {
         "instrument_id": instrument_id,
         "name": instrument.name,
         "currency": listing.currency,
         "chart": cfg.chart,
         "first_transaction": None if first_day is None else first_day.isoformat(),
-        "points": thin(
-            [
-                {
-                    "date": b.date.isoformat(),
-                    "open": s(b.open),
-                    "high": s(b.high),
-                    "low": s(b.low),
-                    "close": str(b.close),
-                    "volume": s(b.volume),
-                }
-                for b in shown
-            ],
-            CHART_POINTS,
-        ),
+        "points": [
+            {
+                "date": b.date.isoformat(),
+                "open": s(b.open),
+                "high": s(b.high),
+                "low": s(b.low),
+                "close": str(b.close),
+                "volume": s(b.volume),
+            }
+            for b in points
+        ],
         "trades": trades,
+        **_change_views(
+            cfg,
+            [(b.date.isoformat(), b.close) for b in points],
+            next((c for d, c in reversed(closes) if d <= start), None),
+        ),
     }  # fmt: skip
-    for key, n in (("ma50", 50), ("ma200", 200)):
-        if key in cfg.overlays:
-            out[key] = [p for p in _moving_average(closes, n) if p["date"] > start.isoformat()]
+    if out["show_price"]:
+        for key, n in (("ma50", 50), ("ma200", 200)):
+            if key in cfg.overlays:
+                out[key] = [p for p in _moving_average(closes, n) if p["date"] > start.isoformat()]
     return out
 
 

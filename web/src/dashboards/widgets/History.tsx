@@ -5,7 +5,7 @@ import { toNumber } from '../../lib/format'
 import { useFormat } from '../../lib/useFormat'
 import { ChartFrame, DataTable } from '../charts/ChartFrame'
 import { SERIES } from '../charts/palette'
-import { TimeChart, type Marker, type TimeSeries } from '../charts/TimeChart'
+import { TimeChart, type ChartTime, type Marker, type TimeSeries } from '../charts/TimeChart'
 import type {
   DrawdownData,
   PerformanceData,
@@ -187,44 +187,87 @@ export function PerformanceWidget({ data }: WidgetProps<PerformanceData>) {
   )
 }
 
+/** Seconds on the clock of the exchange for an intraday point such as 2024-01-12T09:15:00. The
+ * chart reads them as UTC, so the axis shows market hours whatever zone the browser is in. */
+const clockSeconds = (date: string) => Date.parse(`${date}Z`) / 1000
+
+const clockLabel = (time: ChartTime) =>
+  typeof time === 'number' ? new Date(time * 1000).toISOString().slice(11, 16) : String(time)
+
 export function PriceChartWidget({ data, config }: WidgetProps<PriceChartData>) {
   const { t } = useTranslation()
   const { num } = useFormat()
   const navigate = useNavigate()
   const format = useMemo(() => (v: number) => num(v, 2), [num])
+  const percent = useMemo(() => (v: number) => `${num(v, 2)}%`, [num])
+  const intraday = data.intraday === true
+  const showPrice = data.show_price !== false
   const points = useMemo(() => data.points ?? [], [data.points])
+  const when = useCallback(
+    (date: string): ChartTime => (intraday ? clockSeconds(date) : date),
+    [intraday],
+  )
   const overlays = useMemo(() => (config.overlays as string[] | undefined) ?? [], [config.overlays])
+  const showVolume = showPrice && !intraday && overlays.includes('volume')
+  // each thing with its own scale gets its own pane, counted from the top
+  const panes = useMemo(() => {
+    let next = showPrice ? 1 : 0
+    const changes = data.changes ? next++ : undefined
+    const since = data.since_start ? next++ : undefined
+    return { changes, since, volume: next }
+  }, [showPrice, data.changes, data.since_start])
   const series: TimeSeries[] = useMemo(() => {
     const list: TimeSeries[] = []
-    if (data.chart !== 'candles') {
+    if (showPrice && data.chart !== 'candles') {
       list.push({
         key: 'close',
         label: data.name ?? t('widgets.price'),
         color: SERIES[0],
-        points: points.map((p) => ({ time: p.date, value: n(p.close) })),
+        points: points.map((p) => ({ time: when(p.date), value: n(p.close) })),
       })
     }
-    if (data.ma50) {
+    if (showPrice && data.ma50) {
       list.push({
         key: 'ma50',
         label: t('widgets.ma50'),
         color: SERIES[1],
-        points: data.ma50.map((p) => ({ time: p.date, value: n(p.value) })),
+        points: data.ma50.map((p) => ({ time: when(p.date), value: n(p.value) })),
       })
     }
-    if (data.ma200) {
+    if (showPrice && data.ma200) {
       list.push({
         key: 'ma200',
         label: t('widgets.ma200'),
         color: SERIES[2],
-        points: data.ma200.map((p) => ({ time: p.date, value: n(p.value) })),
+        points: data.ma200.map((p) => ({ time: when(p.date), value: n(p.value) })),
+      })
+    }
+    if (data.changes && panes.changes !== undefined) {
+      list.push({
+        key: 'changes',
+        label: t(intraday ? 'widgets.changesPerRefresh' : 'widgets.changesPerDay'),
+        color: SERIES[3],
+        kind: 'bars',
+        pane: panes.changes,
+        format: percent,
+        points: data.changes.map((p) => ({ time: when(p.date), value: n(p.value) })),
+      })
+    }
+    if (data.since_start && panes.since !== undefined) {
+      list.push({
+        key: 'since_start',
+        label: t('widgets.sinceStart'),
+        color: SERIES[4],
+        pane: panes.since,
+        format: percent,
+        points: data.since_start.map((p) => ({ time: when(p.date), value: n(p.value) })),
       })
     }
     return list
-  }, [data, points, t])
+  }, [data, points, panes, showPrice, intraday, percent, when, t])
   const candles = useMemo(
     () =>
-      data.chart === 'candles'
+      showPrice && data.chart === 'candles'
         ? points.map((p) => ({
             time: p.date,
             open: n(p.open ?? p.close),
@@ -233,41 +276,69 @@ export function PriceChartWidget({ data, config }: WidgetProps<PriceChartData>) 
             close: n(p.close),
           }))
         : undefined,
-    [data.chart, points],
+    [showPrice, data.chart, points],
   )
   const volume = useMemo(
     () =>
-      overlays.includes('volume')
+      showVolume
         ? points.filter((p) => p.volume !== null).map((p) => ({ time: p.date, value: n(p.volume) }))
         : undefined,
-    [overlays, points],
+    [showVolume, points],
   )
   const markers: Marker[] = useMemo(
     () =>
-      (data.trades ?? []).map((tr) =>
-        tr.type === 'buy'
-          ? {
-              time: tr.date,
-              position: 'belowBar',
-              shape: 'arrowUp',
-              text: t('position.buy'),
-              color: 'var(--diverge-pos)',
-            }
-          : {
-              time: tr.date,
-              position: 'aboveBar',
-              shape: 'arrowDown',
-              text: t('position.sell'),
-              color: 'var(--diverge-neg)',
-            },
-      ),
-    [data.trades, t],
+      showPrice
+        ? (data.trades ?? []).map((tr) =>
+            tr.type === 'buy'
+              ? {
+                  time: tr.date,
+                  position: 'belowBar',
+                  shape: 'arrowUp',
+                  text: t('position.buy'),
+                  color: 'var(--diverge-pos)',
+                }
+              : {
+                  time: tr.date,
+                  position: 'aboveBar',
+                  shape: 'arrowDown',
+                  text: t('position.sell'),
+                  color: 'var(--diverge-neg)',
+                },
+          )
+        : [],
+    [showPrice, data.trades, t],
   )
   if (data.empty) return <p className="text-sm text-muted">{data.reason}</p>
+  const changeAt = new Map((data.changes ?? []).map((c) => [c.date, c.value]))
+  const sinceAt = new Map((data.since_start ?? []).map((c) => [c.date, c.value]))
+  // the table lists every point the chart draws; with the price left out, the days that have
+  // a change
+  const tableDates = showPrice
+    ? points.map((p) => p.date)
+    : [...new Set([...changeAt.keys(), ...sinceAt.keys()])].sort()
+  const closeAt = new Map(points.map((p) => [p.date, p.close]))
+  const head = [
+    t(intraday ? 'charts.time' : 'charts.date'),
+    ...(showPrice ? [t(intraday ? 'widgets.price' : 'widgets.close')] : []),
+    ...(data.changes ? [t(intraday ? 'widgets.changesPerRefresh' : 'widgets.changesPerDay')] : []),
+    ...(data.since_start ? [t('widgets.sinceStart')] : []),
+  ]
+  const cell = (v: string | undefined) => (v === undefined ? '' : `${num(v, 2)}%`)
+  const session = intraday
+    ? [
+        t('widgets.sessionOf', { date: data.session_date }),
+        data.previous_close
+          ? t('widgets.previousClose', { price: num(data.previous_close, 2) })
+          : null,
+      ]
+        .filter(Boolean)
+        .join(' · ')
+    : ''
   return (
     <div className="flex h-full flex-col gap-1">
       <p className="text-sm text-muted">
         {data.name} · {data.currency}
+        {session && ` · ${session}`}
       </p>
       <ChartFrame
         chart={
@@ -275,6 +346,9 @@ export function PriceChartWidget({ data, config }: WidgetProps<PriceChartData>) 
             series={series}
             candles={candles}
             volume={volume}
+            volumePane={panes.volume}
+            intraday={intraday}
+            timeLabel={intraday ? clockLabel : undefined}
             markers={snapMarkers(
               markers,
               points.map((p) => p.date),
@@ -287,8 +361,15 @@ export function PriceChartWidget({ data, config }: WidgetProps<PriceChartData>) 
         table={
           <DataTable
             caption={t('widgets.price_chart')}
-            head={[t('charts.date'), t('widgets.close')]}
-            rows={[...points].reverse().map((p) => [p.date, num(p.close, 2)])}
+            head={head}
+            rows={[...tableDates]
+              .reverse()
+              .map((date) => [
+                intraday ? date.slice(11, 16) : date,
+                ...(showPrice ? [num(closeAt.get(date), 2)] : []),
+                ...(data.changes ? [cell(changeAt.get(date))] : []),
+                ...(data.since_start ? [cell(sinceAt.get(date))] : []),
+              ])}
           />
         }
       />

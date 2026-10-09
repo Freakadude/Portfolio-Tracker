@@ -207,6 +207,14 @@ export interface PriceChartData extends Empty {
   name?: string
   currency?: string
   chart?: 'line' | 'candles'
+  /** One day of refresh prices; each point's date is the exchange clock, 2024-01-12T09:15:00. */
+  intraday?: boolean
+  session_date?: string
+  previous_close?: string | null
+  /** False when only the changes are shown. */
+  show_price?: boolean
+  changes?: { date: string; value: string }[]
+  since_start?: { date: string; value: string }[]
   points?: {
     date: string
     open: string | null

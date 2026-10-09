@@ -68,11 +68,11 @@ class ValueHistoryConfig(BaseConfig):
     log_scale: bool = False
 
 
-Overlay = Literal["ma50", "ma200", "volume", "trades"]
+Overlay = Literal["price", "ma50", "ma200", "volume", "trades", "changes", "since_start"]
 
 
 def _default_overlays() -> list[Overlay]:
-    return ["trades"]
+    return ["price", "trades"]
 
 
 class PriceChartConfig(BaseConfig):

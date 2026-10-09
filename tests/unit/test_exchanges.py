@@ -80,3 +80,13 @@ def test_openfigi_exchange_codes_map_to_mics() -> None:
     assert exchanges.BLOOMBERG_TO_MIC["GY"] == "XETR"
     assert exchanges.BLOOMBERG_TO_MIC["NA"] == "XAMS"
     assert all(mic in exchanges.EXCHANGES for mic in exchanges.BLOOMBERG_TO_MIC.values())
+
+
+def test_local_time_is_the_exchange_wall_clock_without_a_zone() -> None:
+    winter = datetime(2024, 1, 12, 8, 15, tzinfo=UTC)
+    summer = datetime(2024, 7, 12, 8, 15, tzinfo=UTC)
+    assert exchanges.local_time("XETR", winter) == datetime(2024, 1, 12, 9, 15)
+    assert exchanges.local_time("XETR", summer) == datetime(2024, 7, 12, 10, 15)
+    assert exchanges.local_time("XLON", winter) == datetime(2024, 1, 12, 8, 15)  # GMT
+    assert exchanges.local_time("XNYS", winter) == datetime(2024, 1, 12, 3, 15)  # EST
+    assert exchanges.local_time("XXXX", winter) == datetime(2024, 1, 12, 8, 15)  # no calendar: UTC

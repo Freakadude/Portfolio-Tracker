@@ -98,7 +98,7 @@ def test_options_are_completed_with_defaults() -> None:
     kpi = normalize_config("kpi", {})
     assert kpi["metric"] == "value" and kpi["scope"] == {"kind": "portfolio", "id": None}
     assert kpi["period"] is None and kpi["follow_filters"] is True and kpi["sparkline"] is True
-    assert normalize_config("price_chart", {})["overlays"] == ["trades"]
+    assert normalize_config("price_chart", {})["overlays"] == ["price", "trades"]
 
 
 def test_options_that_do_not_exist_are_refused() -> None:

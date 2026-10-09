@@ -129,6 +129,14 @@ def local_date(mic: str, at: datetime) -> date:
     return at.astimezone(ZoneInfo(str(calendar(mic).tz))).date()
 
 
+def local_time(mic: str, at: datetime) -> datetime:
+    """The exchange-local wall clock of a moment, without a zone (UTC for a listing without a
+    calendar). A chart that shows these reads in market hours."""
+    if not has_calendar(mic):
+        return at.astimezone(UTC).replace(tzinfo=None)
+    return at.astimezone(ZoneInfo(str(calendar(mic).tz))).replace(tzinfo=None)
+
+
 def previous_trading_day(mic: str, day: date) -> date | None:
     """The latest session on or before `day`."""
     days = trading_days(mic, day - timedelta(days=14), day)
