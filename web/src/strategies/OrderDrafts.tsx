@@ -3,6 +3,7 @@ import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { api, errorMessage, unwrap } from '../api/client'
 import { useDrafts, useInvalidateLedger, type Transaction } from '../api/queries'
+import { Panel } from '../components/Panel'
 import { Alert, Button, Input } from '../components/ui'
 import { trimDecimal } from '../lib/decimal'
 import { useFormat } from '../lib/useFormat'
@@ -15,10 +16,7 @@ export function OrderDrafts() {
   const rows = drafts.data?.items.filter((x) => x.type === 'buy' || x.type === 'sell') ?? []
   if (drafts.isSuccess && rows.length === 0) return null
   return (
-    <section className="space-y-2" aria-labelledby="orders-title">
-      <h2 id="orders-title" className="text-lg font-semibold">
-        {t('strategies.orders.title')}
-      </h2>
+    <Panel id="insights-orders" title={t('strategies.orders.title')} count={rows.length}>
       <p className="text-sm text-muted">{t('strategies.orders.intro')}</p>
       {drafts.isError && <Alert>{errorMessage(drafts.error)}</Alert>}
       <div className="overflow-x-auto">
@@ -51,7 +49,7 @@ export function OrderDrafts() {
           </tbody>
         </table>
       </div>
-    </section>
+    </Panel>
   )
 }
 

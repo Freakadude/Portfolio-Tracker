@@ -34,6 +34,7 @@ test('a price alert fires on a new close and the bell updates without a reload (
   const inbox = page.getByRole('list', { name: 'Inbox' })
   const item = inbox.getByRole('listitem', { name: /E2E Watched closed above 25/ })
   await expect(item).toContainText('Waiting for Home Assistant') // the worker sends pushes
+  await page.getByText(/More filters/).click()
   await page.getByLabel('Type').selectOption('alert')
   await expect(inbox.getByRole('listitem')).toHaveCount(1)
   await item.getByRole('button', { name: 'Mark as read' }).click()

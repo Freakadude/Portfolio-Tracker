@@ -103,9 +103,13 @@ describe('the inbox (FR-NT-01)', () => {
     const first = await screen.findByRole('listitem', { name: 'equity is 12.0 pp over its target' })
     expect(first).toHaveTextContent(/Sent to Home Assistant at/)
     expect(first).toHaveTextContent('ntfy failed: ntfy answered HTTP 502.')
-    expect(within(first).getByRole('link', { name: 'Open' })).toHaveAttribute('href', '/strategies')
-    expect(screen.getByText('2 unread')).toBeInTheDocument()
+    expect(within(first).getByRole('link', { name: /^Open/ })).toHaveAttribute(
+      'href',
+      '/strategies',
+    )
+    expect(screen.getByRole('region', { name: 'Inbox' })).toHaveTextContent(/2\s*unread/)
 
+    await userEvent.click(screen.getByText(/More filters/)) // severity, type and subject are folded away
     await userEvent.selectOptions(screen.getByLabelText('Severity'), 'low')
     await waitFor(() =>
       expect(screen.queryByRole('listitem', { name: /equity/ })).not.toBeInTheDocument(),

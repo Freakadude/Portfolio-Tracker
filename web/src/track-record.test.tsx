@@ -1,9 +1,10 @@
 import { screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { afterEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { TrackRecord } from './agent/TrackRecord'
 import { GENERAL_US, mockApi, renderAt } from './test-utils'
 
+beforeEach(() => localStorage.clear()) // an opened section is remembered
 afterEach(() => vi.unstubAllGlobals())
 
 const horizon = (days: number, over: Record<string, unknown> = {}) => ({
@@ -49,6 +50,9 @@ const RECORD = (decisionHorizon = 30) => ({
   ],
 })
 
+const openSection = () =>
+  userEvent.click(screen.getByRole('button', { name: "Track record of the agent's advice" }))
+
 describe('the track record (FR-AG-06)', () => {
   it('shows hit rate and price change by action type, and says what is not scored', async () => {
     mockApi({
@@ -56,6 +60,7 @@ describe('the track record (FR-AG-06)', () => {
       '/api/v1/agent/track-record': RECORD(),
     })
     renderAt(<TrackRecord />)
+    await openSection() // it starts closed: reference material, not something to act on
     const table = await screen.findByRole('table', {
       name: "Hit rate and price change of the agent's recommendations by action type",
     })
@@ -78,6 +83,7 @@ describe('the track record (FR-AG-06)', () => {
         RECORD(Number(new URL(request.url).searchParams.get('horizon'))),
     })
     renderAt(<TrackRecord />)
+    await openSection() // it starts closed: reference material, not something to act on
     await screen.findByRole('table', { name: /Hit rate and price change/ })
     await userEvent.selectOptions(screen.getByLabelText('Horizon'), '90')
     await waitFor(() =>

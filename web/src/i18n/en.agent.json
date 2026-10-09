@@ -58,6 +58,10 @@
     },
     "stale": "The portfolio or the prices have changed since this advice was made, so its order list is out of date. Ask for a new review before making drafts.",
     "evidence": "Evidence and sources",
+    "details": "Show the reasoning, orders and evidence",
+    "why": "Why",
+    "ordersLine_one": "{{count}} order: {{list}}",
+    "ordersLine_other": "{{count}} orders: {{list}}",
     "kind": {
       "signal": "Signal",
       "news_cluster": "News",

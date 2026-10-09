@@ -28,11 +28,12 @@ test('advice is accepted as draft transactions, confirmed, and a rejection keeps
   await expect(card).toBeVisible()
   await expect(card.getByText('AI-generated', { exact: true })).toBeVisible()
   await expect(page.getByText(/AI-generated, not financial advice/).first()).toBeVisible()
+  // the reasoning, orders and evidence are one click away
+  await card.getByText('Show the reasoning, orders and evidence').click()
   await expect(card.getByRole('table', { name: 'Orders from the calculator' })).toContainText(
     'E2E Stock',
   )
   await expect(card.getByText('Departs from your principles')).toHaveCount(0)
-  await card.getByText('Evidence and sources').click()
   await expect(card.getByText('Allocator result')).toBeVisible()
 
   await card.getByRole('button', { name: /^Accept and make draft transactions/ }).click()

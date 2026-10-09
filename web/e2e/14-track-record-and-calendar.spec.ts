@@ -22,6 +22,7 @@ test('the track record shows what became of the advice, by action type and by de
   await page.goto('/insights')
   const section = page.getByRole('region', { name: "Track record of the agent's advice" })
   await expect(section).toBeVisible()
+  await section.getByRole('button', { name: "Track record of the agent's advice" }).click() // it starts closed
   const table = section.getByRole('table', {
     name: "Hit rate and price change of the agent's recommendations by action type",
   })

@@ -9,10 +9,10 @@ import {
   type CorporateAction,
   type Transaction,
 } from '../api/queries'
+import { Panel } from '../components/Panel'
 import { Alert, Button, Input } from '../components/ui'
 import { trimDecimal } from '../lib/decimal'
 import { Recommendations } from '../agent/Recommendations'
-import { AskPanel } from '../agent/Ask'
 import { TrackRecord } from '../agent/TrackRecord'
 import { Inbox } from '../notify/Inbox'
 import { OrderDrafts } from '../strategies/OrderDrafts'
@@ -21,20 +21,15 @@ import { useFormat } from '../lib/useFormat'
 export function Insights() {
   const { t } = useTranslation()
   return (
-    <div className="space-y-8">
+    <div className="space-y-6">
       <h1 className="text-2xl font-semibold">{t('insights.title')}</h1>
+      {/* what needs a decision first, the reference material last */}
       <Recommendations />
-      <section aria-labelledby="ask-h" className="space-y-3">
-        <h2 id="ask-h" className="text-lg font-semibold">
-          {t('ask.title')}
-        </h2>
-        <AskPanel />
-      </section>
-      <TrackRecord />
-      <Inbox />
       <OrderDrafts />
+      <Inbox />
       <Splits />
       <Dividends />
+      <TrackRecord />
     </div>
   )
 }
@@ -55,15 +50,16 @@ function Splits() {
   })
   const rows = actions.data ?? []
   return (
-    <section className="space-y-2" aria-labelledby="splits-title">
-      <h2 id="splits-title" className="text-lg font-semibold">
-        {t('insights.splits.title')}
-      </h2>
+    <Panel
+      id="insights-splits"
+      title={t('insights.splits.title')}
+      count={rows.length}
+      status={actions.isSuccess && rows.length === 0 ? t('insights.splits.empty') : undefined}
+      autoCollapse={actions.isSuccess && rows.length === 0}
+    >
       {act.isError && <Alert>{errorMessage(act.error)}</Alert>}
       {actions.isError && <Alert>{errorMessage(actions.error)}</Alert>}
-      {actions.isSuccess && rows.length === 0 ? (
-        <p className="text-muted">{t('insights.splits.empty')}</p>
-      ) : (
+      {actions.isSuccess && rows.length === 0 ? null : (
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <caption className="sr-only">{t('insights.splits.caption')}</caption>
@@ -121,7 +117,7 @@ function Splits() {
           </table>
         </div>
       )}
-    </section>
+    </Panel>
   )
 }
 
@@ -130,15 +126,16 @@ function Dividends() {
   const drafts = useDrafts()
   const rows = drafts.data?.items.filter((x) => x.type === 'dividend') ?? []
   return (
-    <section className="space-y-2" aria-labelledby="dividends-title">
-      <h2 id="dividends-title" className="text-lg font-semibold">
-        {t('insights.dividends.title')}
-      </h2>
+    <Panel
+      id="insights-dividends"
+      title={t('insights.dividends.title')}
+      count={rows.length}
+      status={drafts.isSuccess && rows.length === 0 ? t('insights.dividends.empty') : undefined}
+      autoCollapse={drafts.isSuccess && rows.length === 0}
+    >
       <p className="text-sm text-muted">{t('insights.dividends.intro')}</p>
       {drafts.isError && <Alert>{errorMessage(drafts.error)}</Alert>}
-      {drafts.isSuccess && rows.length === 0 ? (
-        <p className="text-muted">{t('insights.dividends.empty')}</p>
-      ) : (
+      {drafts.isSuccess && rows.length === 0 ? null : (
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <caption className="sr-only">{t('insights.dividends.caption')}</caption>
@@ -161,7 +158,7 @@ function Dividends() {
           </table>
         </div>
       )}
-    </section>
+    </Panel>
   )
 }
 

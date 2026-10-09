@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { errorMessage } from '../api/client'
+import { Panel } from '../components/Panel'
 import { Alert, Select } from '../components/ui'
 import { useFormat } from '../lib/useFormat'
 import { useTrackRecord } from './api'
@@ -16,11 +17,11 @@ export function TrackRecord() {
   const data = record.data
 
   return (
-    <section aria-labelledby="track-h" className="space-y-3">
-      <div className="flex flex-wrap items-center justify-between gap-2">
-        <h2 id="track-h" className="text-lg font-semibold">
-          {t('track.title')}
-        </h2>
+    <Panel
+      id="insights-track"
+      title={t('track.title')}
+      autoCollapse
+      actions={
         <label className="flex items-center gap-2 text-sm">
           {t('track.horizons')}
           <Select
@@ -35,7 +36,8 @@ export function TrackRecord() {
             ))}
           </Select>
         </label>
-      </div>
+      }
+    >
       {record.isError && <Alert>{errorMessage(record.error)}</Alert>}
       {data && data.total === 0 && <p className="text-muted">{t('track.empty')}</p>}
       {data && data.total > 0 && (
@@ -124,6 +126,6 @@ export function TrackRecord() {
           <p className="text-sm text-muted">{data.note}</p>
         </>
       )}
-    </section>
+    </Panel>
   )
 }
