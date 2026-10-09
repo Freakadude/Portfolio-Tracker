@@ -10,7 +10,14 @@ from sqlalchemy import select
 
 from folio.agent import budget
 from folio.agent import outcomes as outcome_rules
-from folio.agent.ask import ANALYSE, AskError, position_question, queue_ask
+from folio.agent.ask import (
+    ANALYSE,
+    AskError,
+    clean_thread,
+    position_question,
+    queue_ask,
+    thread_runs,
+)
 from folio.agent.llm import LlmClient, LlmError, system_blocks
 from folio.agent.runs import finish_run, metered_create, start_run
 from folio.agent.trackrecord import track_record
@@ -323,6 +330,8 @@ def get_track_record(
 class AskIn(BaseModel):
     question: str | None = Field(default=None, max_length=600)
     instrument_id: int | None = None  # set: analyse this position (the question is optional)
+    thread: str | None = Field(default=None, max_length=40)  # a chat in the side panel
+    page: str | None = Field(default=None, max_length=120)  # the route the owner is on
 
 
 class AskQueuedOut(BaseModel):
@@ -347,6 +356,7 @@ class AskOut(BaseModel):
     kind: Literal["ask", "analyse_position"]
     question: str
     instrument_id: int | None
+    thread: str | None  # the chat in the side panel this belongs to
     status: str  # queued | running | ok | failed | budget
     answer: str | None  # None until answered, and when the code gate refused the answer
     refused: bool  # the run finished but its answer did not pass the check
@@ -370,6 +380,7 @@ def _ask_out(run: AgentRun) -> AskOut:
         kind=run.run_type,
         question=str(output.get("question") or context.get("question") or ""),
         instrument_id=context.get("instrument_id"),
+        thread=context.get("thread"),
         status=run.status,
         answer=answer if isinstance(answer, str) else None,
         refused=run.status == "ok" and not output.get("accepted", False),
@@ -404,7 +415,7 @@ def ask(body: AskIn, request: Request, _user: UserDep, db: DbDep) -> AskQueuedOu
             raise ApiError(422, "Question needed", "Write the question in a few words.")
         question = position_question(instrument)
     try:
-        run = queue_ask(db, cfg, question, instrument, utcnow())
+        run = queue_ask(db, cfg, question, instrument, utcnow(), body.thread, body.page)
     except AskError as exc:
         raise ApiError(422, "Cannot ask that", str(exc)) from exc
     enqueue(db, "agent_ask", {"run_id": run.id})
@@ -428,6 +439,15 @@ def recent_questions(
     if instrument_id is not None:
         rows = [r for r in rows if (r.context or {}).get("instrument_id") == instrument_id][:limit]
     return [_ask_out(r) for r in rows]
+
+
+@router.get("/chat/{thread}", response_model=list[AskOut])
+def chat_thread(thread: str, _user: UserDep, db: DbDep) -> list[AskOut]:
+    """The turns of one chat in the side panel, oldest first."""
+    try:
+        return [_ask_out(r) for r in thread_runs(db, clean_thread(thread))]
+    except AskError as exc:
+        raise ApiError(422, "Cannot read that chat", str(exc)) from exc
 
 
 @router.get("/ask/{run_id}", response_model=AskOut)

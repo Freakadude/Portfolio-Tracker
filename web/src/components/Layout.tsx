@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next'
 import { NavLink, Outlet, useNavigate } from 'react-router-dom'
 import { api, unwrap } from '../api/client'
 import { STATUS_KEY } from '../api/hooks'
+import { ChatDock } from '../chat/ChatPanel'
 import { Bell } from './Bell'
 import { Button } from './ui'
 import { cn } from '../lib/cn'
@@ -97,6 +98,7 @@ export function Layout() {
           </Button>
         </div>
       </main>
+      <ChatDock />
     </div>
   )
 }

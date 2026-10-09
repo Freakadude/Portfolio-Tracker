@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next'
 import { errorMessage } from '../api/client'
 import { Badge } from '../components/display'
 import { Alert, Button, Field, Textarea } from '../components/ui'
+import { AnswerBody } from './AnswerBody'
 import { useAsk, useQuestion, useRecentQuestions, type Question } from './api'
 
 const WORKING = ['queued', 'running']
@@ -90,45 +91,8 @@ function Answer({ q, compact = false }: { q: Question; compact?: boolean }) {
         <p className="font-medium">{q.question}</p>
         <Badge>{t('recs.ai')}</Badge>
       </header>
-      {q.answer && <p className="whitespace-pre-line text-sm">{q.answer}</p>}
-      {q.not_found && (
-        <p className="text-sm text-muted">
-          {t('ask.notFound')} {q.not_found}
-        </p>
-      )}
-      {q.refused && (
-        <Alert>
-          <p>{t('ask.refused')}</p>
-          <ul className="list-disc pl-5">
-            {q.reasons.map((r) => (
-              <li key={r}>{r}</li>
-            ))}
-          </ul>
-        </Alert>
-      )}
-      {q.status === 'failed' && <Alert>{q.error ?? t('ask.failed')}</Alert>}
-      {q.status === 'budget' && <Alert>{q.error ?? t('ask.budget')}</Alert>}
       {WORKING.includes(q.status) && <p className="text-sm text-muted">{t('ask.working')}</p>}
-      {q.data.length > 0 && (
-        <details open={!compact}>
-          <summary className="cursor-pointer text-sm font-medium">
-            {t('ask.dataUsed', { count: q.data.length })}
-          </summary>
-          <ul className="mt-2 space-y-2 text-sm">
-            {q.data.map((d, i) => (
-              <li key={`${d.tool}-${i}`}>
-                <div>
-                  <code>{d.tool}</code> <span className="text-muted">{d.note}</span>
-                </div>
-                <pre className="mt-1 max-h-48 overflow-auto rounded bg-card p-2 text-xs whitespace-pre-wrap">
-                  {d.result}
-                </pre>
-              </li>
-            ))}
-          </ul>
-        </details>
-      )}
-      <p className="text-xs text-muted">{q.ai_label}</p>
+      <AnswerBody q={q} compact={compact} />
     </article>
   )
 }

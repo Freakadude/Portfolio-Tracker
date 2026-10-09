@@ -1,0 +1,28 @@
+{
+  "chat": {
+    "title": "Ask Folio",
+    "open": "Ask Folio",
+    "close": "Close the chat",
+    "shortcut": "Ask Folio (Ctrl+/)",
+    "new": "New chat",
+    "log": "Conversation",
+    "you": "You:",
+    "helper": "Folio:",
+    "form": "Send a message",
+    "message": "Your message",
+    "placeholder": "Ask about your holdings, news or strategy",
+    "send": "Send",
+    "working": "Looking at your data. This can take a minute.",
+    "readOnly": "Reads your data only. Not financial advice.",
+    "intro": "Ask about your portfolio, a holding, the news or your strategy. Every number in an answer comes from your own data, and nothing is ever changed.",
+    "suggest": {
+      "howIsIt": "How is my portfolio doing?",
+      "news": "What changed in the news about my holdings?",
+      "bands": "Is anything outside my strategy's bands?"
+    },
+    "strategyHelper": "Draft or revise a strategy with the helper",
+    "notReady": "The AI agent is off or has no API key.",
+    "toSettings": "Open the agent settings",
+    "paused": "The AI budget for this month is used up, so questions are paused."
+  }
+}

@@ -1095,6 +1095,18 @@
             ],
             "title": "Instrument Id"
           },
+          "page": {
+            "anyOf": [
+              {
+                "maxLength": 120,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Page"
+          },
           "question": {
             "anyOf": [
               {
@@ -1106,6 +1118,18 @@
               }
             ],
             "title": "Question"
+          },
+          "thread": {
+            "anyOf": [
+              {
+                "maxLength": 40,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Thread"
           }
         },
         "title": "AskIn",
@@ -1221,6 +1245,17 @@
           "status": {
             "title": "Status",
             "type": "string"
+          },
+          "thread": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Thread"
           }
         },
         "required": [
@@ -1228,6 +1263,7 @@
           "kind",
           "question",
           "instrument_id",
+          "thread",
           "status",
           "answer",
           "refused",
@@ -13611,6 +13647,53 @@
           }
         },
         "summary": "Get Question",
+        "tags": [
+          "agent"
+        ]
+      }
+    },
+    "/api/v1/agent/chat/{thread}": {
+      "get": {
+        "description": "The turns of one chat in the side panel, oldest first.",
+        "operationId": "chat_thread_api_v1_agent_chat__thread__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "thread",
+            "required": true,
+            "schema": {
+              "title": "Thread",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/AskOut"
+                  },
+                  "title": "Response Chat Thread Api V1 Agent Chat  Thread  Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Chat Thread",
         "tags": [
           "agent"
         ]

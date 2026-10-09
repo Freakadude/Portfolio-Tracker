@@ -82,6 +82,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/agent/chat/{thread}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Chat Thread
+         * @description The turns of one chat in the side panel, oldest first.
+         */
+        get: operations["chat_thread_api_v1_agent_chat__thread__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/agent/runs": {
         parameters: {
             query?: never;
@@ -3461,8 +3481,12 @@ export interface components {
         AskIn: {
             /** Instrument Id */
             instrument_id?: number | null;
+            /** Page */
+            page?: string | null;
             /** Question */
             question?: string | null;
+            /** Thread */
+            thread?: string | null;
         };
         /** AskOut */
         AskOut: {
@@ -3507,6 +3531,8 @@ export interface components {
             refused: boolean;
             /** Status */
             status: string;
+            /** Thread */
+            thread: string | null;
         };
         /** AskQueuedOut */
         AskQueuedOut: {
@@ -7447,6 +7473,37 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["AskOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    chat_thread_api_v1_agent_chat__thread__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                thread: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AskOut"][];
                 };
             };
             /** @description Validation Error */
