@@ -164,6 +164,7 @@
     "refused": "The answer was not shown because it did not pass the check:",
     "failed": "The question could not be answered.",
     "budget": "The AI budget for this month is used up.",
+    "cost": "This answer cost {{amount}}.",
     "dataUsed_one": "The data it used ({{count}} tool)",
     "dataUsed_other": "The data it used ({{count}} tools)"
   },

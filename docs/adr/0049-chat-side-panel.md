@@ -1,6 +1,6 @@
 # ADR 0049: A chat side panel that fronts "Ask the portfolio"
 
-Status: accepted (2026-10-09). Extends FR-AG-08 (see ADR 0038). It is new scope, beyond the original specification, asked for by the owner.
+Status: accepted (2026-10-09). Extends FR-AG-08 (see ADR 0038). It is new scope, beyond the original specification, asked for by the owner. Amended by ADR 0059: the helper can now read the data on the page it is opened on, so "use the page only to understand the question" no longer holds.
 
 ## Context
 The owner wants a collapsible panel on the right of every page where they can talk to the app's AI helper about their portfolio, holdings, news and strategies. "Ask the portfolio" already answers such questions, but only one at a time, on two pages, with no memory of the question before.

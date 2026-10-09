@@ -7,7 +7,9 @@ import type { Question } from './api'
  * was held back, and the data it rests on. Shared by the Ask box and the chat side panel. */
 export function AnswerBody({ q, compact = false }: { q: Question; compact?: boolean }) {
   const { t } = useTranslation()
-  const { rounded } = useFormat()
+  const { rounded, smallEur } = useFormat()
+  const finished = q.status !== 'queued' && q.status !== 'running'
+  const cost = Number(q.cost_eur)
   return (
     <>
       {q.answer && <p className="whitespace-pre-line text-sm">{q.answer}</p>}
@@ -47,7 +49,15 @@ export function AnswerBody({ q, compact = false }: { q: Question; compact?: bool
           </ul>
         </details>
       )}
-      <p className="text-xs text-muted">{q.ai_label}</p>
+      <p className="text-xs text-muted">
+        {q.ai_label}
+        {finished && cost > 0 && (
+          <>
+            {' '}
+            <span data-testid="answer-cost">{t('ask.cost', { amount: smallEur(q.cost_eur) })}</span>
+          </>
+        )}
+      </p>
     </>
   )
 }

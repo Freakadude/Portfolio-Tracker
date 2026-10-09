@@ -18,6 +18,8 @@ from folio.config import get_settings
 from folio.db.engine import make_engine, make_session_factory
 from folio.db.models_insight import Recommendation
 
+CHAT_THREAD = "e2e-chat-cost-1"  # the chat the end-to-end test opens
+
 
 def main() -> None:
     settings = get_settings()
@@ -109,6 +111,21 @@ def main() -> None:
                 **common,
             )
         )
+        # one answered turn of a chat, for the test that the cost of an answer is shown
+        ask = start_run(db, "ask", "ask", "claude-sonnet-5-5", "ask_answer@3+e2e", now)
+        ask.cost_eur = Decimal("0.0213")
+        ask.context = {"question": "What does the drawdown chart show?", "thread": CHAT_THREAD}
+        ask.output = {
+            "kind": "ask",
+            "question": "What does the drawdown chart show?",
+            "accepted": True,
+            "reasons": [],
+            "answer": "It shows how far the portfolio is below its previous high.",
+            "citations": [],
+            "not_found": "",
+            "data": [],
+        }
+        finish_run(db, ask, now)
         db.commit()
 
 

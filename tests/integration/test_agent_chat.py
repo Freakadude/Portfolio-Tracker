@@ -21,6 +21,7 @@ from tests.agent_helpers import ScriptedLlm
 from tests.conftest import PASSWORD, USERNAME
 from tests.integration.test_agent_ask import KEY, AskBrain
 from tests.integration.test_agent_run import NOW, job_ctx, world  # noqa: F401
+from tests.integration.test_agent_view import dip_gold, risk_dashboard
 from tests.integration.test_news_pipeline import book, db  # noqa: F401
 
 THREAD = "chat-0123456789"
@@ -103,6 +104,30 @@ def test_the_page_the_owner_is_on_is_told_to_the_model(db: Session, world) -> No
     news = ScriptedLlm(handler=AskBrain())
     turn(db, news, "What is going on?", chat={"thread": THREAD, "page": "/news"})
     assert "the news page open" in first_user_message(news)
+
+
+def test_a_question_on_a_dashboard_is_answered_from_the_data_on_it(db: Session, world) -> None:
+    """The helper once said it could not read the drawdown chart on the page the owner had open.
+    It is told which dashboard is open, reads it with get_view and quotes the chart's own depth,
+    a negative ratio the gate accepts as the percentage written (ADR 0059)."""
+    dip_gold(db, world)
+    dashboard_id = risk_dashboard(db)
+    brain = AskBrain(
+        answer="The deepest fall from a high was 8% (negative on the chart).",
+        citations=[{"tool": "get_view", "note": "the drawdown widget of this dashboard"}],
+        calls=[("get_view", {"page": None})],
+    )
+    llm = ScriptedLlm(handler=brain)
+    run, outcome = turn(
+        db, llm, "What does the drawdown chart tell me?",
+        chat={"thread": THREAD, "page": f"/dashboards/{dashboard_id}"},
+    )  # fmt: skip
+    assert (outcome.status, outcome.accepted, outcome.reasons) == ("ok", True, [])
+    message = first_user_message(llm)
+    assert f"the dashboard Risk (id {dashboard_id}) open" in message and "get_view" in message
+    (used,) = run.output["data"]
+    assert used["tool"] == "get_view" and "max_drawdown" in used["result"]
+    assert "8%" in run.output["answer"]
 
 
 def test_a_number_that_only_an_earlier_turn_had_is_not_accepted(db: Session, world) -> None:

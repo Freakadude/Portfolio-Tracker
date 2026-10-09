@@ -24,7 +24,7 @@ from folio.agent import budget
 from folio.agent.ask import run_ask
 from folio.agent.lifecycle import expire_due
 from folio.agent.run import run_agent
-from folio.agent.tools import untrusted
+from folio.agent.text import untrusted
 from folio.agent.trackrecord import measure_due
 from folio.db.models_insight import AgentRun, NewsCluster
 from folio.db.models_strategy import Signal

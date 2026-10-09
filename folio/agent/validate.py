@@ -247,7 +247,8 @@ def _decimals(token: str) -> int:
 def unsupported_numbers(text: str, facts: frozenset[Decimal]) -> list[str]:
     """Amounts, quantities and percentages written in `text` that no tool returned. A bare
     number (a date, "14 days") is not checked; one with a currency sign, a percent sign, "pp"
-    or "units" is."""
+    or "units" is. The sign is not part of the check: "a 5.23% drawdown" and "-5.23%" are both
+    the tool's -0.0523, so a written figure matches a result of either sign."""
     bad: list[str] = []
     for m in _AMOUNT.finditer(text):
         pre, post = m.group("pre"), m.group("post")
@@ -259,7 +260,7 @@ def unsupported_numbers(text: str, facts: frozenset[Decimal]) -> list[str]:
         slack = Decimal(5) * Decimal(10) ** -(_decimals(token) + 1)
         scale = (Decimal(1), Decimal(100)) if percent else (Decimal(1),)
         found = any(
-            abs(value - fact * s) <= slack
+            abs(value - abs(fact) * s) <= slack
             for value in _candidates(token)
             for fact in facts
             for s in scale

@@ -165,6 +165,39 @@ describe('the chat side panel (ADR 0049)', () => {
     expect(screen.getByRole('button', { name: 'New chat' })).toBeDisabled()
   })
 
+  it('ends each finished answer with what it cost, as a small amount', async () => {
+    mockApi(
+      routes({
+        [`/api/v1/agent/chat/${THREAD}`]: () => [
+          turn({ id: 7, cost_eur: '0.0213' }),
+          turn({ id: 8, question: 'And a cheap one?', cost_eur: '0.0004' }),
+          turn({ id: 9, question: 'A failed one?', status: 'failed', cost_eur: '0' }),
+        ],
+      }),
+    )
+    window.localStorage.setItem('folio.chat.open', '1')
+    show()
+    const costs = await screen.findAllByTestId('answer-cost')
+    expect(costs.map((c) => c.textContent)).toEqual([
+      expect.stringMatching(/^This answer cost .*0[.,]02\.$/),
+      expect.stringMatching(/^This answer cost < .*0[.,]01\.$/),
+    ]) // a turn that cost nothing says nothing about cost
+  })
+
+  it('shows no cost while the answer is still being written', async () => {
+    mockApi(
+      routes({
+        [`/api/v1/agent/chat/${THREAD}`]: () => [
+          turn({ status: 'running', answer: null, data: [], cost_eur: '0.005' }),
+        ],
+      }),
+    )
+    window.localStorage.setItem('folio.chat.open', '1')
+    show()
+    await screen.findByRole('status')
+    expect(screen.queryByTestId('answer-cost')).toBeNull()
+  })
+
   it('"New chat" starts a fresh conversation id', async () => {
     mockApi(routes({ [`/api/v1/agent/chat/${THREAD}`]: () => [turn()] }))
     window.localStorage.setItem('folio.chat.open', '1')

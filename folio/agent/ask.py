@@ -28,7 +28,9 @@ from folio.agent.prompt_files import labels, load_prompt
 from folio.agent.run import COMPOSE_TOKENS, _investigate
 from folio.agent.runs import finish_run, metered_create
 from folio.agent.schema import ANSWER_SCHEMA
-from folio.agent.tools import ToolBox, untrusted
+from folio.agent.text import untrusted
+from folio.agent.tools import ToolBox
+from folio.db.models_analytics import Dashboard
 from folio.db.models_insight import AgentRun
 from folio.db.models_ledger import Instrument
 from folio.settings_schema import AgentSettings
@@ -154,11 +156,15 @@ def _where(db: Session, page: str | None) -> str:
         return ""
     parts = [p for p in page.split("/") if p]
     if not parts:
-        return "the home page"
+        return "the home page, which shows the default dashboard"
     if parts[0] == "holdings" and len(parts) > 1 and parts[1].isdigit():
         instrument = db.get(Instrument, int(parts[1]))
         if instrument is not None and instrument.deleted_at is None:
             return f"the page of the position {instrument.name} (instrument id {instrument.id})"
+    if parts[0] == "dashboards" and len(parts) > 1 and parts[1].isdigit():
+        dashboard = db.get(Dashboard, int(parts[1]))
+        if dashboard is not None and dashboard.deleted_at is None:
+            return f"the dashboard {dashboard.name} (id {dashboard.id})"
     return PAGES.get(parts[0], "")
 
 
@@ -170,7 +176,10 @@ def conversation_text(db: Session, run: AgentRun) -> str:
     lines: list[str] = []
     where = _where(db, context.get("page"))
     if where:
-        lines.append(f"The owner has {where} open. Use that only to understand the question.")
+        lines.append(
+            f"The owner has {where} open. A question about 'this', 'here' or a chart or figure "
+            "on screen is about that page: read it with get_view before anything else."
+        )
     thread = context.get("thread")
     earlier = [] if not thread else thread_runs(db, str(thread), run.id)
     turns = [r for r in earlier if isinstance((r.output or {}).get("answer"), str)]
@@ -199,7 +208,7 @@ def run_ask(db: Session, llm: LlmClient, now: dt.datetime, run: AgentRun) -> Ask
     db.commit()
     outcome = AskOutcome(run.id, "ok")
     facts = FactsBuilder()
-    tools = ToolBox(db, now, cfg.privacy_mode, facts)
+    tools = ToolBox(db, now, cfg.privacy_mode, facts, page=asked.get("page"))
     tool_calls: list[dict[str, Any]] = []
     try:
         focus = None

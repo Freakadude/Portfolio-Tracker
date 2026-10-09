@@ -1,17 +1,19 @@
 """The agent's read-only tools (spec section 11).
 
-Thirteen functions over Folio's own data. None of them writes anything except `run_calculator`,
-which stores the calculation it made so a recommendation can point at it. In privacy mode (the
-default) no euro amount of the owner's money is returned: weights, quantities, percentages and
-per-unit prices only. Text that came from outside (news headlines, summaries, an LLM's rationale
-for a story) is wrapped in `<untrusted>` with angle brackets removed. Every result is recorded in
-the run's facts, which is what the code gate checks citations and figures against.
+Eighteen functions over Folio's own data. None of them writes anything except `run_calculator`,
+which stores the calculation it made so a recommendation can point at it. Thirteen read the
+portfolio; five read what the app shows (`get_view`, `get_widget`, `get_transactions`,
+`get_watchlist`, `get_inbox`, ADR 0059). In privacy mode (the default) no euro amount of the
+owner's money is returned: weights, quantities, percentages and per-unit prices only. Text that
+came from outside (news headlines, summaries, an LLM's rationale for a story) is wrapped in
+`<untrusted>` with angle brackets removed. Every result is recorded in the run's facts, which is
+what the code gate checks citations and figures against.
 """
 
 from __future__ import annotations
 
 import datetime as dt
-import re
+import json
 from collections.abc import Callable, Mapping
 from decimal import Decimal
 from typing import Any, cast
@@ -20,10 +22,14 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from folio import analytics_service as svc
+from folio.agent import view
 from folio.agent.facts import FactsBuilder, numbers_in
+from folio.agent.text import untrusted
 from folio.agent.validate import Calc
 from folio.analytics.simulate import SimulationError, Trade, simulate
-from folio.db.models_analytics import MacroPoint, MacroSeries
+from folio.dashboards.data import Filters
+from folio.dashboards.widgets import WIDGET_TYPES
+from folio.db.models_analytics import MacroPoint, MacroSeries, Watchlist, WatchlistItem
 from folio.db.models_insight import (
     Calculation,
     NewsAssessment,
@@ -31,8 +37,8 @@ from folio.db.models_insight import (
     NewsLink,
     Recommendation,
 )
-from folio.db.models_ledger import Instrument, PriceBar
-from folio.db.models_strategy import Signal
+from folio.db.models_ledger import Instrument, LedgerTransaction, PriceBar
+from folio.db.models_strategy import Notification, Signal
 from folio.instruments import primary_listing
 from folio.news.calendar import upcoming
 from folio.positions import load_positions
@@ -46,13 +52,7 @@ MAX_ROWS = 60
 MAX_POINTS = 120
 SIGNAL_DAYS = 14
 NEWS_DAYS = 7
-_TAGS = re.compile(r"[<>]")
 Handler = Callable[[Mapping[str, Any]], dict[str, Any]]
-
-
-def untrusted(text: str) -> str:
-    """Outside text, made harmless and marked as data."""
-    return f"<untrusted>{_TAGS.sub(' ', text).strip()}</untrusted>"
 
 
 def _s(value: Decimal | None) -> str | None:
@@ -192,6 +192,54 @@ TOOL_DEFS: list[dict[str, Any]] = [
         "decisions and events the owner added. Dates only; it says nothing about the outcome.",
         _obj({"days": {"type": "integer"}}),
     ),
+    _tool(
+        "get_view",
+        "What the owner has open on screen, with the data on it. page is null for the page the "
+        "owner is on now, or a route such as /dashboards/3 for another. On a dashboard it "
+        "returns its name, its filters and every widget (the first ten with their data and what "
+        "each is for); on a position page the position; on other pages what the page shows and "
+        "which tools read it. Use it first for any question about 'this', 'here' or a chart.",
+        _obj({"page": {"type": ["string", "null"]}}),
+    ),
+    _tool(
+        "get_widget",
+        "The data behind one dashboard widget, computed exactly as the widget on screen is: "
+        "figures, dates and, for charts, a sample of the series with its low and high. widget is "
+        "the type. period (1D, 1W, 1M, 3M, YTD, 1Y, 3Y, 5Y, MAX) sets its period, or null for "
+        "its default. options is a JSON object as text with the widget's own options, or null: "
+        'for kpi {"metric": "max_drawdown"} (value, day_change, total_return, unrealized, '
+        "realized, period_return, twr, xirr, volatility, max_drawdown, current_drawdown, sharpe, "
+        'beta, largest_drift, latest_price); {"scope": {"kind": "instrument", "id": 3}} looks at '
+        "one holding (kinds portfolio, account, sleeve, instrument); price_chart takes "
+        '{"instrument_id": 3}; price_history {"instrument_ids": [3, 4]}; allocation '
+        '{"group_by": "sector"}; look_through {"dimension": "country"}. Drawdowns, volatility, '
+        "returns by period, monthly returns, correlations, attribution, income and projections "
+        "are all read here.",
+        _obj(
+            {
+                "widget": {"type": "string", "enum": [k for k in WIDGET_TYPES if k != "ask"]},
+                "period": {"type": ["string", "null"]},
+                "options": {"type": ["string", "null"]},
+            }
+        ),
+    ),
+    _tool(
+        "get_transactions",
+        "The latest ledger entries (buys, sells, dividends and so on), newest first, with "
+        "quantity and per-unit price. instrument_id limits them to one holding (or null); "
+        "limit is at most 40.",
+        _obj({"instrument_id": {"type": ["integer", "null"]}, "limit": {"type": "integer"}}),
+    ),
+    _tool(
+        "get_watchlist",
+        "The watchlists and the instruments on them, with the owner's note and the last close.",
+        _obj({}),
+    ),
+    _tool(
+        "get_inbox",
+        "The inbox: notifications Folio sent the owner, unread first. state is unread or all.",
+        _obj({"state": {"type": "string", "enum": ["unread", "all"]}}),
+    ),
 ]
 
 
@@ -223,11 +271,13 @@ class ToolBox:
         now: dt.datetime,
         privacy: bool,
         facts: FactsBuilder,
+        page: str | None = None,
     ) -> None:
         self.db = db
         self.now = now
         self.privacy = privacy
         self.facts = facts
+        self.page = page  # the route the owner has open (chat), for get_view
         running = strategies.running(db)
         active = next((r for r in running if r[0].mode == "active"), None)
         self.version_id = None if active is None else active[1].id
@@ -246,6 +296,11 @@ class ToolBox:
             "simulate": self._simulate,
             "get_recommendation_history": self._history_of_recommendations,
             "get_upcoming_events": self._events,
+            "get_view": self._view,
+            "get_widget": self._widget,
+            "get_transactions": self._transactions,
+            "get_watchlist": self._watchlist,
+            "get_inbox": self._inbox,
         }
 
     # -- running a tool -------------------------------------------------------------------------
@@ -737,4 +792,130 @@ class ToolBox:
                 for e in events
             ],
             "note": None if events else "No dated events in this window.",
+        }
+
+    # -- what the app shows ---------------------------------------------------------------------
+
+    def _view(self, args: Mapping[str, Any]) -> dict[str, Any]:
+        page = args.get("page") or self.page
+        if not page:
+            raise ToolError("The page is not known; pass page, for example /dashboards/3.")
+        out = view.page_view(self.db, self._today(), str(page), self.privacy)
+        parts = [p for p in str(page).split("?", 1)[0].split("/") if p]
+        if len(parts) == 2 and parts[0] == "holdings" and parts[1].isdigit():
+            out["position"] = self._detail({"instrument_id": int(parts[1])})
+        return out
+
+    def _widget(self, args: Mapping[str, Any]) -> dict[str, Any]:
+        kind = str(args["widget"])
+        if kind not in WIDGET_TYPES:
+            raise ToolError(
+                f"There is no widget {kind!r}. Choose one of: {', '.join(WIDGET_TYPES)}."
+            )
+        raw = args.get("options")
+        try:
+            options = json.loads(str(raw)) if raw else {}
+        except ValueError as exc:
+            raise ToolError(f"options is not valid JSON: {exc}") from exc
+        if not isinstance(options, dict):
+            raise ToolError("options must be a JSON object.")
+        if args.get("period"):
+            options["period"] = str(args["period"])
+        name, about = view.WIDGETS[kind]
+        data = view.widget_data(self.db, self._today(), kind, options, Filters(), self.privacy)
+        return {"widget": kind, "title": name, "about": about, "data": data}
+
+    def _transactions(self, args: Mapping[str, Any]) -> dict[str, Any]:
+        limit = max(1, min(40, int(args.get("limit") or 20)))
+        query = select(LedgerTransaction).where(
+            LedgerTransaction.deleted_at.is_(None), LedgerTransaction.status == "posted"
+        )
+        if args.get("instrument_id") is not None:
+            query = query.where(LedgerTransaction.instrument_id == int(args["instrument_id"]))
+        rows = list(
+            self.db.scalars(
+                query.order_by(LedgerTransaction.trade_date.desc(), LedgerTransaction.id.desc())
+                .limit(limit)
+            )
+        )  # fmt: skip
+        names = {i.id: i.name for i in self.db.scalars(select(Instrument))}
+        out: list[dict[str, Any]] = []
+        for tx in rows:
+            row: dict[str, Any] = {
+                "date": tx.trade_date.isoformat(),
+                "type": tx.type,
+                "instrument_id": tx.instrument_id,
+                "instrument": names.get(tx.instrument_id or 0),
+                "quantity": str(tx.quantity),
+                "price_per_unit": str(tx.price),
+                "currency": tx.currency,
+            }
+            self._money(row, "net_amount_eur", tx.net_amount_eur)
+            self._money(row, "fees", tx.fees)
+            if tx.note:
+                row["note"] = untrusted(tx.note)
+            out.append(row)
+        return {"transactions": out}
+
+    def _watchlist(self, _args: Mapping[str, Any]) -> dict[str, Any]:
+        lists: list[dict[str, Any]] = []
+        for watchlist in self.db.scalars(
+            select(Watchlist).where(Watchlist.deleted_at.is_(None)).order_by(Watchlist.id)
+        ):
+            items: list[dict[str, Any]] = []
+            entries = self.db.scalars(
+                select(WatchlistItem).where(WatchlistItem.watchlist_id == watchlist.id)
+            )
+            for entry in entries:
+                instrument = self.db.get(Instrument, entry.instrument_id)
+                if instrument is None or instrument.deleted_at is not None:
+                    continue
+                item: dict[str, Any] = {
+                    "instrument_id": instrument.id,
+                    "name": instrument.name,
+                    "isin": instrument.isin,
+                    "note": None if not entry.note else untrusted(entry.note),
+                    "last_close": None,
+                }
+                listing = primary_listing(self.db, instrument.id)
+                bar = (
+                    None
+                    if listing is None
+                    else self.db.scalars(
+                        select(PriceBar)
+                        .where(PriceBar.listing_id == listing.id)
+                        .order_by(PriceBar.date.desc())
+                        .limit(1)
+                    ).first()
+                )
+                if bar is not None and listing is not None:
+                    item.update(
+                        last_close=str(bar.close),
+                        currency=listing.currency,
+                        as_of=bar.date.isoformat(),
+                    )
+                items.append(item)
+            lists.append({"name": watchlist.name, "items": items})
+        return {"watchlists": lists, "note": None if lists else "There is no watchlist."}
+
+    def _inbox(self, args: Mapping[str, Any]) -> dict[str, Any]:
+        query = select(Notification).order_by(Notification.id.desc()).limit(30)
+        if str(args.get("state", "unread")) != "all":
+            query = query.where(Notification.read_at.is_(None))
+        rows = list(self.db.scalars(query))
+        return {
+            "items": [
+                {
+                    "id": n.id,
+                    "source": n.source,
+                    "severity": n.severity,
+                    "time": n.created_at.isoformat(),
+                    "read": n.read_at is not None,
+                    # the lock-screen text carries no amounts, so it is the one that is safe here
+                    "title": untrusted(n.push_title if self.privacy else n.title),
+                    "text": untrusted(n.push_body if self.privacy else n.body),
+                }
+                for n in rows
+            ],
+            "note": None if rows else "The inbox is empty.",
         }
