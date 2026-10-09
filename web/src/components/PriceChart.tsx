@@ -7,6 +7,7 @@ import {
   type Time,
 } from 'lightweight-charts'
 import { useEffect, useRef, useState } from 'react'
+import { keepFitted } from '../dashboards/charts/keepFitted'
 import { css, useThemeKey } from '../dashboards/charts/theme'
 import { useTranslation } from 'react-i18next'
 import { useFormat } from '../lib/useFormat'
@@ -99,16 +100,24 @@ export function PriceChart({
       )
     createSeriesMarkers(series, marks)
     const days = RANGES.find((r) => r.key === range)?.days
-    if (days) {
-      const last = new Date(prices[prices.length - 1].date)
-      const from = new Date(last.getTime() - days * 86_400_000).toISOString().slice(0, 10)
-      chart
-        .timeScale()
-        .setVisibleRange({ from: from as Time, to: prices[prices.length - 1].date as Time })
-    } else {
-      chart.timeScale().fitContent()
+    const applyRange = () => {
+      if (days) {
+        const last = new Date(prices[prices.length - 1].date)
+        const from = new Date(last.getTime() - days * 86_400_000).toISOString().slice(0, 10)
+        chart
+          .timeScale()
+          .setVisibleRange({ from: from as Time, to: prices[prices.length - 1].date as Time })
+      } else {
+        chart.timeScale().fitContent()
+      }
     }
-    return () => chart.remove()
+    applyRange()
+    // the chart is sized to its box, which can change after the first draw: put the range back
+    const stopFitting = keepFitted(chart, el, applyRange)
+    return () => {
+      stopFitting()
+      chart.remove()
+    }
   }, [prices, markers, range, asTable, themeKey, t])
 
   const recent = [...prices].reverse()

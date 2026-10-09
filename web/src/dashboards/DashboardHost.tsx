@@ -16,6 +16,7 @@ import {
   useDashboardActions,
   useDashboards,
   usePriceStatus,
+  useTabDashboard,
   type Box,
   type Config,
   type Dashboard,
@@ -34,6 +35,8 @@ export function DashboardHost({ dashboard }: { dashboard: Dashboard }) {
   const queryClient = useQueryClient()
   const actions = useDashboardActions()
   const list = useDashboards()
+  const [tab, setTab] = useTabDashboard()
+  const isTab = tab === dashboard.id
   const accounts = useAccounts()
   const prices = usePriceStatus()
   const { when } = useFormat()
@@ -113,8 +116,16 @@ export function DashboardHost({ dashboard }: { dashboard: Dashboard }) {
           >
             {t(editing ? 'dashboard.done' : 'dashboard.edit')}
           </Button>
+          <Button
+            variant={isTab ? 'primary' : 'secondary'}
+            aria-pressed={isTab}
+            title={t('dashboard.tabHint')}
+            onClick={() => setTab(isTab ? null : dashboard.id)}
+          >
+            {t(isTab ? 'dashboard.tabIsThis' : 'dashboard.tabMakeThis')}
+          </Button>
           <Link
-            to="/dashboards"
+            to="/dashboards/all"
             className="rounded-md border border-border px-3 py-2 text-sm hover:bg-border/40"
           >
             {t('dashboard.manage')}

@@ -2,7 +2,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter, Route, Routes, useLocation } from 'react-router-dom'
-import { afterEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { Donut } from './dashboards/charts/Donut'
 import { OTHER, colorOf, divergeFill, foldTail } from './dashboards/charts/palette'
 import { squarify } from './dashboards/charts/Treemap'
@@ -699,6 +699,28 @@ describe('Home', () => {
 })
 
 // --- the list of dashboards (FR-DB-01, FR-DB-07) ------------------------------------------------
+
+describe('choosing a dashboard for the Dashboards tab', () => {
+  beforeEach(() => localStorage.clear())
+
+  it('is a switch on the dashboard, kept in this browser, and the list stays one click away', async () => {
+    home()
+    renderAt(<Home />)
+    await screen.findByText('€1,188.00')
+    const button = screen.getByRole('button', { name: 'Open this from the Dashboards tab' })
+    expect(button).toHaveAttribute('aria-pressed', 'false')
+    await userEvent.click(button)
+    expect(localStorage.getItem('folio.dashboards.tab')).toBe('1')
+    const on = screen.getByRole('button', { name: 'Dashboards tab opens this one' })
+    expect(on).toHaveAttribute('aria-pressed', 'true')
+    await userEvent.click(on)
+    expect(localStorage.getItem('folio.dashboards.tab')).toBeNull()
+    expect(screen.getByRole('link', { name: 'All dashboards' })).toHaveAttribute(
+      'href',
+      '/dashboards/all',
+    )
+  })
+})
 
 describe('the dashboards page', () => {
   const list = [

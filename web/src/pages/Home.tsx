@@ -34,7 +34,7 @@ export function Home() {
               <Link to="/transactions/import" className={linkButton}>
                 {t('overview.importCsv')}
               </Link>
-              <Link to="/dashboards" className={linkButton}>
+              <Link to="/dashboards/all" className={linkButton}>
                 {t('dashboard.manage')}
               </Link>
             </div>

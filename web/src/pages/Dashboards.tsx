@@ -1,6 +1,6 @@
 import { useState, type FormEvent } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Link, useNavigate, useParams } from 'react-router-dom'
+import { Link, Navigate, useNavigate, useParams } from 'react-router-dom'
 import { errorMessage } from '../api/client'
 import { Loading } from '../components/Gate'
 import { Badge, Dialog, EmptyState } from '../components/display'
@@ -10,6 +10,7 @@ import {
   useDashboard,
   useDashboardActions,
   useDashboards,
+  useTabDashboard,
   useTemplates,
   type DashboardSummary,
 } from '../dashboards/api'
@@ -22,6 +23,17 @@ export function DashboardPage() {
   if (dashboard.isError) return <Alert>{errorMessage(dashboard.error)}</Alert>
   if (!dashboard.data) return <Loading />
   return <DashboardHost key={dashboard.data.id} dashboard={dashboard.data} />
+}
+
+/** The Dashboards tab: the dashboard the owner chose for it, or else the list. */
+export function DashboardsEntry() {
+  const list = useDashboards()
+  const [tab] = useTabDashboard()
+  if (tab !== null) {
+    if (list.isPending) return <Loading />
+    if (list.data?.some((d) => d.id === tab)) return <Navigate to={`/dashboards/${tab}`} replace />
+  }
+  return <Dashboards />
 }
 
 function download(name: string, document: Record<string, unknown>) {

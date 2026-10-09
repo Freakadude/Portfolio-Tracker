@@ -15,6 +15,7 @@ import {
 } from 'lightweight-charts'
 import { useEffect, useRef } from 'react'
 import { Legend } from './ChartFrame'
+import { keepFitted } from './keepFitted'
 import { css, useThemeKey } from './theme'
 
 /** A moment on the time axis: a date, or seconds of the clock shown (an intraday chart). */
@@ -237,6 +238,7 @@ export function TimeChart({
     const panes = Math.max(0, volume?.length ? volumePane : 0, ...series.map((s) => s.pane ?? 0))
     if (panes > 0) chart.panes()[0]?.setStretchFactor(3) // the first pane is the main one
     chart.timeScale().fitContent()
+    const stopFitting = keepFitted(chart, el, () => chart.timeScale().fitContent())
 
     const box = tooltip.current
     chart.subscribeCrosshairMove((param) => {
@@ -277,7 +279,10 @@ export function TimeChart({
         if (param.time) onTimeClick(String(param.time))
       })
     }
-    return () => chart.remove()
+    return () => {
+      stopFitting()
+      chart.remove()
+    }
   }, [
     series,
     candles,

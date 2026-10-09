@@ -3,7 +3,7 @@ import { Route, Routes } from 'react-router-dom'
 import { Gate, Loading } from './components/Gate'
 import { Layout } from './components/Layout'
 import { Holdings } from './pages/Holdings'
-import { DashboardPage, Dashboards } from './pages/Dashboards'
+import { DashboardPage, Dashboards, DashboardsEntry } from './pages/Dashboards'
 import { Home } from './pages/Home'
 import { Insights } from './pages/Insights'
 import { ImportWizard } from './pages/ImportWizard'
@@ -51,7 +51,8 @@ export function App() {
               </Suspense>
             }
           />
-          <Route path="dashboards" element={<Dashboards />} />
+          <Route path="dashboards" element={<DashboardsEntry />} />
+          <Route path="dashboards/all" element={<Dashboards />} />
           <Route path="dashboards/:dashboardId" element={<DashboardPage />} />
           <Route path="insights" element={<Insights />} />
           <Route path="system" element={<System />} />

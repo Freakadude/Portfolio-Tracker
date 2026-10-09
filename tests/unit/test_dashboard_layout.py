@@ -125,3 +125,19 @@ def test_the_four_templates_use_known_widgets_inside_the_grid() -> None:
         for spec in template.widgets:
             normalize_config(spec.type, spec.config)
             assert spec.x + spec.w <= 12 and spec.type in WIDGET_TYPES
+
+
+def test_a_note_has_a_title_only_switch_a_tint_and_a_title_size() -> None:
+    note = normalize_config("note", {})
+    assert (note["title_only"], note["background"], note["title_size"]) == (False, "none", "small")
+    chosen = normalize_config(
+        "note", {"title_only": True, "background": "amber", "title_size": "xlarge", "text": "x"}
+    )
+    assert (chosen["title_only"], chosen["background"], chosen["title_size"]) == (
+        True,
+        "amber",
+        "xlarge",
+    )
+    for bad in ({"background": "#ff0000"}, {"title_size": "huge"}):
+        with pytest.raises(WidgetError, match="note widget has an option"):
+            normalize_config("note", bad)

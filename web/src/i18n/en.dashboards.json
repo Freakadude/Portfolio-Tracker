@@ -36,6 +36,9 @@
     "done": "Done",
     "edit": "Edit",
     "manage": "All dashboards",
+    "tabMakeThis": "Open this from the Dashboards tab",
+    "tabIsThis": "Dashboards tab opens this one",
+    "tabHint": "The Dashboards tab in the menu opens this dashboard. All dashboards still shows the list. Kept in this browser.",
     "filters": "Dashboard filters",
     "breakpoints": {
       "lg": "desktop",
@@ -333,6 +336,24 @@
     "log_scale": "Logarithmic scale",
     "instrument_id": "Instrument",
     "instrument_ids": "Instruments",
+    "title_only": "Show only the title",
+    "title_size": "Title size",
+    "background": "Background",
+    "titleSizes": {
+      "small": "Small",
+      "medium": "Medium",
+      "large": "Large",
+      "xlarge": "Extra large"
+    },
+    "backgrounds": {
+      "none": "None",
+      "blue": "Blue",
+      "green": "Green",
+      "amber": "Amber",
+      "red": "Red",
+      "purple": "Purple",
+      "grey": "Grey"
+    },
     "instrumentsHint": "Up to six. Each gets its own chart under the others, on the same time axis.",
     "addInstrument": "Add an instrument",
     "chart": "Chart",

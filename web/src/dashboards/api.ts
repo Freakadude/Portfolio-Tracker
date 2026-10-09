@@ -1,4 +1,5 @@
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { useState } from 'react'
 import { api, unwrap } from '../api/client'
 import type { components } from '../api/schema'
 
@@ -227,4 +228,28 @@ export function usePriceStatus() {
     queryFn: () => unwrap(api.GET('/api/v1/portfolio/price-status')),
     refetchInterval: 60_000,
   })
+}
+
+const TAB_KEY = 'folio.dashboards.tab'
+
+/** The dashboard the Dashboards tab opens, kept in this browser; null: the list of dashboards. */
+export function useTabDashboard(): [number | null, (id: number | null) => void] {
+  const [id, setId] = useState<number | null>(() => {
+    try {
+      const saved = Number(window.localStorage.getItem(TAB_KEY))
+      return Number.isInteger(saved) && saved > 0 ? saved : null
+    } catch {
+      return null
+    }
+  })
+  const set = (next: number | null) => {
+    setId(next)
+    try {
+      if (next === null) window.localStorage.removeItem(TAB_KEY)
+      else window.localStorage.setItem(TAB_KEY, String(next))
+    } catch {
+      // the choice just is not remembered
+    }
+  }
+  return [id, set]
 }

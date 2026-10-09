@@ -181,8 +181,15 @@ class AskConfig(BaseConfig):
     show_last: int = Field(default=3, ge=1, le=10)  # how many earlier answers stay on the widget
 
 
+NoteColour = Literal["none", "blue", "green", "amber", "red", "purple", "grey"]
+NoteTitleSize = Literal["small", "medium", "large", "xlarge"]
+
+
 class NoteConfig(BaseConfig):
     text: str = Field(default="", max_length=5000)
+    title_only: bool = False  # show the title alone, as a heading
+    background: NoteColour = "none"  # a tint from the app's palette, readable in both themes
+    title_size: NoteTitleSize = "small"
 
 
 @dataclass(frozen=True)

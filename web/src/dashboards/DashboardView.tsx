@@ -1,5 +1,6 @@
 import { useMemo, useRef, useState, type RefObject } from 'react'
 import { useTranslation } from 'react-i18next'
+import { cn } from '../lib/cn'
 import { Responsive, useContainerWidth } from 'react-grid-layout'
 import 'react-grid-layout/css/styles.css'
 import 'react-resizable/css/styles.css'
@@ -31,6 +32,37 @@ export function widgetTitle(
   const metric = (widget.config as Config).metric
   if (widget.type === 'kpi' && typeof metric === 'string') return t(`widgets.metrics.${metric}`)
   return t(`widgets.${widget.type}`)
+}
+
+/** The tints a note can have: the app's own colours mixed into the card colour, so the text
+ * keeps its contrast in the light and the dark theme. */
+const NOTE_TINT: Record<string, string> = {
+  blue: 'var(--primary)',
+  green: 'var(--gain)',
+  amber: '#d97706',
+  red: 'var(--danger)',
+  purple: '#7c3aed',
+  grey: 'var(--muted)',
+}
+const TITLE_SIZE: Record<string, string> = {
+  small: 'truncate text-sm font-medium',
+  medium: 'text-lg font-semibold leading-snug',
+  large: 'text-2xl font-semibold leading-tight',
+  xlarge: 'text-4xl font-bold leading-tight',
+}
+
+/** How a note looks: the size of its title, a tint behind it, and whether the title stands alone. */
+export function noteLook(widget: Pick<DashboardWidget, 'type' | 'config'>) {
+  const config = widget.config as Config
+  if (widget.type !== 'note') {
+    return { titleClass: TITLE_SIZE.small, style: undefined, titleOnly: false }
+  }
+  const tint = NOTE_TINT[String(config.background)]
+  return {
+    titleClass: TITLE_SIZE[String(config.title_size)] ?? TITLE_SIZE.small,
+    style: tint ? { background: `color-mix(in oklab, ${tint} 16%, var(--card))` } : undefined,
+    titleOnly: config.title_only === true,
+  }
 }
 
 /** One widget's frame: its title, and either its picture, its error or an empty state. */
@@ -136,53 +168,64 @@ export function DashboardView({
           onDragStop={flush}
           onResizeStop={flush}
         >
-          {widgets.map((w) => (
-            <section
-              key={String(w.id)}
-              aria-label={widgetTitle(t, w)}
-              className="flex min-w-0 flex-col overflow-hidden rounded-lg border border-border bg-card"
-            >
-              <header className="flex items-center justify-between gap-2 border-b border-border px-3 py-1.5">
-                <h2 className="truncate text-sm font-medium">{widgetTitle(t, w)}</h2>
-                {editing && (
-                  <div className="flex shrink-0 items-center gap-0.5">
-                    <button
-                      type="button"
-                      className="widget-handle min-h-8 cursor-grab rounded px-2 hover:bg-border/40"
-                      aria-label={t('dashboard.move', { name: widgetTitle(t, w) })}
-                      title={t('dashboard.moveHint')}
-                    >
-                      ⠿
-                    </button>
-                    <Button
-                      variant="ghost"
-                      className="widget-cancel min-h-8 px-2"
-                      onClick={() => onConfigure(w)}
-                      aria-label={t('dashboard.configure', { name: widgetTitle(t, w) })}
-                    >
-                      ✎
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      className="widget-cancel min-h-8 px-2"
-                      onClick={() => onRemove(w)}
-                      aria-label={t('dashboard.remove', { name: widgetTitle(t, w) })}
-                    >
-                      ✕
-                    </Button>
+          {widgets.map((w) => {
+            const look = noteLook(w)
+            return (
+              <section
+                key={String(w.id)}
+                aria-label={widgetTitle(t, w)}
+                style={look.style}
+                className="flex min-w-0 flex-col overflow-hidden rounded-lg border border-border bg-card"
+              >
+                <header
+                  className={cn(
+                    'flex items-center justify-between gap-2 px-3 py-1.5',
+                    look.titleOnly ? 'min-h-0 flex-1' : 'border-b border-border',
+                  )}
+                >
+                  <h2 className={look.titleClass}>{widgetTitle(t, w)}</h2>
+                  {editing && (
+                    <div className="flex shrink-0 items-center gap-0.5">
+                      <button
+                        type="button"
+                        className="widget-handle min-h-8 cursor-grab rounded px-2 hover:bg-border/40"
+                        aria-label={t('dashboard.move', { name: widgetTitle(t, w) })}
+                        title={t('dashboard.moveHint')}
+                      >
+                        ⠿
+                      </button>
+                      <Button
+                        variant="ghost"
+                        className="widget-cancel min-h-8 px-2"
+                        onClick={() => onConfigure(w)}
+                        aria-label={t('dashboard.configure', { name: widgetTitle(t, w) })}
+                      >
+                        ✎
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        className="widget-cancel min-h-8 px-2"
+                        onClick={() => onRemove(w)}
+                        aria-label={t('dashboard.remove', { name: widgetTitle(t, w) })}
+                      >
+                        ✕
+                      </Button>
+                    </div>
+                  )}
+                </header>
+                {!look.titleOnly && (
+                  <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-auto p-3">
+                    <WidgetBody
+                      widget={w}
+                      result={query.data?.[String(w.id)]}
+                      filters={filters}
+                      loading={query.isLoading}
+                    />
                   </div>
                 )}
-              </header>
-              <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-auto p-3">
-                <WidgetBody
-                  widget={w}
-                  result={query.data?.[String(w.id)]}
-                  filters={filters}
-                  loading={query.isLoading}
-                />
-              </div>
-            </section>
-          ))}
+              </section>
+            )
+          })}
         </Responsive>
       )}
       <span className="sr-only" data-breakpoint={breakpoint} />

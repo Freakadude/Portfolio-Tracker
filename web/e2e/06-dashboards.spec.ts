@@ -64,7 +64,7 @@ test('widgets are added, arranged by drag, and the arrangement survives a reload
   // settings: a title and some text, with a preview that follows
   await page.getByRole('button', { name: 'Settings of Note' }).click()
   const dialog = page.getByRole('dialog', { name: /Settings of Note/ })
-  await dialog.getByLabel('Title').fill('Reminder')
+  await dialog.getByLabel('Title', { exact: true }).fill('Reminder')
   await dialog.getByLabel('Text').fill('Review the **allocation** monthly')
   await expect(dialog.getByText('allocation')).toBeVisible() // the preview
   await dialog.getByRole('button', { name: 'Save' }).click()

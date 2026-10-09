@@ -328,7 +328,22 @@ const DEFS: Record<string, Omit<WidgetDef, 'type'>> = {
     drillsTo: 'none',
     scopes: ['portfolio'],
     period: false,
-    fields: [{ key: 'text', kind: 'longtext' }],
+    fields: [
+      { key: 'title_only', kind: 'boolean' },
+      {
+        key: 'title_size',
+        kind: 'select',
+        options: ['small', 'medium', 'large', 'xlarge'],
+        labels: 'widgetOptions.titleSizes',
+      },
+      {
+        key: 'background',
+        kind: 'select',
+        options: ['none', 'blue', 'green', 'amber', 'red', 'purple', 'grey'],
+        labels: 'widgetOptions.backgrounds',
+      },
+      { key: 'text', kind: 'longtext' },
+    ],
   }),
 }
 
