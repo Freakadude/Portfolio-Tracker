@@ -8,8 +8,9 @@ import { Sparkline } from '../charts/Bars'
 import type { KpiData, WidgetProps } from '../types'
 import { ReturnBreakdown } from './ReturnBreakdown'
 
-/** Where a figure leads when clicked (FR-DB-06). */
-export function kpiTarget(metric: string): string {
+/** Where a figure leads when clicked (FR-DB-06). The latest price of a holding opens its page. */
+export function kpiTarget(metric: string, instrumentId?: number): string {
+  if (metric === 'latest_price' && instrumentId !== undefined) return `/holdings/${instrumentId}`
   if (['income', 'net_contributions', 'cash'].includes(metric)) return '/reports'
   if (['volatility', 'max_drawdown', 'current_drawdown', 'sharpe', 'beta'].includes(metric))
     return '/dashboards'
@@ -25,14 +26,20 @@ export function KpiWidget({ data, config }: WidgetProps<KpiData>) {
     return <p className="text-sm text-muted">{data.reason ?? data.note ?? t('widgets.noFigure')}</p>
   }
   const value =
-    data.kind === 'eur' ? eur(data.value) : data.kind === 'pct' ? pct(data.value) : num(data.value)
+    data.kind === 'eur'
+      ? eur(data.value)
+      : data.kind === 'pct'
+        ? pct(data.value)
+        : data.kind === 'price'
+          ? `${num(data.value)} ${data.currency ?? ''}`.trim()
+          : num(data.value)
   const signed = ['day_change', 'total_return', 'period_return', 'largest_drift'].includes(
     data.metric,
   )
   return (
     <div className="flex h-full flex-col gap-1">
       <Link
-        to={kpiTarget(data.metric)}
+        to={kpiTarget(data.metric, data.instrument_id)}
         className="flex min-h-0 flex-1 flex-col justify-between gap-1 no-underline"
       >
         <div>
@@ -62,7 +69,8 @@ export function KpiWidget({ data, config }: WidgetProps<KpiData>) {
         </div>
         <Sparkline
           values={data.sparkline.map((p) => Number(p.value))}
-          label={t('widgets.sparkline')}
+          label={t(data.intraday ? 'widgets.sparklineDay' : 'widgets.sparkline')}
+          baseline={data.baseline === undefined ? undefined : Number(data.baseline)}
         />
       </Link>
       {data.breakdown && (

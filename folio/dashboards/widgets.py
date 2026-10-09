@@ -32,6 +32,7 @@ KPI_METRICS = (
     "current_drawdown",
     "sharpe",
     "beta",
+    "latest_price",
 )
 
 
@@ -59,7 +60,7 @@ class KpiConfig(BaseConfig):
         "value", "day_change", "total_return", "unrealized", "realized", "period_return", "twr",
         "xirr", "cash",
         "net_contributions", "income", "largest_drift", "volatility", "max_drawdown",
-        "current_drawdown", "sharpe", "beta",
+        "current_drawdown", "sharpe", "beta", "latest_price",
     ] = "value"  # fmt: skip
     sparkline: bool = True
 

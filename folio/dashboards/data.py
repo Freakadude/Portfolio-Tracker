@@ -27,7 +27,9 @@ from folio.db.models_analytics import MacroPoint, MacroSeries, Quote
 from folio.db.models_insight import NewsAssessment, NewsCluster, NewsLink, Recommendation
 from folio.db.models_ledger import Instrument, LedgerTransaction, Listing, PriceBar
 from folio.db.models_strategy import Signal
+from folio.display import two as display_two
 from folio.marketdata import exchanges
+from folio.marketdata.quotes import newer_quote
 from folio.positions import load_positions, totals_for
 
 ZERO = Decimal(0)
@@ -159,7 +161,7 @@ _KINDS = {
     "realized": "eur", "period_return": "eur",
     "twr": "pct", "xirr": "pct", "cash": "eur", "net_contributions": "eur", "income": "eur",
     "largest_drift": "pct", "volatility": "pct", "max_drawdown": "pct",
-    "current_drawdown": "pct", "sharpe": "number", "beta": "number",
+    "current_drawdown": "pct", "sharpe": "number", "beta": "number", "latest_price": "price",
 }  # fmt: skip
 
 
@@ -203,10 +205,101 @@ def _breakdown(metric: str, points: list[DailyPoint]) -> dict[str, Any]:
     }
 
 
+def _latest_price(env: Env, cfg: Any, base: dict[str, Any]) -> dict[str, Any]:
+    """The key figure "latest price" of one holding: the newest refresh price when it is from a
+    later day than the newest close, else that close; with a chart of the day (1 day: the
+    refresh prices of the latest session, from the close before it) or of the period."""
+    if cfg.scope.kind != "instrument" or cfg.scope.id is None:
+        return {
+            **base,
+            **_empty("Choose a holding (scope: Instrument) to see its latest price."),
+        }
+    instrument = env.db.get(Instrument, cfg.scope.id)
+    if instrument is None or instrument.deleted_at is not None:
+        raise WidgetDataError("That instrument no longer exists.")
+    listing = _primary_listing(env, instrument.id)
+    if listing is None:
+        return {**base, **_empty("This instrument has no listing to price.")}
+    bars = list(
+        env.db.scalars(
+            select(PriceBar)
+            .where(PriceBar.listing_id == listing.id)
+            .order_by(PriceBar.date.desc())
+            .limit(2)
+        )
+    )
+    last = bars[0] if bars else None
+    quote = newer_quote(env.db, listing, last.date if last else date.min)
+    if quote is not None:
+        value, when = quote[0], exchanges.local_time(listing.exchange_mic, quote[1])
+        label = f"Delayed price of {when:%Y-%m-%d %H:%M} ({quote[2]})"
+    elif last is not None:
+        value, label = last.close, f"Close of {last.date.isoformat()}"
+    else:
+        return {**base, **_empty("No prices are stored for this instrument yet.")}
+    base.update(
+        value=str(value),
+        currency=listing.currency,
+        instrument_id=instrument.id,
+        name=instrument.name,
+        label=label,
+    )
+
+    period = period_of(cfg, env)
+    points: list[tuple[str, Decimal]] = []
+    reference: Decimal | None = None
+    if period == "1D":
+        session = _session(env, listing)
+        if session is None:
+            reference = bars[1].close if len(bars) > 1 else None
+            base["note"] = (
+                "No refresh prices yet, so there is no chart of the day. They are fetched every "
+                "15 minutes while the exchange is open, and only for what you hold or watch."
+            )
+        else:
+            day, pairs, previous = session
+            reference = previous
+            points = ([("previous close", previous)] if previous is not None else []) + pairs
+            base["intraday"] = True
+            base["note"] = f"Session of {day.isoformat()}" + (
+                "" if previous is None else f", previous close {_two(previous)}"
+            )
+    else:
+        ctx = context(env, None)
+        start, end = _price_window(env, ctx, period)
+        window = list(
+            env.db.scalars(
+                select(PriceBar)
+                .where(PriceBar.listing_id == listing.id, PriceBar.date <= end)
+                .order_by(PriceBar.date)
+            )
+        )
+        before = [b for b in window if b.date <= start]
+        points = [(b.date.isoformat(), b.close) for b in window if b.date > start]
+        if quote is not None:
+            points.append(
+                (exchanges.local_time(listing.exchange_mic, quote[1]).date().isoformat(), value)
+            )
+        reference = before[-1].close if before else (points[0][1] if points else None)
+    if reference:
+        base["change_ratio"] = str((value / reference - 1).quantize(Decimal("0.000001")))
+    if cfg.sparkline and len(points) >= 2:
+        base["sparkline"] = [{"date": d, "value": str(v)} for d, v in thin(points, SPARK_POINTS)]
+        if base.get("intraday") and reference is not None:
+            base["baseline"] = str(reference)
+    return base
+
+
+def _two(value: Decimal) -> str:
+    return display_two(value)
+
+
 def kpi(env: Env, cfg: Any) -> dict[str, Any]:
     metric: str = cfg.metric
     kind = _KINDS[metric]
     base: dict[str, Any] = {"metric": metric, "kind": kind, "value": None, "sparkline": []}
+    if metric == "latest_price":
+        return _latest_price(env, cfg, base)
     extras = svc.benchmark_ids(env.db, 1) if metric == "beta" else []
     ctx = context_for(env, cfg, extras)
     if ctx.empty:
@@ -858,17 +951,26 @@ def _change_views(
     return views
 
 
-def _intraday(env: Env, cfg: Any, instrument: Instrument, listing: Listing) -> dict[str, Any]:
-    """One day of a price chart: the refresh prices (quotes) of the latest session on record,
-    in exchange-local time, against the close before it."""
+def _primary_listing(env: Env, instrument_id: int) -> Listing | None:
+    return env.db.scalars(
+        select(Listing)
+        .where(Listing.instrument_id == instrument_id)
+        .order_by(Listing.pricing_primary.desc(), Listing.id)
+        .limit(1)
+    ).first()
+
+
+def _session(
+    env: Env, listing: Listing
+) -> tuple[date, list[tuple[str, Decimal]], Decimal | None] | None:
+    """The latest session with refresh prices on record for a listing: its exchange-local date,
+    its quotes in order as (exchange-local time, price), and the close before that date. None
+    when no quote is stored."""
     latest = env.db.scalars(
         select(Quote).where(Quote.listing_id == listing.id).order_by(Quote.ts.desc()).limit(1)
     ).first()
     if latest is None:
-        return _empty(
-            "No refresh prices are stored for this instrument yet. They are fetched every 15 "
-            "minutes while its exchange is open, and only for what you hold or watch."
-        )
+        return None
     mic = listing.exchange_mic
     day = exchanges.local_date(mic, latest.ts)
     quotes = [
@@ -886,8 +988,33 @@ def _intraday(env: Env, cfg: Any, instrument: Instrument, listing: Listing) -> d
         .order_by(PriceBar.date.desc())
         .limit(1)
     ).first()
-    previous = None if before is None else before.close
     pairs = [(exchanges.local_time(mic, q.ts).isoformat(), q.price) for q in quotes]
+    return day, pairs, None if before is None else before.close
+
+
+NO_REFRESH_PRICES = (
+    "No refresh prices are stored for this instrument yet. They are fetched every 15 "
+    "minutes while its exchange is open, and only for what you hold or watch."
+)
+
+
+def _price_window(env: Env, ctx: svc.AnalyticsContext, period: str) -> tuple[date, date]:
+    """The start and end of a period for a price (a year back when nothing is held yet)."""
+    try:
+        if ctx.empty:
+            return env.today - timedelta(days=365), env.today
+        return svc.resolve(ctx, period, env.today, env.filters.start, env.filters.end)
+    except ValueError as exc:
+        raise WidgetDataError(str(exc)) from exc
+
+
+def _intraday(env: Env, cfg: Any, instrument: Instrument, listing: Listing) -> dict[str, Any]:
+    """One day of a price chart: the refresh prices (quotes) of the latest session on record,
+    in exchange-local time, against the close before it."""
+    session = _session(env, listing)
+    if session is None:
+        return _empty(NO_REFRESH_PRICES)
+    day, pairs, previous = session
     return {
         "instrument_id": instrument.id,
         "name": instrument.name,
@@ -912,12 +1039,7 @@ def price_chart(env: Env, cfg: Any) -> dict[str, Any]:
     instrument = env.db.get(Instrument, instrument_id)
     if instrument is None or instrument.deleted_at is not None:
         raise WidgetDataError("That instrument no longer exists.")
-    listing = env.db.scalars(
-        select(Listing)
-        .where(Listing.instrument_id == instrument_id)
-        .order_by(Listing.pricing_primary.desc(), Listing.id)
-        .limit(1)
-    ).first()
+    listing = _primary_listing(env, instrument_id)
     if listing is None:
         return _empty("This instrument has no listing to chart.")
     period = period_of(cfg, env, "1Y")
@@ -925,14 +1047,7 @@ def price_chart(env: Env, cfg: Any) -> dict[str, Any]:
         return _intraday(env, cfg, instrument, listing)
     ctx = context(env, None)
     first_day = ctx.first_transaction_day
-    try:
-        start, end = (
-            svc.resolve(ctx, period, env.today, env.filters.start, env.filters.end)
-            if not ctx.empty
-            else (env.today - timedelta(days=365), env.today)
-        )
-    except ValueError as exc:
-        raise WidgetDataError(str(exc)) from exc
+    start, end = _price_window(env, ctx, period)
     warm = start - timedelta(days=300)  # the 200-day average needs history before the window
     bars = list(
         env.db.scalars(

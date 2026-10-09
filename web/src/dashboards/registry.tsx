@@ -95,6 +95,7 @@ export const KPI_METRICS = [
   'current_drawdown',
   'sharpe',
   'beta',
+  'latest_price',
 ] as const // fmt: skip
 
 const DEFS: Record<string, Omit<WidgetDef, 'type'>> = {

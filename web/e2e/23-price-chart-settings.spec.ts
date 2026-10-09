@@ -75,3 +75,32 @@ test('the price chart settings: a steady preview, price changes and the 1 day ti
   await expect(page.getByRole('dialog')).toHaveCount(0)
   await expect(page.getByRole('img', { name: /Price chart/ })).toBeVisible()
 })
+
+test('the key figure "Latest price" shows the price of one holding', async ({ page }) => {
+  await login(page)
+  await page.goto('/dashboards')
+  await page.getByLabel('Name').fill('Latest price check')
+  await page.getByRole('button', { name: 'Create dashboard' }).click()
+  await expect(page.getByRole('heading', { level: 1, name: 'Latest price check' })).toBeVisible()
+
+  await page.getByRole('button', { name: 'Add widget' }).first().click()
+  await page.getByRole('searchbox', { name: 'Search widgets and figures' }).fill('latest price')
+  await page
+    .getByRole('button', { name: /^Latest price/ })
+    .first()
+    .click()
+  await page
+    .getByRole('button', { name: /^Settings of/ })
+    .first()
+    .click()
+
+  const dialog = page.getByRole('dialog', { name: /^Settings of/ })
+  // without a holding it says what to choose
+  await expect(dialog.getByText(/Choose a holding/)).toBeVisible()
+  await dialog.getByLabel('Look at').selectOption('instrument')
+  await dialog.getByLabel('Which one').selectOption({ label: 'E2E Chart fund' })
+  await expect(dialog.getByText(/98[.,]50 EUR/)).toBeVisible()
+  await dialog.getByLabel('Period', { exact: true }).selectOption('1D')
+  await expect(dialog.getByText(/98[.,]50 EUR/)).toBeVisible() // no refresh prices: the close, with the reason
+  await expect(dialog.getByText(/No refresh prices yet/)).toBeVisible()
+})

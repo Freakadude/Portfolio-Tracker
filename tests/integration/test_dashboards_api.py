@@ -568,6 +568,122 @@ def test_one_day_without_refresh_prices_says_why(api, book) -> None:
     assert followed["empty"] is True  # a widget that follows the dashboard is a day too
 
 
+def _latest_price(api, instrument_id: int, period: str | None = "1D", **extra):  # type: ignore[no-untyped-def]
+    config = {
+        "metric": "latest_price",
+        "scope": {"kind": "instrument", "id": instrument_id},
+        "period": period,
+        **extra,
+    }
+    return one(api, "kpi", config)
+
+
+def _quotes(db, listing_id: int, rows: list[tuple[tuple[int, int, int, int, int], str]]) -> None:  # type: ignore[no-untyped-def]
+    from datetime import UTC, datetime
+
+    from folio.db.models_analytics import Quote
+
+    for (y, mo, d, h, mi), price in rows:
+        db.add(
+            Quote(
+                listing_id=listing_id,
+                ts=datetime(y, mo, d, h, mi, tzinfo=UTC),
+                price=D(price),
+                source="fake",
+            )
+        )
+    db.commit()
+
+
+def _fund_listing(db, book):  # type: ignore[no-untyped-def]
+    from sqlalchemy import select
+
+    from folio.db.models_ledger import Listing
+
+    return db.scalars(select(Listing).where(Listing.instrument_id == book["fund"])).first()
+
+
+def test_the_latest_price_is_the_newer_refresh_price_and_its_day_starts_at_the_close(
+    api, book, db
+) -> None:
+    listing = _fund_listing(db, book)
+    _quotes(
+        db,
+        listing.id,
+        [
+            ((2024, 1, 15, 8, 0), "109"),  # 09:00 on Xetra, a later day than the last close
+            ((2024, 1, 15, 8, 15), "110.5"),
+            ((2024, 1, 15, 9, 30), "107.9"),
+        ],
+    )
+    out = _latest_price(api, book["fund"])
+    assert (out["kind"], out["currency"], out["instrument_id"]) == ("price", "EUR", book["fund"])
+    assert D(out["value"]) == D("107.9")
+    assert out["label"] == "Delayed price of 2024-01-15 10:30 (fake)"
+    assert out["intraday"] is True and out["baseline"] == "108"  # the close of 12 Jan
+    assert [D(p["value"]) for p in out["sparkline"]] == [108, 109, D("110.5"), D("107.9")]
+    assert out["sparkline"][1]["date"] == "2024-01-15T09:00:00"
+    assert D(out["change_ratio"]) == (D("107.9") / 108 - 1).quantize(D("0.000001"))
+    assert out["note"] == "Session of 2024-01-15, previous close 108.00"
+
+
+def test_once_the_close_is_stored_it_wins_over_the_refresh_prices_of_that_day(
+    api, book, db
+) -> None:
+    listing = _fund_listing(db, book)
+    _quotes(db, listing.id, [((2024, 1, 12, 8, 0), "100"), ((2024, 1, 12, 9, 0), "101")])
+    out = _latest_price(api, book["fund"])
+    assert D(out["value"]) == 108 and out["label"] == "Close of 2024-01-12"
+    assert [D(p["value"]) for p in out["sparkline"]][1:] == [100, 101]  # the day still charted
+
+
+def test_without_refresh_prices_the_figure_still_shows_the_close_and_says_why(
+    api, book, db
+) -> None:
+    from sqlalchemy import select
+
+    out = _latest_price(api, book["fund"])
+    assert D(out["value"]) == 108 and out["sparkline"] == []
+    assert "No refresh prices yet" in out["note"]
+    listing = _fund_listing(db, book)
+    before = db.scalars(
+        select(PriceBar).where(
+            PriceBar.listing_id == listing.id, PriceBar.date == date(2024, 1, 11)
+        )
+    ).one()
+    assert D(out["change_ratio"]) == (D(108) / before.close - 1).quantize(D("0.000001"))
+
+
+def test_over_a_week_the_chart_is_the_closes_and_the_change_runs_from_its_start(
+    api, book, db
+) -> None:
+    from sqlalchemy import select
+
+    listing = _fund_listing(db, book)
+    out = _latest_price(api, book["fund"], "1W")
+    start = db.scalars(
+        select(PriceBar).where(PriceBar.listing_id == listing.id, PriceBar.date == date(2024, 1, 8))
+    ).one()
+    assert "intraday" not in out and "baseline" not in out
+    assert [p["date"] for p in out["sparkline"]] == [
+        "2024-01-09",
+        "2024-01-10",
+        "2024-01-11",
+        "2024-01-12",
+    ]
+    assert D(out["change_ratio"]) == (D(108) / start.close - 1).quantize(D("0.000001"))
+
+
+def test_the_latest_price_needs_a_holding_but_not_a_position(api, book, db) -> None:
+    out = one(api, "kpi", {"metric": "latest_price"})
+    assert out["empty"] is True and "Choose a holding" in out["reason"]
+    never, listing = make_listing(db, ticker="N", isin=None)
+    db.add(PriceBar(listing_id=listing.id, date=date(2024, 1, 10), close=D("12.3456"), source="x"))
+    db.commit()
+    shown = _latest_price(api, never.id, None)
+    assert D(shown["value"]) == D("12.3456") and shown["currency"] == "EUR"
+
+
 def test_a_fifty_day_average_is_the_mean_of_fifty_closes(api, db) -> None:
     fund, listing = make_listing(db, ticker="F")
     for i in range(60):

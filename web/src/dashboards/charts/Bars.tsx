@@ -221,15 +221,27 @@ export function Columns({
   )
 }
 
-export function Sparkline({ values, label }: { values: number[]; label: string }) {
+/** A small line of values; with a `baseline` (the close the day started from) a dotted line
+ * marks it, so the ups and downs of the day can be told from the line itself. */
+export function Sparkline({
+  values,
+  label,
+  baseline,
+}: {
+  values: number[]
+  label: string
+  baseline?: number
+}) {
   if (values.length < 2) return null
-  const min = Math.min(...values)
-  const max = Math.max(...values)
+  const shown = baseline === undefined ? values : [...values, baseline]
+  const min = Math.min(...shown)
+  const max = Math.max(...shown)
   const span = max - min || 1
   const points = values.map(
     (v, i) => `${(i / (values.length - 1)) * 100},${28 - ((v - min) / span) * 24}`,
   )
   const [lastX, lastY] = points[points.length - 1].split(',')
+  const baseY = baseline === undefined ? null : 28 - ((baseline - min) / span) * 24
   return (
     <svg
       viewBox="0 0 100 32"
@@ -238,6 +250,20 @@ export function Sparkline({ values, label }: { values: number[]; label: string }
       className="h-8 w-full"
       preserveAspectRatio="none"
     >
+      {baseY !== null && (
+        <line
+          data-testid="baseline"
+          x1={0}
+          x2={100}
+          y1={baseY}
+          y2={baseY}
+          stroke="var(--muted)"
+          strokeWidth={1}
+          strokeDasharray="2 3"
+          vectorEffect="non-scaling-stroke"
+          opacity={0.6}
+        />
+      )}
       <polyline
         points={points.join(' ')}
         fill="none"

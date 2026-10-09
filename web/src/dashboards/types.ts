@@ -30,8 +30,14 @@ export type ReturnBreakdownData =
 
 export interface KpiData extends Empty {
   metric: string
-  kind: 'eur' | 'pct' | 'number'
+  kind: 'eur' | 'pct' | 'number' | 'price'
   value: string | null
+  /** Latest price: the currency, the holding, and for one day the close the day started from. */
+  currency?: string
+  instrument_id?: number
+  name?: string
+  intraday?: boolean
+  baseline?: string
   change_eur?: string | null
   change_ratio?: string | null
   label?: string

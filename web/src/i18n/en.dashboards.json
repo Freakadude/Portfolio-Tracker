@@ -149,6 +149,7 @@
     "noFigure": "No figure yet.",
     "resultInPeriod": "Result",
     "sparkline": "Trend over the period",
+    "sparklineDay": "Price over the day, dotted line: the close before",
     "value": "Value",
     "contributions": "Net contributions",
     "maxDrawdown": "Deepest drop",
@@ -204,7 +205,8 @@
       "max_drawdown": "Deepest drop (1 year)",
       "current_drawdown": "Below the peak now",
       "sharpe": "Sharpe ratio",
-      "beta": "Beta to the benchmark"
+      "beta": "Beta to the benchmark",
+      "latest_price": "Latest price"
     },
     "groups": {
       "instrument": "Instrument",
