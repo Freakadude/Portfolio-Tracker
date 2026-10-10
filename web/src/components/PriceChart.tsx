@@ -7,6 +7,7 @@ import {
   type Time,
 } from 'lightweight-charts'
 import { useEffect, useRef, useState } from 'react'
+import { TIP_CLASS, TIP_STYLE, hideTip, showTip } from '../dashboards/charts/cursorTip'
 import { keepFitted } from '../dashboards/charts/keepFitted'
 import { css, useThemeKey } from '../dashboards/charts/theme'
 import { useTranslation } from 'react-i18next'
@@ -55,6 +56,10 @@ export function PriceChart({
   const { t } = useTranslation()
   const { eur } = useFormat()
   const container = useRef<HTMLDivElement>(null)
+  const tip = useRef<HTMLDivElement>(null)
+  // read when the pointer moves, so a new formatter does not redraw the chart
+  const money = useRef(eur)
+  money.current = eur
   const [range, setRange] = useState<(typeof RANGES)[number]['key']>('MAX')
   const [asTable, setAsTable] = useState(false)
   const themeKey = useThemeKey()
@@ -71,8 +76,16 @@ export function PriceChart({
       grid: { vertLines: { color: border }, horzLines: { color: border } },
       rightPriceScale: { borderColor: border },
       timeScale: { borderColor: border },
+      // the value under the pointer is written by the chip that follows it, not on the axis
+      crosshair: { horzLine: { labelVisible: false } },
     })
-    const series = chart.addSeries(LineSeries, { color: css('--primary', '#1f4fd6'), lineWidth: 2 })
+    const series = chart.addSeries(LineSeries, {
+      color: css('--primary', '#1f4fd6'),
+      lineWidth: 2,
+      crosshairMarkerRadius: 5,
+      crosshairMarkerBackgroundColor: text, // not the line's own colour
+      crosshairMarkerBorderColor: css('--card', '#fff'),
+    })
     series.setData(prices.map((p) => ({ time: p.date as Time, value: Number(p.close) })))
     const gain = css('--gain', '#146c2e')
     const loss = css('--danger', '#b42318')
@@ -114,6 +127,16 @@ export function PriceChart({
     applyRange()
     // the chart is sized to its box, which can change after the first draw: put the range back
     const stopFitting = keepFitted(chart, el, applyRange)
+    chart.subscribeCrosshairMove((param) => {
+      const box = tip.current
+      if (!box) return
+      const hit = param.seriesData.get(series) as { value?: number } | undefined
+      if (!param.time || !param.point || param.point.x < 0 || param.point.y < 0 || !hit?.value) {
+        hideTip(box)
+        return
+      }
+      showTip(box, el, param.point, String(param.time), [{ value: money.current(hit.value) }])
+    })
     return () => {
       stopFitting()
       chart.remove()
@@ -164,7 +187,10 @@ export function PriceChart({
           </table>
         </div>
       ) : (
-        <div ref={container} role="img" aria-label={label} className="h-80 w-full" />
+        <div className="relative">
+          <div ref={container} role="img" aria-label={label} className="h-80 w-full" />
+          <div ref={tip} hidden className={TIP_CLASS} style={TIP_STYLE} data-testid="cursor-tip" />
+        </div>
       )}
     </div>
   )

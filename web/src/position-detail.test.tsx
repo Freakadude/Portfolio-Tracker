@@ -20,6 +20,7 @@ vi.mock('lightweight-charts', () => ({
     return {
       addSeries: () => chart.series,
       timeScale: () => chart.timeScale,
+      subscribeCrosshairMove: vi.fn(),
       remove: chart.remove,
     }
   },

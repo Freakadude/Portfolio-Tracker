@@ -15,6 +15,7 @@ import {
 } from 'lightweight-charts'
 import { useEffect, useRef } from 'react'
 import { Legend } from './ChartFrame'
+import { TIP_CLASS, TIP_STYLE, hideTip, showTip, type TipRow } from './cursorTip'
 import { keepFitted } from './keepFitted'
 import { css, useThemeKey } from './theme'
 
@@ -123,6 +124,8 @@ export function TimeChart({
         mode: logScale ? PriceScaleMode.Logarithmic : PriceScaleMode.Normal,
       },
       timeScale: { borderColor: grid, timeVisible: intraday, secondsVisible: false },
+      // the value under the pointer is written by the chip that follows it, not on the axis
+      crosshair: { horzLine: { labelVisible: false } },
       localization: { priceFormatter: format },
     })
     const drawn: {
@@ -172,7 +175,8 @@ export function TimeChart({
                     ...shared,
                     color,
                     lineWidth: 2,
-                    crosshairMarkerRadius: 4,
+                    crosshairMarkerRadius: 5,
+                    crosshairMarkerBackgroundColor: text, // not the line's own colour
                     crosshairMarkerBorderColor: surface,
                   },
                   pane,
@@ -243,36 +247,18 @@ export function TimeChart({
     const box = tooltip.current
     chart.subscribeCrosshairMove((param) => {
       if (!box) return
-      if (!param.time || !param.point || param.point.x < 0) {
-        box.hidden = true
+      if (!param.time || !param.point || param.point.x < 0 || param.point.y < 0) {
+        hideTip(box)
         return
       }
-      box.replaceChildren()
-      const when = document.createElement('div')
-      when.className = 'font-medium'
-      when.textContent = timeLabel(param.time as ChartTime)
-      box.appendChild(when)
+      const rows: TipRow[] = []
       for (const d of drawn) {
         const value = param.seriesData.get(d.api) as { value?: number; close?: number } | undefined
         const number = value?.value ?? value?.close
         if (number === undefined) continue
-        const row = document.createElement('div')
-        row.className = 'flex items-center gap-2'
-        const key = document.createElement('span')
-        key.style.cssText = `display:inline-block;width:12px;height:3px;background:${d.color}`
-        const amount = document.createElement('span')
-        amount.className = 'font-semibold'
-        amount.textContent = (d.format ?? format)(number)
-        row.append(key, amount)
-        if (d.label) {
-          const name = document.createElement('span')
-          name.className = 'text-muted'
-          name.textContent = d.label
-          row.appendChild(name)
-        }
-        box.appendChild(row)
+        rows.push({ color: d.color, value: (d.format ?? format)(number), name: d.label })
       }
-      box.hidden = false
+      showTip(box, el, param.point, timeLabel(param.time as ChartTime), rows)
     })
     if (onTimeClick) {
       chart.subscribeClick((param) => {
@@ -311,7 +297,9 @@ export function TimeChart({
         <div
           ref={tooltip}
           hidden
-          className="pointer-events-none absolute left-2 top-2 z-10 space-y-0.5 rounded border border-border bg-card px-2 py-1 text-xs shadow"
+          className={TIP_CLASS}
+          style={TIP_STYLE}
+          data-testid="cursor-tip"
         />
       </div>
       <Legend items={series.map((s) => ({ key: s.key, label: s.label, color: s.color }))} />
