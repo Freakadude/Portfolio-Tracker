@@ -11,7 +11,7 @@
 from __future__ import annotations
 
 import time
-from collections.abc import Callable
+from collections.abc import Callable, Mapping
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 from urllib.parse import urlsplit
@@ -77,6 +77,8 @@ class Fetcher:
         self._min_interval = min_interval
         self._robots: dict[str, tuple[datetime, RobotFileParser | None]] = {}
         self._last: dict[str, float] = {}
+        # lookups that change slowly, kept for the life of the worker (SEC's company list)
+        self.memo: dict[str, tuple[datetime, object]] = {}
 
     def _pace(self, domain: str) -> None:
         last = self._last.get(domain)
@@ -86,7 +88,7 @@ class Fetcher:
                 self._sleep(wait)
         self._last[domain] = self._monotonic()
 
-    def _rules(self, url: str) -> RobotFileParser | None:
+    def _rules(self, url: str, headers: Mapping[str, str] | None = None) -> RobotFileParser | None:
         domain = domain_of(url)
         origin = origin_of(url)
         now = self._clock()
@@ -94,7 +96,7 @@ class Fetcher:
         if cached is not None and now - cached[0] < ROBOTS_TTL:
             return cached[1]
         self._pace(domain)
-        response = self._client_for(domain).request("GET", f"{origin}/robots.txt")
+        response = self._client_for(domain).request("GET", f"{origin}/robots.txt", headers=headers)
         rules: RobotFileParser | None = None
         if response.status_code == 200:
             rules = RobotFileParser()
@@ -107,24 +109,31 @@ class Fetcher:
         self._robots[origin] = (now, rules)
         return rules
 
-    def allowed(self, url: str) -> bool:
-        rules = self._rules(url)
+    def allowed(self, url: str, headers: Mapping[str, str] | None = None) -> bool:
+        rules = self._rules(url, headers)
         return rules is None or rules.can_fetch(AGENT_NAME, url)
 
-    def get(self, url: str, etag: str | None = None, last_modified: str | None = None) -> Fetched:
-        """The feed at `url`, or "not modified" when the site says nothing changed."""
-        if not self.allowed(url):
+    def get(
+        self,
+        url: str,
+        etag: str | None = None,
+        last_modified: str | None = None,
+        headers: Mapping[str, str] | None = None,
+    ) -> Fetched:
+        """The feed at `url`, or "not modified" when the site says nothing changed. `headers`
+        are sent with the request and the robots.txt check (SEC asks for its own User-Agent)."""
+        if not self.allowed(url, headers):
             raise RobotsDisallowed(
                 f"{domain_of(url)}'s robots.txt does not allow fetching this feed."
             )
-        headers: dict[str, str] = {}
+        sent: dict[str, str] = dict(headers or {})
         if etag:
-            headers["If-None-Match"] = etag
+            sent["If-None-Match"] = etag
         if last_modified:
-            headers["If-Modified-Since"] = last_modified
+            sent["If-Modified-Since"] = last_modified
         domain = domain_of(url)
         self._pace(domain)
-        response = self._client_for(domain).request("GET", url, headers=headers)
+        response = self._client_for(domain).request("GET", url, headers=sent)
         if response.status_code == 304:
             return Fetched("not_modified", etag=etag, last_modified=last_modified)
         if response.status_code in (401, 403):

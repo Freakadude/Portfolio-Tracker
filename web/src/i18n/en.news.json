@@ -123,10 +123,10 @@
   },
   "newsSettings": {
     "helpTitle": "How do news feeds work?",
-    "help1": "Folio only reads news from sources you trust: central banks, ETF issuers and EODHD. It never searches the open web for stories.",
+    "help1": "Folio only reads news from sources you trust: central banks, regulators and official company filings (SEC), ETF issuers, EODHD and Nasdaq.com headlines for your shares. It never searches the open web for stories.",
     "help2": "A feed is the address of a page's RSS or Atom list of new articles. Many issuers and companies publish one (look for an RSS icon on their news or press page, or a link ending in /rss or /feed). Add it below with a name, and Folio fetches it regularly and keeps the headline, a short summary and the link.",
     "help3": "Each story is linked to what you hold, directly or through an ETF, and rated by impact. They show on the News page. Use 'Wrong link' on a story if it was tied to the wrong holding.",
-    "intro": "Where news comes from. The ECB, the Federal Reserve and EODHD are ready; add the news feeds of the issuers of your ETFs and the companies you hold. Only the headline, a short summary and the link are kept.",
+    "intro": "Where news comes from. Ready-made: the ECB, the Federal Reserve (press releases, speeches and testimony), US export-control rules, SEC filings and Nasdaq.com headlines for your shares, and EODHD. Add the news feeds of the issuers of your ETFs and the companies you hold. Only the headline, a short summary and the link are kept.",
     "caption": "News sources",
     "columns": {
       "name": "Source",
@@ -137,7 +137,9 @@
     },
     "kinds": {
       "rss": "Feed",
-      "eodhd": "EODHD news"
+      "eodhd": "EODHD news",
+      "sec": "SEC filings",
+      "perSymbol": "Feed per share"
     },
     "off": "off",
     "trust": "Trust {{trust}}",
@@ -163,8 +165,12 @@
       "macro": "Macro series it speaks to",
       "macroHint": "Series codes such as DFII10, comma separated. A rate decision links to the sleeves that watch them.",
       "enabled": "Enabled",
-      "cancel": "Cancel"
-    }
+      "cancel": "Cancel",
+      "urlHint": "Put {symbol} in the address to read it once for each of your US-listed shares."
+    },
+    "help4": "SEC filings and Nasdaq.com headlines are read for each share you hold or watch that is listed in the US (ASML through Nasdaq, TSMC as TSM). SEC asks every automated reader for a contact email: enter yours under 'How stories are assessed' below. To follow a company you do not hold, such as TSMC for ASML, add it to a watchlist. Earnings dates of your shares can come from EODHD: switch them on in the calendar section.",
+    "needsEmail": "Needs your contact email",
+    "needsEmailHint": "Enter your email under 'How stories are assessed' below; SEC asks every automated reader for one."
   },
   "calendar": {
     "upcoming": "Coming up",

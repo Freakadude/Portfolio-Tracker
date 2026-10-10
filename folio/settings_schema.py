@@ -11,6 +11,9 @@ from pydantic import BaseModel, ConfigDict, Field, field_validator
 _HHMM = re.compile(r"^([01]\d|2[0-3]):[0-5]\d$")
 
 
+_EMAIL = re.compile(r"[^@\s]+@[^@\s]+\.[^@\s]+")
+
+
 class Section(BaseModel):
     model_config = ConfigDict(extra="forbid")
     SECRETS: ClassVar[tuple[str, ...]] = ()
@@ -282,6 +285,17 @@ class NewsSettings(Section):
     event_impact: int = Field(default=70, ge=0, le=100)  # starts an agent event run
     push_impact: int = Field(default=80, ge=0, le=100)  # a high notification for a holding
     display_impact: int = Field(default=0, ge=0, le=100)  # the News page's default minimum
+    # SEC asks every automated reader of EDGAR to name a contact address (ADR 0062); without
+    # one, the SEC filings source and the per-holding headlines are skipped
+    sec_contact_email: str = Field(default="", max_length=120)
+
+    @field_validator("sec_contact_email")
+    @classmethod
+    def _email(cls, value: str) -> str:
+        value = value.strip()
+        if value and not _EMAIL.fullmatch(value):
+            raise ValueError("Enter an email address such as you@example.com, or leave it empty.")
+        return value
 
 
 class CalendarSettings(Section):

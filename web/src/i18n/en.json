@@ -229,6 +229,7 @@
     "event_impact": "Start an agent run from impact",
     "push_impact": "Notify from impact",
     "display_impact": "News page minimum impact",
+    "sec_contact_email": "Your email for SEC filings (SEC asks every automated reader for a contact address)",
     "news_share_eur": "Share of the budget news may use (EUR)",
     "daily_review_time": "Daily review time (weekdays)",
     "weekly_review_time": "Weekly deep review time (Sunday)",

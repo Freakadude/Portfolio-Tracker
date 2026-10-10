@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="utf-8"?>
+<rss xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:content="http://purl.org/rss/1.0/modules/content/"
+  xmlns:foaf="http://xmlns.com/foaf/0.1/" xmlns:og="http://ogp.me/ns#"
+  xmlns:rdfs="http://www.w3.org/2000/01/rdf-schema#" xmlns:schema="http://schema.org/"
+  xmlns:sioc="http://rdfs.org/sioc/ns#" xmlns:sioct="http://rdfs.org/sioc/types#"
+  xmlns:skos="http://www.w3.org/2004/02/skos/core#" xmlns:xsd="http://www.w3.org/2001/XMLSchema#"
+  xmlns:nasdaq="http://nasdaq.com/reference/feeds/1.0" version="2.0" xml:base="https://www.nasdaq.com/feed/rssoutbound">
+ <channel>
+  <title>ASML Feed</title>
+  <link>https://www.nasdaq.com/feed/rssoutbound</link>
+  <description>This feed is responsible for generating the rss feed related to the topic ASML</description>
+  <language>en</language>
+  <item>
+   <title>Top Research Reports for JPMorgan, ASML &amp; Chevron</title>
+   <link>https://www.nasdaq.com/articles/top-research-reports-jpmorgan-asml-chevron</link>
+   <description>
+        JPMorgan, ASML and Chevron stand out in today's research, with earnings strength, AI-driven demand and record production shaping their investment outlooks.
+    </description>
+   <pubDate>Fri, 09 Oct 2026 19:39:00 +0000</pubDate>
+   <guid isPermaLink="true">https://www.nasdaq.com/articles/top-research-reports-jpmorgan-asml-chevron?time=1791574740</guid>
+   <dc:creator>Zacks</dc:creator>
+   <category>Technology</category>
+   <nasdaq:tickers>JPM,CVX,ASML,UAVS,PFE,CEG,VLO</nasdaq:tickers>
+  </item><item>
+   <title>Better Artificial Intelligence Stock: ASML vs. QUALCOMM</title>
+   <link>https://www.nasdaq.com/articles/better-artificial-intelligence-stock-asml-vs-qualcomm</link>
+   <description>
+        Key PointsASML maintains a unique monopoly over the extreme ultraviolet lithography machines essential for manufacturing the world's most advanced microchips.
+    </description>
+   <pubDate>Fri, 09 Oct 2026 19:20:06 +0000</pubDate>
+   <guid isPermaLink="true">https://www.nasdaq.com/articles/better-artificial-intelligence-stock-asml-vs-qualcomm?time=1791573606</guid>
+   <dc:creator>The Motley Fool</dc:creator>
+   <category>Markets</category>
+   <nasdaq:tickers>ASML,ASML,QCOM</nasdaq:tickers>
+  </item><item>
+   <title>ASML's Q3 Earnings Coming Up: How Should You Play the Stock?</title>
+   <link>https://www.nasdaq.com/articles/asmls-q3-earnings-coming-how-should-you-play-stock</link>
+   <description>
+        ASML's Q3 earnings approach as AI-driven chip demand, strategic partnerships and strong growth prospects face premium valuation and policy risks. Should you buy or hold?
+    </description>
+   <pubDate>Fri, 09 Oct 2026 15:00:00 +0000</pubDate>
+   <guid isPermaLink="true">https://www.nasdaq.com/articles/asmls-q3-earnings-coming-how-should-you-play-stock?time=1791558000</guid>
+   <dc:creator>Zacks</dc:creator>
+   <category>Stocks</category>
+   <nasdaq:tickers>ASML,SIMO,AEIS</nasdaq:tickers>
+  </item><item>
+   <title>Advanced Micro Devices vs. ASML: Which Semiconductor Stock Is a Better Buy in 2026?</title>
+   <link>https://www.nasdaq.com/articles/advanced-micro-devices-vs-asml-which-semiconductor-stock-better-buy-2026</link>
+   <description>
+        Key PointsAdvanced Micro Devices is rapidly expanding its presence in the AI data center market through strategic partnerships and high-performance GPU releases.
+    </description>
+   <pubDate>Thu, 08 Oct 2026 23:42:51 +0000</pubDate>
+   <guid isPermaLink="true">https://www.nasdaq.com/articles/advanced-micro-devices-vs-asml-which-semiconductor-stock-better-buy-2026?time=1791502971</guid>
+   <dc:creator>The Motley Fool</dc:creator>
+   <category>Markets</category>
+   <nasdaq:tickers>AMD,AMD,ASML</nasdaq:tickers>
+  </item><item>
+   <title>Stocks Settle Lower on Higher Bond Yields</title>
+   <link>https://www.nasdaq.com/articles/stocks-settle-lower-higher-bond-yields</link>
+   <description>
+        The S&amp;P 500 Index ($SPX ) (SPY ) closed down by -0.22% on Wednesday, the Dow Jones Industrial Average ($DOWI ) (DIA ) closed down by -0.66%, and the Nasdaq 100 Index ($IUXX ) (QQQ ) closed down -0.21%.  December E-mini S&amp;P futures (ESZ26 ) fell -0.27%, and December E-mini...
+    </description>
+   <pubDate>Thu, 08 Oct 2026 18:06:00 +0000</pubDate>
+   <guid isPermaLink="true">https://www.nasdaq.com/articles/stocks-settle-lower-higher-bond-yields?time=1791482760</guid>
+   <dc:creator>Barchart</dc:creator>
+   <category>Stocks</category>
+   <nasdaq:tickers>MSTR,DE,RARE,ADI,GLXY,AMGN,COIN,PFE,MHK,WDC,SPY,MU,QQQ,IREN,TOL,CAT,MCHP,ARM,HOOD,AMAT,DHI,BLDR,MRK,TXN,PENG,ASML,BMNR,KBH,PHM,QCOM,LRCX,LLY,DIA,MARA,NXPI,VRTX,LEN,RIOT,GILD,REGN</nasdaq:tickers>
+  </item></channel></rss>

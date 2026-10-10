@@ -1,8 +1,10 @@
 """News sources and stored items (FR-NW-01, FR-NW-02, FR-NW-03).
 
-Sources are the owner's list. Two come ready (Q12: central banks, issuers and EODHD only): the
-ECB's and the Federal Reserve's press releases, each tied to the macro series it speaks to, and
-EODHD's news for the held tickers when an EODHD key exists. Issuer feeds are added by the owner.
+Sources are the owner's list. Some come ready (Q12, widened in ADR 0062: central banks,
+regulators and official filings, issuers, EODHD and Nasdaq.com headlines): the ECB's and the
+Federal Reserve's press releases and the Fed's speeches, each tied to the macro series it speaks
+to, US export-control rules, EODHD's news for the held tickers, Nasdaq.com headlines per holding
+and the SEC filings of held and watched companies. Issuer feeds are added by the owner.
 """
 
 from __future__ import annotations
@@ -23,9 +25,17 @@ from folio.news.fetch import backoff
 from folio.news.normalize import content_hash
 from folio.settings_store import get_value, set_value
 
-KINDS = ("rss", "eodhd")
+KINDS = ("rss", "eodhd", "sec")
+SYMBOL = "{symbol}"  # in an RSS address: read once per followed holding
 TRUST_MIN, TRUST_MAX = Decimal("0.1"), Decimal("1")
 SEEDED_KEY = "news.defaults_seeded"
+ADDED_KEY = "news.defaults_added"  # names of the ready-made sources already added
+# the ready-made sources of the first version, added before the names were kept
+FIRST_DEFAULTS = (
+    "ECB press releases",
+    "Federal Reserve press releases",
+    "EODHD news for your tickers",
+)
 
 DEFAULTS: tuple[dict[str, object], ...] = (
     {
@@ -48,6 +58,37 @@ DEFAULTS: tuple[dict[str, object], ...] = (
         "url": "",
         "trust_weight": Decimal("0.7"),
         "poll_minutes": 360,
+        "macro_series": [],
+    },
+    # ADR 0062
+    {
+        "name": "Federal Reserve speeches and testimony",
+        "url": "https://www.federalreserve.gov/feeds/speeches_and_testimony.xml",
+        "trust_weight": Decimal("1"),
+        "poll_minutes": 60,
+        "macro_series": ["DFF", "DFII10", "DTWEXBGS"],
+    },
+    {
+        "name": "US export controls (BIS, Federal Register)",
+        "url": "https://www.federalregister.gov/api/v1/documents.rss"
+        "?conditions%5Bagencies%5D%5B%5D=industry-and-security-bureau",
+        "trust_weight": Decimal("1"),
+        "poll_minutes": 360,
+        "macro_series": [],
+    },
+    {
+        "name": "SEC filings for your holdings",
+        "kind": "sec",
+        "url": "",
+        "trust_weight": Decimal("1"),
+        "poll_minutes": 180,
+        "macro_series": [],
+    },
+    {
+        "name": "Nasdaq.com headlines for your shares",
+        "url": "https://www.nasdaq.com/feed/rssoutbound?symbol={symbol}",
+        "trust_weight": Decimal("0.5"),
+        "poll_minutes": 180,
         "macro_series": [],
     },
 )
@@ -74,7 +115,7 @@ def check(data: SourceInput) -> SourceInput:
     if not name or len(name) > 100:
         raise SourceError("Give the source a name of up to 100 characters.")
     if data.kind not in KINDS:
-        raise SourceError("The kind must be rss or eodhd.")
+        raise SourceError("The kind must be rss, eodhd or sec.")
     if data.kind == "rss":
         parts = urlsplit(data.url.strip())
         if parts.scheme not in ("http", "https") or not parts.hostname:
@@ -99,10 +140,15 @@ def check(data: SourceInput) -> SourceInput:
 
 
 def seed_defaults(db: Session) -> None:
-    """Add the ready-made sources once. A default the owner deletes does not come back."""
-    if get_value(db, SEEDED_KEY, False):
+    """Add each ready-made source once, also the ones that came with a later version. A default
+    the owner deletes does not come back: what was added is kept by name."""
+    added = list(get_value(db, ADDED_KEY, None) or [])
+    if not added and get_value(db, SEEDED_KEY, False):
+        added = list(FIRST_DEFAULTS)  # an install from before the names were kept
+    missing = [spec for spec in DEFAULTS if spec["name"] not in added]
+    if not missing:
         return
-    for spec in DEFAULTS:
+    for spec in missing:
         db.add(
             NewsSource(
                 name=str(spec["name"]),
@@ -115,6 +161,7 @@ def seed_defaults(db: Session) -> None:
                 macro_series=list(spec["macro_series"]),  # type: ignore[call-overload]
             )
         )
+    set_value(db, ADDED_KEY, added + [str(spec["name"]) for spec in missing])
     set_value(db, SEEDED_KEY, True)
     db.flush()
 

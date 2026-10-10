@@ -1,8 +1,9 @@
+import { useQuery } from '@tanstack/react-query'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useFormat } from '../lib/useFormat'
-import { errorMessage } from '../api/client'
-import { SectionForm } from '../components/SectionForm'
+import { api, errorMessage, unwrap } from '../api/client'
+import { SectionForm, sectionKey } from '../components/SectionForm'
 import { Badge } from '../components/display'
 import { Alert, Button, Checkbox, Field, Help, Input, Select } from '../components/ui'
 import {
@@ -36,12 +37,22 @@ export function NewsTab() {
   const remove = useDeleteNewsSource()
   const fetchNow = useFetchNow()
   const [editing, setEditing] = useState<{ id?: number; value: NewsSourceInput } | null>(null)
+  // the SEC source and the per-share feeds wait for the owner's contact email (ADR 0062)
+  const settings = useQuery({
+    queryKey: sectionKey('news'),
+    queryFn: () =>
+      unwrap(
+        api.GET('/api/v1/settings/{section}', { params: { path: { section: 'news' } } }),
+      ) as Promise<{ sec_contact_email?: string }>,
+  })
+  const hasEmail = !!settings.data?.sec_contact_email
   return (
     <div className="space-y-6">
       <Help title={t('newsSettings.helpTitle')}>
         <p>{t('newsSettings.help1')}</p>
         <p>{t('newsSettings.help2')}</p>
         <p>{t('newsSettings.help3')}</p>
+        <p>{t('newsSettings.help4')}</p>
       </Help>
       <p className="text-sm text-muted">{t('newsSettings.intro')}</p>
       {sources.isError && <Alert>{errorMessage(sources.error)}</Alert>}
@@ -63,6 +74,7 @@ export function NewsTab() {
               <SourceRow
                 key={s.id}
                 source={s}
+                needsEmail={!hasEmail && settings.isSuccess}
                 onEdit={() =>
                   setEditing({
                     id: s.id,
@@ -110,17 +122,21 @@ export function NewsTab() {
 
 function SourceRow({
   source,
+  needsEmail,
   onEdit,
   onDelete,
   onFetch,
 }: {
   source: NewsSource
+  needsEmail: boolean
   onEdit: () => void
   onDelete: () => void
   onFetch: () => void
 }) {
   const { t } = useTranslation()
   const { num } = useFormat()
+  const perShare = source.kind === 'rss' && source.url.includes('{symbol}')
+  const waits = needsEmail && (source.kind === 'sec' || perShare)
   return (
     <tr className="border-b border-border align-top">
       <td className="py-2 pr-3">
@@ -133,13 +149,20 @@ function SourceRow({
           {source.macro_series.length > 0 && ` · ${source.macro_series.join(', ')}`}
         </div>
       </td>
-      <td className="py-2 pr-3">{t(`newsSettings.kinds.${source.kind}`)}</td>
+      <td className="py-2 pr-3">
+        {t(perShare ? 'newsSettings.kinds.perSymbol' : `newsSettings.kinds.${source.kind}`)}
+      </td>
       <td className="py-2 pr-3 whitespace-nowrap">
         {source.last_fetch_at ? new Date(source.last_fetch_at).toLocaleString() : '–'}
         <div className="text-xs text-muted">{t('newsSettings.items', { count: source.items })}</div>
       </td>
       <td className="py-2 pr-3">
-        {source.failures > 0 ? (
+        {waits ? (
+          <div className="space-y-1">
+            <Badge tone="warn">{t('newsSettings.needsEmail')}</Badge>
+            <p className="text-xs text-muted">{t('newsSettings.needsEmailHint')}</p>
+          </div>
+        ) : source.failures > 0 ? (
           <div className="space-y-1">
             <Badge tone="bad">{t('newsSettings.failing', { count: source.failures })}</Badge>
             <p className="text-xs">{source.last_error}</p>
@@ -204,7 +227,7 @@ function SourceForm({
         )}
       </Field>
       {feed && (
-        <Field label={t('newsSettings.form.url')}>
+        <Field label={t('newsSettings.form.url')} hint={t('newsSettings.form.urlHint')}>
           {(p) => (
             <div className="flex gap-2">
               <Input value={v.url} onChange={(e) => setV({ ...v, url: e.target.value })} {...p} />

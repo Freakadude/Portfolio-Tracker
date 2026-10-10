@@ -80,7 +80,7 @@ class Hit:
     alias_weight: Decimal = Decimal(1)
 
 
-_PRIORITY = {"isin": 0, "eodhd": 1, "ticker": 2, "alias": 3, "constituent": 4}
+_PRIORITY = {"feed": 0, "isin": 0, "eodhd": 1, "ticker": 2, "alias": 3, "constituent": 4}
 
 
 class Matcher:
@@ -108,6 +108,9 @@ class Matcher:
                 found[key] = hit
 
         for s in self._subjects:
+            # a source that reads news per holding tags each item with it (SEC, per-symbol feeds)
+            if f"INSTRUMENT:{s.instrument_id}" in tagged:
+                add(Hit(s.instrument_id, "direct", f"feed:{s.ticker or s.instrument_id}"))
             if s.isin and s.isin in isins:
                 add(Hit(s.instrument_id, "direct", f"isin:{s.isin}"))
             if s.eodhd_symbol and s.eodhd_symbol.upper() in tagged:

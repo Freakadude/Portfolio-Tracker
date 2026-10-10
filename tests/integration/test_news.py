@@ -39,7 +39,7 @@ def feed(name: str) -> bytes:
 
 
 def web(request: httpx.Request) -> httpx.Response:
-    """The two central banks' sites, as recorded."""
+    """The ready-made feeds' sites, as recorded."""
     host, path = request.url.host, request.url.path
     if path == "/robots.txt":
         return httpx.Response(404)
@@ -57,6 +57,10 @@ def web(request: httpx.Request) -> httpx.Response:
             content=feed("fed_press_all.xml"),
             headers={"content-type": "text/xml", "last-modified": "Fri, 02 Oct 2026 21:00:00 GMT"},
         )
+    if host == "www.federalreserve.gov" and path == "/feeds/speeches_and_testimony.xml":
+        return httpx.Response(200, content=feed("fed_speeches.xml"))
+    if host == "www.federalregister.gov" and path == "/api/v1/documents.rss":
+        return httpx.Response(200, content=feed("federal_register_bis.xml"))
     return httpx.Response(404)
 
 
@@ -125,7 +129,10 @@ def test_a_304_answer_costs_no_parsing(
     assert "ECB press releases: 15 new, 0 already stored" in first.log
     assert "Federal Reserve press releases: 8 new, 0 already stored" in first.log
     assert "EODHD news for your tickers: skipped, it needs an EODHD API key" in first.log
-    assert "23 new items grouped into" in first.log  # then clustered and linked (FR-NW-04)
+    assert "Federal Reserve speeches and testimony: 5 new, 0 already stored" in first.log
+    assert "US export controls (BIS, Federal Register): 5 new, 0 already stored" in first.log
+    assert "SEC filings for your holdings: skipped, it needs your contact email" in first.log
+    assert "33 new items grouped into" in first.log  # then clustered and linked (FR-NW-04)
     source = db.scalar(select(NewsSource).where(NewsSource.name == "ECB press releases"))
     assert source.etag == ETAG and source.failures == 0
 
@@ -138,7 +145,7 @@ def test_a_304_answer_costs_no_parsing(
     assert ecb.headers["if-none-match"] == ETAG  # the earlier answer's ETag was sent back
     fed = [r for r in scripted.requests if r.url.path == "/feeds/press_all.xml"][-1]
     assert fed.headers["if-modified-since"] == "Fri, 02 Oct 2026 21:00:00 GMT"
-    assert parsed == [1]  # only the Fed answer was parsed; the ECB's 304 was not
+    assert parsed == [1, 1]  # the two Fed feeds were parsed; the ECB's 304 was not
     assert "Federal Reserve press releases: 0 new, 8 already stored" in later.log
 
 
@@ -274,12 +281,12 @@ def test_only_headlines_summaries_links_and_metadata_are_stored(settings: Settin
         "published_at", "language", "content_hash", "symbols", "cluster_id",
     }  # fmt: skip  # no body, content or text column
     rows = db.scalars(select(NewsItem)).all()
-    assert len(rows) == 23
+    assert len(rows) == 33
     assert all(len(r.title) <= 300 and len(r.summary) <= 500 for r in rows)
     assert all(
         r.canonical_url.startswith("https://") and "//press" not in r.canonical_url for r in rows
     )
-    assert len({r.canonical_url for r in rows}) == 23
+    assert len({r.canonical_url for r in rows}) == 33
 
 
 # --- EODHD news -------------------------------------------------------------------------------------
@@ -337,22 +344,24 @@ def api(
     return c
 
 
-def test_the_ready_made_sources_are_central_banks_and_eodhd_and_stay_deleted(
-    api: TestClient,
-) -> None:
+def test_the_ready_made_sources_come_once_and_stay_deleted(api: TestClient) -> None:
     listed = api.get("/api/v1/news/sources").json()
     assert [(s["name"], s["kind"]) for s in listed] == [
         ("ECB press releases", "rss"),
         ("Federal Reserve press releases", "rss"),
         ("EODHD news for your tickers", "eodhd"),
+        ("Federal Reserve speeches and testimony", "rss"),
+        ("US export controls (BIS, Federal Register)", "rss"),
+        ("SEC filings for your holdings", "sec"),
+        ("Nasdaq.com headlines for your shares", "rss"),
     ]
     fed = listed[1]
     assert fed["macro_series"] == ["DFF", "DFII10", "DTWEXBGS"] and fed["poll_minutes"] == 60
+    assert listed[3]["macro_series"] == ["DFF", "DFII10", "DTWEXBGS"]  # the speeches too
+    assert "{symbol}" in listed[6]["url"] and listed[6]["trust_weight"] == "0.5"
     assert api.delete(f"/api/v1/news/sources/{listed[2]['id']}").status_code == 204
-    assert [s["name"] for s in api.get("/api/v1/news/sources").json()] == [
-        "ECB press releases",
-        "Federal Reserve press releases",
-    ]  # a deleted default does not come back
+    names = [s["name"] for s in api.get("/api/v1/news/sources").json()]
+    assert "EODHD news for your tickers" not in names and len(names) == 6  # it does not come back
 
 
 def test_sources_are_added_changed_and_checked(api: TestClient) -> None:

@@ -54,5 +54,5 @@ The owner chose to commit and push directly to `main`. This overrides the defaul
 | Q9 | No benchmark chosen yet. |
 | Q10 | English only, i18n-ready. |
 | Q11 | React for the UI. |
-| Q12 | Trusted news sources: central banks, issuers and EODHD news only. |
+| Q12 | Trusted news sources: central banks, regulators and official company filings (SEC), issuers, EODHD news and Nasdaq.com headlines per holding (widened 2026-10-10, ADR 0062). |
 | Q13 | Commit straight to `main`. |
