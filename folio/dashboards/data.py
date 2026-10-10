@@ -1363,6 +1363,7 @@ def news_feed(env: Env, cfg: Any) -> dict[str, Any]:
     floor = datetime.combine(env.today - timedelta(days=NEWS_DAYS), time.min, UTC)
     query = select(NewsCluster).where(
         NewsCluster.relevance > 0,
+        NewsCluster.affects_owner.is_(True),
         NewsCluster.last_seen >= floor,
         NewsCluster.last_seen <= _end_of(env.today),
     )

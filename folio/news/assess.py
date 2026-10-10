@@ -35,12 +35,15 @@ from folio.db.models_insight import (
 )
 from folio.db.models_ledger import Instrument
 from folio.db.models_strategy import Notification
+from folio.lookthrough.service import latest_snapshots
 from folio.news import triage
 from folio.news.linking import relevance
 from folio.news.pipeline import World, build_world
+from folio.news.service import refresh_effect
 from folio.notify.service import notify
 from folio.settings_schema import NewsSettings
 from folio.settings_store import load_section
+from folio.strategies import service as strategies
 
 HUNDRED = Decimal(100)
 ZERO = Decimal(0)
@@ -82,6 +85,66 @@ def _options(db: Session, world: World) -> tuple[list[triage.Option], list[triag
     ]
     sleeves = [triage.Option(f"sleeve:{s}", s) for s in sorted(world.sleeve_exposure)]
     return holdings, sleeves
+
+
+FUND_TOP = 8  # largest holdings of each fund that the model is shown
+STRATEGY_CHARS = 1800
+
+
+def _funds(
+    db: Session, world: World, names: dict[int, str], now: dt.datetime
+) -> list[triage.FundPack]:
+    """The funds the owner holds with their largest holdings and the weights inside, so a story
+    about a company inside one can be weighed (the same snapshots look-through uses)."""
+    packs: list[triage.FundPack] = []
+    snapshots = latest_snapshots(
+        db, [i for i, share in world.exposure.items() if share > 0], on=now.date()
+    )
+    for fund_id, snap in snapshots.items():
+        ranked = sorted(snap.constituents, key=lambda c: c.weight_pct, reverse=True)[:FUND_TOP]
+        if ranked:
+            packs.append(
+                triage.FundPack(
+                    names.get(fund_id, f"Instrument {fund_id}"),
+                    [(c.name, c.weight_pct.quantize(Decimal("0.1"))) for c in ranked],
+                )
+            )
+    return packs
+
+
+def _strategy_text(db: Session) -> str:
+    """The active strategy in short: principles and theses as written, the sleeves with target and
+    bands, the risk limits in percent and the series each sleeve watches. No amounts: the
+    cash limits in euro are left out."""
+    active = next((r for r in strategies.running(db) if r[0].mode == "active"), None)
+    if active is None:
+        return ""
+    definition = active[2]
+    lines = [f"Strategy: {definition.name}"]
+    lines += [f"Principle: {p}" for p in definition.principles]
+    for thesis in definition.theses:
+        if thesis.why:
+            lines.append(f"Thesis for {thesis.sleeve or thesis.instrument}: {thesis.why}")
+    for sleeve in definition.sleeves:
+        parts = []
+        if sleeve.target_pct is not None:
+            parts.append(f"target {sleeve.target_pct}%")
+        if sleeve.soft_band_pp is not None:
+            parts.append(f"soft band {sleeve.soft_band_pp} pp")
+        if sleeve.hard_band_pp is not None:
+            parts.append(f"hard band {sleeve.hard_band_pp} pp")
+        if sleeve.watch:
+            parts.append("watches " + ", ".join(sleeve.watch))
+        lines.append(f"Sleeve {sleeve.id}: " + (", ".join(parts) or "no target set"))
+    limits = definition.risk_limits
+    if limits.max_single_company_lookthrough_pct is not None:
+        lines.append(
+            f"Risk limit: no single company above {limits.max_single_company_lookthrough_pct}% "
+            "of the portfolio looking through funds"
+        )
+    if limits.max_thematic_total_pct is not None:
+        lines.append(f"Risk limit: thematic holdings at most {limits.max_thematic_total_pct}%")
+    return "\n".join(lines)[:STRATEGY_CHARS]
 
 
 def _eligible(
@@ -204,6 +267,10 @@ def _store(
             confidence=item.confidence,
             model=model,
             cost_eur=cost,
+            outlook_term=item.outlook_term,
+            outlook_level=item.outlook_level,
+            outlook=item.outlook or None,
+            advice=item.advice or None,
         )
     )
     cluster.assessed, cluster.max_impact = True, item.impact
@@ -244,6 +311,7 @@ def _store(
         db.add(link)
         cluster.relevance = max(cluster.relevance, link.relevance)
         added += 1
+    refresh_effect(db, cluster)  # the conclusion may now be "touches none of what you hold"
     return added
 
 
@@ -288,6 +356,8 @@ def assess_news(db: Session, llm: LlmClient | None, now: dt.datetime) -> Result:
     target_refs = instrument_refs + [o.ref for o in sleeves]
     prompts = [load_prompt("system"), load_prompt("news_assess")]
     system = system_blocks(prompts[0].text, prompts[1].text)
+    funds = _funds(db, world, names, now)
+    strategy = _strategy_text(db)
     db.commit()  # no write lock is held across the calls below
 
     def call(
@@ -295,13 +365,13 @@ def assess_news(db: Session, llm: LlmClient | None, now: dt.datetime) -> Result:
     ) -> tuple[list[triage.Assessed], Decimal] | None:
         ids = [p.id for p in packs]
         run = start_run(db, "news", "news_assess", model, labels(prompts), now)
-        user = triage.build_prompt(packs, holdings, sleeves)
+        user = triage.build_prompt(packs, holdings, sleeves, funds, strategy)
         run.context = {"clusters": ids, "message": user}
         try:
             reply = metered_create(
                 db, llm, agent_cfg, tz, now, run, model=model, system=system,
                 messages=[{"role": "user", "content": user}],
-                max_tokens=600 + 350 * len(packs),
+                max_tokens=700 + 550 * len(packs),
                 output_schema=triage.build_schema(ids, instrument_refs, target_refs),
             )  # fmt: skip
         except budget.BudgetExceeded as exc:

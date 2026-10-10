@@ -399,6 +399,9 @@ const STORY = {
       weight_pct: null,
       relevance: '0.8',
       matched_by: 'alias:asml',
+      held: true,
+      portfolio_weight_pct: '20',
+      reason: null,
     },
     {
       id: 6,
@@ -409,6 +412,9 @@ const STORY = {
       weight_pct: '0.8',
       relevance: '0.1',
       matched_by: 'constituent:asml',
+      held: true,
+      portfolio_weight_pct: '40',
+      reason: null,
     },
   ],
   assessment: {
@@ -419,6 +425,10 @@ const STORY = {
     rationale: 'Raised guidance on strong orders. It lifts the direct holding most.',
     confidence: 'medium',
     model: 'claude-sonnet-5-5',
+    outlook_term: 'mid',
+    outlook_level: 'mid',
+    outlook: null,
+    advice: null,
   },
 }
 const NEWS_ROUTES = {
@@ -454,12 +464,14 @@ describe('the News page', () => {
     expect(within(card).getByText('Impact 72')).toBeInTheDocument()
     expect(within(card).getByText('Positive')).toBeInTheDocument()
     expect(within(card).getByText(/Raised guidance on strong orders/)).toBeInTheDocument()
-    expect(within(card).getByText('ASML Holding · directly')).toBeInTheDocument()
-    expect(
-      within(card).getByText('World ETF · inside the fund · 0.8 % of the fund'),
-    ).toBeInTheDocument()
-    expect(within(card).getByText('Reported by 2 sources.')).toBeInTheDocument()
-    const link = within(card).getByRole('link', { name: 'ASML raises outlook' })
+    const direct = within(card).getByRole('list', { name: 'Hits your holding directly' })
+    expect(within(direct).getByText('ASML Holding')).toBeInTheDocument()
+    expect(within(direct).getByText(/20[.,]0 % of your portfolio/)).toBeInTheDocument()
+    const fund = within(card).getByRole('list', { name: 'Reaches you through a fund' })
+    expect(within(fund).getByText('World ETF')).toBeInTheDocument()
+    expect(within(fund).getByText(/Asml is 0[.,]8 % of the fund/)).toBeInTheDocument()
+    expect(within(card).getByText(/Reported by 2 sources/)).toBeInTheDocument()
+    const link = within(card).getAllByRole('link', { name: 'ASML raises outlook' })[0]
     expect(link).toHaveAttribute('href', 'https://ecb.europa.eu/a')
     expect(link).toHaveAttribute('rel', 'noopener noreferrer') // news copy is never rendered as markup
   })
@@ -472,13 +484,12 @@ describe('the News page', () => {
     await userEvent.selectOptions(screen.getByLabelText('Impact'), '50')
     await userEvent.selectOptions(screen.getByLabelText('Direction'), 'negative')
     await userEvent.selectOptions(screen.getByLabelText('Order'), 'impact')
-    await userEvent.click(screen.getByLabelText('Show stories linked to nothing'))
     await waitFor(() => {
       const last = calls.filter((c) => c.path === '/api/v1/news').at(-1)
       expect(last).toBeDefined()
     })
     const urls = calls.filter((c) => c.path === '/api/v1/news')
-    expect(urls.length).toBeGreaterThanOrEqual(5)
+    expect(urls.length).toBeGreaterThanOrEqual(4)
   })
 
   it('marks a story not relevant and says what that changed', async () => {

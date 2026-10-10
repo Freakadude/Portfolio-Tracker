@@ -93,6 +93,9 @@ class NewsCluster(Base):
     max_impact: Mapped[int | None] = mapped_column(Integer, default=None)
     linked: Mapped[bool] = mapped_column(Boolean, default=False)  # the linking step has run
     assessed: Mapped[bool] = mapped_column(Boolean, default=False)
+    # the conclusion is that it touches something the owner holds, watches or has a sleeve for;
+    # stories without that are not listed (ADR 0061)
+    affects_owner: Mapped[bool] = mapped_column(Boolean, default=False)
 
 
 class NewsItem(Base):
@@ -141,6 +144,11 @@ class NewsAssessment(Base):
     confidence: Mapped[str] = mapped_column(String(6))
     model: Mapped[str] = mapped_column(String(60))
     cost_eur: Mapped[Decimal] = mapped_column(DecimalText, default=Decimal(0))
+    # what it could mean later (ADR 0061); empty on assessments made before that
+    outlook_term: Mapped[str | None] = mapped_column(String(6), default=None)  # short|mid|long
+    outlook_level: Mapped[str | None] = mapped_column(String(6), default=None)  # low|mid|high
+    outlook: Mapped[str | None] = mapped_column(Text, default=None)
+    advice: Mapped[str | None] = mapped_column(Text, default=None)
 
 
 class NewsFeedback(Base):

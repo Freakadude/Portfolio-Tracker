@@ -17,7 +17,7 @@
       "from": "From",
       "to": "To",
       "sort": "Order",
-      "unlinked": "Show stories linked to nothing"
+      "more": "More filters"
     },
     "sort": {
       "time": "Newest first",
@@ -26,7 +26,7 @@
     },
     "empty": {
       "title": "No news yet",
-      "body": "Stories about what you hold appear here once Folio has fetched your sources (Settings, News) and found links to your holdings."
+      "body": "Stories appear here when Folio has found that they touch something you hold or watch, or one of your sleeves. Stories that touch nothing of yours are not shown."
     },
     "showing": "Showing {{shown}} of {{total}} stories.",
     "impact": "Impact {{score}}",
@@ -67,6 +67,58 @@
     "change": {
       "source_trust": "Trust in {{name}} went from {{old}} to {{new}}.",
       "alias_weight": "The name \"{{name}}\" now counts for {{new}} when matching stories."
+    },
+    "touches": {
+      "title": "What it touches",
+      "direct": "Hits your holding directly",
+      "fund": "Reaches you through a fund",
+      "indirect": "Might affect you indirectly",
+      "watch": "Touches something you only watch",
+      "portfolioShare": "{{pct}} % of your portfolio",
+      "insideFund": "{{company}} is {{pct}} % of the fund",
+      "sleeve": "{{name}} sleeve",
+      "viaTheme": "through a theme",
+      "viaMacro": "through a macro link",
+      "reason": "because {{reason}}",
+      "none": "Not linked to anything yet.",
+      "watchedOnly": "watchlist"
+    },
+    "reported": {
+      "title": "What was reported",
+      "excerpt": "Summary from the source",
+      "headlineOnly": "The source gave only the headline.",
+      "read": "Read at {{source}}",
+      "allSources": "All {{count}} sources"
+    },
+    "impactNow": {
+      "title": "Impact now",
+      "score": "Impact {{score}}",
+      "scoreOf": "{{score}} of 100",
+      "notAssessed": "Not assessed yet."
+    },
+    "assessmentTitle": "Assessment",
+    "outlook": {
+      "title": "What could happen",
+      "term": {
+        "short": "Short term",
+        "mid": "Mid term",
+        "long": "Long term"
+      },
+      "termHint": {
+        "short": "days",
+        "mid": "weeks to months",
+        "long": "a year or more"
+      },
+      "level": {
+        "low": "Low potential",
+        "mid": "Mid potential",
+        "high": "High potential"
+      },
+      "estimated": "Term and potential are estimated from the score and the horizon. The written outlook appears when this story is assessed again."
+    },
+    "advice": {
+      "title": "What you could do",
+      "note": "AI-generated guidance from your own strategy. Not an order, not financial advice."
     }
   },
   "newsSettings": {

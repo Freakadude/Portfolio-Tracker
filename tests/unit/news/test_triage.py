@@ -215,3 +215,93 @@ def test_an_alias_loses_weight_until_it_stops_matching_and_regains_some() -> Non
     assert triage.alias_after(D("0.1"), "not_relevant") == 0
     assert triage.alias_after(D("0.2"), "useful") == D("0.3")
     assert triage.alias_after(D("0.95"), "useful") == 1
+
+
+# --- what could happen later (ADR 0061) ------------------------------------------------------------
+
+OUTLOOK = {
+    "outlook_term": "mid",
+    "outlook_level": "high",
+    "outlook": "Export limits could cut ASML orders over the next quarters, and Apple is 5.2% of the ETF.",
+    "advice": "Watch the semiconductor sleeve's drift; consider directing new money elsewhere first.",
+}
+
+
+def test_the_outlook_is_read_with_term_level_and_both_texts() -> None:
+    found, problems = triage.parse_reply(reply(row(**OUTLOOK)), IDS, INSTRUMENTS, TARGETS)
+    assert problems == []
+    (a,) = found
+    assert (a.outlook_term, a.outlook_level) == ("mid", "high")
+    assert a.outlook.startswith("Export limits could") and a.advice.startswith("Watch the")
+
+
+def test_an_answer_without_the_outlook_is_still_read_and_leaves_it_empty() -> None:
+    (a,) = triage.parse_reply(reply(row()), IDS, INSTRUMENTS, TARGETS)[0]
+    assert (a.outlook_term, a.outlook_level, a.outlook, a.advice) == (None, None, "", "")
+
+
+def test_a_term_or_level_outside_the_enums_is_left_empty_not_trusted() -> None:
+    (a,) = triage.parse_reply(
+        reply(row(**{**OUTLOOK, "outlook_term": "forever", "outlook_level": "extreme"})),
+        IDS,
+        INSTRUMENTS,
+        TARGETS,
+    )[0]
+    assert (a.outlook_term, a.outlook_level) == (None, None)
+
+
+def test_advice_is_only_kept_for_a_mid_or_high_potential() -> None:
+    (low,) = triage.parse_reply(
+        reply(row(**{**OUTLOOK, "outlook_level": "low"})), IDS, INSTRUMENTS, TARGETS
+    )[0]
+    assert low.advice == "" and low.outlook != ""
+
+
+def test_a_text_that_quotes_an_amount_or_units_is_dropped() -> None:
+    for text in (
+        "Trim 500 EUR of it",
+        "Sell 10 units",
+        "That is about \u20ac1,000 at risk",
+        "Add $200",
+    ):
+        (a,) = triage.parse_reply(
+            reply(row(**{**OUTLOOK, "advice": text, "outlook": text})), IDS, INSTRUMENTS, TARGETS
+        )[0]
+        assert a.advice == "" and a.outlook == "", text
+    (kept,) = triage.parse_reply(
+        reply(row(**{**OUTLOOK, "advice": "Apple is 5.2% of the fund; watch it."})),
+        IDS,
+        INSTRUMENTS,
+        TARGETS,
+    )[0]
+    assert kept.advice.startswith("Apple is 5.2%")  # a percentage is fine
+
+
+def test_the_texts_are_cut_to_length() -> None:
+    (a,) = triage.parse_reply(
+        reply(row(**{**OUTLOOK, "outlook": "word " * 400, "advice": "word " * 400})),
+        IDS,
+        INSTRUMENTS,
+        TARGETS,
+    )[0]
+    assert len(a.outlook) <= 400 and len(a.advice) <= 400
+
+
+def test_the_schema_asks_for_the_outlook_with_its_enums() -> None:
+    props = triage.build_schema(IDS, INSTRUMENTS, TARGETS)["properties"]["assessments"]["items"]
+    assert props["properties"]["outlook_term"]["enum"] == ["short", "mid", "long"]
+    assert props["properties"]["outlook_level"]["enum"] == ["low", "mid", "high"]
+    assert {"outlook", "advice"} <= set(props["required"])
+
+
+def test_the_prompt_carries_the_funds_largest_holdings_and_the_strategy() -> None:
+    funds = [triage.FundPack("World ETF", [("Apple", D("5.2")), ("ASML Holding", D("0.8"))])]
+    text = triage.build_prompt(
+        [], HOLDINGS, SLEEVES, funds, "Principle: direct new money before selling <b>"
+    )
+    assert "World ETF: Apple 5.2%, ASML Holding 0.8%" in text
+    assert "Principle: direct new money before selling  b " in text.replace("<b>", " b ") or (
+        "Principle: direct new money before selling" in text and "<b>" not in text
+    )
+    plain = triage.build_prompt([], HOLDINGS, SLEEVES)
+    assert "largest holdings" not in plain and "risk limits" not in plain

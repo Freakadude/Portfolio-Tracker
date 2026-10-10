@@ -68,123 +68,124 @@ function Stories() {
     <div className="space-y-4">
       <form
         aria-label={t('news.filters')}
-        className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4"
+        className="space-y-3 rounded-xl border border-border bg-card p-4"
         onSubmit={(e) => e.preventDefault()}
       >
-        <Field label={t('news.filter.holding')}>
-          {(p) => (
-            <Select
-              value={filters.instrument ?? ''}
-              onChange={(e) =>
-                set({ instrument: e.target.value ? Number(e.target.value) : undefined })
-              }
-              {...p}
-            >
-              <option value="">{t('news.filter.all')}</option>
-              {(instruments.data ?? []).map((i) => (
-                <option key={i.id} value={i.id}>
-                  {i.name}
-                </option>
-              ))}
-            </Select>
-          )}
-        </Field>
-        <Field label={t('news.filter.impact')}>
-          {(p) => (
-            <Select
-              value={filters.minImpact ?? 0}
-              onChange={(e) => set({ minImpact: Number(e.target.value) })}
-              {...p}
-            >
-              {[0, 30, 50, 70].map((n) => (
-                <option key={n} value={n}>
-                  {n === 0 ? t('news.filter.anyImpact') : t('news.filter.atLeast', { n })}
-                </option>
-              ))}
-            </Select>
-          )}
-        </Field>
-        <Field label={t('news.filter.direction')}>
-          {(p) => (
-            <Select
-              value={filters.direction ?? ''}
-              onChange={(e) => set({ direction: e.target.value || undefined })}
-              {...p}
-            >
-              <option value="">{t('news.filter.all')}</option>
-              {['positive', 'negative', 'mixed', 'unclear'].map((d) => (
-                <option key={d} value={d}>
-                  {t(`news.direction.${d}`)}
-                </option>
-              ))}
-            </Select>
-          )}
-        </Field>
-        <Field label={t('news.filter.source')}>
-          {(p) => (
-            <Select
-              value={filters.source ?? ''}
-              onChange={(e) => set({ source: e.target.value ? Number(e.target.value) : undefined })}
-              {...p}
-            >
-              <option value="">{t('news.filter.all')}</option>
-              {(sources.data ?? []).map((s) => (
-                <option key={s.id} value={s.id}>
-                  {s.name}
-                </option>
-              ))}
-            </Select>
-          )}
-        </Field>
-        <Field label={t('news.filter.from')}>
-          {(p) => (
-            <Input
-              type="date"
-              value={filters.from ?? ''}
-              onChange={(e) => set({ from: e.target.value })}
-              {...p}
-            />
-          )}
-        </Field>
-        <Field label={t('news.filter.to')}>
-          {(p) => (
-            <Input
-              type="date"
-              value={filters.to ?? ''}
-              onChange={(e) => set({ to: e.target.value })}
-              {...p}
-            />
-          )}
-        </Field>
-        <Field label={t('news.filter.sort')}>
-          {(p) => (
-            <Select
-              value={filters.sort ?? 'time'}
-              onChange={(e) => set({ sort: e.target.value as NewsFilters['sort'] })}
-              {...p}
-            >
-              {['time', 'relevance', 'impact'].map((s) => (
-                <option key={s} value={s}>
-                  {t(`news.sort.${s}`)}
-                </option>
-              ))}
-            </Select>
-          )}
-        </Field>
-        <label className="flex items-end gap-2 pb-2 text-sm">
-          <input
-            type="checkbox"
-            checked={filters.includeUnlinked ?? false}
-            onChange={(e) => set({ includeUnlinked: e.target.checked })}
-          />
-          {t('news.filter.unlinked')}
-        </label>
+        <div className="grid gap-3 sm:grid-cols-3">
+          <Field label={t('news.filter.holding')}>
+            {(p) => (
+              <Select
+                value={filters.instrument ?? ''}
+                onChange={(e) =>
+                  set({ instrument: e.target.value ? Number(e.target.value) : undefined })
+                }
+                {...p}
+              >
+                <option value="">{t('news.filter.all')}</option>
+                {(instruments.data ?? []).map((i) => (
+                  <option key={i.id} value={i.id}>
+                    {i.name}
+                  </option>
+                ))}
+              </Select>
+            )}
+          </Field>
+          <Field label={t('news.filter.impact')}>
+            {(p) => (
+              <Select
+                value={filters.minImpact ?? 0}
+                onChange={(e) => set({ minImpact: Number(e.target.value) })}
+                {...p}
+              >
+                {[0, 30, 50, 70].map((n) => (
+                  <option key={n} value={n}>
+                    {n === 0 ? t('news.filter.anyImpact') : t('news.filter.atLeast', { n })}
+                  </option>
+                ))}
+              </Select>
+            )}
+          </Field>
+          <Field label={t('news.filter.sort')}>
+            {(p) => (
+              <Select
+                value={filters.sort ?? 'time'}
+                onChange={(e) => set({ sort: e.target.value as NewsFilters['sort'] })}
+                {...p}
+              >
+                {['time', 'relevance', 'impact'].map((s) => (
+                  <option key={s} value={s}>
+                    {t(`news.sort.${s}`)}
+                  </option>
+                ))}
+              </Select>
+            )}
+          </Field>
+        </div>
+        <details>
+          <summary className="cursor-pointer text-sm font-medium">{t('news.filter.more')}</summary>
+          <div className="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+            <Field label={t('news.filter.direction')}>
+              {(p) => (
+                <Select
+                  value={filters.direction ?? ''}
+                  onChange={(e) => set({ direction: e.target.value || undefined })}
+                  {...p}
+                >
+                  <option value="">{t('news.filter.all')}</option>
+                  {['positive', 'negative', 'mixed', 'unclear'].map((d) => (
+                    <option key={d} value={d}>
+                      {t(`news.direction.${d}`)}
+                    </option>
+                  ))}
+                </Select>
+              )}
+            </Field>
+            <Field label={t('news.filter.source')}>
+              {(p) => (
+                <Select
+                  value={filters.source ?? ''}
+                  onChange={(e) =>
+                    set({ source: e.target.value ? Number(e.target.value) : undefined })
+                  }
+                  {...p}
+                >
+                  <option value="">{t('news.filter.all')}</option>
+                  {(sources.data ?? []).map((s) => (
+                    <option key={s.id} value={s.id}>
+                      {s.name}
+                    </option>
+                  ))}
+                </Select>
+              )}
+            </Field>
+            <Field label={t('news.filter.from')}>
+              {(p) => (
+                <Input
+                  type="date"
+                  value={filters.from ?? ''}
+                  onChange={(e) => set({ from: e.target.value })}
+                  {...p}
+                />
+              )}
+            </Field>
+            <Field label={t('news.filter.to')}>
+              {(p) => (
+                <Input
+                  type="date"
+                  value={filters.to ?? ''}
+                  onChange={(e) => set({ to: e.target.value })}
+                  {...p}
+                />
+              )}
+            </Field>
+          </div>
+        </details>
       </form>
       {news.isError && <Alert>{errorMessage(news.error)}</Alert>}
       {news.isSuccess && stories.length === 0 && (
         <EmptyState title={t('news.empty.title')} body={t('news.empty.body')} />
       )}
-      <div className="space-y-3">
+      <div className="space-y-6">
         {stories.map((s) => (
           <StoryCard key={s.id} story={s} />
         ))}

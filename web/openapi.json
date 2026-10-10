@@ -6199,6 +6199,17 @@
       },
       "NewsAssessmentOut": {
         "properties": {
+          "advice": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Advice"
+          },
           "affected": {
             "items": {
               "type": "string"
@@ -6226,6 +6237,25 @@
             "title": "Model",
             "type": "string"
           },
+          "outlook": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Outlook"
+          },
+          "outlook_level": {
+            "title": "Outlook Level",
+            "type": "string"
+          },
+          "outlook_term": {
+            "title": "Outlook Term",
+            "type": "string"
+          },
           "rationale": {
             "title": "Rationale",
             "type": "string"
@@ -6238,7 +6268,11 @@
           "affected",
           "rationale",
           "confidence",
-          "model"
+          "model",
+          "outlook_term",
+          "outlook_level",
+          "outlook",
+          "advice"
         ],
         "title": "NewsAssessmentOut",
         "type": "object"
@@ -6417,6 +6451,10 @@
       },
       "NewsLinkOut": {
         "properties": {
+          "held": {
+            "title": "Held",
+            "type": "boolean"
+          },
           "id": {
             "title": "Id",
             "type": "integer"
@@ -6443,6 +6481,29 @@
           "matched_by": {
             "title": "Matched By",
             "type": "string"
+          },
+          "portfolio_weight_pct": {
+            "anyOf": [
+              {
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Portfolio Weight Pct"
+          },
+          "reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reason"
           },
           "relevance": {
             "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
@@ -6481,7 +6542,10 @@
           "label",
           "weight_pct",
           "relevance",
-          "matched_by"
+          "matched_by",
+          "held",
+          "portfolio_weight_pct",
+          "reason"
         ],
         "title": "NewsLinkOut",
         "type": "object"

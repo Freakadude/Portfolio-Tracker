@@ -28,6 +28,7 @@ from folio.news.feed import FeedError, parse_feed
 from folio.news.feedback import FeedbackError, give_feedback
 from folio.news.fetch import Fetcher
 from folio.news.service import SourceError, SourceInput
+from folio.positions import load_positions
 
 router = APIRouter(prefix="/news", tags=["news"])
 PREVIEW_ITEMS = 10
@@ -218,6 +219,9 @@ class NewsLinkOut(BaseModel):
     weight_pct: Decimal | None  # the company's weight inside the ETF, for look-through
     relevance: Decimal
     matched_by: str
+    held: bool  # the owner holds the instrument (otherwise it is only watched), or a sleeve
+    portfolio_weight_pct: Decimal | None  # the holding's share of the portfolio, in percent
+    reason: str | None  # why the model linked it (theme and macro links it added)
 
 
 class NewsAssessmentOut(BaseModel):
@@ -228,6 +232,12 @@ class NewsAssessmentOut(BaseModel):
     rationale: str
     confidence: str
     model: str
+    # what it could mean later; the term and level are worked out from the score and the horizon
+    # for assessments made before the model was asked (then `outlook` is empty)
+    outlook_term: str  # short | mid | long
+    outlook_level: str  # low | mid | high
+    outlook: str | None
+    advice: str | None
 
 
 class NewsClusterOut(BaseModel):
@@ -262,7 +272,33 @@ class NewsFeedbackOut(BaseModel):
     changes: list[NewsFeedbackChangeOut]
 
 
-def _cluster_out(db: DbDep, cluster: NewsCluster, names: dict[int, str]) -> NewsClusterOut:
+_TERM_OF_HORIZON = {"intraday": "short", "days": "short", "weeks": "mid", "structural": "long"}
+
+
+def _level_of(score: int) -> str:
+    return "high" if score >= 70 else "mid" if score >= 40 else "low"
+
+
+def _weights(db: DbDep) -> dict[int, Decimal]:
+    """Each held instrument's share of the portfolio, in percent (accounts added together)."""
+    rows, _totals = load_positions(db, group_by_isin=False)
+    shares: dict[int, Decimal] = {}
+    for r in rows:
+        if r.state.quantity > 0 and r.weight is not None:
+            shares[r.instrument.id] = shares.get(r.instrument.id, Decimal(0)) + r.weight * 100
+    return shares
+
+
+def _reason_of(matched_by: str) -> str | None:
+    """The words behind a link the model added ("llm:theme:export rules on chip equipment")."""
+    if not matched_by.startswith("llm:"):
+        return None
+    return matched_by.split(":", 2)[2].strip() or None
+
+
+def _cluster_out(
+    db: DbDep, cluster: NewsCluster, names: dict[int, str], weights: dict[int, Decimal]
+) -> NewsClusterOut:
     sources = {s.id: s.name for s in db.scalars(select(NewsSource))}
     items = db.scalars(
         select(NewsItem).where(NewsItem.cluster_id == cluster.id).order_by(NewsItem.published_at)
@@ -309,6 +345,9 @@ def _cluster_out(db: DbDep, cluster: NewsCluster, names: dict[int, str]) -> News
                 weight_pct=k.weight_pct,
                 relevance=k.relevance,
                 matched_by=k.matched_by,
+                held=k.sleeve is not None or weights.get(k.instrument_id or 0, 0) > 0,
+                portfolio_weight_pct=weights.get(k.instrument_id or 0),
+                reason=_reason_of(k.matched_by or ""),
             )
             for k in links
         ],
@@ -322,6 +361,10 @@ def _cluster_out(db: DbDep, cluster: NewsCluster, names: dict[int, str]) -> News
             rationale=latest.rationale,
             confidence=latest.confidence,
             model=latest.model,
+            outlook_term=latest.outlook_term or _TERM_OF_HORIZON.get(latest.horizon, "short"),
+            outlook_level=latest.outlook_level or _level_of(latest.impact_score),
+            outlook=latest.outlook,
+            advice=latest.advice,
         ),
     )
 
@@ -349,7 +392,8 @@ def list_news(
     that holds the company), impact, direction, source and date."""
     query = select(NewsCluster)
     if not include_unlinked:
-        query = query.where(NewsCluster.relevance > 0)
+        # a story whose conclusion is that it touches nothing of the owner's is not listed
+        query = query.where(NewsCluster.relevance > 0, NewsCluster.affects_owner.is_(True))
     if instrument is not None:
         query = query.where(
             exists().where(
@@ -382,8 +426,8 @@ def list_news(
     page = db.scalars(
         query.order_by(order[sort], NewsCluster.id.desc()).limit(limit).offset(offset)
     )
-    names = _names(db)
-    return NewsPageOut(clusters=[_cluster_out(db, c, names) for c in page], total=total)
+    names, weights = _names(db), _weights(db)
+    return NewsPageOut(clusters=[_cluster_out(db, c, names, weights) for c in page], total=total)
 
 
 @router.get("/clusters/{cluster_id}", response_model=NewsClusterOut)
@@ -391,7 +435,7 @@ def one_story(cluster_id: int, _user: UserDep, db: DbDep) -> NewsClusterOut:
     cluster = db.get(NewsCluster, cluster_id)
     if cluster is None:
         raise ApiError(404, "Not found", "That story does not exist.")
-    return _cluster_out(db, cluster, _names(db))
+    return _cluster_out(db, cluster, _names(db), _weights(db))
 
 
 @router.post("/clusters/{cluster_id}/feedback", response_model=NewsFeedbackOut)

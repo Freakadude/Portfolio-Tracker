@@ -17,7 +17,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from folio.audit import write_audit
-from folio.db.models_insight import NewsItem, NewsSource
+from folio.db.models_insight import NewsAssessment, NewsCluster, NewsItem, NewsLink, NewsSource
 from folio.news.feed import FeedItem
 from folio.news.fetch import backoff
 from folio.news.normalize import content_hash
@@ -248,3 +248,53 @@ def record_failure(source: NewsSource, now: datetime, error: str) -> None:
     source.last_error = error[:500]
     source.last_fetch_at = now
     source.next_fetch_at = now + backoff(source.poll_minutes, source.failures)
+
+
+# --- does a story touch the owner at all (ADR 0061) ---------------------------------------------
+
+LLM_PREFIX = "llm:"  # links the model added carry this in `matched_by`
+SLEEVE_MIN_IMPACT = 20  # a macro story that only reaches a sleeve counts from this score
+
+
+def effect_of(
+    assessed: bool,
+    affected: Sequence[object],
+    impact: int,
+    links: Sequence[tuple[int | None, str | None, str]],
+) -> bool:
+    """Whether the conclusion on a story is that it touches something the owner holds, watches or
+    has a sleeve for. `links` are (instrument id, sleeve, matched_by) of the story. Before it is
+    assessed, any link to a holding, watched instrument or sleeve counts; afterwards the
+    assessment decides: it names affected holdings, or the model added a link of its own, or a
+    sleeve is reached and the score is not noise. A story with none of these is not listed."""
+    own = [k for k in links if k[0] is not None or k[1]]
+    if not own:
+        return False
+    if not assessed:
+        return True
+    return (
+        bool(affected)
+        or any(k[2].startswith(LLM_PREFIX) for k in own)
+        or (any(k[1] for k in own) and impact >= SLEEVE_MIN_IMPACT)
+    )
+
+
+def refresh_effect(db: Session, cluster: NewsCluster) -> bool:
+    """Work out `affects_owner` of a story from its links and its latest assessment."""
+    db.flush()
+    links = [
+        (k.instrument_id, k.sleeve, k.matched_by or "")
+        for k in db.scalars(select(NewsLink).where(NewsLink.cluster_id == cluster.id))
+    ]
+    latest = db.scalars(
+        select(NewsAssessment)
+        .where(NewsAssessment.cluster_id == cluster.id)
+        .order_by(NewsAssessment.id.desc())
+    ).first()
+    cluster.affects_owner = effect_of(
+        cluster.assessed and latest is not None,
+        [] if latest is None else list(latest.affected or []),
+        0 if latest is None else latest.impact_score,
+        links,
+    )
+    return cluster.affects_owner

@@ -42,6 +42,7 @@ from folio.news.linking import (
     relevance,
 )
 from folio.news.normalize import title_tokens
+from folio.news.service import refresh_effect
 from folio.strategies import service as strategies
 from folio.strategies.inputs import sleeve_of_instruments
 
@@ -292,4 +293,5 @@ def _relink(
     db.add_all(best.values())
     cluster.linked = True
     cluster.relevance = max((link.relevance for link in best.values()), default=ZERO)
+    refresh_effect(db, cluster)
     return len(best)

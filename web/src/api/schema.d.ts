@@ -5055,6 +5055,8 @@ export interface components {
         };
         /** NewsAssessmentOut */
         NewsAssessmentOut: {
+            /** Advice */
+            advice: string | null;
             /** Affected */
             affected: string[];
             /** Confidence */
@@ -5067,6 +5069,12 @@ export interface components {
             impact_score: number;
             /** Model */
             model: string;
+            /** Outlook */
+            outlook: string | null;
+            /** Outlook Level */
+            outlook_level: string;
+            /** Outlook Term */
+            outlook_term: string;
             /** Rationale */
             rationale: string;
         };
@@ -5137,6 +5145,8 @@ export interface components {
         };
         /** NewsLinkOut */
         NewsLinkOut: {
+            /** Held */
+            held: boolean;
             /** Id */
             id: number;
             /** Instrument Id */
@@ -5147,6 +5157,10 @@ export interface components {
             link_type: string;
             /** Matched By */
             matched_by: string;
+            /** Portfolio Weight Pct */
+            portfolio_weight_pct: string | null;
+            /** Reason */
+            reason: string | null;
             /** Relevance */
             relevance: string;
             /** Sleeve */

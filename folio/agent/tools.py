@@ -537,7 +537,11 @@ class ToolBox:
         since = _date(args.get("since"), self._today() - dt.timedelta(days=NEWS_DAYS))
         floor = dt.datetime.combine(since, dt.time.min, dt.UTC)
         minimum = int(args.get("min_impact") or 0)
-        query = select(NewsCluster).where(NewsCluster.last_seen >= floor, NewsCluster.relevance > 0)
+        query = select(NewsCluster).where(
+            NewsCluster.last_seen >= floor,
+            NewsCluster.relevance > 0,
+            NewsCluster.affects_owner.is_(True),
+        )
         if minimum:
             query = query.where(NewsCluster.max_impact >= minimum)
         instrument_id = args.get("instrument_id")
@@ -573,6 +577,11 @@ class ToolBox:
                     "direction": None if latest is None else latest.direction,
                     "horizon": None if latest is None else latest.horizon,
                     "assessment": None if latest is None else untrusted(latest.rationale),
+                    "term": None if latest is None else latest.outlook_term,
+                    "potential": None if latest is None else latest.outlook_level,
+                    "outlook": None
+                    if latest is None or not latest.outlook
+                    else untrusted(latest.outlook),
                 }
             )
         return {"stories": out}

@@ -54,13 +54,15 @@ def answers(
     def handler(body: dict[str, Any]) -> dict[str, Any]:
         content = body["messages"][0]["content"]
         ids = [int(i) for i in re.findall(r'<story id="(\d+)"', content)]
+        # unless told otherwise the model finds the story touches the first holding it was given
+        first = re.findall(r"^- (instrument:\d+) ", content, re.MULTILINE)[:1]
         rows = [
             {
                 "cluster_id": i,
                 "impact_score": (impacts or {}).get(i, default),
                 "direction": "mixed",
                 "horizon": "days",
-                "affected": affected or [],
+                "affected": affected if affected is not None else first,
                 "rationale": f"Story {i} matters a little.",
                 "confidence": "medium",
                 "links": links or [],
@@ -142,7 +144,7 @@ def test_linked_stories_are_assessed_in_one_cheap_call_and_the_model_may_add_lin
     ]
     (run,) = db.scalars(select(AgentRun)).all()
     assert (run.run_type, run.status, run.cost_eur) == ("news_assess", "ok", done.cost_eur)
-    assert run.prompt_version.startswith("system@2+") and ", news_assess@1+" in run.prompt_version
+    assert run.prompt_version.startswith("system@2+") and ", news_assess@2+" in run.prompt_version
     assert (
         run.context["clusters"] == [c.id for c in clusters]
         and "<untrusted>" in run.context["message"]
@@ -567,3 +569,119 @@ def test_the_news_list_filters_by_impact_direction_source_and_date_and_sorts(
         "url"
     ].startswith("https://")
     assert api.get("/api/v1/news/clusters/9999").status_code == 404
+
+
+# --- what could happen, and stories that touch nothing (ADR 0061) --------------------------------------
+
+
+def with_outlook(**extra: object) -> Callable[[dict[str, Any]], dict[str, Any]]:
+    """The usual model, with the outlook fields added to each answer."""
+    inner = answers()
+
+    def handler(body: dict[str, Any]) -> dict[str, Any]:
+        reply = inner(body)
+        data = json.loads(reply["content"][0]["text"])
+        for row in data["assessments"]:
+            row.update(
+                {
+                    "outlook_term": "mid",
+                    "outlook_level": "high",
+                    "outlook": "Orders could fall over the coming quarters.",
+                    "advice": "Watch the gold sleeve's drift; consider new money elsewhere first.",
+                    **extra,
+                }
+            )
+        reply["content"][0]["text"] = json.dumps(data)
+        return reply
+
+    return handler
+
+
+def test_the_outlook_is_stored_and_the_prompt_carries_the_funds_and_the_strategy(
+    db: Session, book
+) -> None:
+    (cluster,) = prepared(db, "ASML raises outlook on strong chip orders")
+    llm = ScriptedLlm(handler=with_outlook())
+    assess_news(db, llm.client(), NOW)
+    user = llm.requests[0]["messages"][0]["content"]
+    assert "The largest holdings inside the funds you hold" in user
+    assert "World ETF: APPLE INC 5.2%" in user  # the fund and the weight of the company inside
+    assert "Strategy: News test" in user
+    assert "Sleeve gold_hedge: watches US_REAL_YIELD_10Y, FED_FUNDS" in user  # what it watches
+    assert "EUR" not in user and "\u20ac" not in user  # no amounts, as before
+    row = db.scalar(select(NewsAssessment).where(NewsAssessment.cluster_id == cluster.id))
+    assert (row.outlook_term, row.outlook_level) == ("mid", "high")
+    assert row.outlook.startswith("Orders could") and row.advice.startswith("Watch the gold")
+    assert llm.requests[0]["output_config"]["format"]["schema"]["properties"]["assessments"][
+        "items"
+    ]["required"][-4:] == ["outlook_term", "outlook_level", "outlook", "advice"]
+
+
+def test_a_story_the_model_finds_touches_nothing_is_no_longer_listed(
+    api: TestClient, db: Session, book
+) -> None:
+    a, b = prepared(
+        db, "ASML raises outlook on strong chip orders", "World ETF announces a new fee schedule"
+    )
+    assert api.get("/api/v1/news").json()["total"] == 2  # linked, not assessed yet: listed
+    llm = ScriptedLlm(handler=answers(affected=None))
+
+    def only_asml(body: dict[str, Any]) -> dict[str, Any]:
+        reply = answers()(body)
+        data = json.loads(reply["content"][0]["text"])
+        for row in data["assessments"]:
+            if row["cluster_id"] == b.id:
+                row["affected"] = []  # "this fee change does not touch anything you hold"
+        reply["content"][0]["text"] = json.dumps(data)
+        return reply
+
+    llm = ScriptedLlm(handler=only_asml)
+    assess_news(db, llm.client(), NOW)
+    shown = api.get("/api/v1/news").json()
+    assert [c["id"] for c in shown["clusters"]] == [a.id] and shown["total"] == 1
+    db.expire_all()
+    assert db.get(NewsCluster, b.id).affects_owner is False
+    # the API can still be asked for everything, for tests and tools
+    assert api.get("/api/v1/news", params={"include_unlinked": True}).json()["total"] == 2
+
+
+def test_a_link_the_model_added_makes_a_story_count_even_with_no_holding_named(
+    api: TestClient, db: Session, book
+) -> None:
+    (cluster,) = prepared(db, "World ETF announces a new fee schedule")
+    link = {"target": "sleeve:gold_hedge", "kind": "theme", "reason": "fees across funds"}
+    llm = ScriptedLlm(handler=answers(affected=[], links=[link]))
+    assess_news(db, llm.client(), NOW)
+    db.expire_all()
+    assert db.get(NewsCluster, cluster.id).affects_owner is True
+
+
+def test_the_api_says_what_each_link_is_and_gives_the_outlook_or_a_fallback(
+    api: TestClient, db: Session, book
+) -> None:
+    a, b = prepared(
+        db,
+        "ASML raises outlook on strong chip orders",
+        "Apple unveils new iPhone as services revenue climbs",
+    )
+    llm = ScriptedLlm(handler=with_outlook(outlook_term="long", outlook_level="mid"))
+    assess_news(db, llm.client(), NOW)
+    clusters = {c["id"]: c for c in api.get("/api/v1/news").json()["clusters"]}
+    asml = clusters[a.id]
+    direct = next(k for k in asml["links"] if k["link_type"] == "direct")
+    assert direct["held"] is True and Decimal(direct["portfolio_weight_pct"]) > 0
+    assert direct["reason"] is None
+    apple = next(k for k in clusters[b.id]["links"] if k["link_type"] == "look_through")
+    assert (apple["label"], apple["weight_pct"]) == ("World ETF", "5.2")
+    assessment = asml["assessment"]
+    assert (assessment["outlook_term"], assessment["outlook_level"]) == ("long", "mid")
+    assert assessment["advice"].startswith("Watch the gold")
+
+    # an assessment made before the outlook existed gets a term and level from score and horizon
+    for old in db.scalars(select(NewsAssessment).where(NewsAssessment.cluster_id == a.id)):
+        old.outlook_term = old.outlook_level = old.outlook = old.advice = None
+        old.impact_score, old.horizon = 75, "structural"
+    db.commit()
+    legacy = api.get(f"/api/v1/news/clusters/{a.id}").json()["assessment"]
+    assert (legacy["outlook_term"], legacy["outlook_level"]) == ("long", "high")
+    assert legacy["outlook"] is None and legacy["advice"] is None
