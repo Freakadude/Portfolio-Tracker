@@ -60,6 +60,7 @@ export interface ValueHistoryData extends Empty {
 }
 
 export interface DrawdownData extends Empty {
+  instrument_name?: string | null
   points?: { date: string; value: string }[]
   max_drawdown?: string
   current_drawdown?: string

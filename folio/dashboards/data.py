@@ -557,7 +557,9 @@ def drawdown_chart(env: Env, cfg: Any) -> dict[str, Any]:
     if not index:
         return _empty("There is not enough history for this chart yet.")
     under = drawdown(index)
+    chosen = env.db.get(Instrument, cfg.scope.id) if cfg.scope.kind == "instrument" else None
     return {
+        "instrument_name": None if chosen is None else chosen.name,
         "points": thin(
             [{"date": d.isoformat(), "value": str(v)} for d, v in under.series], CHART_POINTS
         ),

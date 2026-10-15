@@ -106,6 +106,9 @@ export function DrawdownWidget({ data }: WidgetProps<DrawdownData>) {
   if (data.empty) return <p className="text-sm text-muted">{data.reason}</p>
   return (
     <div className="flex h-full flex-col gap-2">
+      {data.instrument_name && (
+        <p className="truncate text-sm font-medium text-foreground">{data.instrument_name}</p>
+      )}
       <p className="text-sm text-muted">
         {t('widgets.maxDrawdown')}:{' '}
         <strong className="text-foreground">{pct(data.max_drawdown, 1)}</strong>

@@ -1060,6 +1060,13 @@ def test_the_dashboard_can_look_at_one_type_or_some_holdings(api, book, db) -> N
     assert nothing["error"] and "type or holding filter" in nothing["error"]
 
 
+def test_the_drawdown_names_the_instrument_it_looks_at(api, book) -> None:
+    whole = one(api, "drawdown")
+    assert whole["instrument_name"] is None
+    single = one(api, "drawdown", {"scope": {"kind": "instrument", "id": book["fund"]}})
+    assert single["instrument_name"]
+
+
 def test_the_cost_basis_is_a_key_figure_and_a_table_column(api, book) -> None:
     """11 units left, worth 1188: the unrealized result is that value minus what they cost."""
     unrealized = D(one(api, "kpi", {"metric": "unrealized"})["value"])
