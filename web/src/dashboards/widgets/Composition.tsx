@@ -375,7 +375,7 @@ export function HoldingsTableWidget({ data, config }: WidgetProps<HoldingsData>)
               </tr>
             )}
             {list.map((r) => (
-              <tr key={r.instrument_id} className="border-b border-border">
+              <tr key={r.instrument_id} className="border-b border-border hover:bg-border/40">
                 {columns.map((c) => (
                   <td
                     key={c}
