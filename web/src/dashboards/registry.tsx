@@ -98,6 +98,10 @@ export const KPI_METRICS = [
   'sharpe',
   'beta',
   'latest_price',
+  'peak_price',
+  'peak_fall_off',
+  'peak_value',
+  'peak_value_fall_off',
 ] as const // fmt: skip
 
 const DEFS: Record<string, Omit<WidgetDef, 'type'>> = {
@@ -196,6 +200,9 @@ const DEFS: Record<string, Omit<WidgetDef, 'type'>> = {
           'day',
           'income',
           'total_return',
+          'peak_price',
+          'peak_fall_off',
+          'peak_value',
         ],
         labels: 'widgets.columns',
       },

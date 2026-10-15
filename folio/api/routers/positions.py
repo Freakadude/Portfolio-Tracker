@@ -17,6 +17,7 @@ from folio.db.models_ledger import Instrument, LedgerTransaction, LotMatch
 from folio.domain import PositionState, position_metrics
 from folio.domain.ledger import ZERO, precise
 from folio.ledger_service import compute_state
+from folio.peaks import peaks_for
 from folio.positions import (
     PositionRow,
     PriceInfo,
@@ -74,6 +75,10 @@ class PositionOut(PositionMetricsOut):
     ticker: str | None
     currency: str | None
     asset_class: str
+    # the best price since the first buy, trading currency (ADR 0063); None without a buy or price
+    peak_price: Decimal | None = None
+    peak_date: dt.date | None = None
+    peak_fall_off: Decimal | None = None  # last price against the peak, 0 or below
 
 
 class TotalsOut(BaseModel):
@@ -233,7 +238,16 @@ def list_positions(
         include_closed=include_closed,
         group_by_isin=group_by_isin,
     )
-    return PositionsOut(positions=[_row_out(r) for r in rows], totals=_totals_out(totals))
+    peaks = peaks_for(db, rows)
+    out = []
+    for r in rows:
+        item = _row_out(r)
+        found = peaks.get(r.instrument.id)
+        if found is not None:
+            item.peak_price, item.peak_date = found.price, found.day
+            item.peak_fall_off = found.fall_off
+        out.append(item)
+    return PositionsOut(positions=out, totals=_totals_out(totals))
 
 
 def _matches(

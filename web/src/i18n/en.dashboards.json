@@ -226,7 +226,11 @@
       "current_drawdown": "Below the peak now",
       "sharpe": "Sharpe ratio",
       "beta": "Beta to the benchmark",
-      "latest_price": "Latest price"
+      "latest_price": "Latest price",
+      "peak_price": "Peak price since your first purchase",
+      "peak_fall_off": "Price below the peak",
+      "peak_value": "Value at the peak price",
+      "peak_value_fall_off": "Value below the peak value"
     },
     "groups": {
       "instrument": "Instrument",
@@ -257,7 +261,10 @@
       "unrealized": "Unrealized",
       "day": "Today",
       "income": "Income",
-      "total_return": "Total return"
+      "total_return": "Total return",
+      "peak_price": "Peak price",
+      "peak_fall_off": "Below peak",
+      "peak_value": "Value at peak"
     },
     "sortDirs": {
       "desc": "Highest first",

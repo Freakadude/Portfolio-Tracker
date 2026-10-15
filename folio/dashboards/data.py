@@ -30,6 +30,7 @@ from folio.db.models_strategy import Signal
 from folio.display import two as display_two
 from folio.marketdata import exchanges
 from folio.marketdata.quotes import newer_quote
+from folio.peaks import peak_value, peaks_for
 from folio.positions import load_positions, totals_for
 
 ZERO = Decimal(0)
@@ -162,6 +163,8 @@ _KINDS = {
     "twr": "pct", "xirr": "pct", "cash": "eur", "net_contributions": "eur", "income": "eur",
     "largest_drift": "pct", "volatility": "pct", "max_drawdown": "pct",
     "current_drawdown": "pct", "sharpe": "number", "beta": "number", "latest_price": "price",
+    "peak_price": "price", "peak_fall_off": "pct", "peak_value": "eur",
+    "peak_value_fall_off": "pct",
 }  # fmt: skip
 
 
@@ -290,6 +293,60 @@ def _latest_price(env: Env, cfg: Any, base: dict[str, Any]) -> dict[str, Any]:
     return base
 
 
+def _peak(env: Env, cfg: Any, base: dict[str, Any]) -> dict[str, Any]:
+    """The four peak figures of one holding (ADR 0063): the highest price since the first buy,
+    how far the last price is below it, what today's holding would fetch at it, and how far
+    today's value is below that."""
+    metric = cfg.metric
+    if cfg.scope.kind != "instrument" or cfg.scope.id is None:
+        return {**base, **_empty("Choose a holding (scope: Instrument) to see its peak.")}
+    instrument = env.db.get(Instrument, cfg.scope.id)
+    if instrument is None or instrument.deleted_at is not None:
+        raise WidgetDataError("That instrument no longer exists.")
+    rows, _ = load_positions(env.db, group_by_isin=True, include_closed=True, today=env.today)
+    row = next((r for r in rows if r.instrument.id == instrument.id), None)
+    if row is None or row.listing is None or row.price is None:
+        return {**base, **_empty("This instrument has no price or purchase to measure a peak.")}
+    found = peaks_for(env.db, [row]).get(instrument.id)
+    if found is None:
+        return {**base, **_empty("A peak is measured from your first purchase; there is none yet.")}
+    held = row.metrics.market_value_eur if row.metrics is not None else None
+    base.update(
+        currency=row.listing.currency,
+        instrument_id=instrument.id,
+        name=instrument.name,
+        start=found.since.isoformat(),
+        label=f"Peak of {found.day.isoformat()}, since your first purchase on "
+        f"{found.since.isoformat()}",
+    )
+    if metric == "peak_price":
+        base["value"] = str(found.price)
+        base["change_ratio"] = str(found.fall_off)
+        bars = list(
+            env.db.scalars(
+                select(PriceBar)
+                .where(PriceBar.listing_id == row.listing.id, PriceBar.date >= found.since)
+                .order_by(PriceBar.date)
+            )
+        )
+        points = [(b.date.isoformat(), b.close) for b in bars]
+        if cfg.sparkline and len(points) >= 2:
+            base["sparkline"] = [
+                {"date": d, "value": str(v)} for d, v in thin(points, SPARK_POINTS)
+            ]
+            base["baseline"] = str(found.price)  # the peak as the dotted line
+    elif metric in ("peak_fall_off", "peak_value_fall_off"):
+        base["value"] = str(found.fall_off)
+    else:  # peak_value
+        value = peak_value(held, found.last, found.price)
+        if value is None:
+            return {**base, **_empty("You hold none of this instrument, or it has no value.")}
+        base["value"] = str(value)
+        base["change_ratio"] = str(found.fall_off)
+        base["note"] = "Today's quantity at the peak price and today's exchange rate."
+    return base
+
+
 def _two(value: Decimal) -> str:
     return display_two(value)
 
@@ -300,6 +357,8 @@ def kpi(env: Env, cfg: Any) -> dict[str, Any]:
     base: dict[str, Any] = {"metric": metric, "kind": kind, "value": None, "sparkline": []}
     if metric == "latest_price":
         return _latest_price(env, cfg, base)
+    if metric.startswith("peak_"):
+        return _peak(env, cfg, base)
     extras = svc.benchmark_ids(env.db, 1) if metric == "beta" else []
     ctx = context_for(env, cfg, extras)
     if ctx.empty:
@@ -689,6 +748,7 @@ def holdings_table(env: Env, cfg: Any) -> dict[str, Any]:
         return _empty("Add your first instrument and a transaction to see positions here.")
     meta = svc.load_meta(env.db, {r.instrument.id for r in rows})
     targets = _target_weights(env.db, rows, meta)
+    peaks = peaks_for(env.db, rows)
     out = []
     for r in rows:
         m = r.metrics
@@ -727,6 +787,19 @@ def holdings_table(env: Env, cfg: Any) -> dict[str, Any]:
                 "day_ratio": s(getattr(m, "day_change_pct", None)),
                 "total_return": s(getattr(m, "total_return_eur", None)),
                 "income": str(r.state.income_eur),
+                "peak_price": s(peaks[r.instrument.id].price if r.instrument.id in peaks else None),
+                "peak_fall_off": s(
+                    peaks[r.instrument.id].fall_off if r.instrument.id in peaks else None
+                ),
+                "peak_value": s(
+                    peak_value(
+                        getattr(m, "market_value_eur", None),
+                        peaks[r.instrument.id].last,
+                        peaks[r.instrument.id].price,
+                    )
+                    if r.instrument.id in peaks
+                    else None
+                ),
             }
         )
     return {

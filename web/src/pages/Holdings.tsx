@@ -27,6 +27,7 @@ type SortKey =
   | 'avgCost'
   | 'cost'
   | 'price'
+  | 'peak'
   | 'value'
   | 'unrealized'
   | 'day'
@@ -73,6 +74,7 @@ const ACCESSORS: Record<SortKey, (p: Position) => string | number | null> = {
   avgCost: (p) => toNumber(p.avg_cost_eur),
   cost: (p) => toNumber(p.cost_basis_eur),
   price: (p) => toNumber(p.price?.close),
+  peak: (p) => toNumber(p.peak_price),
   value: (p) => toNumber(p.market_value_eur),
   unrealized: (p) => toNumber(p.unrealized_pnl_eur),
   day: (p) => toNumber(p.day_change_eur),
@@ -434,6 +436,12 @@ function PositionsTab({ onAdd }: { onAdd: () => void }) {
                 onSort={toggle}
               />
               <SortHeader
+                label={t('holdings.columns.peak')}
+                sortKey="peak"
+                sort={sort}
+                onSort={toggle}
+              />
+              <SortHeader
                 label={t('holdings.columns.value')}
                 sortKey="value"
                 sort={sort}
@@ -465,7 +473,7 @@ function PositionsTab({ onAdd }: { onAdd: () => void }) {
                 <tr className="bg-border/30">
                   <th
                     scope="rowgroup"
-                    colSpan={showAccount ? 10 : 9}
+                    colSpan={showAccount ? 11 : 10}
                     className="px-3 py-1 text-left font-medium"
                   >
                     {g.name}
@@ -522,6 +530,29 @@ function PositionsTab({ onAdd }: { onAdd: () => void }) {
                       <span className="text-muted" title={p.note ?? undefined}>
                         {t('holdings.noPrice')}
                       </span>
+                    )}
+                  </td>
+                  <td className="px-3 py-2 text-right tabular-nums">
+                    {p.peak_price ? (
+                      <span
+                        title={t('holdings.peakHint', {
+                          date: p.peak_date ?? '',
+                        })}
+                      >
+                        {eur(p.peak_price)}
+                        {p.currency && p.currency !== 'EUR' && (
+                          <span className="ml-1 text-xs text-muted">{p.currency}</span>
+                        )}
+                        {p.peak_fall_off && (
+                          <div className="text-xs text-muted">
+                            {Number(p.peak_fall_off) === 0
+                              ? t('holdings.atPeak')
+                              : t('holdings.belowPeak', { pct: pct(p.peak_fall_off) })}
+                          </div>
+                        )}
+                      </span>
+                    ) : (
+                      <span className="text-muted">–</span>
                     )}
                   </td>
                   <td className="px-3 py-2 text-right tabular-nums">{eur(p.market_value_eur)}</td>

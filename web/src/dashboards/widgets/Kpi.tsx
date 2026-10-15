@@ -8,9 +8,11 @@ import { Sparkline } from '../charts/Bars'
 import type { KpiData, WidgetProps } from '../types'
 import { ReturnBreakdown } from './ReturnBreakdown'
 
-/** Where a figure leads when clicked (FR-DB-06). The latest price of a holding opens its page. */
+/** Where a figure leads when clicked (FR-DB-06). The latest price and the peak figures of a
+ * holding open its page. */
 export function kpiTarget(metric: string, instrumentId?: number): string {
-  if (metric === 'latest_price' && instrumentId !== undefined) return `/holdings/${instrumentId}`
+  if ((metric === 'latest_price' || metric.startsWith('peak_')) && instrumentId !== undefined)
+    return `/holdings/${instrumentId}`
   if (['income', 'net_contributions', 'cash'].includes(metric)) return '/reports'
   if (['volatility', 'max_drawdown', 'current_drawdown', 'sharpe', 'beta'].includes(metric))
     return '/dashboards'

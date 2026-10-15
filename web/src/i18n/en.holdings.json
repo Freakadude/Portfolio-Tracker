@@ -8,11 +8,21 @@
     "CASH": "Cash",
     "OTHER": "Other"
   },
-  "delta": { "up": "gain", "down": "loss", "flat": "no change", "none": "" },
-  "asof": { "title": "Close of {{date}} ({{source}})" },
+  "delta": {
+    "up": "gain",
+    "down": "loss",
+    "flat": "no change",
+    "none": ""
+  },
+  "asof": {
+    "title": "Close of {{date}} ({{source}})"
+  },
   "holdings": {
     "title": "Holdings",
-    "tabs": { "positions": "Positions", "instruments": "Instruments" },
+    "tabs": {
+      "positions": "Positions",
+      "instruments": "Instruments"
+    },
     "add": "Add instrument",
     "showClosed": "Show closed positions",
     "groupByIsin": "Group holdings with the same ISIN",
@@ -49,6 +59,7 @@
       "avgCost": "Avg cost",
       "cost": "Cost basis",
       "price": "Price",
+      "peak": "Peak price",
       "value": "Market value",
       "unrealized": "Unrealized",
       "day": "Day change",
@@ -62,11 +73,18 @@
     "unvalued_other": "{{count}} positions have no price and are left out of the value totals.",
     "realized": "Realized",
     "income": "Income",
-    "caption": "Positions with market value, profit and loss in euros"
+    "caption": "Positions with market value, profit and loss in euros",
+    "peakHint": "Highest price since your first purchase, reached on {{date}}.",
+    "atPeak": "at the peak",
+    "belowPeak": "{{pct}} from the peak"
   },
   "instruments": {
     "title": "Instruments",
-    "filters": { "active": "Active", "archived": "Archived", "all": "All" },
+    "filters": {
+      "active": "Active",
+      "archived": "Archived",
+      "all": "All"
+    },
     "columns": {
       "name": "Name",
       "isin": "ISIN",
@@ -195,7 +213,12 @@
     "deleteRow": "Delete the {{type}} of {{date}}",
     "noPosition": "You hold none of this instrument.",
     "chart": "Price chart",
-    "chartRanges": { "1M": "1M", "3M": "3M", "1Y": "1Y", "MAX": "Max" },
+    "chartRanges": {
+      "1M": "1M",
+      "3M": "3M",
+      "1Y": "1Y",
+      "MAX": "Max"
+    },
     "showTable": "Show data as a table",
     "showChart": "Show chart",
     "tableCaption": "Closing prices",

@@ -5471,6 +5471,12 @@ export interface components {
             name: string;
             /** Note */
             note: string | null;
+            /** Peak Date */
+            peak_date?: string | null;
+            /** Peak Fall Off */
+            peak_fall_off?: string | null;
+            /** Peak Price */
+            peak_price?: string | null;
             price: components["schemas"]["folio__api__routers__positions__PriceOut"] | null;
             /** Quantity */
             quantity: string;

@@ -1074,3 +1074,64 @@ def test_key_figures_for_unrealized_and_realized_result(api, book) -> None:
         one(api, "kpi", {"metric": "realized", "follow_filters": False})["value"]
         == realized["value"]
     )
+
+
+# --- peak figures (ADR 0063) ----------------------------------------------------------------------
+
+
+def _peak_book(db, book):  # type: ignore[no-untyped-def]
+    """A price of 200 before the first buy (never counts) and one of 130 on 5 January."""
+    for day, close in ((date(2024, 1, 1), "200"), (date(2024, 1, 5), "130")):
+        bar = db.scalars(
+            select(PriceBar).where(PriceBar.listing_id == book["listing"], PriceBar.date == day)
+        ).first()
+        if bar is None:
+            bar = PriceBar(listing_id=book["listing"], date=day, close=D(close), source="x")
+            db.add(bar)
+        bar.close = D(close)
+    db.commit()
+    clear_cache()
+
+
+def _peak(api, instrument_id: int, metric: str, **extra):  # type: ignore[no-untyped-def]
+    config = {"metric": metric, "scope": {"kind": "instrument", "id": instrument_id}, **extra}
+    return one(api, "kpi", config)
+
+
+def test_the_peak_is_the_highest_price_since_the_first_buy(api, book, db) -> None:
+    _peak_book(db, book)
+    price = _peak(api, book["fund"], "peak_price")
+    assert (price["kind"], price["value"], price["currency"]) == ("price", "130", "EUR")
+    assert "2024-01-05" in price["label"] and price["start"] == "2024-01-02"  # not the 200
+    assert D(price["change_ratio"]) == (D(108) / 130 - 1).quantize(D("0.000001"))
+    assert price["baseline"] == "130" and len(price["sparkline"]) >= 2
+
+
+def test_the_fall_offs_and_the_value_at_the_peak(api, book, db) -> None:
+    _peak_book(db, book)
+    expected = (D(108) / 130 - 1).quantize(D("0.000001"))
+    for metric in ("peak_fall_off", "peak_value_fall_off"):
+        out = _peak(api, book["fund"], metric)
+        assert out["kind"] == "pct" and D(out["value"]) == expected
+    value = _peak(api, book["fund"], "peak_value")
+    assert value["kind"] == "eur" and D(value["value"]) == D("1188") * 130 / 108  # 11 units
+
+
+def test_a_peak_needs_one_holding_and_a_purchase(api, book, db) -> None:
+    out = one(api, "kpi", {"metric": "peak_price"})  # the portfolio
+    assert out["empty"] is True and "scope: Instrument" in out["reason"]
+    other, _ = make_listing(db, ticker="NOBUY", mic="XETR", isin="IE00BK5BQT80")
+    db.commit()
+    nothing = _peak(api, other.id, "peak_price")
+    assert nothing["empty"] is True and "no price or purchase" in nothing["reason"]
+
+
+def test_the_holdings_table_and_the_positions_list_carry_the_peak(api, book, db) -> None:
+    _peak_book(db, book)
+    table = one(api, "holdings_table", {"columns": ["name", "peak_price", "peak_fall_off"]})
+    (row,) = table["rows"]
+    assert row["peak_price"] == "130" and D(row["peak_fall_off"]) < 0
+    assert D(row["peak_value"]) == D("1188") * 130 / 108
+    listed = api.get("/api/v1/positions", params={"group_by_isin": True}).json()["positions"]
+    assert listed[0]["peak_price"] == "130" and listed[0]["peak_date"] == "2024-01-05"
+    assert D(listed[0]["peak_fall_off"]) == (D(108) / 130 - 1).quantize(D("0.000001"))

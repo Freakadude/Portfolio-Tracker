@@ -217,6 +217,9 @@ const COLUMN_KEYS = [
   'day',
   'income',
   'total_return',
+  'peak_price',
+  'peak_fall_off',
+  'peak_value',
 ] as const
 
 export function HoldingsTableWidget({ data, config }: WidgetProps<HoldingsData>) {
@@ -233,6 +236,10 @@ export function HoldingsTableWidget({ data, config }: WidgetProps<HoldingsData>)
           return r.name.toLowerCase()
         case 'latest':
           return toNumber(r.latest)
+        case 'peak_price':
+        case 'peak_fall_off':
+        case 'peak_value':
+          return toNumber(r[sortBy] as string | null)
         case 'quantity':
         case 'close':
         case 'value':
@@ -309,6 +316,12 @@ export function HoldingsTableWidget({ data, config }: WidgetProps<HoldingsData>)
             {num(r.latest)}
           </span>
         )
+      case 'peak_price':
+        return r.peak_price === null ? '–' : num(r.peak_price)
+      case 'peak_fall_off':
+        return r.peak_fall_off === null ? '–' : pct(r.peak_fall_off)
+      case 'peak_value':
+        return r.peak_value === null ? '–' : eur(r.peak_value)
       case 'value':
         return r.value === null ? '–' : eur(r.value)
       case 'weight':

@@ -189,7 +189,7 @@ def private(kind: str, data: dict[str, Any]) -> dict[str, Any]:
         out.pop("breakdown", None)  # the steps behind a return are euro flows
         return _drop_eur(out)  # type: ignore[no-any-return]
     if kind == "holdings_table":
-        euro = {"value", "unrealized", "day", "total_return", "income"}
+        euro = {"value", "unrealized", "day", "total_return", "income", "peak_value"}
         out = dict(data)
         out["rows"] = [{k: v for k, v in row.items() if k not in euro} for row in data["rows"]]
         out["totals"] = _only(data.get("totals") or {}, "unrealized_ratio")

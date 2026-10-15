@@ -162,6 +162,32 @@ describe('the positions table', () => {
     expect(row).toHaveTextContent('59.3%') // weight
   })
 
+  it('shows the peak price right of the price, with how far the price is below it', async () => {
+    api({}, [
+      position({ peak_price: '175', peak_date: '2024-03-14', peak_fall_off: '-0.2' }),
+      position({
+        instrument_id: 2,
+        name: 'Demo Emerging Markets',
+        peak_price: '140',
+        peak_date: '2024-04-10',
+        peak_fall_off: '0',
+      }),
+    ])
+    renderAt(<Holdings />)
+    const table = await screen.findByRole('table', { name: /positions with market value/i })
+    const headers = within(table)
+      .getAllByRole('columnheader')
+      .map((h) => h.textContent)
+    expect(headers.findIndex((h) => h?.startsWith('Peak price'))).toBe(
+      headers.findIndex((h) => h?.startsWith('Price')) + 1,
+    )
+    const first = within(table).getByRole('link', { name: 'iShares Core S&P 500' }).closest('tr')!
+    expect(first).toHaveTextContent('€175.00')
+    expect(first).toHaveTextContent(/20[.,]0+%\s*from the peak/)
+    const second = within(table).getByRole('link', { name: 'Demo Emerging Markets' }).closest('tr')!
+    expect(second).toHaveTextContent('at the peak')
+  })
+
   it('marks gains and losses with a sign and an arrow, not colour alone', async () => {
     api()
     renderAt(<Holdings />)
