@@ -1107,6 +1107,15 @@ def test_the_peak_is_the_highest_price_since_the_first_buy(api, book, db) -> Non
     assert price["baseline"] == "130" and len(price["sparkline"]) >= 2
 
 
+def test_the_peak_compares_prices_as_numbers_not_as_text(api, book, db) -> None:
+    """Closes are stored as text: "99" sorts above "130" as characters, so a number order is needed."""
+    _peak_book(db, book)
+    db.add(PriceBar(listing_id=book["listing"], date=date(2024, 6, 3), close=D("99"), source="x"))
+    db.commit()
+    clear_cache()
+    assert _peak(api, book["fund"], "peak_price")["value"] == "130"
+
+
 def test_the_fall_offs_and_the_value_at_the_peak(api, book, db) -> None:
     _peak_book(db, book)
     expected = (D(108) / 130 - 1).quantize(D("0.000001"))

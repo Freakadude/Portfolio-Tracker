@@ -13,5 +13,9 @@ The owner wanted to see how far each holding sits below the best price it has ha
 - **Where.** The Holdings tab gets only Peak price, right of Price, sortable, with the day as a hint and the fall-off in small text under it. The Key figure widget gets all four (for one holding, like Latest price) and the holdings table widget gets the price, the fall-off and the value as optional columns. The helper's privacy projection treats the euro peak value like any euro amount.
 - **Daily closes only.** Intraday quotes are pruned after a retention period, so the peak is of closes plus the newest quote; a higher price within a past day that never closed there is not known.
 
+## Correction (2026-10-15)
+- Closes are stored as TEXT, so the first version took the maximum by characters ("999" above "1449"). The peak is now ordered by number.
+- The history can start later than the first buy (a back-dated transaction, a provider that cut it). The nightly gap job now fetches the closes between the first buy and the first stored close, so the peak covers the whole holding period.
+
 ## Consequences
 No new table or migration: the peak is worked out from stored closes and the ledger on request, one query per holding for the list.

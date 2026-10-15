@@ -148,6 +148,35 @@ def test_gap_job_repairs_missing_days(settings: Settings, db) -> None:  # type: 
     assert db.scalar(select(PriceBar).where(PriceBar.date == date(2024, 1, 9))) is not None
 
 
+def test_gap_job_fetches_history_missing_before_the_first_stored_close(  # type: ignore[no-untyped-def]
+    settings: Settings, db
+) -> None:
+    """The peak price needs the closes since the first buy (ADR 0063)."""
+    instrument, listing = make_listing(db)
+    account = Account(name="A")
+    db.add(account)
+    db.flush()
+    db.add(
+        LedgerTransaction(
+            account_id=account.id, instrument_id=instrument.id, type="buy",
+            trade_date=date(2023, 6, 15), quantity=D(1), price=D(400),
+        )
+    )  # fmt: skip
+    db.add_all(
+        PriceBar(listing_id=listing.id, date=b.date, close=b.close, source="primary")
+        for b in bars_for("XETR", date(2024, 1, 2), date(2024, 1, 12))
+    )
+    db.commit()
+    older = bars_for("XETR", date(2023, 6, 8), date(2024, 1, 12))
+    provider = FakeProvider(name="primary", bars={listing.id: older})
+    ctx = make_ctx(settings, [provider], now=datetime(2024, 1, 15, 12, 0, tzinfo=UTC))
+    result = gap_job(ctx)
+    assert result.status == "ok" and "older closes" in result.log
+    db.expire_all()
+    first = db.scalars(select(PriceBar).order_by(PriceBar.date)).first()
+    assert first is not None and first.date <= date(2023, 6, 15)
+
+
 def test_fx_job_fetches_rates_for_currencies_in_use(settings: Settings, db) -> None:  # type: ignore[no-untyped-def]
     make_listing(db, ticker="AAA", currency="USD", isin="IE0000000001")
     db.commit()

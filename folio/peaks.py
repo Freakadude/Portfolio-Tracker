@@ -15,7 +15,7 @@ from collections.abc import Sequence
 from dataclasses import dataclass
 from decimal import Decimal
 
-from sqlalchemy import func, select
+from sqlalchemy import Float, cast, func, select
 from sqlalchemy.orm import Session
 
 from folio.db.models_ledger import LedgerTransaction, PriceBar
@@ -73,7 +73,8 @@ def peak_of(
     top = db.execute(
         select(PriceBar.close, PriceBar.date)
         .where(PriceBar.listing_id == listing_id, PriceBar.date >= since)
-        .order_by(PriceBar.close.desc(), PriceBar.date.desc())
+        # close is stored as TEXT: order by number, not by characters ("999" > "1449" as text)
+        .order_by(cast(PriceBar.close, Float).desc(), PriceBar.date.desc())
         .limit(1)
     ).first()
     price, day = (last, last_day) if top is None else (top[0], top[1])

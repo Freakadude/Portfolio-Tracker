@@ -13,7 +13,7 @@ from folio.events import PRICE_UPDATE, prune_events, publish_event
 from folio.jobs.context import JobContext
 from folio.jobs.runner import JobLog, JobResult, run_job
 from folio.marketdata import exchanges
-from folio.marketdata.base import ProviderError
+from folio.marketdata.base import ListingRef, ProviderError
 from folio.marketdata.corporate_actions import propose_all
 from folio.marketdata.fx import FxService, needed_currencies
 from folio.marketdata.macro import MacroService
@@ -102,6 +102,31 @@ def fx_job(ctx: JobContext) -> JobResult:
     return run_job(ctx, "fx", body)
 
 
+HISTORY_SLACK_DAYS = 10  # a first close this far after the first buy means the history is short
+
+
+def _repair_history(
+    db: Session, prices: PriceService, ref: ListingRef, instrument_id: int, log: JobLog
+) -> None:
+    """Fetch the closes between the first transaction and the first stored close, when the
+    history was fetched too short (a back-dated transaction, a provider that cut it). The peak
+    price needs the closes since the first buy (ADR 0063)."""
+    first_buy = first_transaction_date(db, instrument_id)
+    first_close = prices.first_date(ref.listing_id)
+    if first_buy is None or first_close is None:
+        return
+    if first_close - first_buy <= timedelta(days=HISTORY_SLACK_DAYS):
+        return
+    start = first_buy - timedelta(days=BACKFILL_LEAD_DAYS)
+    try:
+        summary = prices.backfill(ref, start, first_close)
+        db.commit()
+        log.info(f"{ref.ticker}: {summary.stored} older closes from {start.isoformat()}")
+    except ProviderError as exc:
+        db.rollback()
+        log.error(f"{ref.ticker}: {exc}")
+
+
 def gap_job(ctx: JobContext, days: int = GAP_WINDOW_DAYS) -> JobResult:
     """Find trading days without a close in the recent past and refetch them (FR-MD-04)."""
 
@@ -110,6 +135,7 @@ def gap_job(ctx: JobContext, days: int = GAP_WINDOW_DAYS) -> JobResult:
         prices = PriceService(db, ctx.chain_for(db), ctx.now())
         for listing, instrument in tracked_listings(db):
             ref = listing_ref(listing, instrument.isin)
+            _repair_history(db, prices, ref, instrument.id, log)
             start = today - timedelta(days=days)
             gaps = prices.detect_gaps(ref, start)
             if not gaps:
