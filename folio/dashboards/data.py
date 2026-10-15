@@ -159,7 +159,7 @@ def _empty(reason: str) -> dict[str, Any]:
 
 _KINDS = {
     "value": "eur", "day_change": "eur", "total_return": "eur", "unrealized": "eur",
-    "realized": "eur", "period_return": "eur",
+    "realized": "eur", "cost_basis": "eur", "period_return": "eur",
     "twr": "pct", "xirr": "pct", "cash": "eur", "net_contributions": "eur", "income": "eur",
     "largest_drift": "pct", "volatility": "pct", "max_drawdown": "pct",
     "current_drawdown": "pct", "sharpe": "number", "beta": "number", "latest_price": "price",
@@ -413,7 +413,7 @@ def kpi(env: Env, cfg: Any) -> dict[str, Any]:
         if not ctx.tracks_cash:
             return {**base, **_empty("Turn on cash tracking for an account to see its cash.")}
         base["value"] = s(ctx.points[-1].cash_eur)
-    elif metric in ("unrealized", "realized"):
+    elif metric in ("unrealized", "realized", "cost_basis"):
         # open positions at the latest prices (unrealized) and what sales and closed positions
         # have already locked in (realized), for the positions this widget looks at
         rows, _ = load_positions(
@@ -433,6 +433,10 @@ def kpi(env: Env, cfg: Any) -> dict[str, Any]:
             rows = [r for r in rows if r.instrument.id in ids]
         if metric == "realized":
             base["value"] = s(sum((r.state.realized_pnl_eur for r in rows), ZERO))
+        elif metric == "cost_basis":
+            # what the open positions cost: the money still in them, at what was paid
+            held = [r for r in rows if r.state.quantity != 0]
+            base["value"] = s(sum((r.state.cost_basis_eur for r in held), ZERO))
         else:
             valued = [r for r in rows if r.metrics is not None and r.state.quantity != 0]
             gain = sum((r.metrics.unrealized_pnl_eur for r in valued), ZERO)  # type: ignore[union-attr]
@@ -770,6 +774,7 @@ def holdings_table(env: Env, cfg: Any) -> dict[str, Any]:
                 "quantity": str(r.state.quantity),
                 "avg_cost_eur": s(r.state.avg_cost_eur),
                 "cost_basis_eur": str(r.state.cost_basis_eur),
+                "cost_basis": str(r.state.cost_basis_eur),
                 "close": s(before),
                 "close_date": None if before_date is None else before_date.isoformat(),
                 "latest": s(latest),

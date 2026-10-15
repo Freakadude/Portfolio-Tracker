@@ -146,6 +146,7 @@ export interface HoldingsData extends Empty {
     peak_price: string | null
     peak_fall_off: string | null
     peak_value: string | null
+    cost_basis: string
     target_weight: string | null
     weight_diff: string | null
     stale: boolean

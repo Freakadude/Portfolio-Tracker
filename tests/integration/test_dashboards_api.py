@@ -1060,6 +1060,19 @@ def test_the_dashboard_can_look_at_one_type_or_some_holdings(api, book, db) -> N
     assert nothing["error"] and "type or holding filter" in nothing["error"]
 
 
+def test_the_cost_basis_is_a_key_figure_and_a_table_column(api, book) -> None:
+    """11 units left, worth 1188: the unrealized result is that value minus what they cost."""
+    unrealized = D(one(api, "kpi", {"metric": "unrealized"})["value"])
+    cost = one(api, "kpi", {"metric": "cost_basis"})
+    assert cost["kind"] == "eur" and D(cost["value"]) == 1188 - unrealized
+    table = one(api, "holdings_table", {"columns": ["name", "cost_basis"]})
+    assert D(table["rows"][0]["cost_basis"]) == D(cost["value"])
+    one_holding = one(
+        api, "kpi", {"metric": "cost_basis", "scope": {"kind": "instrument", "id": book["fund"]}}
+    )
+    assert one_holding["value"] == cost["value"]
+
+
 def test_key_figures_for_unrealized_and_realized_result(api, book) -> None:
     """The book: 10 @ 100 (fee 1) and 5 @ 104, then 4 sold at 106 (fee 1), 11 units left valued
     at 108. Total result 93 = unrealized + realized + the dividend of 3."""

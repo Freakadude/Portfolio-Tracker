@@ -215,6 +215,7 @@ const COLUMN_KEYS = [
   'weight_diff',
   'unrealized',
   'day',
+  'cost_basis',
   'income',
   'total_return',
   'peak_price',
@@ -248,6 +249,7 @@ export function HoldingsTableWidget({ data, config }: WidgetProps<HoldingsData>)
         case 'weight_diff':
         case 'unrealized':
         case 'day':
+        case 'cost_basis':
         case 'income':
         case 'total_return':
           return toNumber(r[sortBy] as string | null)
@@ -334,6 +336,8 @@ export function HoldingsTableWidget({ data, config }: WidgetProps<HoldingsData>)
         return <Delta value={r.unrealized} />
       case 'day':
         return <Delta value={r.day} />
+      case 'cost_basis':
+        return eur(r.cost_basis)
       case 'income':
         return eur(r.income)
       default:

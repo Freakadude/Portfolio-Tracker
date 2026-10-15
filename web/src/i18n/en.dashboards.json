@@ -230,7 +230,8 @@
       "peak_price": "Peak price since your first purchase",
       "peak_fall_off": "Price below the peak",
       "peak_value": "Value at the peak price",
-      "peak_value_fall_off": "Value below the peak value"
+      "peak_value_fall_off": "Value below the peak value",
+      "cost_basis": "Cost basis"
     },
     "groups": {
       "instrument": "Instrument",
@@ -264,7 +265,8 @@
       "total_return": "Total return",
       "peak_price": "Peak price",
       "peak_fall_off": "Below peak",
-      "peak_value": "Value at peak"
+      "peak_value": "Value at peak",
+      "cost_basis": "Cost basis"
     },
     "sortDirs": {
       "desc": "Highest first",
