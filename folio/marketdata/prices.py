@@ -156,8 +156,10 @@ class PriceService:
                 return FetchSummary(ref.listing_id, None, 0, None)
         else:
             expect_data = True
-        self._drop_unfinished_close(ref)
+        # Ask the provider first: the call is counted by another connection, which must not wait
+        # for a write this session has already begun ("database is locked").
         result = self._chain.get_eod(ref, start, end, require_bars=expect_data)
+        self._drop_unfinished_close(ref)
         bars = result.data
         if self._now is not None and exchanges.has_calendar(ref.exchange_mic):
             mic, today = ref.exchange_mic, exchanges.local_date(ref.exchange_mic, self._now)

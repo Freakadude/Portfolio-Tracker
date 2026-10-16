@@ -10,8 +10,8 @@ from sqlalchemy import select
 from folio.config import Settings
 from folio.db.engine import make_engine, make_session_factory
 from folio.db.models import Account
-from folio.db.models_ledger import FxRate, JobRun, LedgerTransaction, PriceBar
-from folio.jobs.market import backfill_job, eod_job, fx_job, gap_job
+from folio.db.models_ledger import FxRate, JobRun, LedgerTransaction, PriceBar, ProviderCall
+from folio.jobs.market import backfill_job, eod_job, fx_job, gap_job, refresh_job
 from folio.jobs.runner import run_job
 from folio.marketdata.base import Bar, ProviderError
 from folio.marketdata.fake import FakeProvider
@@ -129,6 +129,34 @@ def test_backfill_without_transactions_defaults_to_a_year(settings: Settings, db
 def test_backfill_of_a_vanished_listing_is_reported(settings: Settings, db) -> None:  # type: ignore[no-untyped-def]
     result = backfill_job(make_ctx(settings, []), 999)
     assert result.status == "failed" and "Listing 999 no longer exists" in result.log
+
+
+def test_a_refresh_during_the_session_does_not_lock_the_database(  # type: ignore[no-untyped-def]
+    settings: Settings, db
+) -> None:
+    """The provider call is counted by another connection (ProviderCall); the refresh must not
+    hold a write of its own at that moment, or SQLite answers "database is locked"."""
+    from sqlalchemy import text
+
+    _, listing = make_listing(db)
+    db.commit()
+    other = make_session_factory(make_engine(settings.db_url))
+
+    class Counting(FakeProvider):
+        def get_eod(self, listing, start, end):  # type: ignore[no-untyped-def]
+            with other() as counter:  # what UsageTracker.charge does
+                counter.execute(text("PRAGMA busy_timeout=300"))
+                counter.add(ProviderCall(provider="x", day=date(2024, 1, 15), count=1))
+                counter.commit()
+            return super().get_eod(listing, start, end)
+
+    provider = Counting(
+        name="primary", bars={listing.id: bars_for("XETR", date(2024, 1, 2), date(2024, 1, 12))}
+    )
+    # 09:00 UTC on a trading day: the XETR session is still running
+    ctx = make_ctx(settings, [provider], now=datetime(2024, 1, 15, 9, 0, tzinfo=UTC))
+    result = refresh_job(ctx)
+    assert "locked" not in result.log, result.log
 
 
 def test_gap_job_repairs_missing_days(settings: Settings, db) -> None:  # type: ignore[no-untyped-def]
