@@ -172,7 +172,7 @@ def touch(directory: Path, name: str) -> Path:
     return path
 
 
-def test_retention_keeps_14_daily_and_8_weekly_copies(backups: Path) -> None:
+def test_retention_keeps_the_newest_five_by_default(backups: Path) -> None:
     start = date(2024, 1, 1)
     for i in range(91):  # 1 January to 31 March, one a day
         touch(backups, f"folio-{(start + timedelta(days=i)).strftime('%Y%m%d')}-030000.db")
@@ -180,15 +180,31 @@ def test_retention_keeps_14_daily_and_8_weekly_copies(backups: Path) -> None:
     other = touch(backups, "folio-latest.db")
     removed = prune(backups)
     kept = sorted(p.name for p in backups.glob("folio-2*.db"))
-    daily = [f"folio-202403{d}-030000.db" for d in range(18, 32)]  # the 14 newest
-    weekly = [  # the newest of each of the 8 weeks before them (Sundays)
-        "folio-20240317-030000.db", "folio-20240310-030000.db", "folio-20240303-030000.db",
-        "folio-20240225-030000.db", "folio-20240218-030000.db", "folio-20240211-030000.db",
-        "folio-20240204-030000.db", "folio-20240128-030000.db",
-    ]  # fmt: skip
-    assert kept == sorted(daily + weekly) and len(kept) == 22
-    assert len(removed) == 91 - 22
+    assert kept == [f"folio-202403{d}-030000.db" for d in range(27, 32)]  # the 5 newest
+    assert len(removed) == 91 - 5
     assert bystander.exists() and other.exists()  # files that are not backups are never touched
+
+
+def test_retention_keeps_as_many_as_the_owner_sets(backups: Path) -> None:
+    for d in range(1, 21):
+        touch(backups, f"folio-202403{d:02d}-030000.db")
+    prune(backups, keep=12)
+    kept = sorted(p.name for p in backups.glob("folio-2*.db"))
+    assert kept == [f"folio-202403{d:02d}-030000.db" for d in range(9, 21)]
+
+
+def test_the_setting_defaults_to_five_and_is_applied_by_a_backup(
+    settings: Settings, db, backups: Path
+) -> None:  # type: ignore[no-untyped-def]
+    from folio.settings_schema import RetentionSettings
+
+    assert RetentionSettings().backups_keep == 5
+    populate(db)
+    for d in range(1, 9):
+        touch(backups, f"folio-2024010{d}-030000.db")
+    result = create_backup(settings.db_url, backups, now=NOW, keep=3)
+    assert len(list(backups.glob("folio-*.db"))) == 3 and result.path.exists()
+    assert len(result.pruned) == 6
 
 
 def test_retention_with_few_backups_keeps_them_all(backups: Path) -> None:
@@ -209,21 +225,6 @@ def test_safety_copies_are_limited_separately(backups: Path) -> None:
     )
     assert (backups / "pre-migrate-20240308-030000.db").exists()  # the newest are the ones kept
     assert (backups / "folio-20240301-030000.db").exists()
-
-
-def test_creating_a_backup_applies_retention(settings: Settings, db, backups: Path) -> None:  # type: ignore[no-untyped-def]
-    populate(db)
-    for i in range(20):
-        touch(
-            backups, f"folio-{(date(2024, 1, 1) + timedelta(days=i)).strftime('%Y%m%d')}-030000.db"
-        )
-    result = create_backup(settings.db_url, backups, now=datetime(2024, 1, 21, 3, 0, tzinfo=UTC))
-    names = {p.name for p in backups.glob("folio-*.db")}
-    assert len(result.pruned) == 6  # 1 to 6 January: older copies of a week already represented
-    assert (
-        len(names) == 15 and "folio-20240107-030000.db" in names
-    )  # 14 newest + that week's newest
-    assert result.path.name in names
 
 
 # --- restore -----------------------------------------------------------------------------

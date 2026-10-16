@@ -3,6 +3,7 @@ import { useState, type FormEvent } from 'react'
 import { useTranslation } from 'react-i18next'
 import { api, errorMessage, unwrap } from '../api/client'
 import { Badge, Dialog } from '../components/display'
+import { sectionKey } from '../components/SectionForm'
 import { Alert, Button, Checkbox, Field, Input } from '../components/ui'
 
 const KEY = ['system', 'backups'] as const
@@ -63,6 +64,7 @@ export function BackupsPanel() {
           onChange={(e) => setWithKeys(e.target.checked)}
         />
       </div>
+      <KeepSetting />
       {make.isError && <Alert>{errorMessage(make.error)}</Alert>}
       {remove.isError && <Alert>{errorMessage(remove.error)}</Alert>}
       {list.isError && <Alert>{errorMessage(list.error)}</Alert>}
@@ -136,6 +138,66 @@ export function BackupsPanel() {
       <Upload onDone={(name) => setChosen(name)} refresh={refresh} />
       <RestoreDialog name={chosen} onClose={() => setChosen(null)} />
     </section>
+  )
+}
+
+/** How many backups are kept; older ones are deleted by the nightly backup (Retention settings). */
+function KeepSetting() {
+  const { t } = useTranslation()
+  const queryClient = useQueryClient()
+  const query = useQuery({
+    queryKey: sectionKey('retention'),
+    queryFn: () =>
+      unwrap(
+        api.GET('/api/v1/settings/{section}', { params: { path: { section: 'retention' } } }),
+      ) as Promise<Record<string, unknown>>,
+  })
+  const [draft, setDraft] = useState<string | null>(null)
+  const saved = Number(query.data?.backups_keep ?? 5)
+  const value = draft ?? String(saved)
+  const parsed = Number(value)
+  const valid = Number.isInteger(parsed) && parsed >= 1 && parsed <= 365
+  const save = useMutation({
+    mutationFn: () =>
+      unwrap(
+        api.PUT('/api/v1/settings/{section}', {
+          params: { path: { section: 'retention' } },
+          body: { ...(query.data ?? {}), backups_keep: parsed },
+        }),
+      ),
+    onSuccess: async () => {
+      setDraft(null)
+      await queryClient.invalidateQueries({ queryKey: sectionKey('retention') })
+    },
+  })
+  if (!query.data) return null
+  return (
+    <form
+      className="flex flex-wrap items-end gap-3"
+      onSubmit={(e) => {
+        e.preventDefault()
+        if (valid) save.mutate()
+      }}
+    >
+      <Field label={t('backups.keep')} hint={t('backups.keepHint')}>
+        {(field) => (
+          <Input
+            {...field}
+            type="number"
+            min={1}
+            max={365}
+            className="w-24"
+            value={value}
+            onChange={(e) => setDraft(e.target.value)}
+          />
+        )}
+      </Field>
+      <Button type="submit" disabled={!valid || draft === null || save.isPending}>
+        {t('backups.keepSave')}
+      </Button>
+      {!valid && <Alert>{t('backups.keepInvalid')}</Alert>}
+      {save.isError && <Alert>{errorMessage(save.error)}</Alert>}
+    </form>
   )
 }
 

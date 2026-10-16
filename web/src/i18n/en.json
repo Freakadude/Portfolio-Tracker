@@ -207,6 +207,7 @@
     "quotes_days": "Keep quotes (days)",
     "agent_runs_days": "Keep agent runs (days)",
     "news_days": "Keep news (days)",
+    "backups_keep": "Backups to keep",
     "risk_free_source": "Risk-free rate for the Sharpe ratio",
     "risk_free_fixed_pct": "Fixed risk-free rate (% a year)",
     "routing": "Routing (JSON)",

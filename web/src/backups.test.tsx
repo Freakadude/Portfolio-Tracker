@@ -25,6 +25,7 @@ const routes = (extra: Record<string, unknown> = {}) => ({
   '/api/v1/settings/general': GENERAL_US,
   '/api/v1/system/backups': BACKUPS,
   '/api/v1/system/restore': { pending: false, last: null },
+  '/api/v1/settings/retention': { quotes_days: 7, backups_keep: 5 },
   ...extra,
 })
 
@@ -43,6 +44,20 @@ describe('backups and restore (FR-SY-07)', () => {
       screen.getByRole('link', { name: 'Download folio-20261006-030000.db without the API keys' }),
     ).toHaveAttribute('href', '/api/v1/system/backups/folio-20261006-030000.db')
     expect(screen.getByText(/leaves out your saved API keys/)).toBeInTheDocument()
+  })
+
+  it('shows the number of backups to keep and saves a new one', async () => {
+    const { calls } = mockApi(
+      routes({ 'PUT /api/v1/settings/retention': { quotes_days: 7, backups_keep: 9 } }),
+    )
+    renderAt(<BackupsPanel />)
+    const box = await screen.findByLabelText('Number of backups to keep')
+    expect(box).toHaveValue(5)
+    await userEvent.clear(box)
+    await userEvent.type(box, '9')
+    await userEvent.click(screen.getByRole('button', { name: 'Save' }))
+    await waitFor(() => expect(calls.some((c) => c.method === 'PUT')).toBe(true))
+    expect(calls.find((c) => c.method === 'PUT')?.body).toEqual({ quotes_days: 7, backups_keep: 9 })
   })
 
   it('makes a backup now, with or without the keys', async () => {

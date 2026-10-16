@@ -50,6 +50,7 @@ from folio.jobs.runner import JobLog, JobResult, run_job
 from folio.jobs.strategies import quarterly_review_job, rules_job
 from folio.logging import get_logger
 from folio.marketdata import exchanges
+from folio.settings_store import load_section
 
 log = get_logger("folio.scheduler")
 
@@ -75,6 +76,7 @@ def backup_job(ctx: JobContext, settings: Settings, *, include_secrets: bool = T
                 extra_dir=settings.extra_backup_dir,
                 include_secrets=include_secrets,
                 now=ctx.now(),
+                keep=int(load_section(db, "retention").backups_keep),  # type: ignore[attr-defined]
             )
         except BackupError as exc:
             job_log.error(str(exc))

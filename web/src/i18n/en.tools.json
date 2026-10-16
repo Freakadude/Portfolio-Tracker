@@ -219,6 +219,10 @@
       "keys": "A backup made without the API keys brings no keys back: enter them again."
     },
     "typeWord": "Type RESTORE to confirm",
-    "restoreNow": "Restore and restart"
+    "restoreNow": "Restore and restart",
+    "keep": "Number of backups to keep",
+    "keepHint": "The newest backups stay; older ones are deleted automatically when the daily backup runs.",
+    "keepSave": "Save",
+    "keepInvalid": "Enter a whole number from 1 to 365."
   }
 }

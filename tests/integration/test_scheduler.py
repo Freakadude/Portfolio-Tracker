@@ -256,6 +256,25 @@ def test_a_backup_can_be_requested(settings: Settings, db, tmp_path: Path) -> No
     assert [p.name for p in (tmp_path / "nas").glob("*.db")] == ["folio-20240301-030000.db"]
 
 
+def test_the_daily_backup_deletes_the_backups_beyond_the_number_to_keep(  # type: ignore[no-untyped-def]
+    settings: Settings, db, tmp_path: Path
+) -> None:
+    from folio.security.secrets import SecretStore
+    from folio.settings_schema import RetentionSettings
+    from folio.settings_store import save_section
+    from tests.conftest import TEST_SECRET
+
+    cfg = settings.model_copy(update={"backup_dir": str(tmp_path / "bk")})
+    (tmp_path / "bk").mkdir()
+    for d in range(1, 8):
+        (tmp_path / "bk" / f"folio-2024022{d}-030000.db").write_bytes(b"x")
+    save_section(db, SecretStore(db, TEST_SECRET), "retention", RetentionSettings(backups_keep=3))
+    db.commit()
+    result = sched.backup_job(make_ctx(cfg, [], now=datetime(2024, 3, 1, 3, tzinfo=UTC)), cfg)
+    assert result.status == "ok" and "5 old removed" in result.log
+    assert len(list((tmp_path / "bk").glob("folio-*.db"))) == 3
+
+
 def test_a_backup_that_cannot_be_made_is_reported(settings: Settings, db, tmp_path: Path) -> None:  # type: ignore[no-untyped-def]
     cfg = settings.model_copy(update={"db_url": "sqlite://", "backup_dir": str(tmp_path / "bk")})
     result = sched.backup_job(make_ctx(settings, []), cfg)

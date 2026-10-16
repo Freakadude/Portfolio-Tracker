@@ -224,6 +224,7 @@ class RetentionSettings(Section):
     quotes_days: int = Field(default=7, ge=1)
     agent_runs_days: int = Field(default=90, ge=1)
     news_days: int = Field(default=365, ge=1)
+    backups_keep: int = Field(default=5, ge=1, le=365)  # the newest daily backups kept
 
 
 class MacroSeriesConfig(BaseModel):

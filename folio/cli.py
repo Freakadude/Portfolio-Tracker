@@ -25,6 +25,7 @@ from folio.demo import DemoError, seed_demo
 from folio.logging import configure_logging, get_logger
 from folio.security.passwords import hash_password
 from folio.security.users import MIN_PASSWORD_LENGTH, create_user, normalize_username
+from folio.settings_store import load_section
 
 app = typer.Typer(help="Folio: self-hosted portfolio manager.", no_args_is_help=True)
 
@@ -199,6 +200,23 @@ def worker() -> None:
     log.info("worker stopped")
 
 
+def _backups_kept(db_url: str) -> int:
+    """The number of backups to keep, as set in Settings (the default when there is no database)."""
+    from folio.backup import DEFAULT_KEEP, sqlite_path
+
+    try:
+        if not sqlite_path(db_url).is_file():  # connecting would create an empty file
+            return DEFAULT_KEEP
+        engine = make_engine(db_url)
+        try:
+            with make_session_factory(engine)() as db:
+                return int(load_section(db, "retention").backups_keep)  # type: ignore[attr-defined]
+        finally:
+            engine.dispose()
+    except Exception:  # noqa: BLE001 - no database yet: the default
+        return DEFAULT_KEEP
+
+
 @app.command()
 def backup(
     no_secrets: Annotated[
@@ -214,6 +232,7 @@ def backup(
             directory or settings.backup_dir,
             extra_dir=settings.extra_backup_dir,
             include_secrets=not no_secrets,
+            keep=_backups_kept(settings.db_url),
         )
     except BackupError as exc:
         typer.echo(f"Error: {exc}", err=True)

@@ -21,6 +21,7 @@ from folio.api.deps import DbDep, UserDep
 from folio.api.errors import ApiError
 from folio.audit import write_audit
 from folio.backup import BackupError, create_backup, stripped_copy, verify_backup
+from folio.settings_store import load_section
 
 router = APIRouter(prefix="/system", tags=["system"])
 
@@ -120,6 +121,7 @@ def make_backup(request: Request, body: BackupMakeIn, user: UserDep, db: DbDep) 
             settings.backup_dir,
             extra_dir=settings.extra_backup_dir,
             include_secrets=body.include_secrets,
+            keep=int(load_section(db, "retention").backups_keep),  # type: ignore[attr-defined]
         )
     except BackupError as exc:
         raise ApiError(422, "Cannot back up", str(exc)) from exc

@@ -1,8 +1,8 @@
 """Online backups of the SQLite database and restore (FR-SY-06, FR-SY-07).
 
 A backup is made with `VACUUM INTO`, which writes a consistent copy while the app keeps running.
-Every backup is checked with `PRAGMA integrity_check` before it counts. Retention keeps the 14
-newest backups plus the newest one from each of the 8 previous weeks. A restore verifies the
+Every backup is checked with `PRAGMA integrity_check` before it counts. Retention keeps the newest
+backups, as many as the owner sets (5 unless changed). A restore verifies the
 file, takes a safety copy of the current database, swaps the file in, and migrates it forward.
 """
 
@@ -20,8 +20,7 @@ from sqlalchemy.engine import make_url
 
 from folio.db import migrate
 
-DAILY_KEEP = 14
-WEEKLY_KEEP = 8
+DEFAULT_KEEP = 5  # backups kept unless the owner sets another number
 OTHER_KEEP = 5  # pre-migration and pre-restore copies
 _NAME = re.compile(r"^(?P<prefix>folio|pre-migrate|pre-restore)-(?P<stamp>\d{8}-\d{6})(-\d+)?\.db$")
 
@@ -86,6 +85,7 @@ def create_backup(
     include_secrets: bool = True,
     now: datetime | None = None,
     prefix: str = "folio",
+    keep: int = DEFAULT_KEEP,
 ) -> BackupResult:
     """Write a verified backup, optionally copy it to a second folder (a NAS mount), and prune
     old ones. Secrets are stored encrypted in the database; `include_secrets=False` removes
@@ -123,7 +123,7 @@ def create_backup(
         extra.mkdir(parents=True, exist_ok=True)
         copied = extra / target.name
         shutil.copy2(target, copied)
-    return BackupResult(target, target.stat().st_size, copied, prune(directory))
+    return BackupResult(target, target.stat().st_size, copied, prune(directory, keep))
 
 
 def stripped_copy(source: Path, target: Path) -> None:
@@ -145,9 +145,9 @@ def _stamp(path: Path) -> datetime | None:
     return datetime.strptime(match["stamp"], "%Y%m%d-%H%M%S").replace(tzinfo=UTC)
 
 
-def prune(directory: Path) -> list[Path]:
-    """Keep the newest 14 backups and the newest of each of the 8 previous weeks; keep the
-    last 5 pre-migration and pre-restore copies. Other files are never touched."""
+def prune(directory: Path, keep: int = DEFAULT_KEEP) -> list[Path]:
+    """Keep the newest `keep` backups; keep the last 5 pre-migration and pre-restore copies.
+    Other files are never touched."""
     groups: dict[str, list[tuple[datetime, Path]]] = {}
     for path in directory.glob("*.db"):
         match = _NAME.match(path.name)
@@ -157,21 +157,8 @@ def prune(directory: Path) -> list[Path]:
     removed: list[Path] = []
     for prefix, items in groups.items():
         items.sort(key=lambda item: (item[0], item[1].name), reverse=True)  # newest first
-        if prefix != "folio":
-            doomed = [p for _, p in items[OTHER_KEEP:]]
-        else:
-            rest = items[DAILY_KEEP:]
-            kept_weeks: list[tuple[int, int]] = []
-            doomed = []
-            for stamp, path in rest:
-                iso = stamp.isocalendar()
-                week = (iso.year, iso.week)
-                if week in kept_weeks:
-                    doomed.append(path)  # an older copy from a week already kept
-                elif len(kept_weeks) < WEEKLY_KEEP:
-                    kept_weeks.append(week)
-                else:
-                    doomed.append(path)
+        limit = OTHER_KEEP if prefix != "folio" else max(1, keep)
+        doomed = [p for _, p in items[limit:]]
         for path in doomed:
             path.unlink(missing_ok=True)
             removed.append(path)
